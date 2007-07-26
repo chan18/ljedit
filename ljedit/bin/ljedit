@@ -1,0 +1,14 @@
+#!/bin/bash
+
+[ ${0:0:1} = / ] && c_dir=${0%/*} || c_dir=$PWD/${0%/*}
+#echo current dir is: $c_dir
+
+LJED_LIB_PATH=$c_dir/plugins
+#echo LJED_LIB_PATH
+
+export LD_LIBRARY_PATH=$LJED_LIB_PATH:$LD_LIBRARY_PATH
+export PYTHONPATH=$c_dir
+
+ljedit=$c_dir/_ljedit
+$ljedit
+
