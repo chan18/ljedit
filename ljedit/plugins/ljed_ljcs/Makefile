@@ -28,6 +28,7 @@ all : $(BIN)
 
 $(BIN) : $(OBJS)
 	$(CXX) $(CXXFLAGS) $(GTKMMLIBS) $(LJCSLIB) -shared -o $@ $(OBJS)
+	cp ../../../ljcs/lib/libljcs.so ../../bin/plugins/
 
 clean :
 	rm -f $(BIN)
