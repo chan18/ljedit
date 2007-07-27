@@ -2,32 +2,32 @@
 # 
 
 
-import ljedit
+import _ljedit, ljedit
 
 import gtk, os, sys
 
-class T:
+class __Scope:
 	pass
 
-ljedit.main_window = T()
-ljedit.main_window.doc_manager  = T()
-ljedit.main_window.left_panel   = T()
-ljedit.main_window.right_panel  = T()
-ljedit.main_window.bottom_panel = T()
+ljedit.main_window = __Scope()
+ljedit.main_window.doc_manager  = __Scope()
+ljedit.main_window.left_panel   = __Scope()
+ljedit.main_window.right_panel  = __Scope()
+ljedit.main_window.bottom_panel = __Scope()
 
-ljedit.main_window.doc_manager.create_new_file    = lambda :                ljedit.ljedit_doc_manager_create_new_file(ljedit.__c_main_window_doc_manager)
-ljedit.main_window.doc_manager.open_file          = lambda filepath, line : ljedit.ljedit_doc_manager_open_file(ljedit.__c_main_window_doc_manager, filepath, line)
-ljedit.main_window.doc_manager.save_current_file  = lambda :                ljedit.ljedit_doc_manager_save_current_file(ljedit.__c_main_window_doc_manager)
-ljedit.main_window.doc_manager.close_current_file = lambda :                ljedit.ljedit_doc_manager_close_current_file(ljedit.__c_main_window_doc_manager)
-ljedit.main_window.doc_manager.save_all_files     = lambda :                ljedit.ljedit_doc_manager_save_all_files(ljedit.__c_main_window_doc_manager)
-ljedit.main_window.doc_manager.close_all_files    = lambda :                ljedit.ljedit_doc_manager_close_all_files(ljedit.__c_main_window_doc_manager)
+ljedit.main_window.doc_manager.create_new_file    = lambda :                _ljedit.ljedit_doc_manager_create_new_file(_ljedit.c_main_window_doc_manager)
+ljedit.main_window.doc_manager.open_file          = lambda filepath, line : _ljedit.ljedit_doc_manager_open_file(_ljedit.c_main_window_doc_manager, filepath, line)
+ljedit.main_window.doc_manager.save_current_file  = lambda :                _ljedit.ljedit_doc_manager_save_current_file(_ljedit.c_main_window_doc_manager)
+ljedit.main_window.doc_manager.close_current_file = lambda :                _ljedit.ljedit_doc_manager_close_current_file(_ljedit.c_main_window_doc_manager)
+ljedit.main_window.doc_manager.save_all_files     = lambda :                _ljedit.ljedit_doc_manager_save_all_files(_ljedit.c_main_window_doc_manager)
+ljedit.main_window.doc_manager.close_all_files    = lambda :                _ljedit.ljedit_doc_manager_close_all_files(_ljedit.c_main_window_doc_manager)
 
-ljedit.main_window.left_panel.append_page         = lambda name, widget : ljedit.gtkmm_notebook_append_page(ljedit.__c_main_window_left_panel, name, widget)
-ljedit.main_window.left_panel.remove_page         = lambda page         : ljedit.gtkmm_notebook_remove_page(ljedit.__c_main_window_left_panel, page)
-ljedit.main_window.right_panel.append_page        = lambda name, widget : ljedit.gtkmm_notebook_append_page(ljedit.__c_main_window_right_panel, name, widget)
-ljedit.main_window.right_panel.remove_page        = lambda page         : ljedit.gtkmm_notebook_remove_page(ljedit.__c_main_window_right_panel, page)
-ljedit.main_window.bottom_panel.append_page       = lambda name, widget : ljedit.gtkmm_notebook_append_page(ljedit.__c_main_window_bottom_panel, name, widget)
-ljedit.main_window.bottom_panel.remove_page       = lambda page         : ljedit.gtkmm_notebook_remove_page(ljedit.__c_main_window_bottom_panel, page)
+ljedit.main_window.left_panel.append_page         = lambda name, widget :   _ljedit.gtkmm_notebook_append_page(_ljedit.c_main_window_left_panel, name, widget)
+ljedit.main_window.left_panel.remove_page         = lambda page         :   _ljedit.gtkmm_notebook_remove_page(_ljedit.c_main_window_left_panel, page)
+ljedit.main_window.right_panel.append_page        = lambda name, widget :   _ljedit.gtkmm_notebook_append_page(_ljedit.c_main_window_right_panel, name, widget)
+ljedit.main_window.right_panel.remove_page        = lambda page         :   _ljedit.gtkmm_notebook_remove_page(_ljedit.c_main_window_right_panel, page)
+ljedit.main_window.bottom_panel.append_page       = lambda name, widget :   _ljedit.gtkmm_notebook_append_page(_ljedit.c_main_window_bottom_panel, name, widget)
+ljedit.main_window.bottom_panel.remove_page       = lambda page         :   _ljedit.gtkmm_notebook_remove_page(_ljedit.c_main_window_bottom_panel, page)
 
 def __trace(message):
 	if sys.platform=='win32':

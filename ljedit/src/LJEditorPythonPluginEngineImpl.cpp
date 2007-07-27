@@ -154,9 +154,9 @@ PyObject* gtkmm_notebook_remove_page(PyObject* self, PyObject* args) {
 	return Py_None;
 }
 
-// ljedit methods
+// __ljedit methods
 // 
-PyMethodDef ljedit_methods[] = {
+PyMethodDef __ljedit_methods[] = {
 	{ "ljedit_doc_manager_create_new_file",    ljedit_doc_manager_create_new_file,    METH_VARARGS, "ljedit_doc_manager_create_new_file." },
 	{ "ljedit_doc_manager_open_file",          ljedit_doc_manager_open_file,          METH_VARARGS, "ljedit_doc_manager_open_file." },
 	{ "ljedit_doc_manager_save_current_file",  ljedit_doc_manager_save_current_file,  METH_VARARGS, "ljedit_doc_manager_save_current_file." },
@@ -165,6 +165,10 @@ PyMethodDef ljedit_methods[] = {
 	{ "ljedit_doc_manager_close_all_files",    ljedit_doc_manager_close_all_files,    METH_VARARGS, "ljedit_doc_manager_close_all_files." },
 	{ "gtkmm_notebook_append_page",            gtkmm_notebook_append_page,            METH_VARARGS, "gtkmm_notebook_append_page." },
 	{ "gtkmm_notebook_remove_page",            gtkmm_notebook_remove_page,            METH_VARARGS, "gtkmm_notebook_remove_page." },
+	{NULL, NULL, 0, NULL}
+};
+
+PyMethodDef ljedit_methods[] = {
 	{NULL, NULL, 0, NULL}
 };
 
@@ -186,10 +190,10 @@ bool init_pygobject_library() {
 	return true;
 }
 
-bool py_ljedit_add(PyObject* py_ljedit, const char* name, void* object) {
+bool py_module_add(PyObject* module, const char* name, void* object) {
 	assert( object != 0 );
 	PyObject* py_c_object = PyCObject_FromVoidPtr(object, 0);
-	return( py_c_object!=0 && PyModule_AddObject(py_ljedit, name, py_c_object)==0 );
+	return( py_c_object!=0 && PyModule_AddObject(module, name, py_c_object)==0 );
 }
 
 class PythonPluginManager {
@@ -203,20 +207,20 @@ public:
 		if( !init_pygobject_library() )
 			return false;
 
+		PyObject* py_ljedit_impl = Py_InitModule("_ljedit", __ljedit_methods);
 		PyObject* py_ljedit = Py_InitModule("ljedit", ljedit_methods);
-		if( py_ljedit==0 )
+		if( py_ljedit_impl==0 || py_ljedit==0 )
 			return false;
 
 		LJEditorImpl& ljedit = LJEditorImpl::self();
-
-		if( !( py_ljedit_add( py_ljedit, "__c_main_window", &ljedit.main_window())
-			&& py_ljedit_add( py_ljedit, "__c_main_window_ui_manager",   &ljedit.main_window().ui_manager()   )
-			&& py_ljedit_add( py_ljedit, "__c_main_window_action_group", &ljedit.main_window().action_group() )
-			&& py_ljedit_add( py_ljedit, "__c_main_window_left_panel",   &ljedit.main_window().left_panel()   )
-			&& py_ljedit_add( py_ljedit, "__c_main_window_doc_manager",  &ljedit.main_window().doc_manager()  )
-			&& py_ljedit_add( py_ljedit, "__c_main_window_right_panel",  &ljedit.main_window().right_panel()  )
-			&& py_ljedit_add( py_ljedit, "__c_main_window_bottom_panel", &ljedit.main_window().bottom_panel() )
-			&& py_ljedit_add( py_ljedit, "__c_main_window_status_bar",   &ljedit.main_window().status_bar()   ) ) )
+		MainWindow& main_window = ljedit.main_window();
+		
+		if( !( py_module_add( py_ljedit_impl, "c_main_window", &main_window)
+			&& py_module_add( py_ljedit_impl, "c_main_window_left_panel",   &main_window.left_panel()   )
+			&& py_module_add( py_ljedit_impl, "c_main_window_doc_manager",  &main_window.doc_manager()  )
+			&& py_module_add( py_ljedit_impl, "c_main_window_right_panel",  &main_window.right_panel()  )
+			&& py_module_add( py_ljedit_impl, "c_main_window_bottom_panel", &main_window.bottom_panel() )
+			&& py_module_add( py_ljedit_impl, "c_main_window_status_bar",   &main_window.status_bar()   ) ) )
 		{
 			return false;
 		}

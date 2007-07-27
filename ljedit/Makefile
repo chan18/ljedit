@@ -33,6 +33,8 @@ all : $(BIN)
 $(BIN) : $(LJEDOBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $(LJEDOBJS) -ldl $(LJEDLIBS)
 
+src/LJEditorPythonPluginEngine.o : src/LJEditorPythonPluginEngineImpl.cpp
+
 plugin :
 	cd plugins/ljed_ljcs;make
 	cd plugins/ljed_hello;make
