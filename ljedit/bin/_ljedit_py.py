@@ -44,6 +44,7 @@ ljedit_plugins = []
 def load_plugin(plugin_file):
 	plugin = __import__(plugin_file)
 	plugin.active()
+	return plugin
 
 PY_PLUGIN_SIGN = '.py.ljedit_plugin'
 
@@ -65,8 +66,10 @@ def load_plugins():
 
 def unload_plugins():
 	global ljedit_plugins
-
 	for plugin in ljedit_plugins:
-		plugin.deactive()
+		try:
+			plugin.deactive()
+		except Exception, e:
+			pass
 	del ljed_plugins
 

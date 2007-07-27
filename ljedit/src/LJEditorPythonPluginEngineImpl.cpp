@@ -256,11 +256,11 @@ public:
 		if( dict==0 )
 			return;
 
-		PyObject* load_plugins = PyDict_GetItemString(dict, "unload_plugins");
-		if( load_plugins==0 )
+		PyObject* unload_plugins = PyDict_GetItemString(dict, "unload_plugins");
+		if( unload_plugins==0 )
 			return;
 
-		PyObject* result = PyObject_CallFunction(load_plugins, 0);
+		PyObject* result = PyObject_CallFunction(unload_plugins, 0);
 		if( result==0 )
 			PyErr_Clear();
 		Py_XDECREF(result);
