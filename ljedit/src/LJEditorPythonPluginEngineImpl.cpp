@@ -222,7 +222,7 @@ public:
 		}
 
 		py_impl_ = PyImport_ImportModule("_ljedit_python_plugins_manager");
-		PyErr_Print();
+
 		return py_impl_!=0;
 	}
 
@@ -285,5 +285,4 @@ void ljed_stop_python_plugin_engine() {
 
 	::Py_Finalize();
 }
-
 
