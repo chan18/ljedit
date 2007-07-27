@@ -292,7 +292,7 @@
 			Name="bin"
 			>
 			<File
-				RelativePath=".\bin\_ljedit_python_plugins_manager.py"
+				RelativePath=".\bin\_ljedit_py.py"
 				>
 			</File>
 		</Filter>

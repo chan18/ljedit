@@ -221,7 +221,7 @@ public:
 			return false;
 		}
 
-		py_impl_ = PyImport_ImportModule("_ljedit_python_plugins_manager");
+		py_impl_ = PyImport_ImportModule("_ljedit_py");
 
 		return py_impl_!=0;
 	}

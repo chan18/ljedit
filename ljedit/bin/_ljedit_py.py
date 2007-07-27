@@ -4,7 +4,7 @@
 
 import ljedit
 
-import gtk, os
+import gtk, os, sys
 
 class T:
 	pass
@@ -29,6 +29,16 @@ ljedit.main_window.right_panel.remove_page        = lambda page         : ljedit
 ljedit.main_window.bottom_panel.append_page       = lambda name, widget : ljedit.gtkmm_notebook_append_page(ljedit.__c_main_window_bottom_panel, name, widget)
 ljedit.main_window.bottom_panel.remove_page       = lambda page         : ljedit.gtkmm_notebook_remove_page(ljedit.__c_main_window_bottom_panel, page)
 
+def __trace(message):
+	if sys.platform=='win32':
+		dlg = gtk.MessageDialog(parent=None, buttons=gtk.BUTTONS_YES_NO, message_format=str(message))
+		dlg.run()
+		dlg.destroy()
+	else:
+		print message
+
+ljedit.trace = __trace
+
 ljedit_plugins = []
 
 def load_plugin(plugin_file):
@@ -46,19 +56,12 @@ def load_plugins():
 
 	for f in os.listdir(path):
 		if f.endswith('.py.ljedit_plugin'):
-			print 'f:', f
 			try:
 				plugin_file = f[:-len(PY_PLUGIN_SIGN)]
-				print plugin_file
 				plugin = load_plugin(plugin_file)
 				ljedit_plugins.append(plugin)
 			except Exception, e:
-				dlg = gtk.MessageDialog(parent=None, buttons=gtk.BUTTONS_YES_NO, message_format=str(e))
-				dlg.run()
-				dlg.destroy()
-	
-				print e
-				raise e
+				ljedit.trace(e)
 
 def unload_plugins():
 	global ljedit_plugins
