@@ -145,10 +145,29 @@ PyObject* gtkmm_notebook_remove_page(PyObject* self, PyObject* args) {
 		return 0;
 
 	Gtk::Notebook* nb = (Gtk::Notebook*)PyCObject_AsVoidPtr(py_c_notebook);
-	if( py_c_notebook==0 || page==0 || nb==0 )
+	if( py_c_notebook==0 || nb==0 )
 		return 0;
 
 	nb->remove_page(page);
+
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+// status bar
+// 
+PyObject* gtkmm_status_bar_push(PyObject* self, PyObject* args) {
+	PyObject* py_c_status_bar = 0;
+	const char* msg = 0;
+	int context_id = 0;
+	if(!PyArg_ParseTuple(args, "Osi:gtkmm_status_bar_push", &py_c_status_bar, &msg, &context_id))
+		return 0;
+
+	Gtk::Statusbar* sb = (Gtk::Statusbar*)PyCObject_AsVoidPtr(py_c_status_bar);
+	if( py_c_status_bar==0 || msg==0 || sb==0 )
+		return 0;
+
+	sb->push(msg, context_id);
 
 	Py_INCREF(Py_None);
 	return Py_None;
@@ -163,8 +182,12 @@ PyMethodDef __ljedit_methods[] = {
 	{ "ljedit_doc_manager_close_current_file", ljedit_doc_manager_close_current_file, METH_VARARGS, "ljedit_doc_manager_close_current_file." },
 	{ "ljedit_doc_manager_save_all_files",     ljedit_doc_manager_save_all_files,     METH_VARARGS, "ljedit_doc_manager_save_all_files." },
 	{ "ljedit_doc_manager_close_all_files",    ljedit_doc_manager_close_all_files,    METH_VARARGS, "ljedit_doc_manager_close_all_files." },
+
 	{ "gtkmm_notebook_append_page",            gtkmm_notebook_append_page,            METH_VARARGS, "gtkmm_notebook_append_page." },
 	{ "gtkmm_notebook_remove_page",            gtkmm_notebook_remove_page,            METH_VARARGS, "gtkmm_notebook_remove_page." },
+
+	{ "gtkmm_status_bar_push",                 gtkmm_status_bar_push,                 METH_VARARGS, "gtkmm_status_bar_push." },
+
 	{NULL, NULL, 0, NULL}
 };
 
@@ -214,7 +237,7 @@ public:
 
 		LJEditorImpl& ljedit = LJEditorImpl::self();
 		MainWindow& main_window = ljedit.main_window();
-		
+
 		if( !( py_module_add( py_ljedit_impl, "c_main_window", &main_window)
 			&& py_module_add( py_ljedit_impl, "c_main_window_left_panel",   &main_window.left_panel()   )
 			&& py_module_add( py_ljedit_impl, "c_main_window_doc_manager",  &main_window.doc_manager()  )
