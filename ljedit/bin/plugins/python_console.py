@@ -12,7 +12,7 @@ def active():
 	python_console.show_all()
 
 	bottom = ljedit.main_window.bottom_panel
-	python_console.page_id = bottom.append_page('Python Console', python_console)
+	python_console.page_id = bottom.append_page(python_console, gtk.Label('Python Console'))
 
 def deactive():
 	bottom = ljedit.main_window.bottom_panel

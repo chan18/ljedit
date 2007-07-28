@@ -24,199 +24,169 @@
 #include "LJEditorImpl.h"
 
 //-------------------------------------------------------------------
-// wrapper doc manager
 // 
 PyObject* ljedit_doc_manager_create_new_file(PyObject* self, PyObject* args) {
-	PyObject* py_c_doc_manager = 0;
-	if(!PyArg_ParseTuple(args, "O:ljedit_doc_manager_create_new_file", &py_c_doc_manager))
+	PyObject* py_c_ljedit = 0;
+	if(!PyArg_ParseTuple(args, "O:ljedit_doc_manager_create_new_file", &py_c_ljedit))
+		return NULL;
+
+	LJEditorImpl* ljedit = (LJEditorImpl*)PyCObject_AsVoidPtr(py_c_ljedit);
+	if( ljedit==0 )
 		return 0;
 
-	DocManager* dm = (DocManager*)PyCObject_AsVoidPtr(py_c_doc_manager);
-	if( dm==0 )
-		return 0;
-
-	dm->create_new_file();
+	ljedit->main_window().doc_manager().create_new_file();
 
 	Py_INCREF(Py_None);
 	return Py_None;
 }
 
 PyObject* ljedit_doc_manager_open_file(PyObject* self, PyObject* args) {
-	PyObject* py_c_doc_manager = 0;
+	PyObject* py_c_ljedit = 0;
 	const char* filepath = 0;
 	int line = 0;
-	if(!PyArg_ParseTuple(args, "Osi:ljedit_doc_manager_open_file", &py_c_doc_manager, &filepath, &line))
+	if(!PyArg_ParseTuple(args, "Osi:ljedit_doc_manager_open_file", &py_c_ljedit, &filepath, &line))
+		return NULL;
+
+	LJEditorImpl* ljedit = (LJEditorImpl*)PyCObject_AsVoidPtr(py_c_ljedit);
+	if( ljedit==0 )
 		return 0;
 
-	DocManager* dm = (DocManager*)PyCObject_AsVoidPtr(py_c_doc_manager);
-	if( dm==0 || filepath==0 )
-		return 0;
-
-	dm->open_file(filepath, line);
+	ljedit->main_window().doc_manager().open_file(filepath, line);
 
 	Py_INCREF(Py_None);
 	return Py_None;
 }
 
 PyObject* ljedit_doc_manager_save_current_file(PyObject* self, PyObject* args) {
-	PyObject* py_c_doc_manager = 0;
-	if(!PyArg_ParseTuple(args, "O:ljedit_doc_manager_save_current_file", &py_c_doc_manager))
+	PyObject* py_c_ljedit = 0;
+	if(!PyArg_ParseTuple(args, "O:ljedit_doc_manager_save_current_file", &py_c_ljedit))
+		return NULL;
+
+	LJEditorImpl* ljedit = (LJEditorImpl*)PyCObject_AsVoidPtr(py_c_ljedit);
+	if( ljedit==0 )
 		return 0;
 
-	DocManager* dm = (DocManager*)PyCObject_AsVoidPtr(py_c_doc_manager);
-	if( dm==0 )
-		return 0;
-
-	dm->save_current_file();
+	ljedit->main_window().doc_manager().save_current_file();
 
 	Py_INCREF(Py_None);
 	return Py_None;
 }
 
 PyObject* ljedit_doc_manager_close_current_file(PyObject* self, PyObject* args) {
-	PyObject* py_c_doc_manager = 0;
-	if(!PyArg_ParseTuple(args, "O:ljedit_doc_manager_close_current_file", &py_c_doc_manager))
+	PyObject* py_c_ljedit = 0;
+	if(!PyArg_ParseTuple(args, "O:ljedit_doc_manager_close_current_file", &py_c_ljedit))
+		return NULL;
+
+	LJEditorImpl* ljedit = (LJEditorImpl*)PyCObject_AsVoidPtr(py_c_ljedit);
+	if( ljedit==0 )
 		return 0;
 
-	DocManager* dm = (DocManager*)PyCObject_AsVoidPtr(py_c_doc_manager);
-	if( dm==0 )
-		return 0;
-
-	dm->close_current_file();
+	ljedit->main_window().doc_manager().close_current_file();
 
 	Py_INCREF(Py_None);
 	return Py_None;
 }
 
 PyObject* ljedit_doc_manager_save_all_files(PyObject* self, PyObject* args) {
-	PyObject* py_c_doc_manager = 0;
-	if(!PyArg_ParseTuple(args, "O:ljedit_doc_manager_save_all_files", &py_c_doc_manager))
+	PyObject* py_c_ljedit = 0;
+	if(!PyArg_ParseTuple(args, "O:ljedit_doc_manager_save_all_files", &py_c_ljedit))
+		return NULL;
+
+	LJEditorImpl* ljedit = (LJEditorImpl*)PyCObject_AsVoidPtr(py_c_ljedit);
+	if( ljedit==0 )
 		return 0;
 
-	DocManager* dm = (DocManager*)PyCObject_AsVoidPtr(py_c_doc_manager);
-	if( dm==0 )
-		return 0;
-
-	dm->save_all_files();
+	ljedit->main_window().doc_manager().save_all_files();
 
 	Py_INCREF(Py_None);
 	return Py_None;
 }
 
 PyObject* ljedit_doc_manager_close_all_files(PyObject* self, PyObject* args) {
-	PyObject* py_c_doc_manager = 0;
-	if(!PyArg_ParseTuple(args, "O:ljedit_doc_manager_close_all_files", &py_c_doc_manager))
+	PyObject* py_c_ljedit = 0;
+	if(!PyArg_ParseTuple(args, "O:ljedit_doc_manager_close_all_files", &py_c_ljedit))
+		return NULL;
+
+	LJEditorImpl* ljedit = (LJEditorImpl*)PyCObject_AsVoidPtr(py_c_ljedit);
+	if( ljedit==0 )
 		return 0;
 
-	DocManager* dm = (DocManager*)PyCObject_AsVoidPtr(py_c_doc_manager);
-	if( dm==0 )
-		return 0;
-
-	dm->close_all_files();
+	ljedit->main_window().doc_manager().close_all_files();
 
 	Py_INCREF(Py_None);
 	return Py_None;
 }
 
-// wrapper gtkmm Notebook
-// 
-PyObject* gtkmm_notebook_append_page(PyObject* self, PyObject* args) {
-	PyObject* py_c_notebook = 0;
-	const char* name = 0;
-	PyGObject* py_widget = 0;
-	if(!PyArg_ParseTuple(args, "OsO:gtkmm_notebook_append_page", &py_c_notebook, &name, &py_widget))
-		return 0;
-
-	Gtk::Notebook* nb = (Gtk::Notebook*)PyCObject_AsVoidPtr(py_c_notebook);
-	if( py_c_notebook==0 || name==0 || py_widget==0 || nb==0 || py_widget->obj==0 )
-		return 0;
-
-	GtkWidget* obj = (GtkWidget*)(py_widget->obj);
-	Gtk::Widget* widget = Gtk::manage(Glib::wrap(obj));
-	int page = nb->append_page(*widget, name);
-
-	return PyInt_FromLong((long)page);
-}
-
-PyObject* gtkmm_notebook_remove_page(PyObject* self, PyObject* args) {
-	PyObject* py_c_notebook = 0;
-	int page = 0;
-	if(!PyArg_ParseTuple(args, "Oi:gtkmm_notebook_remove_page", &py_c_notebook, &page))
-		return 0;
-
-	Gtk::Notebook* nb = (Gtk::Notebook*)PyCObject_AsVoidPtr(py_c_notebook);
-	if( py_c_notebook==0 || nb==0 )
-		return 0;
-
-	nb->remove_page(page);
-
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-
-// status bar
-// 
-PyObject* gtkmm_status_bar_push(PyObject* self, PyObject* args) {
-	PyObject* py_c_status_bar = 0;
-	const char* msg = 0;
-	int context_id = 0;
-	if(!PyArg_ParseTuple(args, "Osi:gtkmm_status_bar_push", &py_c_status_bar, &msg, &context_id))
-		return 0;
-
-	Gtk::Statusbar* sb = (Gtk::Statusbar*)PyCObject_AsVoidPtr(py_c_status_bar);
-	if( py_c_status_bar==0 || msg==0 || sb==0 )
-		return 0;
-
-	sb->push(msg, context_id);
-
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-
-// __ljedit methods
-// 
-PyMethodDef __ljedit_methods[] = {
+PyMethodDef ljedit_methods[] = {
 	{ "ljedit_doc_manager_create_new_file",    ljedit_doc_manager_create_new_file,    METH_VARARGS, "ljedit_doc_manager_create_new_file." },
 	{ "ljedit_doc_manager_open_file",          ljedit_doc_manager_open_file,          METH_VARARGS, "ljedit_doc_manager_open_file." },
 	{ "ljedit_doc_manager_save_current_file",  ljedit_doc_manager_save_current_file,  METH_VARARGS, "ljedit_doc_manager_save_current_file." },
 	{ "ljedit_doc_manager_close_current_file", ljedit_doc_manager_close_current_file, METH_VARARGS, "ljedit_doc_manager_close_current_file." },
 	{ "ljedit_doc_manager_save_all_files",     ljedit_doc_manager_save_all_files,     METH_VARARGS, "ljedit_doc_manager_save_all_files." },
 	{ "ljedit_doc_manager_close_all_files",    ljedit_doc_manager_close_all_files,    METH_VARARGS, "ljedit_doc_manager_close_all_files." },
-
-	{ "gtkmm_notebook_append_page",            gtkmm_notebook_append_page,            METH_VARARGS, "gtkmm_notebook_append_page." },
-	{ "gtkmm_notebook_remove_page",            gtkmm_notebook_remove_page,            METH_VARARGS, "gtkmm_notebook_remove_page." },
-
-	{ "gtkmm_status_bar_push",                 gtkmm_status_bar_push,                 METH_VARARGS, "gtkmm_status_bar_push." },
-
-	{NULL, NULL, 0, NULL}
-};
-
-PyMethodDef ljedit_methods[] = {
 	{NULL, NULL, 0, NULL}
 };
 
 //-------------------------------------------------------------------
 // 
-void __init_pygobject__() {
-	init_pygobject();
-}
+void __ljed_init_pygobject__() { init_pygobject(); }
+void __ljed_init_pygtk__()     { init_pygtk(); }
 
-bool init_pygobject_library() {
-	__init_pygobject__();
-
-	PyObject* err = PyErr_Occurred();
-	if( err != 0 ) {
+bool ljed_init_pygtk_library() {
+	__ljed_init_pygobject__();
+	if( PyErr_Occurred() ) {
 		PyErr_Print();
 		PyErr_Clear();
 		return false;
 	}
+
+	__ljed_init_pygtk__();
+	if( PyErr_Occurred() ) {
+		PyErr_Print();
+		PyErr_Clear();
+		return false;
+	}
+
 	return true;
 }
 
-bool py_module_add(PyObject* module, const char* name, void* object) {
-	assert( object != 0 );
-	PyObject* py_c_object = PyCObject_FromVoidPtr(object, 0);
-	return( py_c_object!=0 && PyModule_AddObject(module, name, py_c_object)==0 );
+inline PyObject* ljed_pygobject_new(Glib::Object& o)
+	{ return pygobject_new(o.gobj()); }
+
+PyObject* ljed_py_create_main_window() {
+	MainWindow& main_window = LJEditorImpl::self().main_window();
+	PyObject* py_main_window = ljed_pygobject_new(main_window);
+	if( py_main_window==0 )
+		return 0;
+
+	PyObject* py_ui_manager   = pygobject_new( main_window.ui_manager()->::Glib::Object::gobj() );
+	PyObject* py_action_group = pygobject_new( main_window.action_group()->::Glib::Object::gobj() );
+	PyObject* py_left_panel   = ljed_pygobject_new( main_window.left_panel() );
+	PyObject* py_doc_manager  = ljed_pygobject_new( main_window.doc_manager() );
+	PyObject* py_right_panel  = ljed_pygobject_new( main_window.right_panel() );
+	PyObject* py_bottom_panel = ljed_pygobject_new( main_window.bottom_panel() );
+	PyObject* py_status_bar   = ljed_pygobject_new( main_window.status_bar() );
+
+	if( py_ui_manager==0
+		|| py_action_group==0
+		|| py_left_panel==0
+		|| py_doc_manager==0
+		|| py_right_panel==0
+		|| py_bottom_panel==0
+		|| py_status_bar==0 )
+	{
+		return 0;
+	}
+
+	PyObject_SetAttrString(py_main_window, "ui_manager",   py_ui_manager);
+	PyObject_SetAttrString(py_main_window, "action_group", py_action_group);
+	PyObject_SetAttrString(py_main_window, "left_panel",   py_left_panel);
+	PyObject_SetAttrString(py_main_window, "doc_manager", py_ui_manager);
+	PyObject_SetAttrString(py_main_window, "right_panel",  py_right_panel);
+	PyObject_SetAttrString(py_main_window, "bottom_panel", py_bottom_panel);
+	PyObject_SetAttrString(py_main_window, "status_bar",   py_status_bar);
+
+	return py_main_window;
 }
 
 class PythonPluginManager {
@@ -227,26 +197,20 @@ public:
 	}
 
 	bool init() {
-		if( !init_pygobject_library() )
+		if( !ljed_init_pygtk_library() )
 			return false;
 
-		PyObject* py_ljedit_impl = Py_InitModule("_ljedit", __ljedit_methods);
 		PyObject* py_ljedit = Py_InitModule("ljedit", ljedit_methods);
-		if( py_ljedit_impl==0 || py_ljedit==0 )
+		if( py_ljedit==0 )
 			return false;
 
-		LJEditorImpl& ljedit = LJEditorImpl::self();
-		MainWindow& main_window = ljedit.main_window();
+		PyObject* py_c_ljedit = ::PyCObject_FromVoidPtr(&LJEditorImpl::self(), 0);
+		PyModule_AddObject(py_ljedit, "__c_ljedit", py_c_ljedit);
 
-		if( !( py_module_add( py_ljedit_impl, "c_main_window", &main_window)
-			&& py_module_add( py_ljedit_impl, "c_main_window_left_panel",   &main_window.left_panel()   )
-			&& py_module_add( py_ljedit_impl, "c_main_window_doc_manager",  &main_window.doc_manager()  )
-			&& py_module_add( py_ljedit_impl, "c_main_window_right_panel",  &main_window.right_panel()  )
-			&& py_module_add( py_ljedit_impl, "c_main_window_bottom_panel", &main_window.bottom_panel() )
-			&& py_module_add( py_ljedit_impl, "c_main_window_status_bar",   &main_window.status_bar()   ) ) )
-		{
+		PyObject* py_main_window = ljed_py_create_main_window();
+		if( py_main_window==0 )
 			return false;
-		}
+		PyModule_AddObject(py_ljedit, "main_window", py_main_window);
 
 		py_impl_ = PyImport_ImportModule("_ljedit_py");
 
