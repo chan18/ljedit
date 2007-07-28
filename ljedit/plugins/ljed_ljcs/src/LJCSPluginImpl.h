@@ -6,12 +6,14 @@
 
 #include "gtkenv.h"
 
+#include <list>
+#include <map>
+
 #include "TipWindow.h"
 #include "OutlinePage.h"
 #include "PreviewPage.h"
 
-#include <list>
-#include <map>
+#include "ParseThread.h"
 
 class Page;
 class LJEditor;
@@ -67,7 +69,9 @@ private:
     PreviewPage	preview_;
 
 private:
-    LJEditor&	editor_;
+    LJEditor&				editor_;
+
+    ParseThread				parse_thread_;
 
     TConnectionListMap		connections_map_;
 };

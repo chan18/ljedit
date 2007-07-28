@@ -117,13 +117,17 @@ PyObject* ljedit_doc_manager_close_all_files(PyObject* self, PyObject* args) {
 	return Py_None;
 }
 
-PyMethodDef ljedit_methods[] = {
+PyMethodDef __ljedit_methods[] = {
 	{ "ljedit_doc_manager_create_new_file",    ljedit_doc_manager_create_new_file,    METH_VARARGS, "ljedit_doc_manager_create_new_file." },
 	{ "ljedit_doc_manager_open_file",          ljedit_doc_manager_open_file,          METH_VARARGS, "ljedit_doc_manager_open_file." },
 	{ "ljedit_doc_manager_save_current_file",  ljedit_doc_manager_save_current_file,  METH_VARARGS, "ljedit_doc_manager_save_current_file." },
 	{ "ljedit_doc_manager_close_current_file", ljedit_doc_manager_close_current_file, METH_VARARGS, "ljedit_doc_manager_close_current_file." },
 	{ "ljedit_doc_manager_save_all_files",     ljedit_doc_manager_save_all_files,     METH_VARARGS, "ljedit_doc_manager_save_all_files." },
 	{ "ljedit_doc_manager_close_all_files",    ljedit_doc_manager_close_all_files,    METH_VARARGS, "ljedit_doc_manager_close_all_files." },
+	{NULL, NULL, 0, NULL}
+};
+
+PyMethodDef ljedit_methods[] = {
 	{NULL, NULL, 0, NULL}
 };
 
@@ -201,11 +205,12 @@ public:
 			return false;
 
 		PyObject* py_ljedit = Py_InitModule("ljedit", ljedit_methods);
-		if( py_ljedit==0 )
+		PyObject* __py_ljedit = Py_InitModule("__ljedit", __ljedit_methods);
+		if( py_ljedit==0 || __py_ljedit==0 )
 			return false;
 
 		PyObject* py_c_ljedit = ::PyCObject_FromVoidPtr(&LJEditorImpl::self(), 0);
-		PyModule_AddObject(py_ljedit, "__c_ljedit", py_c_ljedit);
+		PyModule_AddObject(__py_ljedit, "__c_ljedit", py_c_ljedit);
 
 		PyObject* py_main_window = ljed_py_create_main_window();
 		if( py_main_window==0 )

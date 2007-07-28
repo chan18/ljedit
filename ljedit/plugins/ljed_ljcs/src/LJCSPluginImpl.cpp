@@ -4,7 +4,6 @@
 #include "LJCSPluginImpl.h"
 #include "LJCSPluginUtils.h"
 
-#include "ParseThread.h"
 
 #include "DocManager.h"
 #include "LJEditor.h"
@@ -26,7 +25,7 @@ void LJCSPluginImpl::active_page(Page& page) {
 
     if( !page.filepath().empty() ) {
         std::string filename = page.filepath();
-        ParseTask::self().add(filename);
+        parse_thread_.add(filename);
     }
 }
 
@@ -53,7 +52,7 @@ void LJCSPluginImpl::show_hint(Page& page
     MatchedSet mset;
 
     std::string filename = page.filepath();
-    cpp::File* file = ParseTask::self().get(filename);
+    cpp::File* file = ParserEnviron::self().find_parsed(filename);
     if( file==0 )
         return;
 
@@ -115,11 +114,17 @@ void LJCSPluginImpl::create() {
     // preview
     preview_.create();
     main_window.bottom_panel().append_page(preview_.get_widget(), "preview");
+
+	// start parse thread
+	parse_thread_.run(); 
 }
 
 void LJCSPluginImpl::destroy() {
     MainWindow& main_window = editor_.main_window();
     DocManager& dm = main_window.doc_manager();
+
+	// stop parse thread
+	parse_thread_.stop();
 
     // disconnect all signal connections
     TConnectionListMap::iterator it = connections_map_.begin();

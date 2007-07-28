@@ -2,16 +2,16 @@
 # 
 
 
-import ljedit
+import ljedit, __ljedit
 
 import gtk, os, sys
 
-ljedit.main_window.doc_manager.create_new_file    = lambda : ljedit.ljedit_doc_manager_create_new_file(ljedit.__c_ljedit)
-ljedit.main_window.doc_manager.open_file          = lambda filepath, line : ljedit.ljedit_doc_manager_open_file(ljedit.__c_ljedit, filepath, line)
-ljedit.main_window.doc_manager.save_current_file  = lambda : ljedit.ljedit_doc_manager_save_current_file(ljedit.__c_ljedit)
-ljedit.main_window.doc_manager.close_current_file = lambda : ljedit.ljedit_doc_manager_close_current_file(ljedit.__c_ljedit)
-ljedit.main_window.doc_manager.save_all_files     = lambda : ljedit.ljedit_doc_manager_save_all_files(ljedit.__c_ljedit)
-ljedit.main_window.doc_manager.close_all_files    = lambda : ljedit.ljedit_doc_manager_close_all_files(ljedit.__c_ljedit)
+ljedit.main_window.doc_manager.create_new_file    = lambda :                  __ljedit.ljedit_doc_manager_create_new_file(__ljedit.__c_ljedit)
+ljedit.main_window.doc_manager.open_file          = lambda filepath, line=0 : __ljedit.ljedit_doc_manager_open_file(__ljedit.__c_ljedit, filepath, line)
+ljedit.main_window.doc_manager.save_current_file  = lambda :                  __ljedit.ljedit_doc_manager_save_current_file(__ljedit.__c_ljedit)
+ljedit.main_window.doc_manager.close_current_file = lambda :                  __ljedit.ljedit_doc_manager_close_current_file(__ljedit.__c_ljedit)
+ljedit.main_window.doc_manager.save_all_files     = lambda :                  __ljedit.ljedit_doc_manager_save_all_files(__ljedit.__c_ljedit)
+ljedit.main_window.doc_manager.close_all_files    = lambda :                  __ljedit.ljedit_doc_manager_close_all_files(__ljedit.__c_ljedit)
 
 ljedit.trace = lambda msg : ljedit.main_window.status_bar.push(str(msg))
 
@@ -46,8 +46,6 @@ def load_plugins():
 				plugin = load_plugin(plugin_file)
 				ljedit_plugins.append(plugin)
 			except Exception, e:
-				ljedit.msgbox(e)
-
 				ljedit.trace(e)
 
 def unload_plugins():

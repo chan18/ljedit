@@ -9,7 +9,7 @@
 
 #ifdef WIN32
     #include <windows.h>
-    void sleep(int sec) { ::Sleep(sec * 1000); }
+    inline void sleep(int sec) { ::Sleep(sec * 1000); }
 #else
     #include <pthread.h>
 #endif
@@ -80,34 +80,6 @@ private:
 #else
     pthread_t				pid_;
 #endif
-};
-
-class ParseTask {
-public:
-    static ParseTask& self() {
-        static ParseTask pool;
-        return pool;
-    }
-
-    void add(const std::string& filename) {
-        thread_.add(filename);
-    }
-
-    cpp::File* get(std::string& filename) {
-        return ParserEnviron::self().find_parsed(filename);
-    }
-
-private:
-    ParseTask() {
-        thread_.run();
-    }
-
-    ~ParseTask() {
-        thread_.stop();
-    }
-
-private:
-    ParseThread thread_;
 };
 
 #endif//EEINC_PARSE_THREAD_H
