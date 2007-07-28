@@ -17,3 +17,5 @@ def active():
 def deactive():
 	bottom = ljedit.main_window.bottom_panel
 	bottom.remove_page(python_console.page_id)
+
+
