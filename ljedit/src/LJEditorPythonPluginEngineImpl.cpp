@@ -185,7 +185,7 @@ PyObject* ljed_py_create_main_window() {
 	PyObject_SetAttrString(py_main_window, "ui_manager",   py_ui_manager);
 	PyObject_SetAttrString(py_main_window, "action_group", py_action_group);
 	PyObject_SetAttrString(py_main_window, "left_panel",   py_left_panel);
-	PyObject_SetAttrString(py_main_window, "doc_manager", py_ui_manager);
+	PyObject_SetAttrString(py_main_window, "doc_manager",  py_doc_manager);
 	PyObject_SetAttrString(py_main_window, "right_panel",  py_right_panel);
 	PyObject_SetAttrString(py_main_window, "bottom_panel", py_bottom_panel);
 	PyObject_SetAttrString(py_main_window, "status_bar",   py_status_bar);

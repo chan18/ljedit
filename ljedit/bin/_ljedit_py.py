@@ -13,7 +13,7 @@ ljedit.main_window.doc_manager.close_current_file = lambda :                  __
 ljedit.main_window.doc_manager.save_all_files     = lambda :                  __ljedit.ljedit_doc_manager_save_all_files(__ljedit.__c_ljedit)
 ljedit.main_window.doc_manager.close_all_files    = lambda :                  __ljedit.ljedit_doc_manager_close_all_files(__ljedit.__c_ljedit)
 
-ljedit.trace = lambda msg : ljedit.main_window.status_bar.push(str(msg))
+ljedit.trace = lambda msg : ljedit.main_window.status_bar.push(str(msg), 0)
 
 def show_msgbox(message):
 	dlg = gtk.MessageDialog(parent=None, buttons=gtk.BUTTONS_YES_NO, message_format=str(message))
