@@ -64,7 +64,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="ljcs_mdd.lib"
-				OutputFile="$(SolutionDir)bin\plugins\$(ProjectName)_d.dll"
+				OutputFile="$(SolutionDir)bin\plugins\$(ProjectName).dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(ProjectDir)..\..\..\ljcs\lib"
 				GenerateDebugInformation="true"
