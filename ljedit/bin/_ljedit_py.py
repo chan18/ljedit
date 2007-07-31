@@ -13,6 +13,9 @@ ljedit.main_window.doc_manager.close_current_file = lambda :                  __
 ljedit.main_window.doc_manager.save_all_files     = lambda :                  __ljedit.ljedit_doc_manager_save_all_files(__ljedit.__c_ljedit)
 ljedit.main_window.doc_manager.close_all_files    = lambda :                  __ljedit.ljedit_doc_manager_close_all_files(__ljedit.__c_ljedit)
 
+ljedit.main_window.doc_manager.get_file_path      = lambda page_num:          __ljedit.ljedit_doc_manager_get_file_path(__ljedit.__c_ljedit, page_num)
+ljedit.main_window.doc_manager.get_text_view      = lambda page_num:          __ljedit.ljedit_doc_manager_get_text_view(__ljedit.__c_ljedit, page_num)
+
 ljedit.trace = lambda msg : ljedit.main_window.status_bar.push(str(msg), 0)
 
 def show_msgbox(message):

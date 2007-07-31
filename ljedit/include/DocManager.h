@@ -16,11 +16,9 @@ private: // nocopyable
     Page& operator=(const Page& o);
 
 public:
-    virtual bool modified() const = 0;
-
     virtual const Glib::ustring& filepath() const = 0;
 
-    virtual Glib::RefPtr<Gtk::TextBuffer> buffer() = 0;
+	Glib::RefPtr<Gtk::TextBuffer> buffer() { return view().get_buffer(); }
 
     virtual Gtk::TextView& view() = 0;
 };
@@ -35,7 +33,7 @@ private: // nocopyable
     DocManager& operator=(const DocManager& o);
 
 public:
-    virtual Page& child_to_page(Gtk::Widget& child) = 0;
+	virtual Page& child_to_page(Gtk::Widget& child) = 0;
 
     virtual void create_new_file() = 0;
     virtual void open_file(const std::string& filepath, int line=0) = 0;

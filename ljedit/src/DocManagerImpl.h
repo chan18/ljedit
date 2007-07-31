@@ -8,7 +8,7 @@
 
 #include <gtksourceviewmm/sourceview.h>
 
-class PageImpl : public Gtk::ScrolledWindow, public Page
+class PageImpl : public Page, public Gtk::ScrolledWindow
 {
 public:
     static PageImpl* create(const std::string& filepath
@@ -60,8 +60,8 @@ public:
     ~DocManagerImpl();
 
 public:
-    virtual Page& child_to_page(Gtk::Widget& child)
-        { return (PageImpl&)child; }
+	virtual Page& child_to_page(Gtk::Widget& child)
+		{ return ((PageImpl&)child); }
 
     virtual void create_new_file();
     virtual void open_file(const std::string& filepath, int line=0);

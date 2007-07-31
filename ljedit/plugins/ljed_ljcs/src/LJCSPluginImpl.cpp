@@ -147,15 +147,13 @@ void LJCSPluginImpl::on_doc_page_added(Gtk::Widget* widget, guint page_num) {
     assert( widget != 0 );
 
     Page& page = editor_.main_window().doc_manager().child_to_page(*widget);
-
-    active_page(page);
+	active_page(page);
 }
 
 void LJCSPluginImpl::on_doc_page_removed(Gtk::Widget* widget, guint page_num) {
     assert( widget != 0 );
 
     Page& page = editor_.main_window().doc_manager().child_to_page(*widget);
-
     deactive_page(page);
 }
 
@@ -340,12 +338,11 @@ void LJCSPluginImpl::outline_update_page() {
         assert( widget != 0 );
 
         Page& page = dm.child_to_page(*widget);
-
         cpp::File* file = ParserEnviron::self().find_parsed(page.filepath());
 
-        Glib::RefPtr<Gtk::TextBuffer> buf = page.buffer();
-        Gtk::TextBuffer::iterator it = buf->get_iter_at_mark(buf->get_insert());
-        outline_.set_file(file, it.get_line());
+		Glib::RefPtr<Gtk::TextBuffer> buf = page.buffer();
+		Gtk::TextBuffer::iterator it = buf->get_iter_at_mark(buf->get_insert());
+		outline_.set_file(file, it.get_line());
     }
 }
 

@@ -25,16 +25,27 @@
 
 //-------------------------------------------------------------------
 // 
-PyObject* ljedit_doc_manager_create_new_file(PyObject* self, PyObject* args) {
+inline DocManager* __parse_doc_manager(const char* format, PyObject* args) {
 	PyObject* py_c_ljedit = 0;
-	if(!PyArg_ParseTuple(args, "O:ljedit_doc_manager_create_new_file", &py_c_ljedit))
-		return NULL;
-
-	LJEditorImpl* ljedit = (LJEditorImpl*)PyCObject_AsVoidPtr(py_c_ljedit);
-	if( ljedit==0 )
+	if(!PyArg_ParseTuple(args, format, &py_c_ljedit))
 		return 0;
 
-	ljedit->main_window().doc_manager().create_new_file();
+	LJEditorImpl* ljedit = (LJEditorImpl*)PyCObject_AsVoidPtr(py_c_ljedit);
+	if( ljedit==0 ) {
+		Py_INCREF(PyExc_Exception);
+		PyErr_SetString(PyExc_Exception, "get py_c_ljedit error");
+		return 0;
+	}
+
+	return &(ljedit->main_window().doc_manager());
+}
+
+PyObject* ljedit_doc_manager_create_new_file(PyObject* self, PyObject* args) {
+	DocManager* dm = __parse_doc_manager("O:"__FUNCTION__, args);
+	if( dm==0 )
+		return 0;
+
+	dm->create_new_file();
 
 	Py_INCREF(Py_None);
 	return Py_None;
@@ -44,12 +55,15 @@ PyObject* ljedit_doc_manager_open_file(PyObject* self, PyObject* args) {
 	PyObject* py_c_ljedit = 0;
 	const char* filepath = 0;
 	int line = 0;
-	if(!PyArg_ParseTuple(args, "Osi:ljedit_doc_manager_open_file", &py_c_ljedit, &filepath, &line))
-		return NULL;
+	if(!PyArg_ParseTuple(args, "Osi:"__FUNCTION__, &py_c_ljedit, &filepath, &line))
+		return 0;
 
 	LJEditorImpl* ljedit = (LJEditorImpl*)PyCObject_AsVoidPtr(py_c_ljedit);
-	if( ljedit==0 )
+	if( ljedit==0 ) {
+		Py_INCREF(PyExc_Exception);
+		PyErr_SetString(PyExc_Exception, "get py_c_ljedit error");
 		return 0;
+	}
 
 	ljedit->main_window().doc_manager().open_file(filepath, line);
 
@@ -58,74 +72,104 @@ PyObject* ljedit_doc_manager_open_file(PyObject* self, PyObject* args) {
 }
 
 PyObject* ljedit_doc_manager_save_current_file(PyObject* self, PyObject* args) {
-	PyObject* py_c_ljedit = 0;
-	if(!PyArg_ParseTuple(args, "O:ljedit_doc_manager_save_current_file", &py_c_ljedit))
-		return NULL;
-
-	LJEditorImpl* ljedit = (LJEditorImpl*)PyCObject_AsVoidPtr(py_c_ljedit);
-	if( ljedit==0 )
+	DocManager* dm = __parse_doc_manager("O:"__FUNCTION__, args);
+	if( dm==0 )
 		return 0;
 
-	ljedit->main_window().doc_manager().save_current_file();
+	dm->save_current_file();
 
 	Py_INCREF(Py_None);
 	return Py_None;
 }
 
 PyObject* ljedit_doc_manager_close_current_file(PyObject* self, PyObject* args) {
-	PyObject* py_c_ljedit = 0;
-	if(!PyArg_ParseTuple(args, "O:ljedit_doc_manager_close_current_file", &py_c_ljedit))
-		return NULL;
-
-	LJEditorImpl* ljedit = (LJEditorImpl*)PyCObject_AsVoidPtr(py_c_ljedit);
-	if( ljedit==0 )
+	DocManager* dm = __parse_doc_manager("O:"__FUNCTION__, args);
+	if( dm==0 )
 		return 0;
 
-	ljedit->main_window().doc_manager().close_current_file();
+	dm->close_current_file();
 
 	Py_INCREF(Py_None);
 	return Py_None;
 }
 
 PyObject* ljedit_doc_manager_save_all_files(PyObject* self, PyObject* args) {
-	PyObject* py_c_ljedit = 0;
-	if(!PyArg_ParseTuple(args, "O:ljedit_doc_manager_save_all_files", &py_c_ljedit))
-		return NULL;
-
-	LJEditorImpl* ljedit = (LJEditorImpl*)PyCObject_AsVoidPtr(py_c_ljedit);
-	if( ljedit==0 )
+	DocManager* dm = __parse_doc_manager("O:"__FUNCTION__, args);
+	if( dm==0 )
 		return 0;
 
-	ljedit->main_window().doc_manager().save_all_files();
+	dm->save_all_files();
 
 	Py_INCREF(Py_None);
 	return Py_None;
 }
 
 PyObject* ljedit_doc_manager_close_all_files(PyObject* self, PyObject* args) {
-	PyObject* py_c_ljedit = 0;
-	if(!PyArg_ParseTuple(args, "O:ljedit_doc_manager_close_all_files", &py_c_ljedit))
-		return NULL;
-
-	LJEditorImpl* ljedit = (LJEditorImpl*)PyCObject_AsVoidPtr(py_c_ljedit);
-	if( ljedit==0 )
+	DocManager* dm = __parse_doc_manager("O:"__FUNCTION__, args);
+	if( dm==0 )
 		return 0;
 
-	ljedit->main_window().doc_manager().close_all_files();
+	dm->close_all_files();
 
 	Py_INCREF(Py_None);
 	return Py_None;
 }
 
-PyMethodDef __ljedit_methods[] = {
-	{ "ljedit_doc_manager_create_new_file",    ljedit_doc_manager_create_new_file,    METH_VARARGS, "ljedit_doc_manager_create_new_file." },
-	{ "ljedit_doc_manager_open_file",          ljedit_doc_manager_open_file,          METH_VARARGS, "ljedit_doc_manager_open_file." },
-	{ "ljedit_doc_manager_save_current_file",  ljedit_doc_manager_save_current_file,  METH_VARARGS, "ljedit_doc_manager_save_current_file." },
-	{ "ljedit_doc_manager_close_current_file", ljedit_doc_manager_close_current_file, METH_VARARGS, "ljedit_doc_manager_close_current_file." },
-	{ "ljedit_doc_manager_save_all_files",     ljedit_doc_manager_save_all_files,     METH_VARARGS, "ljedit_doc_manager_save_all_files." },
-	{ "ljedit_doc_manager_close_all_files",    ljedit_doc_manager_close_all_files,    METH_VARARGS, "ljedit_doc_manager_close_all_files." },
-	{NULL, NULL, 0, NULL}
-};
+inline Page* __parse_doc_page(const char* format, PyObject* args) {
+	PyObject* py_c_ljedit = 0;
+	int page_num = 0;
+	if(!PyArg_ParseTuple(args, format, &py_c_ljedit, &page_num))
+		return 0;
+
+	LJEditorImpl* ljedit = (LJEditorImpl*)PyCObject_AsVoidPtr(py_c_ljedit);
+	if( ljedit==0 ) {
+		Py_INCREF(PyExc_Exception);
+		PyErr_SetString(PyExc_Exception, "get py_c_ljedit error");
+		return 0;
+	}
+
+	DocManager& dm = ljedit->main_window().doc_manager();
+	Gtk::Widget* widget = dm.get_nth_page(page_num);
+	if( widget==0 ) {
+		Py_INCREF(PyExc_Exception);
+		PyErr_SetString(PyExc_Exception, "page index out of range");
+		return 0;
+	}
+
+	return &dm.child_to_page(*widget);
+}
+
+PyObject* ljedit_doc_manager_get_file_path(PyObject* self, PyObject* args) {
+	Page* page = __parse_doc_page("Oi:"__FUNCTION__, args);
+	if( page==0 )
+		return 0;
+
+	return PyString_FromString(page->filepath().c_str());
+}
+
+PyObject* ljedit_doc_manager_get_text_view(PyObject* self, PyObject* args) {
+	Page* page = __parse_doc_page("Oi:"__FUNCTION__, args);
+	if( page==0 )
+		return 0;
+
+	return pygobject_new(page->view().Glib::Object::gobj());
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+
+PyMethodDef __ljedit_methods[] =
+	{ { "ljedit_doc_manager_create_new_file",    ljedit_doc_manager_create_new_file,    METH_VARARGS, "ljedit_doc_manager_create_new_file."    }
+	, { "ljedit_doc_manager_open_file",          ljedit_doc_manager_open_file,          METH_VARARGS, "ljedit_doc_manager_open_file."          }
+	, { "ljedit_doc_manager_save_current_file",  ljedit_doc_manager_save_current_file,  METH_VARARGS, "ljedit_doc_manager_save_current_file."  }
+	, { "ljedit_doc_manager_close_current_file", ljedit_doc_manager_close_current_file, METH_VARARGS, "ljedit_doc_manager_close_current_file." }
+	, { "ljedit_doc_manager_save_all_files",     ljedit_doc_manager_save_all_files,     METH_VARARGS, "ljedit_doc_manager_save_all_files."     }
+	, { "ljedit_doc_manager_close_all_files",    ljedit_doc_manager_close_all_files,    METH_VARARGS, "ljedit_doc_manager_close_all_files."    }
+
+	, { "ljedit_doc_manager_get_file_path",      ljedit_doc_manager_get_file_path,      METH_VARARGS, "ljedit_doc_manager_get_file_path."      }
+	, { "ljedit_doc_manager_get_text_view",      ljedit_doc_manager_get_text_view,      METH_VARARGS, "ljedit_doc_manager_get_text_view."      }
+
+	, { NULL, NULL, 0, NULL } };
 
 PyMethodDef ljedit_methods[] = {
 	{NULL, NULL, 0, NULL}
