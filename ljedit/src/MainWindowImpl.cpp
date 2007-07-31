@@ -10,7 +10,6 @@ MainWindowImpl::MainWindowImpl()
 }
 
 MainWindowImpl::~MainWindowImpl() {
-    destroy();
 }
 
 void MainWindowImpl::create() {
@@ -43,6 +42,7 @@ void MainWindowImpl::create() {
 }
 
 void MainWindowImpl::destroy() {
+	doc_manager_.close_all_files();
 }
 
 void MainWindowImpl::create_ui_manager() {
@@ -145,7 +145,8 @@ void MainWindowImpl::on_file_save_as() {
 }
 
 void MainWindowImpl::on_file_quit() {
-    Gtk::Main::quit();
+	destroy();
+	Gtk::Main::quit();
 }
 
 void MainWindowImpl::on_help_about() {
