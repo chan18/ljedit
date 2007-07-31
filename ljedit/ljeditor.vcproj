@@ -65,7 +65,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="libgtksourceview-1.0.lib libgtksourceviewmm_vc8_static_MDd-1.0.lib"
-				OutputFile="$(ProjectDir)bin\$(ProjectName)_d.exe"
+				OutputFile="$(ProjectDir)bin\$(ProjectName).exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories=""
 				IgnoreDefaultLibraryNames=""
@@ -296,6 +296,10 @@
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath=".\readme.txt"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
