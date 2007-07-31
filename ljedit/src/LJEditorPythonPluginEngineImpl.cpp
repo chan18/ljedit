@@ -41,7 +41,7 @@ inline DocManager* __parse_doc_manager(const char* format, PyObject* args) {
 }
 
 PyObject* ljedit_doc_manager_create_new_file(PyObject* self, PyObject* args) {
-	DocManager* dm = __parse_doc_manager("O:"__FUNCTION__, args);
+	DocManager* dm = __parse_doc_manager("O:ljedit_doc_manager_create_new_file", args);
 	if( dm==0 )
 		return 0;
 
@@ -55,7 +55,7 @@ PyObject* ljedit_doc_manager_open_file(PyObject* self, PyObject* args) {
 	PyObject* py_c_ljedit = 0;
 	const char* filepath = 0;
 	int line = 0;
-	if(!PyArg_ParseTuple(args, "Osi:"__FUNCTION__, &py_c_ljedit, &filepath, &line))
+	if(!PyArg_ParseTuple(args, "Osi:ljedit_doc_manager_open_file", &py_c_ljedit, &filepath, &line))
 		return 0;
 
 	LJEditorImpl* ljedit = (LJEditorImpl*)PyCObject_AsVoidPtr(py_c_ljedit);
@@ -72,7 +72,7 @@ PyObject* ljedit_doc_manager_open_file(PyObject* self, PyObject* args) {
 }
 
 PyObject* ljedit_doc_manager_save_current_file(PyObject* self, PyObject* args) {
-	DocManager* dm = __parse_doc_manager("O:"__FUNCTION__, args);
+	DocManager* dm = __parse_doc_manager("O:ljedit_doc_manager_save_current_file", args);
 	if( dm==0 )
 		return 0;
 
@@ -83,7 +83,7 @@ PyObject* ljedit_doc_manager_save_current_file(PyObject* self, PyObject* args) {
 }
 
 PyObject* ljedit_doc_manager_close_current_file(PyObject* self, PyObject* args) {
-	DocManager* dm = __parse_doc_manager("O:"__FUNCTION__, args);
+	DocManager* dm = __parse_doc_manager("O:ljedit_doc_manager_close_current_file", args);
 	if( dm==0 )
 		return 0;
 
@@ -94,7 +94,7 @@ PyObject* ljedit_doc_manager_close_current_file(PyObject* self, PyObject* args) 
 }
 
 PyObject* ljedit_doc_manager_save_all_files(PyObject* self, PyObject* args) {
-	DocManager* dm = __parse_doc_manager("O:"__FUNCTION__, args);
+	DocManager* dm = __parse_doc_manager("O:ljedit_doc_manager_save_all_files", args);
 	if( dm==0 )
 		return 0;
 
@@ -105,7 +105,7 @@ PyObject* ljedit_doc_manager_save_all_files(PyObject* self, PyObject* args) {
 }
 
 PyObject* ljedit_doc_manager_close_all_files(PyObject* self, PyObject* args) {
-	DocManager* dm = __parse_doc_manager("O:"__FUNCTION__, args);
+	DocManager* dm = __parse_doc_manager("O:ljedit_doc_manager_close_all_files", args);
 	if( dm==0 )
 		return 0;
 
@@ -140,7 +140,7 @@ inline Page* __parse_doc_page(const char* format, PyObject* args) {
 }
 
 PyObject* ljedit_doc_manager_get_file_path(PyObject* self, PyObject* args) {
-	Page* page = __parse_doc_page("Oi:"__FUNCTION__, args);
+	Page* page = __parse_doc_page("Oi:ljedit_doc_manager_get_file_path", args);
 	if( page==0 )
 		return 0;
 
@@ -148,7 +148,7 @@ PyObject* ljedit_doc_manager_get_file_path(PyObject* self, PyObject* args) {
 }
 
 PyObject* ljedit_doc_manager_get_text_view(PyObject* self, PyObject* args) {
-	Page* page = __parse_doc_page("Oi:"__FUNCTION__, args);
+	Page* page = __parse_doc_page("Oi:ljedit_doc_manager_get_text_view", args);
 	if( page==0 )
 		return 0;
 
