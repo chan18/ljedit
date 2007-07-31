@@ -16,6 +16,7 @@ PageImpl* PageImpl::create(const std::string& filepath
 
     gtksourceview::SourceView* view = Gtk::manage(new gtksourceview::SourceView(buffer));
     view->set_wrap_mode(Gtk::WRAP_NONE);
+	view->set_tabs_width(4);
     view->set_highlight_current_line();
         
     PageImpl* page = Gtk::manage(new PageImpl(*label, *view));
