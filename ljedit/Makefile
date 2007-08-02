@@ -17,9 +17,11 @@ CXXFLAGS += -DENABLE_PYTHON_PLUGIN_ENGINE \
             -I/usr/include/pygtk-2.0
 LJEDLIBS += -lpython2.5
 
-LJEDOBJS = src/DocManagerImpl.o      \
+LJEDOBJS = src/DocPageImpl.o         \
+	src/DocManagerImpl.o             \
 	src/LanguageManager.o            \
 	src/LJEditorImpl.o               \
+	src/LJEditorUtilsImpl.o          \
 	src/MainWindowImpl.o             \
 	src/MiniCmdWindow.o              \
 	src/PluginManager.o              \
