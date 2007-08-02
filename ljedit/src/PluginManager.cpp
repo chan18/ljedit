@@ -60,9 +60,8 @@ void PluginManager::load_plugins() {
     {
         TPluginPaths::iterator it = paths_.begin();
         TPluginPaths::iterator end = paths_.end();
-        for( ; it!=end; ++it ) {
-                find_all_plugin_file(plugin_files, *it);
-        }
+        for( ; it!=end; ++it )
+            find_all_plugin_file(plugin_files, *it);
     }
 
     {
@@ -112,7 +111,7 @@ bool PluginManager::plugin_create(DllPlugin& dllplugin, const std::string& plugi
         if( createfn!=0 || destroyfn!=0 ) {
             dllplugin.plugin = (*createfn)(LJEditorImpl::self());
             if( dllplugin.plugin != 0 ) {
-                if( dllplugin.plugin->ljed_plugin_create() )
+                if( dllplugin.plugin->ljed_plugin_create(plugin_filename) )
                     return true;
             }
         }

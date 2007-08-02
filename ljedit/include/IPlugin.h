@@ -10,8 +10,11 @@ class IPlugin {
 public:
     IPlugin(LJEditor& editor) : editor_(editor) {}
 
-    bool ljed_plugin_create()  { return on_create(); }
-    void ljed_plugin_destroy() { on_destroy(); }
+    bool ljed_plugin_create(const std::string& plugin_filename)
+		{ return on_create(plugin_filename.c_str()); }
+
+    void ljed_plugin_destroy()
+		{ on_destroy(); }
 
     LJEditor& editor() { return editor_; }
 
@@ -26,7 +29,7 @@ public:
 protected:
     // when new succeed and add to plugin list
     // 
-    virtual bool on_create() = 0;
+    virtual bool on_create(const char* plugin_filename) = 0;
 
     // when remove from plugin list
     // 

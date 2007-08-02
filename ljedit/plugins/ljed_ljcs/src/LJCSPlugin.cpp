@@ -14,7 +14,7 @@ private:
     LJCSPlugin(LJEditor& editor, void* impl);
     virtual ~LJCSPlugin();
 
-    virtual bool on_create();
+    virtual bool on_create(const char* plugin_filename);
     virtual void on_destroy();
 
 private:
@@ -56,11 +56,11 @@ LJCSPlugin::~LJCSPlugin() {
     impl_ = 0;
 }
 
-bool LJCSPlugin::on_create() {
+bool LJCSPlugin::on_create(const char* plugin_filename) {
     assert( impl_ != 0 );
     LJCSPluginImpl& impl = *(LJCSPluginImpl*)impl_;
 
-    impl.create();
+    impl.create(plugin_filename);
     return true;
 }
 

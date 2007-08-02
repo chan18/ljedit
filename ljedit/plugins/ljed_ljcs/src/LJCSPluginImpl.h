@@ -33,7 +33,7 @@ class LJCSPluginImpl {
 public:
     LJCSPluginImpl(LJEditor& editor);
 
-    void create();
+    void create(const char* plugin_filename);
     void destroy();
 
 private:	// auto complete

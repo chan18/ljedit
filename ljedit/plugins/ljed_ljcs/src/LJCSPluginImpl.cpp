@@ -94,7 +94,7 @@ void LJCSPluginImpl::auto_complete(DocPage& page) {
     tip_.hide();
 }
 
-void LJCSPluginImpl::create() {
+void LJCSPluginImpl::create(const char* plugin_filename) {
     MainWindow& main_window = editor_.main_window();
     DocManager& dm = editor_.main_window().doc_manager();
     TConnectionList& cons = connections_map_[0];
