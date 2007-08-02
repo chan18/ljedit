@@ -1,4 +1,4 @@
-// MainWindowImpl.cpp
+﻿// MainWindowImpl.cpp
 // 
 
 #include "MainWindowImpl.h"
@@ -49,7 +49,9 @@ void MainWindowImpl::create_ui_manager() {
     action_group_ = Gtk::ActionGroup::create("Actions");
 
     action_group_->add( Gtk::Action::create("FileMenu", "_File") );
+    action_group_->add( Gtk::Action::create("ToolsMenu", "_Tools") );
     action_group_->add( Gtk::Action::create("HelpMenu", "_Help") );
+
     action_group_->add( Gtk::Action::create("New",    Gtk::Stock::NEW,   "_New",        "Create a new file"),	sigc::mem_fun(doc_manager_, &DocManager::create_new_file) );
     action_group_->add( Gtk::Action::create("Open",   Gtk::Stock::OPEN,  "_Open",       "Open a file"),			sigc::mem_fun(this, &MainWindowImpl::on_file_open) );
     action_group_->add( Gtk::Action::create("Save",   Gtk::Stock::SAVE,  "_Save",       "Save current file"),	sigc::mem_fun(doc_manager_, &DocManager::save_current_file) );
@@ -74,6 +76,9 @@ void MainWindowImpl::create_ui_manager() {
         "            <separator/>"
         "            <menuitem action='Quit'/>"
         "        </menu>"
+        "        <menu action='ToolsMenu'>"
+        "            <menuitem action='About'/>"
+        "        </menu>"
         "        <menu action='HelpMenu'>"
         "            <menuitem action='About'/>"
         "        </menu>"
@@ -86,6 +91,15 @@ void MainWindowImpl::create_ui_manager() {
         "</ui>";
 
     ui_manager_->add_ui_from_string(ui_info);
+
+	Gtk::Widget* widget = ui_manager_->get_widget("/MenuBar");
+	assert( widget != 0 );
+
+	Gtk::MenuBar* menu_bar = (Gtk::MenuBar*)widget;
+	menu_bar->items().erase(++menu_bar->items().begin());
+	Gtk::MenuItem* tee = Gtk::manage( new Gtk::MenuItem("vvvv") );
+	tee->show_all();
+	menu_bar->items().front().get_submenu()->items().push_back( *tee );
 }
 
 void MainWindowImpl::create_vpaned() {
