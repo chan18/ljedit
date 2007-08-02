@@ -10,9 +10,9 @@
 
 LJCSPluginImpl::LJCSPluginImpl(LJEditor& editor)
     : editor_(editor)
-    , preview_(editor.main_window().doc_manager()) {}
+    , preview_(editor.utils()) {}
 
-void LJCSPluginImpl::active_page(Page& page) {
+void LJCSPluginImpl::active_page(DocPage& page) {
     Gtk::TextView& view = page.view();
 
     assert( connections_map_.find(&page)==connections_map_.end() );
@@ -29,7 +29,7 @@ void LJCSPluginImpl::active_page(Page& page) {
     }
 }
 
-void LJCSPluginImpl::deactive_page(Page& page) {
+void LJCSPluginImpl::deactive_page(DocPage& page) {
     TConnectionListMap::iterator it = connections_map_.find(&page);
     if( it != connections_map_.end() ) {
         disconnect_all_connections(it->second);
@@ -37,7 +37,7 @@ void LJCSPluginImpl::deactive_page(Page& page) {
     }
 }
 
-void LJCSPluginImpl::show_hint(Page& page
+void LJCSPluginImpl::show_hint(DocPage& page
     , Gtk::TextBuffer::iterator& it
     , Gtk::TextBuffer::iterator& end
     , char tag)
@@ -73,7 +73,7 @@ void LJCSPluginImpl::show_hint(Page& page
     tip_.show_tip(view_x + cursor_x, view_y + cursor_y + rect.get_height() + 2, mset.elems, tag);
 }
 
-void LJCSPluginImpl::auto_complete(Page& page) {
+void LJCSPluginImpl::auto_complete(DocPage& page) {
     cpp::Element* selected = tip_.get_selected();
     if( selected == 0 )
         return;
@@ -139,25 +139,25 @@ void LJCSPluginImpl::destroy() {
     main_window.right_panel().remove_page(outline_.get_widget());
 
     // preview
-    preview_.destroy();
     main_window.bottom_panel().remove_page(preview_.get_widget());
+    preview_.destroy();
 }
 
 void LJCSPluginImpl::on_doc_page_added(Gtk::Widget* widget, guint page_num) {
     assert( widget != 0 );
 
-    Page& page = editor_.main_window().doc_manager().child_to_page(*widget);
+    DocPage& page = editor_.main_window().doc_manager().child_to_page(*widget);
 	active_page(page);
 }
 
 void LJCSPluginImpl::on_doc_page_removed(Gtk::Widget* widget, guint page_num) {
     assert( widget != 0 );
 
-    Page& page = editor_.main_window().doc_manager().child_to_page(*widget);
+    DocPage& page = editor_.main_window().doc_manager().child_to_page(*widget);
     deactive_page(page);
 }
 
-bool LJCSPluginImpl::on_key_press_event(GdkEventKey* event, Page* page) {
+bool LJCSPluginImpl::on_key_press_event(GdkEventKey* event, DocPage* page) {
     assert( page != 0 );
 
     if( !tip_.is_visible() )
@@ -211,7 +211,7 @@ bool LJCSPluginImpl::on_key_press_event(GdkEventKey* event, Page* page) {
     return false;
 }
 
-bool LJCSPluginImpl::on_key_release_event(GdkEventKey* event, Page* page) {
+bool LJCSPluginImpl::on_key_release_event(GdkEventKey* event, DocPage* page) {
     assert( page != 0 );
 
     switch( event->keyval ) {
@@ -277,7 +277,7 @@ bool LJCSPluginImpl::on_key_release_event(GdkEventKey* event, Page* page) {
     return true;
 }
 
-bool LJCSPluginImpl::on_button_release_event(GdkEventButton* event, Page* page) {
+bool LJCSPluginImpl::on_button_release_event(GdkEventButton* event, DocPage* page) {
     assert( page != 0 );
 
     // test CTRL state
@@ -320,11 +320,11 @@ bool LJCSPluginImpl::on_button_release_event(GdkEventButton* event, Page* page) 
     return false;
 }
 
-bool LJCSPluginImpl::on_motion_notify_event(GdkEventMotion* event, Page* page) {
+bool LJCSPluginImpl::on_motion_notify_event(GdkEventMotion* event, DocPage* page) {
     return true;
 }
 
-bool LJCSPluginImpl::on_focus_out_event(GdkEventFocus* event, Page* page) {
+bool LJCSPluginImpl::on_focus_out_event(GdkEventFocus* event, DocPage* page) {
     tip_.hide();
     return true;
 }
@@ -337,7 +337,7 @@ void LJCSPluginImpl::outline_update_page() {
         Gtk::Widget* widget = it->get_child();
         assert( widget != 0 );
 
-        Page& page = dm.child_to_page(*widget);
+        DocPage& page = dm.child_to_page(*widget);
         cpp::File* file = ParserEnviron::self().find_parsed(page.filepath());
 
 		Glib::RefPtr<Gtk::TextBuffer> buf = page.buffer();

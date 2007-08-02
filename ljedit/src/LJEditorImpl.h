@@ -6,8 +6,8 @@
 
 #include "LJEditor.h"
 
+#include "LJEditorUtilsImpl.h"
 #include "MainWindowImpl.h"
-
 
 class LJEditorImpl : public LJEditor {
 public:
@@ -17,8 +17,9 @@ public:
     }
 
 public:
-    virtual MainWindow& main_window()
-        { return main_window_; }
+    virtual MainWindow& main_window() { return main_window_; }
+
+	virtual LJEditorUtils& utils()    { return LJEditorUtilsImpl::self(); }
 
 public:
     bool create();
@@ -31,6 +32,10 @@ private:
 
     LJEditorImpl(const LJEditorImpl&);
     LJEditorImpl& operator = (const LJEditorImpl&);
+
+private:
+	virtual Gtk::TextView* create_source_view() ;
+	virtual void destroy_source_view(Gtk::TextView* view);
 
 private:
     MainWindowImpl main_window_;

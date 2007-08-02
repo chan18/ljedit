@@ -8,26 +8,6 @@
 #include "LanguageManager.h"
 #include "dir_utils.h"
 
-PageImpl* PageImpl::create(const std::string& filepath
-        , const std::string& display_name
-        , Glib::RefPtr<gtksourceview::SourceBuffer> buffer)
-{
-    Gtk::Label* label = Gtk::manage(new Gtk::Label(display_name));
-
-    gtksourceview::SourceView* view = Gtk::manage(new gtksourceview::SourceView(buffer));
-    view->set_wrap_mode(Gtk::WRAP_NONE);
-	view->set_tabs_width(4);
-    view->set_highlight_current_line();
-        
-    PageImpl* page = Gtk::manage(new PageImpl(*label, *view));
-    page->filepath_ = filepath;
-    page->add(*view);
-    page->set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-    page->show_all();
-
-    return page;
-}
-
 DocManagerImpl::DocManagerImpl() : page_num_(-1) {
 }
 
@@ -60,7 +40,7 @@ bool DocManagerImpl::scroll_to_file_pos() {
     if( it != pages().end() ) {
         set_current_page(page_num_);
 
-        PageImpl* page = (PageImpl*)(get_current()->get_child());
+        DocPageImpl* page = (DocPageImpl*)(get_current()->get_child());
         assert( page != 0 );
 
         Glib::RefPtr<gtksourceview::SourceBuffer> buffer = page->source_buffer();
@@ -83,7 +63,7 @@ void DocManagerImpl::open_file(const std::string& filepath, int line) {
     Gtk::Notebook::PageList::iterator it = pages().begin();
     Gtk::Notebook::PageList::iterator end = pages().end();
     for( ; it!=end; ++it ) {
-        PageImpl* page = (PageImpl*)(it->get_child());
+        DocPageImpl* page = (DocPageImpl*)(it->get_child());
         assert( page != 0 );
 
         if( page->filepath()==abspath ) {
@@ -111,7 +91,7 @@ bool DocManagerImpl::open_page(const std::string filepath
         , Glib::RefPtr<gtksourceview::SourceBuffer> buffer
         , int line)
 {
-    PageImpl* page = PageImpl::create(filepath, displaty_name, buffer);
+    DocPageImpl* page = DocPageImpl::create(filepath, displaty_name, buffer);
     int n = append_page(*page, page->label());
     page->view().grab_focus();
     set_current_page(n);
@@ -123,7 +103,7 @@ bool DocManagerImpl::open_page(const std::string filepath
     return true;
 }
 
-bool DocManagerImpl::save_page(PageImpl& page) {
+bool DocManagerImpl::save_page(DocPageImpl& page) {
     if( !page.modified() )
         return true;
 
@@ -147,7 +127,7 @@ bool DocManagerImpl::save_page(PageImpl& page) {
     return false;
 }
 
-bool DocManagerImpl::close_page(PageImpl& page) {
+bool DocManagerImpl::close_page(DocPageImpl& page) {
     pages().erase( pages().find(page) );
     return true;
 }
@@ -156,7 +136,7 @@ void DocManagerImpl::save_current_file() {
     Gtk::Widget* widget = get_current()->get_child();
     if( widget==0 )
         return;
-    save_page( *((PageImpl*)widget) );
+    save_page( *((DocPageImpl*)widget) );
 }
 
 void DocManagerImpl::close_current_file() {
@@ -164,7 +144,7 @@ void DocManagerImpl::close_current_file() {
     if( widget==0 )
         return;
 
-    close_page( *((PageImpl*)widget) );
+    close_page( *((DocPageImpl*)widget) );
 }
 
 void DocManagerImpl::save_all_files() {
@@ -174,7 +154,7 @@ void DocManagerImpl::save_all_files() {
         Gtk::Widget* widget = get_current()->get_child();
         assert( widget != 0 );
 
-        save_page( *(PageImpl*)(it->get_child()) );
+        save_page( *(DocPageImpl*)(it->get_child()) );
     }
 }
 
@@ -182,21 +162,7 @@ void DocManagerImpl::close_all_files() {
     pages().clear();
 }
 
-Gtk::TextView* DocManagerImpl::create_source_view() {
-    Glib::RefPtr<gtksourceview::SourceBuffer> buffer = create_cppfile_buffer();
-    gtksourceview::SourceView* view = new gtksourceview::SourceView(buffer);
-    if( view != 0 ) {
-        view->set_wrap_mode(Gtk::WRAP_NONE);
-        view->set_highlight_current_line();
-    }
-    return view;
-}
-
-void DocManagerImpl::destroy_source_view(Gtk::TextView* view) {
-    delete view;
-}
-
-void DocManagerImpl::on_doc_modified_changed(PageImpl* page) {
+void DocManagerImpl::on_doc_modified_changed(DocPageImpl* page) {
     assert( page != 0 );
     Glib::ustring label = page->label().get_text();
     if( label.empty() )

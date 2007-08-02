@@ -208,6 +208,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\DocPageImpl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\DocPageImpl.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\LanguageManager.cpp"
 				>
 			</File>
@@ -229,6 +237,14 @@
 			</File>
 			<File
 				RelativePath=".\src\LJEditorPythonPluginEngine.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\LJEditorUtilsImpl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\LJEditorUtilsImpl.h"
 				>
 			</File>
 			<File
@@ -272,6 +288,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\DocPage.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\gtkenv.h"
 				>
 			</File>
@@ -281,6 +301,10 @@
 			</File>
 			<File
 				RelativePath=".\include\LJEditor.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\LJEditorUtils.h"
 				>
 			</File>
 			<File

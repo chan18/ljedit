@@ -15,7 +15,7 @@
 
 #include "ParseThread.h"
 
-class Page;
+class DocPage;
 class LJEditor;
 
 typedef std::list<sigc::connection>			TConnectionList;
@@ -37,24 +37,24 @@ public:
     void destroy();
 
 private:	// auto complete
-    void active_page(Page& page);
-    void deactive_page(Page& page);
+    void active_page(DocPage& page);
+    void deactive_page(DocPage& page);
 
-    void show_hint(Page& page
+    void show_hint(DocPage& page
         , Gtk::TextBuffer::iterator& it
         , Gtk::TextBuffer::iterator& end
         , char tag);
 
-    void auto_complete(Page& page);
+    void auto_complete(DocPage& page);
 
     void on_doc_page_added(Gtk::Widget* widget, guint page_num);
     void on_doc_page_removed(Gtk::Widget* widget, guint page_num);
 
-    bool on_key_press_event(GdkEventKey* event, Page* page);
-    bool on_key_release_event(GdkEventKey* event, Page* page);
-    bool on_button_release_event(GdkEventButton* event, Page* page);
-    bool on_motion_notify_event(GdkEventMotion* event, Page* page);
-    bool on_focus_out_event(GdkEventFocus* event, Page* page);
+    bool on_key_press_event(GdkEventKey* event, DocPage* page);
+    bool on_key_release_event(GdkEventKey* event, DocPage* page);
+    bool on_button_release_event(GdkEventButton* event, DocPage* page);
+    bool on_motion_notify_event(GdkEventMotion* event, DocPage* page);
+    bool on_focus_out_event(GdkEventFocus* event, DocPage* page);
 
 private:	// outline
     void outline_update_page();

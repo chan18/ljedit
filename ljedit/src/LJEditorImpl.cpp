@@ -4,6 +4,7 @@
 #include "LJEditorImpl.h"
 
 #include "PluginManager.h"
+#include "LanguageManager.h"
 
 #include "LJEditorPythonPluginEngine.h"
 
@@ -33,10 +34,26 @@ void LJEditorImpl::destroy() {
 void LJEditorImpl::run() {
     try {
         Gtk::Main::run(main_window_);
+
     } catch( const Glib::Exception& e ) {
         Gtk::MessageDialog dlg(e.what(), false, Gtk::MESSAGE_ERROR);
         dlg.set_title("LJEdit ERROR");
         dlg.run();
     }
+}
+
+
+Gtk::TextView* LJEditorImpl::create_source_view() {
+    Glib::RefPtr<gtksourceview::SourceBuffer> buffer = create_cppfile_buffer();
+    gtksourceview::SourceView* view = new gtksourceview::SourceView(buffer);
+    if( view != 0 ) {
+        view->set_wrap_mode(Gtk::WRAP_NONE);
+        view->set_highlight_current_line();
+    }
+    return view;
+}
+
+void LJEditorImpl::destroy_source_view(Gtk::TextView* view) {
+    delete view;
 }
 

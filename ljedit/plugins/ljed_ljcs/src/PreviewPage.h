@@ -5,7 +5,7 @@
 #define LJED_INC_PREVIEWPAGE_H
 
 #include "gtkenv.h"
-#include "DocManager.h"
+#include "LJEditorUtils.h"
 
 #include "ljcs/ljcs.h"
 
@@ -17,7 +17,7 @@ public:
     void destroy();
 
 public:
-    PreviewPage(DocManager& dm);
+    PreviewPage(LJEditorUtils& utils);
     virtual ~PreviewPage();
 
     void preview(cpp::ElementSet& mset);
@@ -26,7 +26,7 @@ private:
     bool on_scroll_to_define_line();
 
 private:
-    DocManager& dm_;
+    LJEditorUtils&          utils_;
 
 private:
     Gtk::VBox				vbox_;

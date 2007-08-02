@@ -115,7 +115,7 @@ PyObject* ljedit_doc_manager_close_all_files(PyObject* self, PyObject* args) {
 	return Py_None;
 }
 
-inline Page* __parse_doc_page(const char* format, PyObject* args) {
+inline DocPage* __parse_doc_page(const char* format, PyObject* args) {
 	PyObject* py_c_ljedit = 0;
 	int page_num = 0;
 	if(!PyArg_ParseTuple(args, format, &py_c_ljedit, &page_num))
@@ -140,7 +140,7 @@ inline Page* __parse_doc_page(const char* format, PyObject* args) {
 }
 
 PyObject* ljedit_doc_manager_get_file_path(PyObject* self, PyObject* args) {
-	Page* page = __parse_doc_page("Oi:ljedit_doc_manager_get_file_path", args);
+	DocPage* page = __parse_doc_page("Oi:ljedit_doc_manager_get_file_path", args);
 	if( page==0 )
 		return 0;
 
@@ -148,7 +148,7 @@ PyObject* ljedit_doc_manager_get_file_path(PyObject* self, PyObject* args) {
 }
 
 PyObject* ljedit_doc_manager_get_text_view(PyObject* self, PyObject* args) {
-	Page* page = __parse_doc_page("Oi:ljedit_doc_manager_get_text_view", args);
+	DocPage* page = __parse_doc_page("Oi:ljedit_doc_manager_get_text_view", args);
 	if( page==0 )
 		return 0;
 

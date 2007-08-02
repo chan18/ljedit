@@ -3,8 +3,8 @@
 
 #include "PreviewPage.h"
 
-PreviewPage::PreviewPage(DocManager& dm)
-    : dm_(dm)
+PreviewPage::PreviewPage(LJEditorUtils& utils)
+    : utils_(utils)
     , view_(0)
 {
 }
@@ -13,7 +13,7 @@ PreviewPage::~PreviewPage() {
 }
 
 void PreviewPage::create() {
-    view_ = dm_.create_source_view();
+    view_ = utils_.create_source_view();
     if( view_ == 0 )
         return;
 
@@ -33,7 +33,7 @@ void PreviewPage::create() {
 }
 
 void PreviewPage::destroy() {
-    dm_.destroy_source_view(view_);
+    utils_.destroy_source_view(view_);
     view_ = 0;
 }
 
