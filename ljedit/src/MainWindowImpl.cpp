@@ -1,4 +1,4 @@
-﻿// MainWindowImpl.cpp
+// MainWindowImpl.cpp
 // 
 
 #include "MainWindowImpl.h"
