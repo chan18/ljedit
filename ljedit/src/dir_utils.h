@@ -67,7 +67,7 @@ inline void ljcs_filepath_to_abspath(std::string& filepath) {
 			for( ; it < end; ++it ) {
 				if( *it=='\\' )
 					*it = '/';
-				if( ::isupper(*it) )
+				if( *it > 0 && ::isupper(*it) )
 					*it = ::tolower(*it);
 			}
 
