@@ -72,17 +72,29 @@ void DocManagerImpl::open_file(const std::string& filepath, int line) {
         }
     }
 
-    Glib::ustring text;
+	Glib::RefPtr<Glib::IOChannel> ifs;
     try {
-        Glib::RefPtr<Glib::IOChannel> ifs = Glib::IOChannel::create_from_file(abspath.c_str(), "r");
-        ifs->read_to_end(text);
-
-    } catch(Glib::FileError error) {
+		ifs = Glib::IOChannel::create_from_file(abspath.c_str(), "r");
+    } catch(Glib::FileError e) {
         return;
-    }
+	}
+
+    Glib::ustring text;
+
+	try {
+		ifs->read_to_end(text);
+
+	} catch(Glib::IOChannelError e) {
+		return;
+
+	} catch(Glib::ConvertError e) {
+		return;
+	}
 
     Glib::RefPtr<gtksourceview::SourceBuffer> buffer = create_cppfile_buffer();
+	buffer->begin_not_undoable_action();
     buffer->set_text(text);
+	buffer->end_not_undoable_action();
     open_page(abspath, filename, buffer, line);
 }
 
