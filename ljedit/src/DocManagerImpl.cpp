@@ -4,6 +4,7 @@
 #include "DocManagerImpl.h"
 
 #include <fstream>
+#include <sys/stat.h>
 
 #include "LanguageManager.h"
 #include "dir_utils.h"
@@ -72,28 +73,28 @@ void DocManagerImpl::open_file(const std::string& filepath, int line) {
         }
     }
 
-	Glib::RefPtr<Glib::IOChannel> ifs;
-    try {
-		ifs = Glib::IOChannel::create_from_file(abspath.c_str(), "r");
-    } catch(Glib::FileError e) {
-        return;
-	}
+	struct stat st;
+	::memset(&st, 0, sizeof(st));
 
-    Glib::ustring text;
-
-	try {
-		ifs->read_to_end(text);
-
-	} catch(Glib::IOChannelError e) {
+	if( ::stat(abspath.c_str(), &st)!=0 )
 		return;
 
-	} catch(Glib::ConvertError e) {
+	std::string buf;
+	try {
+		buf.resize(st.st_size);
+
+		std::ifstream ifs(abspath.c_str(), std::ios::in | std::ios::binary);
+		ifs.read(&buf[0], buf.size());
+
+	} catch(const std::exception&) {
 		return;
 	}
 
     Glib::RefPtr<gtksourceview::SourceBuffer> buffer = create_cppfile_buffer();
 	buffer->begin_not_undoable_action();
-    buffer->set_text(text);
+	const char* ps = &buf[0];
+	const char* pe = ps + buf.size();
+    buffer->set_text(ps, pe);
 	buffer->end_not_undoable_action();
     open_page(abspath, filename, buffer, line);
 }

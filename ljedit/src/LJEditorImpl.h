@@ -22,7 +22,7 @@ public:
 	virtual LJEditorUtils& utils()    { return LJEditorUtilsImpl::self(); }
 
 public:
-    bool create();
+    bool create(const std::string& path);
     void run();
     void destroy();
 

@@ -7,24 +7,23 @@
 int main(int argc, char *argv[]) {
     Gtk::Main kit(argc, argv);
 
+	std::string path;
+	
 #ifdef WIN32
-    std::string appname = Glib::get_application_name();
-    std::string filename = Glib::find_program_in_path(appname);
-	if( !filename.empty() ) {
-		std::string path = Glib::path_get_dirname(filename) + "/plugins";
-	    PluginManager::self().add_plugins_path(path);
-	}
+    path = Glib::get_application_name();
+    path = Glib::find_program_in_path(path);
+	path = Glib::path_get_dirname(path);
 
 #else
-    std::string path = argv[0];
+    path = argv[0];
     path.erase(path.find_last_of('/'));
-    path += "/plugins";
-    PluginManager::self().add_plugins_path(path);
 
 #endif
+
+	PluginManager::self().add_plugins_path(path + "/plugins");
  
-   LJEditorImpl& app = LJEditorImpl::self();
-    if( app.create() ) {
+    LJEditorImpl& app = LJEditorImpl::self();
+    if( app.create(path) ) {
         app.run();
         app.destroy();
     }

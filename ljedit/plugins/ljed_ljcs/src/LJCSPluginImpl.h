@@ -47,6 +47,9 @@ private:	// auto complete
 
     void auto_complete(DocPage& page);
 
+private:
+	void on_show_setup_dialog();
+
     void on_doc_page_added(Gtk::Widget* widget, guint page_num);
     void on_doc_page_removed(Gtk::Widget* widget, guint page_num);
 
@@ -64,6 +67,9 @@ private:	// outline
     void outline_on_elem_actived(const cpp::Element& elem);
 
 private:
+    Glib::RefPtr<Gtk::ActionGroup>	action_group_;
+	Gtk::UIManager::ui_merge_id		menu_id_;
+
     TipWindow	tip_;
     OutlinePage	outline_;
     PreviewPage	preview_;

@@ -14,7 +14,7 @@ public:
     MainWindowImpl();
     virtual ~MainWindowImpl();
 
-    void create();
+    void create(const std::string& path);
     void destroy();
 
 public:
@@ -30,7 +30,7 @@ public:
     virtual Gtk::Statusbar&					status_bar()	{ return status_bar_;   }
 
 private:
-    void create_ui_manager();
+    void create_ui_manager(const std::string& config_file);
     void create_vpaned();
 
     void create_vpaned_hpaneds();

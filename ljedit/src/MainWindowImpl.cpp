@@ -12,9 +12,9 @@ MainWindowImpl::MainWindowImpl()
 MainWindowImpl::~MainWindowImpl() {
 }
 
-void MainWindowImpl::create() {
+void MainWindowImpl::create(const std::string& path) {
     // create main-ui
-    create_ui_manager();
+    create_ui_manager(path + "/conf/menu.xml");
 
     // menubar
     Gtk::Widget* menubar = ui_manager_->get_widget("/MenuBar");
@@ -45,11 +45,11 @@ void MainWindowImpl::destroy() {
 	doc_manager_.close_all_files();
 }
 
-void MainWindowImpl::create_ui_manager() {
+void MainWindowImpl::create_ui_manager(const std::string& config_file) {
     action_group_ = Gtk::ActionGroup::create("Actions");
 
     action_group_->add( Gtk::Action::create("FileMenu", "_File") );
-    action_group_->add( Gtk::Action::create("ToolsMenu", "_Tools") );
+    action_group_->add( Gtk::Action::create("PluginsMenu", "_Plugins") );
     action_group_->add( Gtk::Action::create("HelpMenu", "_Help") );
 
     action_group_->add( Gtk::Action::create("New",    Gtk::Stock::NEW,   "_New",        "Create a new file"),	sigc::mem_fun(doc_manager_, &DocManager::create_new_file) );
@@ -64,42 +64,7 @@ void MainWindowImpl::create_ui_manager() {
     ui_manager_->insert_action_group(action_group_);
     add_accel_group( ui_manager_->get_accel_group() );
 
-    Glib::ustring ui_info = 
-        "<ui>"
-        "    <menubar name='MenuBar'>"
-        "        <menu action='FileMenu'>"
-        "            <menuitem action='New'/>"
-        "            <menuitem action='Open'/>"
-        "            <menuitem action='Save'/>"
-        "            <menuitem action='SaveAs'/>"
-        "            <menuitem action='Close'/>"
-        "            <separator/>"
-        "            <menuitem action='Quit'/>"
-        "        </menu>"
-        "        <menu action='ToolsMenu'>"
-        "            <menuitem action='About'/>"
-        "        </menu>"
-        "        <menu action='HelpMenu'>"
-        "            <menuitem action='About'/>"
-        "        </menu>"
-        "    </menubar>"
-        ""
-        "    <toolbar name='ToolBar'>"
-        "        <toolitem action='Open'/>"
-        "        <toolitem action='Quit'/>"
-        "    </toolbar>"
-        "</ui>";
-
-    ui_manager_->add_ui_from_string(ui_info);
-
-	Gtk::Widget* widget = ui_manager_->get_widget("/MenuBar");
-	assert( widget != 0 );
-
-	Gtk::MenuBar* menu_bar = (Gtk::MenuBar*)widget;
-	menu_bar->items().erase(++menu_bar->items().begin());
-	Gtk::MenuItem* tee = Gtk::manage( new Gtk::MenuItem("vvvv") );
-	tee->show_all();
-	menu_bar->items().front().get_submenu()->items().push_back( *tee );
+    ui_manager_->add_ui_from_file(config_file);
 }
 
 void MainWindowImpl::create_vpaned() {

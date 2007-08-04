@@ -225,6 +225,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\SetupDialog.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\SetupDialog.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\TipWindow.cpp"
 				>
 			</File>

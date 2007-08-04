@@ -4,6 +4,7 @@
 #include "LJCSPluginImpl.h"
 #include "LJCSPluginUtils.h"
 
+#include "SetupDialog.h"
 
 #include "DocManager.h"
 #include "LJEditor.h"
@@ -99,6 +100,32 @@ void LJCSPluginImpl::create(const char* plugin_filename) {
     DocManager& dm = editor_.main_window().doc_manager();
     TConnectionList& cons = connections_map_[0];
 
+	// menu
+	action_group_ = Gtk::ActionGroup::create("LJCSActions");
+    action_group_->add( Gtk::Action::create("PluginsMenu", "_Plugins") );
+    action_group_->add( Gtk::Action::create("LJCSSetup", Gtk::Stock::ABOUT,   "_ljcs",  "LJCS plugin setup"),	sigc::mem_fun(this, &LJCSPluginImpl::on_show_setup_dialog) );
+
+	Glib::ustring ui_info = 
+        "<ui>"
+        "    <menubar name='MenuBar'>"
+        "        <menu action='PluginsMenu'>"
+        "            <menuitem action='LJCSSetup'/>"
+        "        </menu>"
+        "    </menubar>"
+        "</ui>";
+
+	main_window.ui_manager()->insert_action_group(action_group_);
+	menu_id_ = main_window.ui_manager()->add_ui_from_string(ui_info);
+
+	/*
+    Gtk::MenuItem* plugins_menu = (Gtk::MenuItem*)main_window.ui_manager()->get_widget("/MenuBar/PluginsMenu");
+	assert( plugins_menu != 0 );
+	
+	Gtk::MenuItem* menu_setup = Gtk::manage( new Gtk::MenuItem("ljcs-setup") );
+	menu_setup->show_all();
+	plugins_menu->get_submenu()->items().push_back(*menu_setup);
+	*/
+
     // auto complete
     cons.push_back( dm.signal_page_added().connect( sigc::mem_fun(this, &LJCSPluginImpl::on_doc_page_added) ) );
     cons.push_back( dm.signal_page_removed().connect( sigc::mem_fun(this, &LJCSPluginImpl::on_doc_page_removed) ) );
@@ -123,6 +150,10 @@ void LJCSPluginImpl::destroy() {
     MainWindow& main_window = editor_.main_window();
     DocManager& dm = main_window.doc_manager();
 
+	// remove menu
+	main_window.ui_manager()->remove_action_group(action_group_);
+	main_window.ui_manager()->remove_ui(menu_id_);
+
 	// stop parse thread
 	parse_thread_.stop();
 
@@ -141,6 +172,10 @@ void LJCSPluginImpl::destroy() {
     // preview
     main_window.bottom_panel().remove_page(preview_.get_widget());
     preview_.destroy();
+}
+
+void LJCSPluginImpl::on_show_setup_dialog() {
+	show_setup_dialog(editor_.main_window());
 }
 
 void LJCSPluginImpl::on_doc_page_added(Gtk::Widget* widget, guint page_num) {

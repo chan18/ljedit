@@ -19,7 +19,7 @@ inline size_t get_abspath_pos(const std::string& s) {
 		return 1;
 
 	if( s.size() > 2 ) {
-		if( ::isalpha(s[0]) && s[1]==':' && is_split_char(s[2]) )	// x:\xx
+		if( s[0] > 0 && s[1]==':' && ::isalpha(s[0]) && is_split_char(s[2]) )	// x:\xx
 			return 3;
 
 		if( s[0]=='\\' && s[1]=='\\' )	// \\host\e$\xx
