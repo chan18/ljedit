@@ -104,23 +104,30 @@ def fill_subs(model, parent_iter):
 			if row[2] == 'dir':
 				row[2] = 'dir-expanded'
 				pathname = row[1]
-				for f in os.listdir(pathname):
-					sp = os.path.join(pathname, f)
-					sign = 'dir' if is_dir(sp) else 'file'
-					model.append(iter, [f.decode(sys.getfilesystemencoding()), sp, sign])
+				try:
+					for f in os.listdir(pathname):
+						sp = os.path.join(pathname, f)
+						sign = 'dir' if is_dir(sp) else 'file'
+						model.append(iter, [f.decode(sys.getfilesystemencoding()), sp, sign])
+				except:
+					pass
 			iter = model.iter_next(iter)
 		
 	elif row[2]=='dir':
 		row[2] = 'dir-expanded'
+		pathname = row[1]
 		for f in os.listdir(pathname):
 			sp = os.path.join(pathname, f)
 			sign = 'dir-expanded' if is_dir(sp) else 'file'
 			iter = model.append(parent_iter, [f.decode(sys.getfilesystemencoding()), sp, sign])
 			if sign=='dir-expanded':
-				for ssf in os.listdir(sp):
-					ssp = os.path.join(sp, ssf)
-					sign = 'dir' if is_dir(ssp) else 'file'
-					model.append(iter, [ssf.decode(sys.getfilesystemencoding()), ssp, sign])
+				try:
+					for ssf in os.listdir(sp):
+						ssp = os.path.join(sp, ssf)
+						sign = 'dir' if is_dir(ssp) else 'file'
+						model.append(iter, [ssf.decode(sys.getfilesystemencoding()), ssp, sign])
+				except:
+					pass
 		
 	elif row[2]=='win32root':
 		row[2] = 'win32root-expanded'
@@ -162,8 +169,10 @@ class FileExplorer(gtk.VBox):
 	def make_root_model(self):
 		model = gtk.TreeStore(str, str, str)	# display, path, [file, dir, dir-expanded]
 		model.set_default_sort_func(self.sort_filename_method)
-		pathname = '' if sys.platform=='win32' else '/'
-		iter = model.append(None, ['my computer', pathname, 'win32root'])
+		if sys.platform=='win32':
+			iter = model.append(None, ['my computer', '', 'win32root'])
+		else:
+			iter = model.append(None, ['/', '/', 'dir'])
 		fill_subs(model, iter)
 		return model
 		
