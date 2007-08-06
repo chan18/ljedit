@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<options>
+	<include_paths>
+		<path value="/usr/include/"/>
+		<path value="/usr/include/c++/4.1/"/>
+	</include_paths>
+</options>
