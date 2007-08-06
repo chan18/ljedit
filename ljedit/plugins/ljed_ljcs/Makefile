@@ -21,7 +21,8 @@ OBJS = src/LJCSPlugin.o   \
     src/LJCSPluginUtils.o \
     src/OutlinePage.o     \
     src/PreviewPage.o     \
-    src/TipWindow.o
+    src/TipWindow.o       \
+    src/SetupDialog.o
 
 BIN = ../../bin/plugins/ljed_ljcs.so
 all : $(BIN)
