@@ -27,9 +27,9 @@ PYTHON_LIB=python2.5
 LJCSOBJS = src/use_mlexer.o src/parser.o src/cp.o src/skey.o src/searcher.o src/ds_utils.o $(CPOBJS)
 LJCS_PYOBJS = $(LJCSOBJS) src/ljcs_py_wrap.o
 
-all : lib/ljcs.so lib/_ljcs_py.so
+all : lib/libljcs.so lib/_ljcs_py.so
 
-lib/ljcs.so : $(LJCSOBJS)
+lib/libljcs.so : $(LJCSOBJS)
 	$(CXX) $(CXXFLAGS) -shared -o $@ $(LJCSOBJS)
 	cp src/ds.h include/ljcs/
 	cp src/parser.h include/ljcs/
