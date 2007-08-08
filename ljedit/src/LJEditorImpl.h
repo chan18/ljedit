@@ -27,8 +27,8 @@ public:
     void destroy();
 
 private:
-    LJEditorImpl() {}
-    ~LJEditorImpl() {}
+	LJEditorImpl();
+    ~LJEditorImpl();
 
     LJEditorImpl(const LJEditorImpl&);
     LJEditorImpl& operator = (const LJEditorImpl&);
@@ -39,6 +39,7 @@ private:
 
 private:
     MainWindowImpl main_window_;
+    MainWindowImpl* main_window__;
 };
 
 #endif//LJED_INC_LJEDITORIMPL_H

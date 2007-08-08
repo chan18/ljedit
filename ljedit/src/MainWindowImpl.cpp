@@ -5,12 +5,26 @@
 
 #include "RuntimeException.h"
 
+
 MainWindowImpl::MainWindowImpl()
+{
+}
+
+MainWindowImpl::MainWindowImpl(GtkWindow* widget, Glib::RefPtr<Gnome::Glade::Xml> xml)
+	: MainWindow(widget)
 {
 }
 
 MainWindowImpl::~MainWindowImpl() {
 }
+
+class Teee : public Gtk::Window {
+public:
+	Teee(GtkWindow* widget, Glib::RefPtr<Gnome::Glade::Xml> xml) {
+	}
+};
+
+Teee* teee;
 
 void MainWindowImpl::create(const std::string& path) {
     // create main-ui

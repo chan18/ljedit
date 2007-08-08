@@ -8,10 +8,13 @@
 
 #include "DocManagerImpl.h"
 
+#include <libglademm.h>
+
 
 class MainWindowImpl : public MainWindow {
 public:
-    MainWindowImpl();
+	MainWindowImpl();
+	MainWindowImpl(GtkWindow* widget, Glib::RefPtr<Gnome::Glade::Xml> xml);
     virtual ~MainWindowImpl();
 
     void create(const std::string& path);
