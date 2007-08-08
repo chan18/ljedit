@@ -7,9 +7,13 @@
 #include "DocManager.h"
 #include "DocPageImpl.h"
 
+#include <libglademm.h>
+
+
 class DocManagerImpl : public DocManager {
 public:
     DocManagerImpl();
+	DocManagerImpl(GtkNotebook* widget, Glib::RefPtr<Gnome::Glade::Xml> xml);
     ~DocManagerImpl();
 
 public:

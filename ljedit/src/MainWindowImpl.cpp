@@ -18,13 +18,17 @@ MainWindowImpl::MainWindowImpl(GtkWindow* widget, Glib::RefPtr<Gnome::Glade::Xml
 MainWindowImpl::~MainWindowImpl() {
 }
 
-class Teee : public Gtk::Window {
-public:
-	Teee(GtkWindow* widget, Glib::RefPtr<Gnome::Glade::Xml> xml) {
-	}
-};
+MainWindowImpl* MainWindowImpl::create__(const std::string& path) {
+	Glib::RefPtr<Gnome::Glade::Xml> xml = Gnome::Glade::Xml::create(path + "/conf/main.glade");
+	
+	MainWindowImpl* mw;
 
-Teee* teee;
+	xml->get_widget_derived("MainWindow", mw);
+	xml->get_widget_derived("MainWindow.DocManager", mw->doc_manager__);
+
+	//mw->create(path);
+	return mw;
+}
 
 void MainWindowImpl::create(const std::string& path) {
     // create main-ui

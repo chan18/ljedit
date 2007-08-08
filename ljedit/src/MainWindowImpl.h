@@ -17,6 +17,8 @@ public:
 	MainWindowImpl(GtkWindow* widget, Glib::RefPtr<Gnome::Glade::Xml> xml);
     virtual ~MainWindowImpl();
 
+    static MainWindowImpl* create__(const std::string& path);
+
     void create(const std::string& path);
     void destroy();
 
@@ -56,6 +58,7 @@ private:
 
     Gtk::Notebook					left_panel_;
     DocManagerImpl					doc_manager_;
+	DocManagerImpl*					doc_manager__;
     Gtk::Notebook					right_panel_;
 
     Gtk::Notebook					bottom_panel_;

@@ -18,17 +18,7 @@ LJEditorImpl::~LJEditorImpl() {
 bool LJEditorImpl::create(const std::string& path) {
 	// create MainWindow use glade file
 	// 
-	try {
-		Glib::RefPtr<Gnome::Glade::Xml> xml = Gnome::Glade::Xml::create(path + "/conf/main.glade");
-		xml->get_widget_derived("MainWindow", main_window__);
-		main_window__->show_all();
-
-	} catch( const Glib::Exception& e ) {
-        Gtk::MessageDialog dlg(e.what(), false, Gtk::MESSAGE_ERROR);
-        dlg.set_title("LJEdit ERROR");
-        dlg.run();
-        return false;
-	}
+	main_window__ = MainWindowImpl::create__(path);
 
     try {
         main_window_.create(path);
