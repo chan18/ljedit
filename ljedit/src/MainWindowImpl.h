@@ -8,8 +8,6 @@
 
 #include "DocManagerImpl.h"
 
-#include <libglademm.h>
-
 
 class MainWindowImpl : public MainWindow {
 public:

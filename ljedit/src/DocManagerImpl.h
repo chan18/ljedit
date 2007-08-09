@@ -7,8 +7,6 @@
 #include "DocManager.h"
 #include "DocPageImpl.h"
 
-#include <libglademm.h>
-
 
 class DocManagerImpl : public DocManager {
 public:

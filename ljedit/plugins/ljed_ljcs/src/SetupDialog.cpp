@@ -3,26 +3,40 @@
 
 #include "SetupDialog.h"
 
-/*
-    static MainWindowImpl* create__(const std::string& path);
+#include <libglademm.h>
 
-	MainWindowImpl(GtkWindow* widget, Glib::RefPtr<Gnome::Glade::Xml> xml);
-MainWindowImpl* MainWindowImpl::create__(const std::string& path) {
-	// 
-	Glib::RefPtr<Gnome::Glade::Xml> xml = Gnome::Glade::Xml::create(path + "/conf/main.glade");
-	
-	MainWindowImpl* mw;
 
-	xml->get_widget_derived("MainWindow", mw);
-	xml->get_widget_derived("MainWindow.DocManager", mw->doc_manager__);
+class SetupDialog : public Gtk::Dialog {
+public:
+	SetupDialog(GtkDialog* castitem, Glib::RefPtr<Gnome::Glade::Xml> xml)
+		: Gtk::Dialog(castitem)
+	{
+	}
 
-	//mw->create(path);
-	return mw;
-}
-*/
+	~SetupDialog() {}
 
-void show_setup_dialog(Gtk::Window& parent) {
-	Gtk::MessageDialog dlg(parent, "ljcs setup");
-	dlg.run();
+private:
+
+};
+
+void show_setup_dialog(Gtk::Window& parent, const std::string& plugin_path) {
+	Glib::RefPtr<Gnome::Glade::Xml> xml;
+	try {
+		xml = Gnome::Glade::Xml::create( Glib::build_filename(plugin_path, "ljcs.glade") );
+		
+	} catch(Gnome::Glade::XmlError e) {
+		Gtk::MessageDialog err_dlg(parent, "load ljcs setup dialog GLADE file failed!");
+		err_dlg.run();
+		return;
+	}
+
+	SetupDialog* dlg = 0;
+	if( xml->get_widget_derived("SetupDialog", dlg)==0 ) {
+		Gtk::MessageDialog err_dlg(parent, "load setup GLADE file failed!");
+		err_dlg.run();
+		return;
+	}
+
+	dlg->run();
 }
 

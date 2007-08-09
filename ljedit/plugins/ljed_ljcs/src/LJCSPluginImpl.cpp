@@ -96,6 +96,8 @@ void LJCSPluginImpl::auto_complete(DocPage& page) {
 }
 
 void LJCSPluginImpl::create(const char* plugin_filename) {
+	plugin_path_ = Glib::path_get_dirname(plugin_filename);
+
     MainWindow& main_window = editor_.main_window();
     DocManager& dm = editor_.main_window().doc_manager();
     TConnectionList& cons = connections_map_[0];
@@ -175,7 +177,7 @@ void LJCSPluginImpl::destroy() {
 }
 
 void LJCSPluginImpl::on_show_setup_dialog() {
-	show_setup_dialog(editor_.main_window());
+	show_setup_dialog(editor_.main_window(), plugin_path_);
 }
 
 void LJCSPluginImpl::on_doc_page_added(Gtk::Widget* widget, guint page_num) {

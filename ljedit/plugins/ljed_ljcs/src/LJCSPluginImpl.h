@@ -6,6 +6,7 @@
 
 #include "gtkenv.h"
 
+#include <string>
 #include <list>
 #include <map>
 
@@ -76,6 +77,7 @@ private:
 
 private:
     LJEditor&				editor_;
+	std::string				plugin_path_;
 
     ParseThread				parse_thread_;
 
