@@ -10,9 +10,6 @@ class DocManager : public Gtk::Notebook {
 protected:
     DocManager() {}
 
-    DocManager(GtkNotebook* castitem)
-        : Gtk::Notebook(castitem) {}
-
     virtual ~DocManager() {}
 
 private: // nocopyable

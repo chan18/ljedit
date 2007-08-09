@@ -10,24 +10,7 @@ MainWindowImpl::MainWindowImpl()
 {
 }
 
-MainWindowImpl::MainWindowImpl(GtkWindow* widget, Glib::RefPtr<Gnome::Glade::Xml> xml)
-	: MainWindow(widget)
-{
-}
-
 MainWindowImpl::~MainWindowImpl() {
-}
-
-MainWindowImpl* MainWindowImpl::create__(const std::string& path) {
-	Glib::RefPtr<Gnome::Glade::Xml> xml = Gnome::Glade::Xml::create(path + "/conf/main.glade");
-	
-	MainWindowImpl* mw;
-
-	xml->get_widget_derived("MainWindow", mw);
-	xml->get_widget_derived("MainWindow.DocManager", mw->doc_manager__);
-
-	//mw->create(path);
-	return mw;
 }
 
 void MainWindowImpl::create(const std::string& path) {

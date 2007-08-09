@@ -39,7 +39,6 @@ private:
 
 private:
     MainWindowImpl main_window_;
-    MainWindowImpl* main_window__;
 };
 
 #endif//LJED_INC_LJEDITORIMPL_H

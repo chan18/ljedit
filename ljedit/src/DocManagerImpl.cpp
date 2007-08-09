@@ -12,11 +12,6 @@
 DocManagerImpl::DocManagerImpl() : page_num_(-1) {
 }
 
-DocManagerImpl::DocManagerImpl(GtkNotebook* widget, Glib::RefPtr<Gnome::Glade::Xml> xml)
-	: DocManager(widget)
-{
-}
-
 DocManagerImpl::~DocManagerImpl() {
      close_all_files();
 }

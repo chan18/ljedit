@@ -14,10 +14,7 @@
 class MainWindowImpl : public MainWindow {
 public:
 	MainWindowImpl();
-	MainWindowImpl(GtkWindow* widget, Glib::RefPtr<Gnome::Glade::Xml> xml);
     virtual ~MainWindowImpl();
-
-    static MainWindowImpl* create__(const std::string& path);
 
     void create(const std::string& path);
     void destroy();

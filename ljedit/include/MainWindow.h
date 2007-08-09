@@ -11,9 +11,6 @@ protected:
     MainWindow(Gtk::WindowType type=Gtk::WINDOW_TOPLEVEL)
         : Gtk::Window(type) {}
 
-    MainWindow(GtkWindow* castitem)
-        : Gtk::Window(castitem) {}
-
     virtual ~MainWindow() {}
 
 public:

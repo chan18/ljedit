@@ -9,17 +9,13 @@
 #include "LJEditorPythonPluginEngine.h"
 
 
-LJEditorImpl::LJEditorImpl() : main_window__(0) {
+LJEditorImpl::LJEditorImpl() {
 }
 
 LJEditorImpl::~LJEditorImpl() {
 }
 
 bool LJEditorImpl::create(const std::string& path) {
-	// create MainWindow use glade file
-	// 
-	main_window__ = MainWindowImpl::create__(path);
-
     try {
         main_window_.create(path);
     } catch( const Glib::Exception& e ) {
