@@ -144,6 +144,9 @@ void LJCSPluginImpl::create(const char* plugin_filename) {
     preview_.create();
     main_window.bottom_panel().append_page(preview_.get_widget(), "preview");
 
+	// init parser environ
+	load_setup(plugin_path_);
+
 	// start parse thread
 	parse_thread_.run(); 
 }
