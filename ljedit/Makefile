@@ -30,7 +30,7 @@ LJEDOBJS = src/DocPageImpl.o         \
 
 BIN = bin/_ljedit
 
-all : $(BIN)
+all : $(BIN) plugin
 
 $(BIN) : $(LJEDOBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $(LJEDOBJS) -ldl $(LJEDLIBS)
@@ -44,6 +44,7 @@ plugin :
 clean :
 	rm -f $(BIN)
 	rm -f src/*.o
+	make clean_plugin
 
 clean_plugin :
 	cd plugins/ljed_ljcs;make clean
