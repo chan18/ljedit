@@ -17,9 +17,8 @@ void TipWindow::create() {
     defines_store_ = Gtk::ListStore::create(columns_);
 
     defines_view_.set_model(defines_store_);
+	defines_view_.append_column("icon", columns_.icon);
     defines_view_.append_column("name", columns_.name);
-    defines_view_.append_column("decl", columns_.decl);
-    //defines_view_.append_column("elem", columns_.elem);
 
     scrolled_window_.add(defines_view_);
     scrolled_window_.set_policy(Gtk::POLICY_NEVER, Gtk::POLICY_ALWAYS);
@@ -35,6 +34,13 @@ void TipWindow::create() {
 void TipWindow::destroy() {
 }
 
+Glib::RefPtr<Gdk::Pixbuf> TipWindow::get_icon_from_elem(cpp::Element& elem) {
+	static Glib::RefPtr<Gdk::Pixbuf> icon = render_icon(Gtk::Stock::JUMP_TO, Gtk::ICON_SIZE_MENU);
+	return icon;
+}
+
+#include <windows.h>
+
 void TipWindow::show_tip(int x, int y, cpp::ElementSet& mset, char tag) {
     tag_ = tag;
 
@@ -46,21 +52,26 @@ void TipWindow::show_tip(int x, int y, cpp::ElementSet& mset, char tag) {
     defines_view_.unset_model();
     defines_store_->clear();
 
+	size_t _s = GetCurrentTime();
     cpp::ElementSet::iterator it = element_set_.begin();
     cpp::ElementSet::iterator end = element_set_.end();
     for( ; it!=end; ++it ) {
         Gtk::TreeRow row = *(defines_store_->append());
+        row[columns_.icon] = get_icon_from_elem(**it);
         row[columns_.name] = (*it)->name;
-        row[columns_.decl] = (*it)->decl;
         row[columns_.elem] = (*it);
     }
+	size_t _e = GetCurrentTime();
+	printf("time : %d\n", _e-_s);
     defines_view_.set_model(defines_store_);
-    defines_view_.columns_autosize();
     defines_view_.get_selection()->select(defines_store_->children().begin());
+    defines_view_.columns_autosize();
 
     if( element_set_.empty() ) {
         hide();
+
     } else {
+		resize(150, 150);
         move(x, y);
         Gtk::Widget::show();
     }

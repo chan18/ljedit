@@ -27,6 +27,8 @@ private:
     void create();
     void destroy();
 
+	Glib::RefPtr<Gdk::Pixbuf> get_icon_from_elem(cpp::Element& elem);
+
 private:	// /window
     Gtk::VBox		vbox_;
 
@@ -36,11 +38,11 @@ private:	// /window/vbox
     Glib::RefPtr<Gtk::ListStore>	defines_store_;
 
     struct ModelColumns : public Gtk::TreeModelColumnRecord {
-        Gtk::TreeModelColumn<Glib::ustring>	name;
-        Gtk::TreeModelColumn<Glib::ustring>	decl;
-        Gtk::TreeModelColumn<cpp::Element*>	elem;
+		Gtk::TreeModelColumn< Glib::RefPtr<Gdk::Pixbuf> >	icon;
+        Gtk::TreeModelColumn<Glib::ustring>					name;
+        Gtk::TreeModelColumn<cpp::Element*>					elem;
 
-        ModelColumns() { add(name); add(decl); add(elem); }
+        ModelColumns() { add(icon); add(name); add(elem); }
     };
 
     const ModelColumns columns_;
