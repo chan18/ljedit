@@ -36,15 +36,13 @@ void PreviewPage::create() {
 	hbox->pack_start(*btn, true, true);
 
 	// view
-	view_ = ljedit_.utils().create_source_view();
+	view_ = ljedit_.utils().create_source_view(true);
     Glib::RefPtr<Gtk::TextBuffer> buffer = view_->get_buffer();
     view_->set_buffer(buffer);
-    view_->set_wrap_mode(Gtk::WRAP_NONE);
-    view_->set_editable(false);
-	//Gdk::Color bg_color;
-	//bg_color.set_rgb(182, 182, 182);
-	//view_->modify_bg(Gtk::STATE_NORMAL, bg_color);
-	//view_->modify_base(Gtk::STATE_NORMAL, bg_color);
+	view_->set_editable(false);
+	Gdk::Color bg_color;
+	bg_color.set_rgb_p(0.8, 0.8, 0.8);
+	view_->modify_base(Gtk::STATE_NORMAL, bg_color);
 
 	view_->signal_button_release_event().connect( sigc::mem_fun(this, &PreviewPage::on_sourceview_button_release_event), false );
 

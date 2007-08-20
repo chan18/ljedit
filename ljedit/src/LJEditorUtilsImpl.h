@@ -21,7 +21,7 @@ private:
     LJEditorUtilsImpl& operator = (const LJEditorUtilsImpl&);
 
 private:
-	virtual Gtk::TextView* create_source_view() ;
+	virtual Gtk::TextView* create_source_view(bool show_line_number=false) ;
 	virtual void destroy_source_view(Gtk::TextView* view);
 };
 

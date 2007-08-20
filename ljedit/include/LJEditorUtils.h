@@ -8,7 +8,7 @@
 
 class LJEditorUtils {
 public:
-    virtual Gtk::TextView* create_source_view() = 0;
+    virtual Gtk::TextView* create_source_view(bool show_line_number=false) = 0;
     virtual void destroy_source_view(Gtk::TextView* view) = 0;
 };
 
