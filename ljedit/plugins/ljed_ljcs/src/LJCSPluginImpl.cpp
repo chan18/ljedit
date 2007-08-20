@@ -11,7 +11,7 @@
 
 LJCSPluginImpl::LJCSPluginImpl(LJEditor& editor)
     : editor_(editor)
-    , preview_(editor.utils()) {}
+    , preview_(editor) {}
 
 void LJCSPluginImpl::active_page(DocPage& page) {
     Gtk::TextView& view = page.view();
@@ -354,7 +354,11 @@ bool LJCSPluginImpl::on_button_release_event(GdkEventButton* event, DocPage* pag
         MatchedSet mset;
         ::search_keys(keys, mset, *file, line);
 
-        preview_.preview(mset.elems);
+		cpp::Elements elems;
+		elems.resize(mset.elems.size());
+		std::copy(mset.elems.begin(), mset.elems.end(), elems.begin());
+
+        preview_.preview(elems);
     }
 
     return false;

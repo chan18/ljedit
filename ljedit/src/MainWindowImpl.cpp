@@ -14,6 +14,9 @@ MainWindowImpl::~MainWindowImpl() {
 }
 
 void MainWindowImpl::create(const std::string& path) {
+	Gtk::VBox* vbox = Gtk::manage(new Gtk::VBox());
+    add(*vbox);
+
     // create main-ui
     create_ui_manager(path + "/conf/menu.xml");
 
@@ -21,29 +24,56 @@ void MainWindowImpl::create(const std::string& path) {
     Gtk::Widget* menubar = ui_manager_->get_widget("/MenuBar");
     if( menubar==0 )
         throw RuntimeException("error : create main window not find MenuBar!");
-    vbox_.pack_start(*menubar, Gtk::PACK_SHRINK);
+    vbox->pack_start(*menubar, Gtk::PACK_SHRINK);
 
     // toolbar
     Gtk::Widget* toolbar = ui_manager_->get_widget("/ToolBar");
     if( toolbar==0 )
         throw RuntimeException("error : create main window not find ToolBar!");
-    vbox_.pack_start(*toolbar, Gtk::PACK_SHRINK);
+    vbox->pack_start(*toolbar, Gtk::PACK_SHRINK);
 
-    // vpaned
-    create_vpaned();
-    vbox_.pack_start(vpaned_);
+	// body hpanel
+	Gtk::HPaned* hpaned = Gtk::manage(new Gtk::HPaned());
+	hpaned->set_border_width(3);
+    vbox->pack_start(*hpaned);
+	{
+		// left
+		left_panel_.set_tab_pos(Gtk::POS_BOTTOM);
+		hpaned->add1(left_panel_);
+
+		// 
+		Gtk::VPaned* right_vpaned = Gtk::manage(new Gtk::VPaned());
+		right_vpaned->set_position(500);
+		hpaned->add2(*right_vpaned);
+		{
+			// 
+			Gtk::HPaned* right_hpaned = Gtk::manage(new Gtk::HPaned());
+			right_hpaned->set_position(600);
+			right_vpaned->add1(*right_hpaned);
+			{
+				// doc manager
+				doc_manager_.set_scrollable();
+				right_hpaned->add1(doc_manager_);
+
+				// right
+				right_panel_.set_size_request(200, -1);
+				right_panel_.set_tab_pos(Gtk::POS_BOTTOM);
+				right_hpaned->add2(right_panel_);
+			}
+
+			// bottom
+			bottom_panel_.set_size_request(-1, 200);
+			bottom_panel_.set_tab_pos(Gtk::POS_BOTTOM);
+			right_vpaned->add2(bottom_panel_);
+		}
+
+	}
 
     // statusbar
-    vbox_.pack_start(status_bar_, false, false);
+    vbox->pack_start(status_bar_, false, false);
 
-    this->add(vbox_);
-    this->resize(1024, 768);
-
+    resize(1024, 768);
     show_all();
-}
-
-void MainWindowImpl::destroy() {
-	doc_manager_.close_all_files();
 }
 
 void MainWindowImpl::create_ui_manager(const std::string& config_file) {
@@ -68,41 +98,8 @@ void MainWindowImpl::create_ui_manager(const std::string& config_file) {
     ui_manager_->add_ui_from_file(config_file);
 }
 
-void MainWindowImpl::create_vpaned() {
-    // hpaned_left
-    create_vpaned_hpaneds();
-    vpaned_.add1(hpaned_right_);
-
-    // bottom panel
-    create_vpaned_bottom_panel();
-    vpaned_.add2(bottom_panel_);
-
-    vpaned_.set_position(500);
-}
-
-void MainWindowImpl::create_vpaned_hpaneds() {
-    // left
-    hpaned_left_.set_border_width(3);
-
-    left_panel_.set_tab_pos(Gtk::POS_BOTTOM);
-    hpaned_left_.add1(left_panel_);
-
-    doc_manager_.set_scrollable();
-    hpaned_left_.add2(doc_manager_);
-
-    // right
-    hpaned_right_.set_border_width(3);
-    hpaned_right_.set_position(800);
-
-    hpaned_right_.add1(hpaned_left_);
-
-    right_panel_.set_tab_pos(Gtk::POS_BOTTOM);
-    hpaned_right_.add2(right_panel_);
-}
-
-void MainWindowImpl::create_vpaned_bottom_panel() {
-    bottom_panel_.set_size_request(-1, 200);
-    bottom_panel_.set_tab_pos(Gtk::POS_BOTTOM);
+void MainWindowImpl::destroy() {
+	doc_manager_.close_all_files();
 }
 
 void MainWindowImpl::on_file_open() {

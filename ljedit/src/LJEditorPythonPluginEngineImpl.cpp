@@ -270,36 +270,36 @@ public:
 		if( py_impl_==0 )
 			return;
 
-		PyObject* dict = PyModule_GetDict(py_impl_);
-		if( dict==0 )
+		PyObject* py_dict = PyModule_GetDict(py_impl_);
+		if( py_dict==0 )
 			return;
 
-		PyObject* load_plugins = PyDict_GetItemString(dict, "load_plugins");
-		if( load_plugins==0 )
+		PyObject* py_load_plugins = PyDict_GetItemString(py_dict, "load_plugins");
+		if( py_load_plugins==0 )
 			return;
 
-		PyObject* result = PyObject_CallFunction(load_plugins, 0);
-		if( result==0 )
+		PyObject* py_result = PyObject_CallFunction(py_load_plugins, 0);
+		if( py_result==0 )
 			PyErr_Clear();
-		Py_XDECREF(result);
+		Py_XDECREF(py_result);
 	}
 
 	void unload_plugins() {
 		if( py_impl_==0 )
 			return;
 
-		PyObject* dict = PyModule_GetDict(py_impl_);
-		if( dict==0 )
+		PyObject* py_dict = PyModule_GetDict(py_impl_);
+		if( py_dict==0 )
 			return;
 
-		PyObject* unload_plugins = PyDict_GetItemString(dict, "unload_plugins");
-		if( unload_plugins==0 )
+		PyObject* py_unload_plugins = PyDict_GetItemString(py_dict, "unload_plugins");
+		if( py_unload_plugins==0 )
 			return;
 
-		PyObject* result = PyObject_CallFunction(unload_plugins, 0);
-		if( result==0 )
+		PyObject* py_result = PyObject_CallFunction(py_unload_plugins, 0);
+		if( py_result==0 )
 			PyErr_Clear();
-		Py_XDECREF(result);
+		Py_XDECREF(py_result);
 	}
 
 private:

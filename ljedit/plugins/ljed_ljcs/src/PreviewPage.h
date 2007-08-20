@@ -5,7 +5,7 @@
 #define LJED_INC_PREVIEWPAGE_H
 
 #include "gtkenv.h"
-#include "LJEditorUtils.h"
+#include "LJEditor.h"
 
 #include "ljcs/ljcs.h"
 
@@ -17,25 +17,31 @@ public:
     void destroy();
 
 public:
-    PreviewPage(LJEditorUtils& utils);
+    PreviewPage(LJEditor& ljedit);
     virtual ~PreviewPage();
 
-    void preview(cpp::ElementSet& mset);
+    void preview(cpp::Elements& elems, size_t index=0);
 
 private:
+	void on_number_btn_clicked();
+	void on_filename_btn_clicked();
     bool on_scroll_to_define_line();
+	bool on_sourceview_button_release_event(GdkEventButton* event);
 
 private:
-    LJEditorUtils&          utils_;
+    LJEditor&				ljedit_;
 
 private:
-    Gtk::VBox				vbox_;
-    
-    Gtk::Label				label_;
-    Gtk::ScrolledWindow		sw_;
-    
+	Gtk::VBox				vbox_;
+
+	Gtk::Button*			number_button_;
+	Gtk::Label*				filename_label_;
+
     Gtk::TextView*			view_;
-    cpp::ElementSet			mset_;
+
+    cpp::Elements			elems_;
+	size_t					index_;
+	cpp::File*				last_preview_file_;
 };
 
 #endif//LJED_INC_PREVIEWPAGE_H

@@ -95,7 +95,10 @@ void load_setup(const std::string& plugin_path) {
 	if( ifs ) {
 		std::string line;
 		while( std::getline(ifs, line) )
+		{
 			text += line;
+			text += '\n';
+		}
 
 	} else {
 		text =	"/usr/include/\n"
@@ -110,7 +113,7 @@ void load_setup(const std::string& plugin_path) {
 }
 
 void save_setup(const std::string& plugin_path, const std::string& includes) {
-	std::string filename = Glib::build_filename(plugin_path, "ljcs.conf").c_str();
+	std::string filename = Glib::build_filename(plugin_path, "ljcs.conf");
 	std::ofstream ofs(filename.c_str());
 	if( ofs ) {
 		ofs << includes;
@@ -118,7 +121,7 @@ void save_setup(const std::string& plugin_path, const std::string& includes) {
 }
 
 void show_setup_dialog(Gtk::Window& parent, const std::string& plugin_path) {
-	SetupDialog* dlg = SetupDialog::create(plugin_path);
+	std::auto_ptr<SetupDialog> dlg( SetupDialog::create(plugin_path) );
 	int res = dlg->run();
 
 	switch( res ) {
@@ -133,7 +136,5 @@ void show_setup_dialog(Gtk::Window& parent, const std::string& plugin_path) {
 	default:
 		break;
 	}
-
-	delete dlg;
 }
 

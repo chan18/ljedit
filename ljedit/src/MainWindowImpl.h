@@ -31,13 +31,6 @@ public:
 
 private:
     void create_ui_manager(const std::string& config_file);
-    void create_vpaned();
-
-    void create_vpaned_hpaneds();
-    void create_vpaned_bottom_panel();
-
-    void create_vpaned_hpaned_left_panel();
-    void create_vpaned_hpaned_docs_panel();
 
 private:
     void on_file_new();
@@ -53,18 +46,11 @@ private:
 
     Gtk::Notebook					left_panel_;
     DocManagerImpl					doc_manager_;
-	DocManagerImpl*					doc_manager__;
     Gtk::Notebook					right_panel_;
 
     Gtk::Notebook					bottom_panel_;
 
     Gtk::Statusbar					status_bar_;
-
-private:
-    Gtk::VBox		vbox_;
-    Gtk::VPaned		vpaned_;
-    Gtk::HPaned		hpaned_left_;
-    Gtk::HPaned		hpaned_right_;
 };
 
 #endif//LJED_INC_MAINWINDOWIMPL_H

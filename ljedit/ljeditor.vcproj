@@ -319,6 +319,14 @@
 				RelativePath=".\bin\_ljedit_py.py"
 				>
 			</File>
+			<Filter
+				Name="conf"
+				>
+				<File
+					RelativePath=".\bin\conf\menu.xml"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<File
 			RelativePath=".\readme.txt"
