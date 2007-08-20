@@ -104,7 +104,6 @@ void LJCSPluginImpl::create(const char* plugin_filename) {
 
 	// menu
 	action_group_ = Gtk::ActionGroup::create("LJCSActions");
-    action_group_->add( Gtk::Action::create("PluginsMenu", "_Plugins") );
     action_group_->add( Gtk::Action::create("LJCSSetup", Gtk::Stock::ABOUT,   "_ljcs",  "LJCS plugin setup"),	sigc::mem_fun(this, &LJCSPluginImpl::on_show_setup_dialog) );
 
 	Glib::ustring ui_info = 
@@ -118,15 +117,6 @@ void LJCSPluginImpl::create(const char* plugin_filename) {
 
 	main_window.ui_manager()->insert_action_group(action_group_);
 	menu_id_ = main_window.ui_manager()->add_ui_from_string(ui_info);
-
-	/*
-    Gtk::MenuItem* plugins_menu = (Gtk::MenuItem*)main_window.ui_manager()->get_widget("/MenuBar/PluginsMenu");
-	assert( plugins_menu != 0 );
-	
-	Gtk::MenuItem* menu_setup = Gtk::manage( new Gtk::MenuItem("ljcs-setup") );
-	menu_setup->show_all();
-	plugins_menu->get_submenu()->items().push_back(*menu_setup);
-	*/
 
     // auto complete
     cons.push_back( dm.signal_page_added().connect( sigc::mem_fun(this, &LJCSPluginImpl::on_doc_page_added) ) );
