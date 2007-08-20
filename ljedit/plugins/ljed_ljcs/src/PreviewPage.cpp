@@ -81,7 +81,7 @@ void PreviewPage::preview(cpp::Elements& elems, size_t index) {
 		char buf[1024];
 		buf[0] = '\0';
 
-		sprintf(buf, "%s:%d", elem->file.filename.c_str(), elem->sline + 1);
+		sprintf(buf, "%s:%d", elem->file.filename.c_str(), elem->sline - 1);
 		filename_label_->set_text(buf);
 
 		sprintf(buf, "%d/%d", index_ + 1, elems_.size());
@@ -122,7 +122,7 @@ void PreviewPage::on_filename_btn_clicked() {
 	cpp::Element* elem = elems_[index_];
 	assert( elem != 0 );
 
-	ljedit_.main_window().doc_manager().open_file(elem->file.filename, elem->sline + 1);
+	ljedit_.main_window().doc_manager().open_file(elem->file.filename, elem->sline - 1);
 }
 
 bool PreviewPage::on_scroll_to_define_line() {
