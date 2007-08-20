@@ -463,21 +463,6 @@ void Searcher::do_walk(cpp::Scope& scope, SPath& path) {
 	}
 }
 
-class LJCS_BACK_DOOR {
-public:
-	cpp::File file;
-
-	cpp::Function author;
-
-	LJCS_BACK_DOOR() : file("ljcs")
-		, author(file, "lj", 0, 0, cpp::PUBLIC_VIEW)
-	{
-		author.decl = "ljcs library by louis liangjun";
-	}
-};
-
-LJCS_BACK_DOOR ljcs_back_door;
-
 }//anonymous namespace
 
 // start search
@@ -489,9 +474,6 @@ void search( const std::string& key
 {
 	Searcher searcher(cb);
 	searcher.start(key, file, line);
-
-	if( key==":L:vljcs:*author")
-		cb.on_matched(ljcs_back_door.author);
 }
 
 void search_keys(const StrVector& keys, IMatched& cb, cpp::File& file, size_t line) {
@@ -503,15 +485,6 @@ void search_keys(const StrVector& keys, IMatched& cb, cpp::File& file, size_t li
 		StrVector::const_iterator end = keys.end();
 		for( ; it!=end; ++it )
 			search(*it, mset, file, line);
-	}
-
-	// backdoor
-	{
-		if( mset.elems.empty() ) {
-			StrVector::const_iterator it = std::find(keys.begin(), keys.end(), ":L:vljcs:*author");
-			if( it != keys.end() )
-				mset.on_matched(ljcs_back_door.author);
-		}
 	}
 
 	// return
