@@ -38,7 +38,9 @@ protected:
 
 private:
     void on_doc_modified_changed(DocPageImpl* page);
+	void on_page_close_button_clicked(DocPageImpl* page);
 
+private:
     int page_num_;
     int line_num_;
 };

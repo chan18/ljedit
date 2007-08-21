@@ -41,7 +41,7 @@ bool DocManagerImpl::scroll_to_file_pos() {
     if( it != pages().end() ) {
         set_current_page(page_num_);
 
-        DocPageImpl* page = (DocPageImpl*)(get_current()->get_child());
+        DocPageImpl* page = (DocPageImpl*)get_current()->get_child();
         assert( page != 0 );
 
         Glib::RefPtr<gtksourceview::SourceBuffer> buffer = page->source_buffer();
@@ -64,7 +64,7 @@ void DocManagerImpl::open_file(const std::string& filepath, int line) {
     Gtk::Notebook::PageList::iterator it = pages().begin();
     Gtk::Notebook::PageList::iterator end = pages().end();
     for( ; it!=end; ++it ) {
-        DocPageImpl* page = (DocPageImpl*)(it->get_child());
+        DocPageImpl* page = (DocPageImpl*)it->get_child();
         assert( page != 0 );
 
         if( page->filepath()==abspath ) {
@@ -101,17 +101,22 @@ void DocManagerImpl::open_file(const std::string& filepath, int line) {
     open_page(abspath, filename, buffer, line);
 }
 
+void DocManagerImpl::on_page_close_button_clicked(DocPageImpl* page) {
+	close_page(*page);
+}
+
 bool DocManagerImpl::open_page(const std::string filepath
         , const std::string& displaty_name
         , Glib::RefPtr<gtksourceview::SourceBuffer> buffer
         , int line)
 {
     DocPageImpl* page = DocPageImpl::create(filepath, displaty_name, buffer);
-    int n = append_page(*page, page->label());
+	page->close_button().signal_clicked().connect( sigc::bind(sigc::mem_fun(this, &DocManagerImpl::on_page_close_button_clicked), page) );
+    int n = append_page(*page, page->label_widget());
     page->view().grab_focus();
     set_current_page(n);
 
-    buffer->signal_modified_changed().connect(sigc::bind(sigc::mem_fun(this, &DocManagerImpl::on_doc_modified_changed), page));
+    buffer->signal_modified_changed().connect( sigc::bind(sigc::mem_fun(this, &DocManagerImpl::on_doc_modified_changed), page) );
 
     locate_page_line(n, line);
 

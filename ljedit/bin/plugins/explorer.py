@@ -3,7 +3,7 @@
 import os, stat, time, sys
 import pygtk
 pygtk.require('2.0')
-import gtk
+import gobject, gtk
 
 folderxpm = [
 	"17 16 7 1",
@@ -108,7 +108,7 @@ def fill_subs(model, parent_iter):
 					for f in os.listdir(pathname):
 						sp = os.path.join(pathname, f)
 						sign = 'dir' if is_dir(sp) else 'file'
-						model.append(iter, [f.decode(sys.getfilesystemencoding()), sp, sign])
+						model.append(iter, [f.decode(sys.getfilesystemencoding()), sp, sign, f])
 				except:
 					pass
 			iter = model.iter_next(iter)
@@ -119,13 +119,13 @@ def fill_subs(model, parent_iter):
 		for f in os.listdir(pathname):
 			sp = os.path.join(pathname, f)
 			sign = 'dir-expanded' if is_dir(sp) else 'file'
-			iter = model.append(parent_iter, [f.decode(sys.getfilesystemencoding()), sp, sign])
+			iter = model.append(parent_iter, [f.decode(sys.getfilesystemencoding()), sp, sign, f])
 			if sign=='dir-expanded':
 				try:
 					for ssf in os.listdir(sp):
 						ssp = os.path.join(sp, ssf)
 						sign = 'dir' if is_dir(ssp) else 'file'
-						model.append(iter, [ssf.decode(sys.getfilesystemencoding()), ssp, sign])
+						model.append(iter, [ssf.decode(sys.getfilesystemencoding()), ssp, sign, ssf])
 				except:
 					pass
 		
@@ -133,15 +133,40 @@ def fill_subs(model, parent_iter):
 		row[2] = 'win32root-expanded'
 		drivers = get_win32_drivers()
 		for volume, driver in drivers:
-			iter = model.append(parent_iter, [volume, driver, 'dir-expanded'])
+			iter = model.append(parent_iter, [volume, driver, 'dir-expanded', driver.lower()[:2]])
 			
 			try:
 				for f in os.listdir(driver):
 					sp = os.path.join(driver, f)
 					sign = 'dir' if is_dir(sp) else 'file'
-					model.append(iter, [f.decode(sys.getfilesystemencoding()), sp, sign])
+					model.append(iter, [f.decode(sys.getfilesystemencoding()), sp, sign, f])
 			except:
 				pass
+
+def locate_to(model, it, paths):
+	if len(paths)==0:
+		return it
+
+	name = paths.pop(0)
+	if len(name)==0:
+		return locate_to(model, it, paths)
+
+	sit = model.iter_children(it)
+	while sit != None:
+		row = model[sit]
+		#print 'vvv :', row[3], name
+		if sys.platform=='win32':
+			if row[3].lower()==name.lower():
+				fill_subs(model, sit)
+				#print '-->', name
+				return locate_to(model, sit, paths)
+			
+		else:
+			if row[3]==name:
+				fill_subs(model, sit)
+				#print '-->', name
+				return locate_to(model, sit, paths)
+		sit = model.iter_next(sit)
 
 class FileExplorer(gtk.VBox):
 	def __init__(self):
@@ -156,23 +181,39 @@ class FileExplorer(gtk.VBox):
 		self.pack_start(self.scrolledwindow)
 		self.set_size_request(200, 100)
 		
- 	def sort_filename_method(self, model, iter1, iter2):
- 		if model[iter1][2]=='file':
- 			if model[iter2][2]=='file':
- 				return -1 if model[iter1][1] < model[iter2][1] else 1
- 			return 1
- 		else:
- 			if model[iter2][2]=='file':
- 				return -1
- 			return -1 if model[iter1][1] < model[iter2][1] else 1
- 		
+		# export first layer
+		rit = model.get_iter_root()
+		path = model.get_path(rit)
+		self.treeview.expand_to_path(path)
+			
+	def locate_to_file(self, filename):
+		model = self.treeview.get_model()
+		it = locate_to(model, model.get_iter_root(), filename.split('/'))
+		#print 'get it : ', it
+		if it:
+			self.treeview.get_selection().select_iter(it)
+			path = model.get_path(it)
+			self.treeview.expand_to_path(path)
+			self.treeview.scroll_to_cell(path)
+			gobject.idle_add(self.treeview.scroll_to_cell, path)
+		
+	def sort_filename_method(self, model, iter1, iter2):
+		if model[iter1][2]=='file':
+			if model[iter2][2]=='file':
+				return -1 if model[iter1][1] < model[iter2][1] else 1
+			return 1
+		else:
+			if model[iter2][2]=='file':
+				return -1
+			return -1 if model[iter1][1] < model[iter2][1] else 1
+		
 	def make_root_model(self):
-		model = gtk.TreeStore(str, str, str)	# display, path, [file, dir, dir-expanded]
+		model = gtk.TreeStore(str, str, str, str)	# display, path, [file, dir, dir-expanded, name]
 		model.set_default_sort_func(self.sort_filename_method)
 		if sys.platform=='win32':
-			iter = model.append(None, ['my computer', '', 'win32root'])
+			iter = model.append(None, ['my computer', '', 'win32root', ''])
 		else:
-			iter = model.append(None, ['/', '/', 'dir'])
+			iter = model.append(None, ['/', '/', 'dir', ''])
 		fill_subs(model, iter)
 		return model
 		
@@ -205,6 +246,8 @@ class FileExplorer(gtk.VBox):
 		cell.set_property('text', model.get_value(iter, 0))
 		
 	def cb_file_activated(self, filename):
+		# test
+		#self.locate_to_file('d:/mingw32/include/c++/3.4.2/bits/stl_list.h')
 		print filename
 		
 	def cb_row_expanded(self, treeview, iter, path):
@@ -251,8 +294,15 @@ try:
 
 		left = ljedit.main_window.left_panel
 		explorer.page_id = left.append_page(explorer, gtk.Label('Explorer'))
+		
+		def on_switch_page(nb, gp, page):
+			filepath = ljedit.main_window.doc_manager.get_file_path(page)
+			explorer.locate_to_file(filepath)
+			
+		explorer.switch_page_id = ljedit.main_window.doc_manager.connect('switch-page', on_switch_page)
 
 	def deactive():
+		ljedit.main_window.doc_manager.disconnect(explorer.switch_page_id)
 		left = ljedit.main_window.left_panel
 		left.remove_page(explorer.page_id)
 
