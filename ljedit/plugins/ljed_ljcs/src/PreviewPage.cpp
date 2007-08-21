@@ -4,8 +4,8 @@
 #include "PreviewPage.h"
 #include "LJCSPluginUtils.h"
 
-PreviewPage::PreviewPage(LJEditor& ljedit)
-    : ljedit_(ljedit)
+PreviewPage::PreviewPage(LJEditor& editor)
+    : editor_(editor)
     , view_(0)
 	, index_(0)
 	, last_preview_file_(0)
@@ -36,7 +36,7 @@ void PreviewPage::create() {
 	hbox->pack_start(*btn, true, true);
 
 	// view
-	view_ = ljedit_.utils().create_source_view(true);
+	view_ = editor_.utils().create_source_view(true, true);
     Glib::RefPtr<Gtk::TextBuffer> buffer = view_->get_buffer();
     view_->set_buffer(buffer);
 	view_->set_editable(false);
@@ -59,7 +59,7 @@ void PreviewPage::create() {
 void PreviewPage::destroy() {
     cpp::unref_all_elems(elems_);
 	elems_.clear();
-    ljedit_.utils().destroy_source_view(view_);
+    editor_.utils().destroy_source_view(view_);
     view_ = 0;
 }
 
@@ -104,6 +104,8 @@ void PreviewPage::preview(cpp::Elements& elems, size_t index) {
         filename_label_->set_text("");
 		number_button_->set_label("0/0");
         buffer->set_text(text);
+
+		last_preview_file_ = 0;
     }
 
     Glib::signal_idle().connect( sigc::mem_fun(this, &PreviewPage::on_scroll_to_define_line) );
@@ -120,7 +122,7 @@ void PreviewPage::on_filename_btn_clicked() {
 	cpp::Element* elem = elems_[index_];
 	assert( elem != 0 );
 
-	ljedit_.main_window().doc_manager().open_file(elem->file.filename, elem->sline - 1);
+	editor_.main_window().doc_manager().open_file(elem->file.filename, elem->sline - 1);
 }
 
 bool PreviewPage::on_scroll_to_define_line() {

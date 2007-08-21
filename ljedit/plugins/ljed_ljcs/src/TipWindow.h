@@ -4,13 +4,13 @@
 #ifndef LJED_INC_TIPWINDOW_H
 #define LJED_INC_TIPWINDOW_H
 
-#include "gtkenv.h"
+#include "LJEditor.h"
 
 #include <ljcs/ljcs.h>
 
 class TipWindow : public Gtk::Window {
 public:
-    TipWindow();
+    TipWindow(LJEditor& editor);
     virtual ~TipWindow();
 
     void show_tip(int x, int y, cpp::ElementSet& element_set, char tag);
@@ -29,13 +29,21 @@ private:
 
 	Glib::RefPtr<Gdk::Pixbuf> get_icon_from_elem(cpp::Element& elem);
 
-private:	// /window
-    Gtk::VBox		vbox_;
+private:
+	typedef std::map<std::string, cpp::Element*> ElementMap;
 
-private:	// /window/vbox
-    Gtk::ScrolledWindow				scrolled_window_;
-    Gtk::TreeView					defines_view_;
-    Glib::RefPtr<Gtk::ListStore>	defines_store_;
+	void clear_define_store();
+
+	void fill_define_store(ElementMap& emap);
+
+private:
+	LJEditor&						editor_;
+
+	Gtk::Notebook					pages_;
+    Gtk::TreeView					elems_view_;
+	Gtk::TextView*					infos_view_;
+
+    Glib::RefPtr<Gtk::ListStore>	elems_store_;
 
     struct ModelColumns : public Gtk::TreeModelColumnRecord {
 		Gtk::TreeModelColumn< Glib::RefPtr<Gdk::Pixbuf> >	icon;
@@ -48,8 +56,6 @@ private:	// /window/vbox
     const ModelColumns columns_;
 
 private:
-    cpp::ElementSet element_set_;
-
     char			tag_;
 };
 

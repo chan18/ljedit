@@ -21,8 +21,9 @@ private:
     LJEditorUtilsImpl& operator = (const LJEditorUtilsImpl&);
 
 private:
-	virtual Gtk::TextView* create_source_view(bool show_line_number=false) ;
-	virtual void destroy_source_view(Gtk::TextView* view);
+	virtual Gtk::TextView* do_create_source_view(bool highlight_current_line, bool show_line_number);
+
+	virtual void do_destroy_source_view(Gtk::TextView* view);
 };
 
 #endif//LJED_INC_LJEDITORUTILSIMPL_H

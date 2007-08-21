@@ -4,7 +4,6 @@
 #ifndef LJED_INC_PREVIEWPAGE_H
 #define LJED_INC_PREVIEWPAGE_H
 
-#include "gtkenv.h"
 #include "LJEditor.h"
 
 #include "ljcs/ljcs.h"
@@ -17,7 +16,7 @@ public:
     void destroy();
 
 public:
-    PreviewPage(LJEditor& ljedit);
+    PreviewPage(LJEditor& editor);
     virtual ~PreviewPage();
 
     void preview(cpp::Elements& elems, size_t index=0);
@@ -29,7 +28,7 @@ private:
 	bool on_sourceview_button_release_event(GdkEventButton* event);
 
 private:
-    LJEditor&				ljedit_;
+    LJEditor&				editor_;
 
 private:
 	Gtk::VBox				vbox_;

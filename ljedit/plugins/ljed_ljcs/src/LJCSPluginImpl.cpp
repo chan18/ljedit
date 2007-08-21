@@ -11,7 +11,8 @@
 
 LJCSPluginImpl::LJCSPluginImpl(LJEditor& editor)
     : editor_(editor)
-    , preview_(editor) {}
+    , preview_(editor)
+	, tip_(editor) {}
 
 void LJCSPluginImpl::active_page(DocPage& page) {
     Gtk::TextView& view = page.view();
@@ -198,6 +199,7 @@ bool LJCSPluginImpl::on_key_press_event(GdkEventKey* event, DocPage* page) {
         return false;
     }
 
+	/*
     switch( event->keyval ) {
     case '(':
     case '.':
@@ -206,36 +208,36 @@ bool LJCSPluginImpl::on_key_press_event(GdkEventKey* event, DocPage* page) {
         if( tip_.tag()=='s' ) {
             auto_complete(*page);
         }
-        break;
-    default:
-        if( tip_.tag() == 'f' ) {
-            tip_.hide();
-            break;
-        }
+        return false;
+	default:
+		if( tip_.tag() == 'f' ) {
+			tip_.hide();
+			return false;
+		}
+	}
+	*/
 
-        switch( event->keyval ) {
-        case GDK_Tab:
-        case GDK_Return: {
-                auto_complete(*page);
-                Glib::RefPtr<Gtk::TextBuffer> buf = page->buffer();
-                Glib::RefPtr<Gtk::TextMark> mark = buf->get_insert();
-                Gtk::TextBuffer::iterator it = buf->get_iter_at_mark(mark);
-                Gtk::TextBuffer::iterator end = it;
-                show_hint(*page, it, end, 'f');
-            }
-            return true;
-        case GDK_Up:
-            tip_.select_prev();
-            return true;
-        case GDK_Down:
-            tip_.select_next();
-            return true;
-        case GDK_Escape:
-            tip_.hide();
-            return true;
+    switch( event->keyval ) {
+    case GDK_Tab:
+    //case GDK_Return:
+		{
+            auto_complete(*page);
+            Glib::RefPtr<Gtk::TextBuffer> buf = page->buffer();
+            Glib::RefPtr<Gtk::TextMark> mark = buf->get_insert();
+            Gtk::TextBuffer::iterator it = buf->get_iter_at_mark(mark);
+            Gtk::TextBuffer::iterator end = it;
+            show_hint(*page, it, end, 'f');
         }
-
-        break;
+        return true;
+    case GDK_Up:
+        tip_.select_prev();
+        return true;
+    case GDK_Down:
+        tip_.select_next();
+        return true;
+    case GDK_Escape:
+        tip_.hide();
+        return true;
     }
 
     return false;
@@ -250,6 +252,8 @@ bool LJCSPluginImpl::on_key_release_event(GdkEventKey* event, DocPage* page) {
     case GDK_Up:
     case GDK_Down:
     case GDK_Escape:
+	case GDK_Shift_L:
+	case GDK_Shift_R:
         return false;
     }
 

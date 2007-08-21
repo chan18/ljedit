@@ -96,6 +96,8 @@ void DocManagerImpl::open_file(const std::string& filepath, int line) {
 	const char* pe = ps + buf.size();
     buffer->set_text(ps, pe);
 	buffer->end_not_undoable_action();
+	buffer->set_modified(false);
+
     open_page(abspath, filename, buffer, line);
 }
 
