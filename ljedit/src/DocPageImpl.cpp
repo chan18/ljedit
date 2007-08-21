@@ -14,7 +14,11 @@ DocPageImpl* DocPageImpl::create(const std::string& filepath
 {
     Gtk::Label* label = Gtk::manage(new Gtk::Label(display_name));
 	Gtk::Button* close_button = Gtk::manage(new Gtk::Button());
-	close_button->set_size_request(16, 16);
+	Gtk::Image* img = Gtk::manage(new Gtk::Image(Gtk::Stock::CLOSE, Gtk::ICON_SIZE_MENU));
+	close_button->add(*img);
+	close_button->set_size_request(13, 13);
+	close_button->set_relief(Gtk::RELIEF_NONE);
+
 	Gtk::HBox* hbox = Gtk::manage(new Gtk::HBox());
 	hbox->pack_start(*label);
 	hbox->pack_start(*close_button);

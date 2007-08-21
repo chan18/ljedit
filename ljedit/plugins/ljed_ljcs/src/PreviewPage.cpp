@@ -41,7 +41,7 @@ void PreviewPage::create() {
     view_->set_buffer(buffer);
 	view_->set_editable(false);
 	Gdk::Color bg_color;
-	bg_color.set_rgb_p(0.8, 0.8, 0.8);
+	bg_color.set_rgb_p(0.9, 0.9, 0.7);
 	view_->modify_base(Gtk::STATE_NORMAL, bg_color);
 
 	view_->signal_button_release_event().connect( sigc::mem_fun(this, &PreviewPage::on_sourceview_button_release_event), false );
@@ -79,7 +79,7 @@ void PreviewPage::preview(cpp::Elements& elems, size_t index) {
 		char buf[1024];
 		buf[0] = '\0';
 
-		sprintf(buf, "%s:%d", elem->file.filename.c_str(), elem->sline - 1);
+		sprintf(buf, "%s:%d", elem->file.filename.c_str(), elem->sline);
 		filename_label_->set_text(buf);
 
 		sprintf(buf, "%d/%d", index_ + 1, elems_.size());
