@@ -147,7 +147,7 @@ char* STR_SPACE = " ";
 inline bool is_ws(char ch)   { return( ch==' ' || ch=='\t' ); }
 
 #define skip_ws(p) while( ::is_ws(*p) ) { ++p; }
-#define skip_id(p) while( ::isalnum(*p) || *p=='_' ) { ++p; }
+#define skip_id(p) while( *p>0 && (::isalnum(*p) || *p=='_') ) { ++p; }
 
 struct _macro_argpos { short sign; short idx; };
 
@@ -321,7 +321,7 @@ number		{num1}|{num2}|{num3}|{num4}|{num5}
 							args.clear();
 							while( succeed && *p!=')' ) {
 								skip_ws(p);
-								if( ::isalpha(*p) || *p=='_' ) {
+								if( *p>0 && (::isalpha(*p) || *p=='_') ) {
 									yytext = p;
 									skip_id(p);	// get arg
 									args.resize( args.size() + 1 );

@@ -25,7 +25,12 @@ DocPageImpl* DocPageImpl::create(const std::string& filepath
 	hbox->show_all();
 
     gtksourceview::SourceView* view = Gtk::manage(new gtksourceview::SourceView(buffer));
-    view->set_wrap_mode(Gtk::WRAP_NONE);
+
+#ifndef WIN32
+	view->modify_font(Pango::FontDescription("monospace"));
+#endif
+
+	view->set_wrap_mode(Gtk::WRAP_NONE);
 	view->set_tabs_width(4);
     view->set_highlight_current_line();
         

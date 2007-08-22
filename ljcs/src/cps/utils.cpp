@@ -5,7 +5,7 @@
 #include "next_block.h"
 #include <sstream>
 
-inline bool is_id_char(char ch) { return (isalnum(ch) || ch=='_'); }
+inline bool is_id_char(char ch) { return ch > 0 && (isalnum(ch) || ch=='_'); }
 
 void meger_tokens(BlockLexer& lexer, size_t ps, size_t pe, std::string& decl) {
 	std::ostringstream ss;
@@ -75,7 +75,7 @@ void parse_ns(BlockLexer& lexer, std::string& ns) {
 				ns += "[]";
 			} else {
 				std::string& s = lexer.token().word;
-				if( s.size() > 0 && isalpha(s[0]) )
+				if( s.size()>0 && s[0]>0 && isalpha(s[0]) )
 					ns += ' ';
 				ns += lexer.token().word;
 			}

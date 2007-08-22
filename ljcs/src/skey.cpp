@@ -59,6 +59,9 @@ bool find_key(std::string& key, IDocIter& ps, IDocIter& pe) {
 		type = '?';
 		break;
 	default:
+		if( ch <= 0 )
+			return false;
+
 		if( ch!='_' && !isalnum(ch) )
 			return false;
 		word += ch;
@@ -128,7 +131,7 @@ bool find_key(std::string& key, IDocIter& ps, IDocIter& pe) {
 			break;
 			
 		default:
-			if( ch=='_' || ::isalnum(ch) ) {
+			if( ch>0 && (::isalnum(ch) || ch=='_') ) {
 				word += ch;
 				break;
 				
