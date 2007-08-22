@@ -12,7 +12,14 @@ DocPageImpl* DocPageImpl::create(const std::string& filepath
         , const std::string& display_name
         , Glib::RefPtr<gtksourceview::SourceBuffer> buffer)
 {
-    Gtk::Label* label = Gtk::manage(new Gtk::Label(display_name));
+	Glib::ustring u_display_name;
+	try {
+		u_display_name = Glib::locale_to_utf8(display_name);
+	} catch(const Glib::Exception&) {
+		u_display_name = display_name;
+	}
+
+    Gtk::Label* label = Gtk::manage(new Gtk::Label(u_display_name));
 	Gtk::Button* close_button = Gtk::manage(new Gtk::Button());
 	Gtk::Image* img = Gtk::manage(new Gtk::Image(Gtk::Stock::CLOSE, Gtk::ICON_SIZE_MENU));
 	close_button->add(*img);

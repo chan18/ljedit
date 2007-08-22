@@ -79,18 +79,22 @@ void DocManagerImpl::open_file(const std::string& filepath, int line) {
 	if( ::stat(abspath.c_str(), &st)!=0 )
 		return;
 
-	std::string buf;
+	Glib::ustring ubuf;
 	try {
+	std::string buf;
 		buf.resize(st.st_size);
 
 		std::ifstream ifs(abspath.c_str(), std::ios::in | std::ios::binary);
 		ifs.read(&buf[0], buf.size());
 
+		ubuf = Glib::locale_to_utf8(buf);
+
 	} catch(const std::exception&) {
 		return;
-	}
 
-	Glib::ustring ubuf = Glib::locale_to_utf8(buf);
+	} catch(const Glib::Exception&) {
+		return;
+	}
 
     Glib::RefPtr<gtksourceview::SourceBuffer> buffer = create_cppfile_buffer();
 	buffer->begin_not_undoable_action();
