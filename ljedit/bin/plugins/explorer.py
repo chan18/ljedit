@@ -199,6 +199,7 @@ class FileExplorer(gtk.VBox):
 			gobject.idle_add(self.treeview.scroll_to_cell, path)
 		
 	def sort_filename_method(self, model, iter1, iter2):
+		#print model[iter1][2], model[iter2][2]
 		if model[iter1][2]=='file':
 			if model[iter2][2]=='file':
 				return -1 if model[iter1][1] < model[iter2][1] else 1
@@ -211,6 +212,8 @@ class FileExplorer(gtk.VBox):
 	def make_root_model(self):
 		model = gtk.TreeStore(str, str, str, str)	# display, path, [file, dir, dir-expanded, name]
 		model.set_default_sort_func(self.sort_filename_method)
+		# shit!!! cause crush on windows xp
+		#model.set_sort_column_id(-1, gtk.SORT_ASCENDING)
 		if sys.platform=='win32':
 			iter = model.append(None, ['my computer', '', 'win32root', ''])
 		else:
