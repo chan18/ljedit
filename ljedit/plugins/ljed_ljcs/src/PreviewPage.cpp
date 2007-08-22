@@ -90,14 +90,9 @@ void PreviewPage::preview(cpp::Elements& elems, size_t index) {
 		if( &(elem->file) != last_preview_file_ ) {
 			last_preview_file_ = &(elem->file);
 
-            try {
-                Glib::RefPtr<Glib::IOChannel> ifs = Glib::IOChannel::create_from_file(elem->file.filename, "r");
-                ifs->read_to_end(text);
-
-            } catch(Glib::FileError error) {
-            }
-
-            buffer->set_text(text);
+			Glib::ustring text;
+			if( editor_.utils().load_file(text, elem->file.filename) )
+				buffer->set_text(text);
         }
 
     } else {

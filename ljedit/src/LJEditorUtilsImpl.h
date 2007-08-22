@@ -24,6 +24,8 @@ private:
 	virtual Gtk::TextView* do_create_source_view(bool highlight_current_line, bool show_line_number);
 
 	virtual void do_destroy_source_view(Gtk::TextView* view);
+	
+	virtual bool do_load_file(Glib::ustring& out, const std::string& filename);
 };
 
 #endif//LJED_INC_LJEDITORUTILSIMPL_H
