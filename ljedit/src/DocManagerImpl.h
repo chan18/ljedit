@@ -28,7 +28,7 @@ protected:
     bool save_page(DocPageImpl& page);
     bool open_page(const std::string filepath
         , const std::string& displaty_name
-        , Glib::RefPtr<gtksourceview::SourceBuffer> buffer
+        , const Glib::ustring* text = 0
         , int line=0 );
     bool close_page(DocPageImpl& page);
 

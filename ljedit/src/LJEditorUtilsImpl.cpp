@@ -6,8 +6,6 @@
 #include <fstream>
 #include <sys/stat.h>
 
-#include <gtksourceviewmm/sourceview.h>
-
 #include "LanguageManager.h"
 
 
@@ -20,13 +18,13 @@ TStrCoderList init_coders() {
 	return coders;
 }
 
-Gtk::TextView* LJEditorUtilsImpl::do_create_source_view(bool highlight_current_line, bool show_line_number) {
+gtksourceview::SourceView* LJEditorUtilsImpl::create_gtk_source_view(bool highlight_current_line, bool show_line_number) {
     Glib::RefPtr<gtksourceview::SourceBuffer> buffer = create_cppfile_buffer();
     gtksourceview::SourceView* view = new gtksourceview::SourceView(buffer);
     if( view != 0 ) {
 		
 #ifndef WIN32
-		view->modify_font(Pango::FontDescription("monospace"));
+		view->modify_font(Pango::FontDescription("Courier 10 Pitch"));
 #endif
 
         view->set_wrap_mode(Gtk::WRAP_NONE);
@@ -36,10 +34,6 @@ Gtk::TextView* LJEditorUtilsImpl::do_create_source_view(bool highlight_current_l
     }
 
     return view;
-}
-
-void LJEditorUtilsImpl::do_destroy_source_view(Gtk::TextView* view) {
-    delete view;
 }
 
 bool LJEditorUtilsImpl::do_load_file(Glib::ustring& out, const std::string& filename) {

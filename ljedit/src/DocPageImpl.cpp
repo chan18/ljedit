@@ -6,11 +6,11 @@
 #include <fstream>
 
 #include "LanguageManager.h"
+#include "LJEditorUtilsImpl.h"
 #include "dir_utils.h"
 
 DocPageImpl* DocPageImpl::create(const std::string& filepath
-        , const std::string& display_name
-        , Glib::RefPtr<gtksourceview::SourceBuffer> buffer)
+        , const std::string& display_name)
 {
 	Glib::ustring u_display_name;
 	try {
@@ -31,16 +31,10 @@ DocPageImpl* DocPageImpl::create(const std::string& filepath
 	hbox->pack_start(*close_button);
 	hbox->show_all();
 
-    gtksourceview::SourceView* view = Gtk::manage(new gtksourceview::SourceView(buffer));
+	gtksourceview::SourceView* view = LJEditorUtilsImpl::self().create_gtk_source_view();
+	if( view==0 )
+		return 0;
 
-#ifndef WIN32
-	view->modify_font(Pango::FontDescription("monospace"));
-#endif
-
-	view->set_wrap_mode(Gtk::WRAP_NONE);
-	view->set_tabs_width(4);
-    view->set_highlight_current_line();
-        
     DocPageImpl* page = Gtk::manage(new DocPageImpl(*label, *close_button, *hbox, *view));
     page->filepath_ = filepath;
     page->add(*view);

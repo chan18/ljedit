@@ -19,7 +19,7 @@ void DocManagerImpl::create_new_file() {
 
     Glib::RefPtr<gtksourceview::SourceBuffer> buffer = create_cppfile_buffer();
 
-    open_page("", noname, buffer);
+    open_page("", noname);
 }
 
 void DocManagerImpl::locate_page_line(int page_num, int line) {
@@ -75,13 +75,7 @@ void DocManagerImpl::open_file(const std::string& filepath, int line) {
 	if( !LJEditorUtilsImpl::self().load_file(ubuf, abspath) )
 		return;
 
-    Glib::RefPtr<gtksourceview::SourceBuffer> buffer = create_cppfile_buffer();
-	buffer->begin_not_undoable_action();
-	buffer->set_text(ubuf);
-	buffer->end_not_undoable_action();
-	buffer->set_modified(false);
-
-    open_page(abspath, filename, buffer, line);
+    open_page(abspath, filename, &ubuf, line);
 }
 
 void DocManagerImpl::on_page_close_button_clicked(DocPageImpl* page) {
@@ -90,16 +84,26 @@ void DocManagerImpl::on_page_close_button_clicked(DocPageImpl* page) {
 
 bool DocManagerImpl::open_page(const std::string filepath
         , const std::string& displaty_name
-        , Glib::RefPtr<gtksourceview::SourceBuffer> buffer
+        , const Glib::ustring* text
         , int line)
 {
-    DocPageImpl* page = DocPageImpl::create(filepath, displaty_name, buffer);
+    DocPageImpl* page = DocPageImpl::create(filepath, displaty_name);
+    if( page==0 )
+    	return false;
+
+	if( text != 0 ) {
+	    Glib::RefPtr<gtksourceview::SourceBuffer> buffer = page->source_buffer();
+		buffer->begin_not_undoable_action();
+		buffer->set_text(*text);
+		buffer->end_not_undoable_action();
+		buffer->set_modified(false);
+		buffer->signal_modified_changed().connect( sigc::bind(sigc::mem_fun(this, &DocManagerImpl::on_doc_modified_changed), page) );
+	}
+	
 	page->close_button().signal_clicked().connect( sigc::bind(sigc::mem_fun(this, &DocManagerImpl::on_page_close_button_clicked), page) );
     int n = append_page(*page, page->label_widget());
     page->view().grab_focus();
     set_current_page(n);
-
-    buffer->signal_modified_changed().connect( sigc::bind(sigc::mem_fun(this, &DocManagerImpl::on_doc_modified_changed), page) );
 
     locate_page_line(n, line);
 
@@ -123,6 +127,7 @@ bool DocManagerImpl::save_page(DocPageImpl& page) {
     try {
         Glib::RefPtr<Glib::IOChannel> ofs = Glib::IOChannel::create_from_file(filepath, "w");
         ofs->write(page.buffer()->get_text());
+        page.buffer()->set_modified(true);
         return true;
     } catch(Glib::FileError error) {
     }
