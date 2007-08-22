@@ -9,6 +9,20 @@
 #include "LanguageManager.h"
 #include "dir_utils.h"
 
+typedef std::list<std::string> TStrCoderList;
+
+TStrCoderList init_coders() {
+	TStrCoderList coders;
+	coders.push_back("utf-8");
+	coders.push_back("gb18030");
+	return coders;
+}
+
+const TStrCoderList& get_coders() {
+	static TStrCoderList coders = init_coders();
+	return coders;
+}
+
 DocManagerImpl::DocManagerImpl() : page_num_(-1) {
 }
 
@@ -79,21 +93,36 @@ void DocManagerImpl::open_file(const std::string& filepath, int line) {
 	if( ::stat(abspath.c_str(), &st)!=0 )
 		return;
 
-	Glib::ustring ubuf;
-	try {
 	std::string buf;
+	try {
 		buf.resize(st.st_size);
 
 		std::ifstream ifs(abspath.c_str(), std::ios::in | std::ios::binary);
 		ifs.read(&buf[0], buf.size());
 
-		ubuf = Glib::locale_to_utf8(buf);
-
 	} catch(const std::exception&) {
 		return;
+	}
 
-	} catch(const Glib::Exception&) {
-		return;
+	Glib::ustring ubuf;
+	{
+		try {
+			ubuf = Glib::locale_to_utf8(buf);
+
+		} catch(const Glib::ConvertError&) {
+			TStrCoderList::const_iterator it = get_coders().begin();
+			TStrCoderList::const_iterator end = get_coders().end();
+			for( ; it!=end; ++it ) {
+				try {
+					ubuf = Glib::convert(buf, "utf-8", *it);
+					break;
+				} catch(const Glib::ConvertError&) {
+				}
+			}
+
+			if( it==end )
+				return;
+		}
 	}
 
     Glib::RefPtr<gtksourceview::SourceBuffer> buffer = create_cppfile_buffer();
