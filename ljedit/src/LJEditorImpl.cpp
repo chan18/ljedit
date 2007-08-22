@@ -39,14 +39,17 @@ void LJEditorImpl::destroy() {
 }
 
 void LJEditorImpl::run() {
-    try {
-        Gtk::Main::run(main_window_);
+	for(;;) {
+		try {
+			Gtk::Main::run(main_window_);
+			return;
 
-    } catch( const Glib::Exception& e ) {
-        Gtk::MessageDialog dlg(e.what(), false, Gtk::MESSAGE_ERROR);
-        dlg.set_title("LJEdit ERROR");
-        dlg.run();
-    }
+		} catch( const Glib::Exception& e ) {
+			Gtk::MessageDialog dlg(e.what(), false, Gtk::MESSAGE_ERROR);
+			dlg.set_title("LJEdit ERROR");
+			dlg.run();
+		}
+	}
 }
 
 
