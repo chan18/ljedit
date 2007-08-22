@@ -212,8 +212,7 @@ class FileExplorer(gtk.VBox):
 	def make_root_model(self):
 		model = gtk.TreeStore(str, str, str, str)	# display, path, [file, dir, dir-expanded, name]
 		model.set_default_sort_func(self.sort_filename_method)
-		# shit!!! cause crush on windows xp
-		#model.set_sort_column_id(-1, gtk.SORT_ASCENDING)
+		model.set_sort_column_id(-1, gtk.SORT_ASCENDING)
 		if sys.platform=='win32':
 			iter = model.append(None, ['my computer', '', 'win32root', ''])
 		else:
