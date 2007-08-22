@@ -90,11 +90,11 @@ void DocManagerImpl::open_file(const std::string& filepath, int line) {
 		return;
 	}
 
+	Glib::ustring ubuf = Glib::locale_to_utf8(buf);
+
     Glib::RefPtr<gtksourceview::SourceBuffer> buffer = create_cppfile_buffer();
 	buffer->begin_not_undoable_action();
-	const char* ps = &buf[0];
-	const char* pe = ps + buf.size();
-    buffer->set_text(ps, pe);
+	buffer->set_text(ubuf);
 	buffer->end_not_undoable_action();
 	buffer->set_modified(false);
 
