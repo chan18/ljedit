@@ -39,32 +39,32 @@ void MainWindowImpl::create(const std::string& path) {
 	{
 		// left
 		left_panel_.set_tab_pos(Gtk::POS_BOTTOM);
-		hpaned->add1(left_panel_);
+		hpaned->pack1(left_panel_, false, false);
 
 		// 
 		Gtk::VPaned* right_vpaned = Gtk::manage(new Gtk::VPaned());
-		right_vpaned->set_position(500);
-		hpaned->add2(*right_vpaned);
+		//right_vpaned->set_position(500);
+		hpaned->pack2(*right_vpaned, true, false);
 		{
 			// 
 			Gtk::HPaned* right_hpaned = Gtk::manage(new Gtk::HPaned());
-			right_hpaned->set_position(600);
-			right_vpaned->add1(*right_hpaned);
+			//right_hpaned->set_position(600);
+			right_vpaned->pack1(*right_hpaned, true, false);
 			{
 				// doc manager
 				doc_manager_.set_scrollable();
-				right_hpaned->add1(doc_manager_);
+				right_hpaned->pack1(doc_manager_, true, false);
 
 				// right
 				right_panel_.set_size_request(200, -1);
 				right_panel_.set_tab_pos(Gtk::POS_BOTTOM);
-				right_hpaned->add2(right_panel_);
+				right_hpaned->pack2(right_panel_, false, false);
 			}
 
 			// bottom
 			bottom_panel_.set_size_request(-1, 200);
 			bottom_panel_.set_tab_pos(Gtk::POS_BOTTOM);
-			right_vpaned->add2(bottom_panel_);
+			right_vpaned->pack2(bottom_panel_, false, false);
 		}
 
 	}

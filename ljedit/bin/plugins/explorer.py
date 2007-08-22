@@ -173,6 +173,7 @@ class FileExplorer(gtk.VBox):
 		gtk.VBox.__init__(self)
 		
 		self.treeview = self.make_file_view()
+		self.treeview.set_headers_visible(False)
 		model = self.make_root_model()
 		self.treeview.set_model(model)
 		

@@ -15,6 +15,7 @@ OutlinePage::~OutlinePage() {
 }
 
 void OutlinePage::create() {
+	view_.set_headers_visible(false);
     view_.signal_row_activated().connect(sigc::mem_fun(this, &OutlinePage::on_elem_clicked));
     add_columns();
 
