@@ -95,6 +95,25 @@ def is_dir(pathname):
 		pass
 	return False
 
+def sort_file(a, b, path):
+	sa = is_dir(os.path.join(path, a))
+	sb = is_dir(os.path.join(path, b))
+	if sa==sb:
+		return 1 if a.lower() > b.lower() else -1
+	else:
+		return 1 if sb else -1
+
+def fill_folder(model, parent_iter, pathname):
+	try:
+		fs = os.listdir(pathname)
+		fs.sort(lambda a, b : sort_file(a, b, pathname))
+		for f in fs:
+			sp = os.path.join(pathname, f)
+			sign = 'dir' if is_dir(sp) else 'file'
+			model.append(parent_iter, [f.decode(sys.getfilesystemencoding()), sp, sign, f])
+	except:
+		pass
+
 def fill_subs(model, parent_iter):
 	row = model[parent_iter]
 	if row[2]=='dir-expanded':
@@ -103,45 +122,23 @@ def fill_subs(model, parent_iter):
 			row = model[iter]
 			if row[2] == 'dir':
 				row[2] = 'dir-expanded'
-				pathname = row[1]
-				try:
-					for f in os.listdir(pathname):
-						sp = os.path.join(pathname, f)
-						sign = 'dir' if is_dir(sp) else 'file'
-						model.append(iter, [f.decode(sys.getfilesystemencoding()), sp, sign, f])
-				except:
-					pass
+				fill_folder(model, iter, row[1])
 			iter = model.iter_next(iter)
 		
 	elif row[2]=='dir':
 		row[2] = 'dir-expanded'
-		pathname = row[1]
-		for f in os.listdir(pathname):
-			sp = os.path.join(pathname, f)
-			sign = 'dir-expanded' if is_dir(sp) else 'file'
-			iter = model.append(parent_iter, [f.decode(sys.getfilesystemencoding()), sp, sign, f])
-			if sign=='dir-expanded':
-				try:
-					for ssf in os.listdir(sp):
-						ssp = os.path.join(sp, ssf)
-						sign = 'dir' if is_dir(ssp) else 'file'
-						model.append(iter, [ssf.decode(sys.getfilesystemencoding()), ssp, sign, ssf])
-				except:
-					pass
+		fill_folder(model, parent_iter, row[1])
+		#iter = model.iter_children(parent_iter)
+		#while iter != None:
+		#	print model[iter][1]
+		#	iter = model.iter_next(iter)
 		
 	elif row[2]=='win32root':
 		row[2] = 'win32root-expanded'
 		drivers = get_win32_drivers()
 		for volume, driver in drivers:
 			iter = model.append(parent_iter, [volume, driver, 'dir-expanded', driver.lower()[:2]])
-			
-			try:
-				for f in os.listdir(driver):
-					sp = os.path.join(driver, f)
-					sign = 'dir' if is_dir(sp) else 'file'
-					model.append(iter, [f.decode(sys.getfilesystemencoding()), sp, sign, f])
-			except:
-				pass
+			fill_folder(model, iter, driver)
 
 def locate_to(model, it, paths):
 	if len(paths)==0:
@@ -212,34 +209,8 @@ class FileExplorer(gtk.VBox):
 			self.treeview.scroll_to_cell(path)
 			gobject.idle_add(self.treeview.scroll_to_cell, path)
 		
-	def sort_filename_method(self, model, iter1, iter2):
-		#print model[iter1][1], model.iter_is_valid(iter2)#[iter2][1]
-		if model[iter1][2]=='file':
-			if model[iter2][2]=='file':
-				key1 = model[iter1][3]
-				if key1!=None:
-					key1 = key1.lower()
-				key2 = model[iter2][3]
-				if key2!=None:
-					key2 = key2.lower()
-				return -1 if key1 < key2 else 1
-			return 1
-		else:
-			if model[iter2][2]=='file':
-				return -1
-				
-			key1 = model[iter1][3]
-			if key1!=None:
-				key1 = key1.lower()
-			key2 = model[iter2][3]
-			if key2!=None:
-				key2 = key2.lower()
-			return -1 if key1 < key2 else 1
-		
 	def make_root_model(self):
 		model = gtk.TreeStore(str, str, str, str)	# display, path, [file, dir, dir-expanded, name]
-		model.set_default_sort_func(self.sort_filename_method)
-		model.set_sort_column_id(-1, gtk.SORT_ASCENDING)
 		if sys.platform=='win32':
 			iter = model.append(None, ['my computer', '', 'win32root', ''])
 		else:
