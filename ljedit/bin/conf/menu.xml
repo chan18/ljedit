@@ -9,6 +9,16 @@
       <separator/>
       <menuitem action='Quit'/>
     </menu>
+    <menu action='EditMenu'>
+      <!--
+      <menuitem action='Undo'/>
+      <menuitem action='Redo'/>
+      <separator/>
+      <menuitem action='Cut'/>
+      <menuitem action='Copy'/>
+      -->
+      <separator/>
+    </menu>
     <menu action='PluginsMenu'>
     </menu>
     <menu action='HelpMenu'>

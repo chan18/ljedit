@@ -80,6 +80,7 @@ void MainWindowImpl::create_ui_manager(const std::string& config_file) {
     action_group_ = Gtk::ActionGroup::create("Actions");
 
     action_group_->add( Gtk::Action::create("FileMenu", "_File") );
+    action_group_->add( Gtk::Action::create("EditMenu", "_Edit") );
     action_group_->add( Gtk::Action::create("PluginsMenu", "_Plugins") );
     action_group_->add( Gtk::Action::create("HelpMenu", "_Help") );
 
@@ -89,6 +90,12 @@ void MainWindowImpl::create_ui_manager(const std::string& config_file) {
     action_group_->add( Gtk::Action::create("SaveAs", Gtk::Stock::SAVE,  "Save _As...", "Save to a file"),		sigc::mem_fun(this, &MainWindowImpl::on_file_save_as) );
     action_group_->add( Gtk::Action::create("Close",  Gtk::Stock::CLOSE, "_Close",      "Close current file"),	sigc::mem_fun(doc_manager_, &DocManager::close_current_file) );
     action_group_->add( Gtk::Action::create("Quit",   Gtk::Stock::QUIT,  "_Quit",       "Quit"),				sigc::mem_fun(this, &MainWindowImpl::on_file_quit) );
+
+	//action_group_->add( Gtk::Action::create("Undo",   Gtk::Stock::UNDO,  "Undo",        "Undo") ),				sigc::mem_fun(doc_manager_, &xx::xx) );
+	//action_group_->add( Gtk::Action::create("Redo",   Gtk::Stock::REDO,  "Redo",        "Redo"),				sigc::mem_fun(this, &xx::xx) );
+	//action_group_->add( Gtk::Action::create("Cut",    Gtk::Stock::CUT,   "Cut",         "Cut"),					sigc::mem_fun(doc_manager_, &xx::xx) );
+	//action_group_->add( Gtk::Action::create("Copy",   Gtk::Stock::COPY,  "Copy",        "Copy"),				sigc::mem_fun(this, &xx::xx) );
+
     action_group_->add( Gtk::Action::create("About",  Gtk::Stock::ABOUT, "About",       "About"),				sigc::mem_fun(this, &MainWindowImpl::on_help_about) );
 
     ui_manager_ = Gtk::UIManager::create();

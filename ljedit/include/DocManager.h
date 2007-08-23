@@ -17,6 +17,14 @@ private: // nocopyable
     DocManager& operator=(const DocManager& o);
 
 public:
+	DocPage* get_current_document() {
+		Gtk::Widget* widget = get_current()->get_child();
+		if( widget==0 )
+			return 0;
+		return &child_to_page(*widget);
+	}
+
+public:
 	virtual DocPage& child_to_page(Gtk::Widget& child) = 0;
 
     virtual void create_new_file() = 0;
