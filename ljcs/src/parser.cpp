@@ -231,7 +231,7 @@ cpp::File* Parser::parse(const std::string& abspath, std::ostream* os) {
 	// start parse
 	retval->datetime = datetime;
 
-	cxx_parser::parse(*lexer);
+	cxx_parser::parse(*lexer, stopsign_);
 	ParserEnviron::self().add_parsed(retval);
 	included_files_[retval->filename] = retval;
 
@@ -271,7 +271,7 @@ cpp::File* Parser::parse_text(const std::string& text, size_t sline, std::ostrea
 	}
 
 	// start parse
-	cxx_parser::parse(*lexer);
+	cxx_parser::parse(*lexer, stopsign_);
 
 	delete lexer;
 	return retval;	

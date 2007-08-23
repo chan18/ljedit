@@ -154,7 +154,7 @@ def locate_to(model, it, paths):
 	sit = model.iter_children(it)
 	while sit != None:
 		row = model[sit]
-		#print 'vvv :', row[3], name
+		#print 'vvv :', row[3].lower(), name.lower()
 		if sys.platform=='win32':
 			if row[3].lower()==name.lower():
 				fill_subs(model, sit)
@@ -172,6 +172,12 @@ class FileExplorer(gtk.VBox):
 	def __init__(self):
 		gtk.VBox.__init__(self)
 		
+		self.fchooser = gtk.FileChooserButton('choose folder')
+		self.fchooser.set_action(gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER)
+		self.fchooser.set_border_width(3)
+		self.fchooser.connect('current-folder-changed', self.on_folder_changed)
+		self.pack_start(self.fchooser, False, True)
+		
 		self.treeview = self.make_file_view()
 		self.treeview.set_headers_visible(False)
 		model = self.make_root_model()
@@ -186,7 +192,15 @@ class FileExplorer(gtk.VBox):
 		rit = model.get_iter_root()
 		path = model.get_path(rit)
 		self.treeview.expand_to_path(path)
-			
+		
+		self.on_folder_changed(self.fchooser)
+		
+	def on_folder_changed(self, fchooser):
+		folder = fchooser.get_current_folder()
+		if sys.platform=='win32':
+			folder = folder.replace('\\', '/')
+		self.locate_to_file(folder)
+		
 	def locate_to_file(self, filename):
 		model = self.treeview.get_model()
 		it = locate_to(model, model.get_iter_root(), filename.split('/'))
@@ -199,15 +213,28 @@ class FileExplorer(gtk.VBox):
 			gobject.idle_add(self.treeview.scroll_to_cell, path)
 		
 	def sort_filename_method(self, model, iter1, iter2):
-		#print model[iter1][2], model[iter2][2]
+		#print model[iter1][1], model.iter_is_valid(iter2)#[iter2][1]
 		if model[iter1][2]=='file':
 			if model[iter2][2]=='file':
-				return -1 if model[iter1][1] < model[iter2][1] else 1
+				key1 = model[iter1][3]
+				if key1!=None:
+					key1 = key1.lower()
+				key2 = model[iter2][3]
+				if key2!=None:
+					key2 = key2.lower()
+				return -1 if key1 < key2 else 1
 			return 1
 		else:
 			if model[iter2][2]=='file':
 				return -1
-			return -1 if model[iter1][1] < model[iter2][1] else 1
+				
+			key1 = model[iter1][3]
+			if key1!=None:
+				key1 = key1.lower()
+			key2 = model[iter2][3]
+			if key2!=None:
+				key2 = key2.lower()
+			return -1 if key1 < key2 else 1
 		
 	def make_root_model(self):
 		model = gtk.TreeStore(str, str, str, str)	# display, path, [file, dir, dir-expanded, name]

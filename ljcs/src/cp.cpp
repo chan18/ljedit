@@ -9,14 +9,14 @@
 
 namespace cxx_parser {
 
-void parse(Lexer& lexer) {
+void parse(Lexer& lexer, bool& stopsign) {
 	cpp::File& file = lexer.file();
 	LexerEnviron env(file);
 	Block block(env);
 	BlockLexer blexer(block);
 	TParseFn fn = 0;
 
-	while( next_block(block, fn, &lexer) ) {
+	while( !stopsign && next_block(block, fn, &lexer) ) {
 		assert( fn != 0 );
 		blexer.reset();
 		try {

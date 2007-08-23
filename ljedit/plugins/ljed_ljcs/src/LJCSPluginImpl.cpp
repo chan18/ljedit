@@ -381,7 +381,10 @@ void LJCSPluginImpl::outline_update_page() {
 		Glib::RefPtr<Gtk::TextBuffer> buf = page.buffer();
 		Gtk::TextBuffer::iterator it = buf->get_iter_at_mark(buf->get_insert());
 		outline_.set_file(file, it.get_line());
-    }
+
+	} else {
+		outline_.set_file(0, 0);
+	}
 }
 
 void LJCSPluginImpl::outline_on_switch_page(GtkNotebookPage*, guint) {

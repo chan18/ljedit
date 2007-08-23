@@ -8,7 +8,7 @@
 
 namespace cxx_parser {
 
-void parse(Lexer& lexer);
+void parse(Lexer& lexer, bool& stopsign);
 
 };// namespace cxx_parser
 
