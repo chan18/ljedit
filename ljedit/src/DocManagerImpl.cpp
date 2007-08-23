@@ -127,7 +127,7 @@ bool DocManagerImpl::save_page(DocPageImpl& page) {
     try {
         Glib::RefPtr<Glib::IOChannel> ofs = Glib::IOChannel::create_from_file(filepath, "w");
         ofs->write(page.buffer()->get_text());
-        page.buffer()->set_modified(true);
+        page.buffer()->set_modified(false);
         return true;
     } catch(Glib::FileError error) {
     }
