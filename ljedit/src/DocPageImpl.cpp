@@ -5,7 +5,6 @@
 
 #include <fstream>
 
-#include "LanguageManager.h"
 #include "LJEditorUtilsImpl.h"
 #include "dir_utils.h"
 
