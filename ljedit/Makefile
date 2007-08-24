@@ -19,7 +19,6 @@ LJEDLIBS += -lpython2.5
 
 LJEDOBJS = src/DocPageImpl.o         \
 	src/DocManagerImpl.o             \
-	src/LanguageManager.o            \
 	src/LJEditorImpl.o               \
 	src/LJEditorUtilsImpl.o          \
 	src/MainWindowImpl.o             \
