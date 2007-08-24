@@ -4,7 +4,6 @@
 #include "LJEditorImpl.h"
 
 #include "PluginManager.h"
-#include "LanguageManager.h"
 
 #include "LJEditorPythonPluginEngine.h"
 
