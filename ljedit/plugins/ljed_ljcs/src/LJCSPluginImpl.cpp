@@ -15,7 +15,7 @@ LJCSPluginImpl::LJCSPluginImpl(LJEditor& editor)
 	, tip_(editor) {}
 
 void LJCSPluginImpl::active_page(DocPage& page) {
-    Gtk::TextView& view = page.view();
+	Gtk::TextView& view = page.view();
 
     assert( connections_map_.find(&page)==connections_map_.end() );
     TConnectionList& cons = connections_map_[&page];

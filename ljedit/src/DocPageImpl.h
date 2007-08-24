@@ -21,10 +21,7 @@ public:
     virtual const Glib::ustring& filepath() const
         { return filepath_; }
 
-    virtual Glib::RefPtr<Gtk::TextBuffer> buffer()
-        { return source_buffer(); }
-
-    virtual Gtk::TextView& view()
+    virtual gtksourceview::SourceView& view()
         { return source_view(); }
 
     Glib::ustring& filepath() { return filepath_; }

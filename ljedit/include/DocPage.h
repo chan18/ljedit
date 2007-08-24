@@ -18,9 +18,10 @@ private: // nocopyable
 public:
     virtual const Glib::ustring& filepath() const = 0;
 
-	Glib::RefPtr<Gtk::TextBuffer> buffer() { return view().get_buffer(); }
+    Glib::RefPtr<gtksourceview::SourceBuffer> buffer()
+        { return view().get_source_buffer(); }
 
-    virtual Gtk::TextView& view() = 0;
+    virtual gtksourceview::SourceView& view() = 0;
 };
 
 #endif//LJED_INC_DOCPAGE_H

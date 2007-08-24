@@ -3,7 +3,6 @@
 
 #include "DocManagerImpl.h"
 
-#include "LanguageManager.h"
 #include "LJEditorUtilsImpl.h"
 #include "dir_utils.h"
 
@@ -16,8 +15,6 @@ DocManagerImpl::~DocManagerImpl() {
 
 void DocManagerImpl::create_new_file() {
     static std::string noname = "noname";
-
-    Glib::RefPtr<gtksourceview::SourceBuffer> buffer = create_cppfile_buffer();
 
     open_page("", noname);
 }

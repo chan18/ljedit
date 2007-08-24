@@ -36,10 +36,19 @@ void PreviewPage::create() {
 	hbox->pack_start(*btn, true, true);
 
 	// view
-	view_ = editor_.utils().create_source_view(true, true);
-    Glib::RefPtr<Gtk::TextBuffer> buffer = view_->get_buffer();
-    view_->set_buffer(buffer);
+    view_ = editor_.utils().create_gtk_source_view();
+    if( view_ == 0 )
+		return;
+
+	Glib::RefPtr<gtksourceview::SourceLanguage> lang = editor_.utils().get_source_language_manager()->get_language_from_mime_type("text/x-c++hdr");
+	Glib::RefPtr<gtksourceview::SourceBuffer> buffer = view_->get_source_buffer();
+	buffer->set_language(lang);
+	buffer->set_highlight();
+
+	view_->set_highlight_current_line(true);
+	view_->set_show_line_numbers(true);
 	view_->set_editable(false);
+
 	Gdk::Color bg_color;
 	bg_color.set_rgb_p(0.9, 0.9, 0.7);
 	view_->modify_base(Gtk::STATE_NORMAL, bg_color);
@@ -59,7 +68,7 @@ void PreviewPage::create() {
 void PreviewPage::destroy() {
     cpp::unref_all_elems(elems_);
 	elems_.clear();
-    editor_.utils().destroy_source_view(view_);
+	delete view_;
     view_ = 0;
 }
 
@@ -117,7 +126,7 @@ void PreviewPage::on_filename_btn_clicked() {
 	cpp::Element* elem = elems_[index_];
 	assert( elem != 0 );
 
-	editor_.main_window().doc_manager().open_file(elem->file.filename, elem->sline - 1);
+	editor_.main_window().doc_manager().open_file(elem->file.filename, (int)(elem->sline - 1));
 }
 
 bool PreviewPage::on_scroll_to_define_line() {

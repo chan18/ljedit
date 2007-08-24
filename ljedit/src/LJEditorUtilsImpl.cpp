@@ -6,7 +6,16 @@
 #include <fstream>
 #include <sys/stat.h>
 
-#include "LanguageManager.h"
+#include <gtksourceviewmm/init.h>
+
+#include <gtksourceviewmm/sourcebuffer.h>
+
+
+Glib::RefPtr<gtksourceview::SourceLanguagesManager> create_source_language_manager() {
+    gtksourceview::init();
+
+    return gtksourceview::SourceLanguagesManager::create();
+}
 
 
 typedef std::list<std::string> TStrCoderList;
@@ -18,22 +27,28 @@ TStrCoderList init_coders() {
 	return coders;
 }
 
-gtksourceview::SourceView* LJEditorUtilsImpl::create_gtk_source_view(bool highlight_current_line, bool show_line_number) {
-    Glib::RefPtr<gtksourceview::SourceBuffer> buffer = create_cppfile_buffer();
-    gtksourceview::SourceView* view = new gtksourceview::SourceView(buffer);
+gtksourceview::SourceView* LJEditorUtilsImpl::create_gtk_source_view() {
+    gtksourceview::SourceView* view = new gtksourceview::SourceView();
     if( view != 0 ) {
 		
 #ifndef WIN32
 		view->modify_font(Pango::FontDescription("Courier 10 Pitch"));
 #endif
 
-        view->set_wrap_mode(Gtk::WRAP_NONE);
+		view->set_wrap_mode(Gtk::WRAP_NONE);
         view->set_tabs_width(4);
-		view->set_highlight_current_line(highlight_current_line);
-		view->set_show_line_numbers(show_line_number);
     }
 
-    return view;
+	return view;
+}
+
+void LJEditorUtilsImpl::destroy_gtk_source_view(gtksourceview::SourceView* view) {
+	delete view;
+}
+
+Glib::RefPtr<gtksourceview::SourceLanguagesManager> LJEditorUtilsImpl::do_get_source_language_manager() {
+	static Glib::RefPtr<gtksourceview::SourceLanguagesManager> mgr = create_source_language_manager();
+	return mgr;
 }
 
 bool LJEditorUtilsImpl::do_load_file(Glib::ustring& out, const std::string& filename) {

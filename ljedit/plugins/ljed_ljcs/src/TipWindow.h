@@ -41,7 +41,7 @@ private:
 
 	Gtk::Notebook					pages_;
     Gtk::TreeView					elems_view_;
-	Gtk::TextView*					infos_view_;
+	gtksourceview::SourceView*		infos_view_;
 
     Glib::RefPtr<Gtk::ListStore>	elems_store_;
 

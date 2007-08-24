@@ -23,11 +23,22 @@ void TipWindow::create() {
 	elems_view_.append_column("icon", columns_.icon);
     elems_view_.append_column("name", columns_.name);
 
-	infos_view_ = editor_.utils().create_source_view(false, false);
+	// view
+    infos_view_ = editor_.utils().create_gtk_source_view();
+    if( infos_view_ == 0 )
+		return;
+
+	Glib::RefPtr<gtksourceview::SourceLanguage> lang = editor_.utils().get_source_language_manager()->get_language_from_mime_type("text/x-c++hdr");
+	Glib::RefPtr<gtksourceview::SourceBuffer> buffer = infos_view_->get_source_buffer();
+	buffer->set_language(lang);
+	buffer->set_highlight();
+
+	infos_view_->set_editable(false);
 	infos_view_->set_cursor_visible(false);
-	Gdk::Color infos_bg_color;
-	infos_bg_color.set_rgb_p(0.9, 0.9, 0.7);
-	infos_view_->modify_base(Gtk::STATE_NORMAL, infos_bg_color);
+
+	Gdk::Color bg_color;
+	bg_color.set_rgb_p(0.9, 0.9, 0.7);
+	infos_view_->modify_base(Gtk::STATE_NORMAL, bg_color);
 
 	Gtk::ScrolledWindow* sw = Gtk::manage(new Gtk::ScrolledWindow());
     sw->set_policy(Gtk::POLICY_NEVER, Gtk::POLICY_ALWAYS);

@@ -28,19 +28,19 @@ private:
 	bool on_sourceview_button_release_event(GdkEventButton* event);
 
 private:
-    LJEditor&				editor_;
+    LJEditor&					editor_;
 
 private:
-	Gtk::VBox				vbox_;
+	Gtk::VBox					vbox_;
 
-	Gtk::Button*			number_button_;
-	Gtk::Label*				filename_label_;
+	Gtk::Button*				number_button_;
+	Gtk::Label*					filename_label_;
 
-    Gtk::TextView*			view_;
+    gtksourceview::SourceView*	view_;
 
-    cpp::Elements			elems_;
-	size_t					index_;
-	cpp::File*				last_preview_file_;
+    cpp::Elements				elems_;
+	size_t						index_;
+	cpp::File*					last_preview_file_;
 };
 
 #endif//LJED_INC_PREVIEWPAGE_H

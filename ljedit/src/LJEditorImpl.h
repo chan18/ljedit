@@ -34,10 +34,6 @@ private:
     LJEditorImpl& operator = (const LJEditorImpl&);
 
 private:
-	virtual Gtk::TextView* create_source_view() ;
-	virtual void destroy_source_view(Gtk::TextView* view);
-
-private:
     MainWindowImpl main_window_;
 };
 

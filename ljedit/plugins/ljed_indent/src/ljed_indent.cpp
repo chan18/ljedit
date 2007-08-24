@@ -58,7 +58,7 @@ void LJIndent::on_indent() {
 	if( page==0 )
 		return;
 
-	Glib::RefPtr<Gtk::TextBuffer> buf = page->buffer();
+	Glib::RefPtr<gtksourceview::SourceBuffer> buf = page->buffer();
 	buf->begin_user_action();
 	{
 		Gtk::TextIter start, end;
@@ -71,21 +71,9 @@ void LJIndent::on_indent() {
 		if( end.get_visible_line_offset()==0 && eline > sline )
 			--eline;
 
-		/*
-		if (gtk_source_view_get_insert_spaces_instead_of_tabs (view))
-		{
-			gint tabs_size;
-
-			tabs_size = gtk_source_view_get_tabs_width (view);
-			tab_buffer = g_strnfill (tabs_size, ' ');
-		}
-		else
-		{
-			tab_buffer = g_strdup ("\t");
-		}
-		*/
-
-		const Glib::ustring tab = "\t";
+		Glib::ustring tab = page->view().get_insert_spaces_instead_of_tabs()
+			? Glib::ustring(page->view().get_tabs_width(), ' ')
+			: "\t";
 
 		Gtk::TextIter it;
 
@@ -106,7 +94,7 @@ void LJIndent::on_unindent() {
 	if( page==0 )
 		return;
 
-	Glib::RefPtr<Gtk::TextBuffer> buf = page->buffer();
+	Glib::RefPtr<gtksourceview::SourceBuffer> buf = page->buffer();
 	buf->begin_user_action();
 	{
 		Gtk::TextIter start, end;
@@ -143,8 +131,8 @@ void LJIndent::on_unindent() {
 				}
 
 				if( spaces > 0 ) {
-					gint tabs_size = 4;	// gtk_source_view_get_tabs_width (view);
-					gint tabs = spaces / tabs_size;
+					guint tabs_size = page->view().get_tabs_width();
+					guint tabs = spaces / tabs_size;
 					spaces -= (tabs * tabs_size);
 
 					if (spaces == 0)

@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)..\..\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(GTKMM_BASEPATH)\include\gtksourceview-1.0&quot;;&quot;$(GTKMM_BASEPATH)\include\gtksourceviewmm-1.0&quot;;&quot;$(ProjectDir)..\..\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LJHELLO_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -63,6 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="libgtksourceview-1.0.lib libgtksourceviewmm_vc8_static_MDd-1.0.lib"
 				OutputFile="$(SolutionDir)bin\plugins\$(ProjectName).dll"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -120,7 +121,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)..\..\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(GTKMM_BASEPATH)\include\gtksourceview-1.0&quot;;&quot;$(GTKMM_BASEPATH)\include\gtksourceviewmm-1.0&quot;;&quot;$(ProjectDir)..\..\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LJHELLO_EXPORTS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -140,6 +141,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="libgtksourceview-1.0.lib libgtksourceviewmm_vc8_static_MD-1.0.lib"
 				OutputFile="$(SolutionDir)bin\plugins\$(ProjectName).dll"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"

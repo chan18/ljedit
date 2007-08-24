@@ -15,9 +15,9 @@ public:
         return me;
     }
 
-	gtksourceview::SourceView* create_gtk_source_view(bool highlight_current_line=true, bool show_line_number=false);
+	virtual gtksourceview::SourceView* create_gtk_source_view();
 
-	void destroy_gtk_source_view(gtksourceview::SourceView* view) { delete view; }
+	virtual void destroy_gtk_source_view(gtksourceview::SourceView* view);
 
 private:
     LJEditorUtilsImpl() {}
@@ -27,11 +27,7 @@ private:
     LJEditorUtilsImpl& operator = (const LJEditorUtilsImpl&);
 
 private:
-	virtual Gtk::TextView* do_create_source_view(bool highlight_current_line, bool show_line_number)
-		{ return create_gtk_source_view(highlight_current_line, show_line_number); }
-
-	virtual void do_destroy_source_view(Gtk::TextView* view)
-		{ destroy_gtk_source_view(dynamic_cast<gtksourceview::SourceView*>(view)); }
+	virtual Glib::RefPtr<gtksourceview::SourceLanguagesManager> do_get_source_language_manager();
 
 	virtual bool do_load_file(Glib::ustring& out, const std::string& filename);
 };

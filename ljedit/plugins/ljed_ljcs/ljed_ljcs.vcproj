@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)..\..\include&quot;;&quot;$(ProjectDir)..\..\..\ljcs\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(GTKMM_BASEPATH)\include\gtksourceview-1.0&quot;;&quot;$(GTKMM_BASEPATH)\include\gtksourceviewmm-1.0&quot;;&quot;$(ProjectDir)..\..\include&quot;;&quot;$(ProjectDir)..\..\..\ljcs\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LJED_LJCS_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ljcs_mdd.lib"
+				AdditionalDependencies="ljcs_mdd.lib libgtksourceview-1.0.lib libgtksourceviewmm_vc8_static_MDd-1.0.lib"
 				OutputFile="$(SolutionDir)bin\plugins\$(ProjectName).dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(ProjectDir)..\..\..\ljcs\lib"
@@ -122,7 +122,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)..\..\include&quot;;&quot;$(ProjectDir)..\..\..\ljcs\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(GTKMM_BASEPATH)\include\gtksourceview-1.0&quot;;&quot;$(GTKMM_BASEPATH)\include\gtksourceviewmm-1.0&quot;;&quot;$(ProjectDir)..\..\include&quot;;&quot;$(ProjectDir)..\..\..\ljcs\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LJED_LJCS_EXPORTS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -142,7 +142,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ljcs_md.lib"
+				AdditionalDependencies="ljcs_md.lib libgtksourceview-1.0.lib libgtksourceviewmm_vc8_static_MD-1.0.lib"
 				OutputFile="$(SolutionDir)bin\plugins\$(ProjectName).dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(ProjectDir)..\..\..\ljcs\lib"

@@ -31,9 +31,23 @@ DocPageImpl* DocPageImpl::create(const std::string& filepath
 	hbox->pack_start(*close_button);
 	hbox->show_all();
 
-	gtksourceview::SourceView* view = LJEditorUtilsImpl::self().create_gtk_source_view();
-	if( view==0 )
+	// view
+    gtksourceview::SourceView* view = LJEditorUtilsImpl::self().create_gtk_source_view();
+    if( view == 0 )
 		return 0;
+
+	Glib::RefPtr<gtksourceview::SourceLanguage> lang = LJEditorUtilsImpl::self().get_source_language_manager()->get_language_from_mime_type("text/x-c++hdr");
+	Glib::RefPtr<gtksourceview::SourceBuffer> buffer = view->get_source_buffer();
+	buffer->set_language(lang);
+	buffer->set_highlight();
+
+#ifndef WIN32
+	view->modify_font(Pango::FontDescription("Courier 10 Pitch"));
+#endif
+
+	view->set_highlight_current_line(true);
+    view->set_wrap_mode(Gtk::WRAP_NONE);
+    view->set_tabs_width(4);
 
     DocPageImpl* page = Gtk::manage(new DocPageImpl(*label, *close_button, *hbox, *view));
     page->filepath_ = filepath;

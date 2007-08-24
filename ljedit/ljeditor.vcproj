@@ -216,14 +216,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\LanguageManager.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\LanguageManager.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\LJEditorImpl.cpp"
 				>
 			</File>
