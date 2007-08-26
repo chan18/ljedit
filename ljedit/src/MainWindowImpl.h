@@ -38,6 +38,9 @@ private:
     void on_file_save();
     void on_file_save_as();
     void on_file_quit();
+
+	void on_jump_to();
+
     void on_help_about();
 
 private:
