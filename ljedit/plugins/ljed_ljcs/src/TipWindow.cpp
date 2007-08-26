@@ -89,7 +89,7 @@ void TipWindow::fill_define_store(ElementMap& emap) {
 }
 
 void TipWindow::show_tip(int x, int y, cpp::ElementSet& mset, char tag) {
-    tag_ = tag;
+	tag_ = tag;
 
 	clear_define_store();
 
@@ -109,14 +109,10 @@ void TipWindow::show_tip(int x, int y, cpp::ElementSet& mset, char tag) {
 
 		fill_define_store(emap);
 
-		elems_view_.set_model(elems_store_);
 		elems_view_.get_selection()->select(elems_store_->children().begin());
 		elems_view_.columns_autosize();
 
 		pages_.set_current_page(0);
-		resize(150, 150);
-		move(x, y);
-		show();
 
 	} else {
 		char str[1024];
@@ -138,11 +134,16 @@ void TipWindow::show_tip(int x, int y, cpp::ElementSet& mset, char tag) {
 		buf->place_cursor( buf->begin() );
 		
 		pages_.set_current_page(1);
-		set_size_request();
-		resize(150, 150);
-		move(x, y);
-		show();
 	}
+
+#ifdef WIN32
+	resize(150, 150);
+	pages_.resize_children();
+	resize_children();
+#endif
+
+	move(x, y);
+	show();
 }
 
 cpp::Element* TipWindow::get_selected() {
@@ -157,7 +158,6 @@ cpp::Element* TipWindow::get_selected() {
     }
     return result;
 }
-
 
 void TipWindow::select_next() {
     if( elems_store_->children().empty() )

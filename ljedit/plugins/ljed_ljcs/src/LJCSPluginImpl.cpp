@@ -46,19 +46,19 @@ void LJCSPluginImpl::show_hint(DocPage& page
 {
     LJEditorDocIter ps(it);
     LJEditorDocIter pe(end);
-    std::string key;
-    if( !find_key(key, ps, pe) )
-        return;
-
-    Glib::ustring str = it.get_text(end);
-    MatchedSet mset;
-
+	
     std::string filename = page.filepath();
     cpp::File* file = ParserEnviron::self().find_parsed(filename);
     if( file==0 )
         return;
 
-    search(key, mset, *file);
+    size_t line = (size_t)it.get_line() + 1;
+    StrVector keys;
+    if( !find_keys(keys, it, end, file) )
+        return;
+
+    MatchedSet mset;
+    ::search_keys(keys, mset, *file, line);
 
     int view_x = 0;
     int view_y = 0;

@@ -43,7 +43,7 @@ bool DocManagerImpl::scroll_to_file_pos() {
         gtksourceview::SourceBuffer::iterator it = buffer->get_iter_at_line(line_num_);
         if( it != buffer->end() )
             buffer->place_cursor(it);
-        page->view().scroll_to_iter(it, 0.5);
+        page->view().scroll_to_iter(it, 0.25);
 
         page_num_ = -1;
     }

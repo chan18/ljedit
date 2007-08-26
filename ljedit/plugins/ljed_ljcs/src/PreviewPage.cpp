@@ -141,7 +141,7 @@ bool PreviewPage::on_scroll_to_define_line() {
     Gtk::TextBuffer::iterator it = buffer->get_iter_at_line(int(elem->sline - 1));
     if( it != buffer->end() )
         buffer->place_cursor(it);
-    view_->scroll_to_iter(it, 0.5);
+    view_->scroll_to_iter(it, 0.25);
 
     return false;
 }

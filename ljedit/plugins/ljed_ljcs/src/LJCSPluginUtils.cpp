@@ -30,7 +30,8 @@ bool find_keys( StrVector& keys
 
     std::string rkey = it.get_text(end);
     ljcs_parse_macro_replace(rkey, file);
-    if( rkey.empty() && rkey!=key )
+	parse_key(rkey, rkey);
+    if( !rkey.empty() && rkey!=key )
         keys.push_back(rkey);
 
     return true;

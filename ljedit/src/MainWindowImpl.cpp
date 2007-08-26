@@ -149,7 +149,7 @@ void MainWindowImpl::on_jump_to() {
 		gtksourceview::SourceBuffer::iterator it = buffer->get_iter_at_line(line_num - 1);
 		if( it != buffer->end() )
 			buffer->place_cursor(it);
-		page->view().scroll_to_iter(it, 0.5);
+		page->view().scroll_to_iter(it, 0.25);
 	}
 }
 
