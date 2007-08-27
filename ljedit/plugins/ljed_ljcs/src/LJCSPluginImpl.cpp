@@ -329,7 +329,6 @@ bool LJCSPluginImpl::on_button_release_event(GdkEventButton* event, DocPage* pag
         Glib::RefPtr<Gtk::TextBuffer> buf = page->buffer();
         Glib::RefPtr<Gtk::TextMark> mark = buf->get_insert();
         Gtk::TextBuffer::iterator it = buf->get_iter_at_mark(mark);
-        Gtk::TextBuffer::iterator end = it;
         char ch = (char)it.get_char();
         if( ::isalnum(ch) || ch=='_' ) {
             while( it.forward_word_end() ) {
@@ -339,6 +338,7 @@ bool LJCSPluginImpl::on_button_release_event(GdkEventButton* event, DocPage* pag
                 break;
             }
         }
+        Gtk::TextBuffer::iterator end = it;
 
         StrVector keys;
         if( !find_keys(keys, it, end, file) )
