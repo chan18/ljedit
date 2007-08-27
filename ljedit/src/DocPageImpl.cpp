@@ -47,6 +47,7 @@ DocPageImpl* DocPageImpl::create(const std::string& filepath
 	view->set_highlight_current_line(true);
     view->set_wrap_mode(Gtk::WRAP_NONE);
     view->set_tabs_width(4);
+	view->set_auto_indent(true);
 
     DocPageImpl* page = Gtk::manage(new DocPageImpl(*label, *close_button, *hbox, *view));
     page->filepath_ = filepath;
