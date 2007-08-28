@@ -1,13 +1,14 @@
 // MainWindowImpl.cpp
 // 
 
+#include "StdAfx.h"	// for vc precompile header
+
 #include "MainWindowImpl.h"
 
 #include "RuntimeException.h"
 
 
-MainWindowImpl::MainWindowImpl()
-{
+MainWindowImpl::MainWindowImpl() {
 }
 
 MainWindowImpl::~MainWindowImpl() {
@@ -128,6 +129,7 @@ void MainWindowImpl::on_file_save_as() {
 
 void MainWindowImpl::on_file_quit() {
 	destroy();
+
 	Gtk::Main::quit();
 }
 

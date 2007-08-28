@@ -1,6 +1,8 @@
 // LJEditorUtilsImpl.cpp
 //
 
+#include "StdAfx.h"	// for vc precompile header
+
 #include "LJEditorUtilsImpl.h"
 
 #include <fstream>
@@ -34,7 +36,6 @@ gtksourceview::SourceView* LJEditorUtilsImpl::create_gtk_source_view() {
 #ifndef WIN32
 		view->modify_font(Pango::FontDescription("Courier 10 Pitch"));
 #endif
-
 		view->set_wrap_mode(Gtk::WRAP_NONE);
         view->set_tabs_width(4);
     }

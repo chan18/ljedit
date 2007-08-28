@@ -1,6 +1,8 @@
 // LJCSPlugin.cpp
 // 
 
+#include "StdAfx.h"	// for vc precompile header
+
 #include "IPlugin.h"
 #include "LJCSPluginImpl.h"
 

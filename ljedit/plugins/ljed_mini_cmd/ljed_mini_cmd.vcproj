@@ -45,7 +45,7 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="0"
+				UsePrecompiledHeader="1"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
@@ -118,9 +118,10 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				WholeProgramOptimization="false"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LJED_MINI_CMD_EXPORTS"
 				RuntimeLibrary="2"
-				UsePrecompiledHeader="0"
+				UsePrecompiledHeader="1"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"

@@ -1,6 +1,8 @@
 // TipWindow.cpp
 // 
 
+#include "StdAfx.h"	// for vc precompile header
+
 #include "TipWindow.h"
 
 TipWindow::TipWindow(LJEditor& editor)

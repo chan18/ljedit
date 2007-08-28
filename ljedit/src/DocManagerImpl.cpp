@@ -1,6 +1,8 @@
 // DocManagerImpl.cpp
 // 
 
+#include "StdAfx.h"	// for vc precompile header
+
 #include "DocManagerImpl.h"
 
 #include "LJEditorUtilsImpl.h"

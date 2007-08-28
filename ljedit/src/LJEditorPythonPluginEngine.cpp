@@ -1,6 +1,8 @@
 // LJEditorPythonPluginEngine.cpp
 // 
 
+#include "StdAfx.h"	// for vc precompile header
+
 #include "LJEditorPythonPluginEngine.h"
 
 #ifndef ENABLE_PYTHON_PLUGIN_ENGINE

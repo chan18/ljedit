@@ -1,6 +1,8 @@
 // LJEditorImpl.cpp
 //
 
+#include "StdAfx.h"	// for vc precompile header
+
 #include "LJEditorImpl.h"
 
 #include "PluginManager.h"
@@ -35,6 +37,7 @@ void LJEditorImpl::destroy() {
 	::ljed_stop_python_plugin_engine();
 
     PluginManager::self().unload_plugins();
+
 }
 
 void LJEditorImpl::run() {

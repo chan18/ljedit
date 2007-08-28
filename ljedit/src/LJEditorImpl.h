@@ -34,7 +34,7 @@ private:
     LJEditorImpl& operator = (const LJEditorImpl&);
 
 private:
-    MainWindowImpl main_window_;
+    MainWindowImpl		main_window_;
 };
 
 #endif//LJED_INC_LJEDITORIMPL_H

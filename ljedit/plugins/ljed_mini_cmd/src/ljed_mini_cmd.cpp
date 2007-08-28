@@ -1,12 +1,13 @@
 // ljed_mini_cmd.cpp
 // 
 
+#include "StdAfx.h"	// for vc precompile header
+
 #include "IPlugin.h"
 
 class LJMiniCmd : public IPlugin {
 public:
     LJMiniCmd(LJEditor& editor) : IPlugin(editor)
-		, mini_cmd_item_(0)
 		, mini_cmd_entry_(0) {}
 
     virtual const char* get_plugin_name() { return "LJMiniCmd"; }
@@ -20,16 +21,16 @@ protected:
 			return false;
 
 		Gtk::Label* label = Gtk::manage(new Gtk::Label("cmd:"));
-		Gtk::ComboBoxEntry* entry = Gtk::manage(new Gtk::ComboBoxEntry());
+		mini_cmd_entry_ = Gtk::manage(new Gtk::ComboBoxEntry());
 		Gtk::HBox* hbox = Gtk::manage(new Gtk::HBox());
 		hbox->pack_start(*label);
-		hbox->pack_start(*entry);
+		hbox->pack_start(*mini_cmd_entry_);
 
 		Gtk::ToolItem* item = Gtk::manage(new Gtk::ToolItem());
 		item->add(*hbox);
 		item->show_all();
 
-		item->signal_key_release_event().connect( sigc::mem_fun(this, &LJMiniCmd::on_mini_cmd_key_release) );
+		mini_cmd_sig_handler_ = item->signal_key_release_event().connect( sigc::mem_fun(this, &LJMiniCmd::on_mini_cmd_key_release) );
 
 		toolbar->append(*item);
 
@@ -63,12 +64,7 @@ protected:
 		ui->remove_action_group(action_group_);
 		ui->remove_ui(menu_id_);
 
-		Gtk::Toolbar* toolbar = dynamic_cast<Gtk::Toolbar*>(ui->get_widget("/ToolBar"));
-		if( toolbar==0 )
-			return;
-
-		if( mini_cmd_item_!=0 )
-			toolbar->remove(*mini_cmd_item_);
+		mini_cmd_sig_handler_.disconnect();
     }
 
 private:
@@ -78,9 +74,8 @@ private:
 private:
     Glib::RefPtr<Gtk::ActionGroup>	action_group_;
 	Gtk::UIManager::ui_merge_id		menu_id_;
-	Gtk::ToolItem*					mini_cmd_item_;
 	Gtk::ComboBoxEntry*				mini_cmd_entry_;
-
+	sigc::connection				mini_cmd_sig_handler_;
 };
 
 void LJMiniCmd::on_mini_cmd_active() {
@@ -105,6 +100,12 @@ bool LJMiniCmd::on_mini_cmd_key_release(GdkEventKey* event) {
 
 	Gtk::TextIter it = buf->get_iter_at_mark(buf->get_insert());
 
+	Gtk::TextIter ps, pe;
+	if( it.forward_search(text, Gtk::TEXT_SEARCH_TEXT_ONLY, ps, pe) ) {
+		buf->place_cursor(pe);
+		buf->select_range(ps, pe);
+		page->view().scroll_to_iter(ps, 0.3);
+	}
 
 	return false;	
 }

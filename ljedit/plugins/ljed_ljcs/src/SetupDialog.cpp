@@ -1,6 +1,8 @@
 // SetupDialog.cpp
 // 
 
+#include "StdAfx.h"	// for vc precompile header
+
 #include "SetupDialog.h"
 
 #include <string>

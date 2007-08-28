@@ -1,6 +1,8 @@
 // ljed_hello.cpp
 // 
 
+#include "StdAfx.h"	// for vc precompile header
+
 #include "IPlugin.h"
 
 class LJHello : public IPlugin {

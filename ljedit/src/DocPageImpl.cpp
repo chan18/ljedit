@@ -1,6 +1,8 @@
 // DocPageImpl.cpp
 // 
 
+#include "StdAfx.h"	// for vc precompile header
+
 #include "DocPageImpl.h"
 
 #include <fstream>

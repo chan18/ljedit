@@ -1,6 +1,8 @@
 // LJCSPluginUtils.cpp
 // 
 
+#include "StdAfx.h"	// for vc precompile header
+
 #include "LJCSPluginUtils.h"
 
 bool is_in_comment(Gtk::TextBuffer::iterator& it) {

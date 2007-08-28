@@ -1,6 +1,8 @@
 // ljed_indent.cpp
 // 
 
+#include "StdAfx.h"	// for vc precompile header
+
 #include "IPlugin.h"
 
 class LJIndent : public IPlugin {

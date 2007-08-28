@@ -1,6 +1,8 @@
 // PluginManager.cpp
 // 
 
+#include "StdAfx.h"	// for vc precompile header
+
 #include "PluginManager.h"
 #include "LJEditorImpl.h"
 

@@ -1,6 +1,8 @@
 // OutlinePage.cpp
 // 
 
+#include "StdAfx.h"	// for vc precompile header
+
 #include "OutlinePage.h"
 
 OutlinePage::OutlinePage() : file_(0), line_(0) {
