@@ -27,9 +27,10 @@ void MainWindowImpl::create(const std::string& path) {
     vbox->pack_start(*menubar, Gtk::PACK_SHRINK);
 
     // toolbar
-    Gtk::Widget* toolbar = ui_manager_->get_widget("/ToolBar");
+    Gtk::Toolbar* toolbar = dynamic_cast<Gtk::Toolbar*>(ui_manager_->get_widget("/ToolBar"));
     if( toolbar==0 )
         throw RuntimeException("error : create main window not find ToolBar!");
+	toolbar->set_toolbar_style(Gtk::TOOLBAR_BOTH_HORIZ);
     vbox->pack_start(*toolbar, Gtk::PACK_SHRINK);
 
 	// body hpanel
