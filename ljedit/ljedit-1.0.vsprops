@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="gb2312"?>
+<VisualStudioPropertySheet
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="ljedit-1.0 release"
+	InheritedPropertySheets="$(GTKMM_BASEPATH)\MSVC\gtkmm-2.4.vsprops"
+	>
+	<Tool
+		Name="VCCLCompilerTool"
+		AdditionalIncludeDirectories="&quot;$(GTKMM_BASEPATH)\include\gtksourceview-1.0&quot;;&quot;$(GTKMM_BASEPATH)\include\gtksourceviewmm-1.0&quot;;&quot;$(SolutionDir)include&quot;"
+		DisableSpecificWarnings="4250;4520"
+	/>
+	<Tool
+		Name="VCLinkerTool"
+		AdditionalDependencies="libgtksourceview-1.0.lib libgtksourceviewmm_vc8_static_MD-1.0.lib"
+	/>
+</VisualStudioPropertySheet>
