@@ -23,10 +23,9 @@ typedef std::list<sigc::connection>			TConnectionList;
 typedef std::map<void*, TConnectionList>	TConnectionListMap;
 
 inline void disconnect_all_connections(TConnectionList& cons) {
-    TConnectionList::iterator it = cons.begin();
-    TConnectionList::iterator end = cons.end();
-    for( ; it!=end; ++it )
-        it->disconnect();
+	std::for_each( cons.begin()
+		, cons.end()
+		, std::mem_fun_ref(&sigc::connection::disconnect) );
     cons.clear();
 }
 

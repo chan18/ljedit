@@ -8,6 +8,8 @@
 class LJMiniCmd : public IPlugin {
 public:
     LJMiniCmd(LJEditor& editor) : IPlugin(editor)
+		, toolbar_(0)
+		, toolitem_(0)
 		, mini_cmd_entry_(0) {}
 
     virtual const char* get_plugin_name() { return "LJMiniCmd"; }
@@ -16,23 +18,25 @@ protected:
     virtual bool on_create(const char* plugin_filename)  {
 		// toolbar
 		Glib::RefPtr<Gtk::UIManager> ui = editor().main_window().ui_manager();
-		Gtk::Toolbar* toolbar = dynamic_cast<Gtk::Toolbar*>(ui->get_widget("/ToolBar"));
-		if( toolbar==0 )
+		toolbar_ = dynamic_cast<Gtk::Toolbar*>(ui->get_widget("/ToolBar"));
+		if( toolbar_==0 )
 			return false;
 
 		Gtk::Label* label = Gtk::manage(new Gtk::Label("cmd:"));
-		mini_cmd_entry_ = Gtk::manage(new Gtk::ComboBoxEntry());
+		mini_cmd_entry_ = Gtk::manage(new Gtk::Entry());
+		
 		Gtk::HBox* hbox = Gtk::manage(new Gtk::HBox());
 		hbox->pack_start(*label);
 		hbox->pack_start(*mini_cmd_entry_);
 
-		Gtk::ToolItem* item = Gtk::manage(new Gtk::ToolItem());
-		item->add(*hbox);
-		item->show_all();
+		toolitem_ = Gtk::manage(new Gtk::ToolItem());
+		toolitem_->add(*hbox);
+		toolitem_->show_all();
 
-		mini_cmd_sig_handler_ = item->signal_key_release_event().connect( sigc::mem_fun(this, &LJMiniCmd::on_mini_cmd_key_release) );
+		mini_cmd_sigs_.push_back( mini_cmd_entry_->signal_changed().connect(sigc::mem_fun(this, &LJMiniCmd::on_mini_cmd_key_changed)) );
+		mini_cmd_sigs_.push_back( mini_cmd_entry_->signal_key_press_event().connect(sigc::mem_fun(this, &LJMiniCmd::on_mini_cmd_key_press), false) );
 
-		toolbar->append(*item);
+		toolbar_->append(*toolitem_);
 
 		// menu
 		action_group_ = Gtk::ActionGroup::create("MiniCmdActions");
@@ -59,44 +63,51 @@ protected:
     }
 
     virtual void on_destroy() {
+		toolbar_->remove(*toolitem_);
+
 		Glib::RefPtr<Gtk::UIManager> ui = editor().main_window().ui_manager();
 
 		ui->remove_action_group(action_group_);
 		ui->remove_ui(menu_id_);
 
-		mini_cmd_sig_handler_.disconnect();
+		std::for_each( mini_cmd_sigs_.begin()
+			, mini_cmd_sigs_.end()
+			, std::mem_fun_ref(&sigc::connection::disconnect) );
+		mini_cmd_sigs_.clear();
     }
 
 private:
 	void on_mini_cmd_active();
-	bool on_mini_cmd_key_release(GdkEventKey* event);
+	void on_mini_cmd_key_changed();
+	bool on_mini_cmd_key_press(GdkEventKey* event);
+	void on_editing_done();
 
 private:
     Glib::RefPtr<Gtk::ActionGroup>	action_group_;
 	Gtk::UIManager::ui_merge_id		menu_id_;
-	Gtk::ComboBoxEntry*				mini_cmd_entry_;
-	sigc::connection				mini_cmd_sig_handler_;
+	Gtk::Toolbar*					toolbar_;
+	Gtk::ToolItem*					toolitem_;
+	Gtk::Entry*						mini_cmd_entry_;
+	std::list<sigc::connection>		mini_cmd_sigs_;
 };
 
 void LJMiniCmd::on_mini_cmd_active() {
-	assert( mini_cmd_entry_!=0 && mini_cmd_entry_->get_entry()!=0 );
+	assert( mini_cmd_entry_!=0 );
 
-	Gtk::Entry* entry = mini_cmd_entry_->get_entry();
-	entry->select_region(0, entry->get_text_length());
+	mini_cmd_entry_->select_region(0, mini_cmd_entry_->get_text_length());
 	mini_cmd_entry_->grab_focus();
 }
 
-bool LJMiniCmd::on_mini_cmd_key_release(GdkEventKey* event) {
+void LJMiniCmd::on_mini_cmd_key_changed() {
 	DocPage* page = editor().main_window().doc_manager().get_current_document();
 	if( page==0 )
-		return false;
+		return;
 
 	Glib::RefPtr<gtksourceview::SourceBuffer> buf = page->buffer();
 
-	assert( mini_cmd_entry_!=0 && mini_cmd_entry_->get_entry()!=0 );
+	assert( mini_cmd_entry_!=0 );
 
-	Gtk::Entry* entry = mini_cmd_entry_->get_entry();
-	Glib::ustring text = entry->get_text();
+	Glib::ustring text = mini_cmd_entry_->get_text();
 
 	Gtk::TextIter it = buf->get_iter_at_mark(buf->get_insert());
 
@@ -106,8 +117,67 @@ bool LJMiniCmd::on_mini_cmd_key_release(GdkEventKey* event) {
 		buf->select_range(ps, pe);
 		page->view().scroll_to_iter(ps, 0.3);
 	}
+}
 
-	return false;	
+bool LJMiniCmd::on_mini_cmd_key_press(GdkEventKey* event) {
+	DocPage* page = editor().main_window().doc_manager().get_current_document();
+	if( page==0 )
+		return false;
+
+    switch( event->keyval ) {
+    case GDK_Up:
+		{
+			Glib::RefPtr<gtksourceview::SourceBuffer> buf = page->buffer();
+
+			assert( mini_cmd_entry_!=0 );
+			Glib::ustring text = mini_cmd_entry_->get_text();
+
+			Gtk::TextIter it = buf->get_insert()->get_iter();
+
+			Gtk::TextIter ps, pe;
+			if( !it.backward_search(text, Gtk::TEXT_SEARCH_TEXT_ONLY, ps, pe) ) {
+				it.forward_to_end();
+
+				if( !it.backward_search(text, Gtk::TEXT_SEARCH_TEXT_ONLY, ps, pe) )
+					return true;
+			}
+
+			buf->select_range(ps, pe);
+			page->view().scroll_to_iter(ps, 0.3);
+		}
+		return true;
+
+    case GDK_Down:
+		{
+			Glib::RefPtr<gtksourceview::SourceBuffer> buf = page->buffer();
+
+			assert( mini_cmd_entry_!=0 );
+			Glib::ustring text = mini_cmd_entry_->get_text();
+
+			Gtk::TextIter it = buf->get_insert()->get_iter();
+			if( !it.forward_char() )
+				it.set_offset(0);
+
+			Gtk::TextIter ps, pe;
+			if( !it.forward_search(text, Gtk::TEXT_SEARCH_TEXT_ONLY, ps, pe) ) {
+				it.set_offset(0);
+
+				if( !it.forward_search(text, Gtk::TEXT_SEARCH_TEXT_ONLY, ps, pe) )
+					return true;
+			}
+
+			buf->select_range(ps, pe);
+			page->view().scroll_to_iter(ps, 0.3);
+		}
+		return true;
+
+    case GDK_Escape:
+    case GDK_Return:
+		page->view().grab_focus();
+		return true;
+    }
+
+	return false;
 }
 
 LJED_PLUGIN_DLL_EXPORT IPlugin* plugin_create(LJEditor& editor) {

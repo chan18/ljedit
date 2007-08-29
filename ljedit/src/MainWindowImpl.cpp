@@ -75,7 +75,7 @@ void MainWindowImpl::create(const std::string& path) {
     vbox->pack_start(status_bar_, false, false);
 
     resize(1024, 768);
-    show_all();
+	show_all_children();
 }
 
 void MainWindowImpl::create_ui_manager(const std::string& config_file) {

@@ -41,6 +41,8 @@ void LJEditorImpl::destroy() {
 }
 
 void LJEditorImpl::run() {
+	main_window_.show();
+
 	for(;;) {
 		try {
 			Gtk::Main::run(main_window_);
