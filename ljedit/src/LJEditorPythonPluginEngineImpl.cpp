@@ -279,8 +279,10 @@ public:
 			return;
 
 		PyObject* py_result = PyObject_CallFunction(py_load_plugins, 0);
-		if( py_result==0 )
+		if( py_result==0 ) {
+			PyErr_Print();
 			PyErr_Clear();
+		}
 		Py_XDECREF(py_result);
 	}
 
@@ -297,8 +299,10 @@ public:
 			return;
 
 		PyObject* py_result = PyObject_CallFunction(py_unload_plugins, 0);
-		if( py_result==0 )
+		if( py_result==0 ) {
+			PyErr_Print();
 			PyErr_Clear();
+		}
 		Py_XDECREF(py_result);
 	}
 
@@ -313,6 +317,7 @@ void ljed_start_python_plugin_engine() {
 	::Py_Initialize();
 
 	if( !PythonPluginManager::self().init() ) {
+		PyErr_Print();
 		PyErr_Clear();
 		return;
 	}

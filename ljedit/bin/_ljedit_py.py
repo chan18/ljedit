@@ -16,8 +16,6 @@ ljedit.main_window.doc_manager.close_all_files    = lambda :                  __
 ljedit.main_window.doc_manager.get_file_path      = lambda page_num:          __ljedit.ljedit_doc_manager_get_file_path(__ljedit.__c_ljedit, page_num)
 ljedit.main_window.doc_manager.get_text_view      = lambda page_num:          __ljedit.ljedit_doc_manager_get_text_view(__ljedit.__c_ljedit, page_num)
 
-ljedit.trace = lambda msg : ljedit.main_window.status_bar.push(str(msg), 0)
-
 def show_msgbox(message):
 	dlg = gtk.MessageDialog(parent=None, buttons=gtk.BUTTONS_YES_NO, message_format=str(message))
 	dlg.run()
@@ -25,6 +23,22 @@ def show_msgbox(message):
 
 ljedit.msgbox = show_msgbox 
 
+def traceback(e):
+	try:
+		info = sys.exc_info()
+		#print dir(info[2])
+		#print dir(info[2].tb_frame.f_code)
+		#print dir(info[2].tb_next)
+		print 'ERROR : ', e
+		print 'TRACEBACK :'
+		info = info[2]
+		while info:
+			print '\t>>>%s:%d' % (info.tb_frame.f_code.co_filename, info.tb_frame.f_code.co_firstlineno)
+			info = info.tb_next
+	except Exception:
+		pass
+
+ljedit.traceback = traceback
 
 ljedit_plugins = []
 
@@ -49,7 +63,7 @@ def load_plugins():
 				plugin = load_plugin(plugin_file)
 				ljedit_plugins.append(plugin)
 			except Exception, e:
-				ljedit.trace(e)
+				traceback(e)
 
 def unload_plugins():
 	global ljedit_plugins
@@ -57,6 +71,5 @@ def unload_plugins():
 		try:
 			plugin.deactive()
 		except Exception, e:
-			pass
-	del ljed_plugins
+			traceback(e)
 

@@ -40,6 +40,7 @@ plugin :
 	cd plugins/ljed_ljcs;make
 	cd plugins/ljed_hello;make
 	cd plugins/ljed_indent;make
+	cd plugins/ljed_mini_cmd;make
 
 clean :
 	rm -f $(BIN)
@@ -50,5 +51,6 @@ clean_plugin :
 	cd plugins/ljed_ljcs;make clean
 	cd plugins/ljed_hello;make clean
 	cd plugins/ljed_indent;make clean
+	cd plugins/ljed_mini_cmd;make clean
 
 
