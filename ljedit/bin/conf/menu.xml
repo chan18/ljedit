@@ -17,7 +17,6 @@
       <menuitem action='Cut'/>
       <menuitem action='Copy'/>
       -->
-      <menuitem action='JumpTo'/>
       <separator/>
     </menu>
     <menu action='PluginsMenu'>

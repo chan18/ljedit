@@ -92,9 +92,7 @@ void MainWindowImpl::create_ui_manager(const std::string& config_file) {
     action_group_->add( Gtk::Action::create("SaveAs", Gtk::Stock::SAVE,      "Save _As...", "Save to a file"),		sigc::mem_fun(this, &MainWindowImpl::on_file_save_as) );
     action_group_->add( Gtk::Action::create("Close",  Gtk::Stock::CLOSE,     "_Close",      "Close current file"),	sigc::mem_fun(doc_manager_, &DocManager::close_current_file) );
     action_group_->add( Gtk::Action::create("Quit",   Gtk::Stock::QUIT,      "_Quit",       "Quit"),				sigc::mem_fun(this, &MainWindowImpl::on_file_quit) );
-
-	action_group_->add( Gtk::Action::create("JumpTo", Gtk::Stock::JUMP_TO,   "_Jump To",    "Jump to line"), Gtk::AccelKey("<control>G"),	sigc::mem_fun(this, &MainWindowImpl::on_jump_to) );
-																		       
+						       
     action_group_->add( Gtk::Action::create("About",  Gtk::Stock::ABOUT,     "About",       "About"),				sigc::mem_fun(this, &MainWindowImpl::on_help_about) );
 
     ui_manager_ = Gtk::UIManager::create();
@@ -131,29 +129,6 @@ void MainWindowImpl::on_file_quit() {
 	destroy();
 
 	Gtk::Main::quit();
-}
-
-void MainWindowImpl::on_jump_to() {
-	DocPage* page = doc_manager_.get_current_document();
-	if( page==0 )
-		return;
-
-	Gtk::Dialog dlg;
-	Gtk::Entry entry;
-	dlg.get_vbox()->pack_start(entry);
-	dlg.add_button(Gtk::Stock::JUMP_TO, Gtk::RESPONSE_OK);
-	dlg.show_all_children();
-	if( dlg.run()!=Gtk::RESPONSE_OK )
-		return;
-
-	int line_num = atoi(entry.get_text().c_str());
-	if( line_num > 0 ) {
-		Glib::RefPtr<gtksourceview::SourceBuffer> buffer = page->buffer();
-		gtksourceview::SourceBuffer::iterator it = buffer->get_iter_at_line(line_num - 1);
-		if( it != buffer->end() )
-			buffer->place_cursor(it);
-		page->view().scroll_to_iter(it, 0.25);
-	}
 }
 
 void MainWindowImpl::on_help_about() {

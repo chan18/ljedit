@@ -36,6 +36,7 @@ DocPageImpl* DocPageImpl::create(const std::string& filepath
     gtksourceview::SourceView* view = LJEditorUtilsImpl::self().create_gtk_source_view();
     if( view == 0 )
 		return 0;
+	view->set_show_line_numbers();
 
 	Glib::RefPtr<gtksourceview::SourceLanguage> lang = LJEditorUtilsImpl::self().get_source_language_manager()->get_language_from_mime_type("text/x-c++hdr");
 	Glib::RefPtr<gtksourceview::SourceBuffer> buffer = view->get_source_buffer();
