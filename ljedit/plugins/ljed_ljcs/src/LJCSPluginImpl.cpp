@@ -248,6 +248,11 @@ bool LJCSPluginImpl::on_key_press_event(GdkEventKey* event, DocPage* page) {
 bool LJCSPluginImpl::on_key_release_event(GdkEventKey* event, DocPage* page) {
     assert( page != 0 );
 
+    if( event->state & (Gdk::CONTROL_MASK | Gdk::MOD1_MASK) ) {
+        tip_.hide();
+        return false;
+    }
+
     switch( event->keyval ) {
     case GDK_Tab:
     case GDK_Return:
