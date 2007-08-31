@@ -167,10 +167,11 @@ void LJMiniCmd::on_mini_cmd_key_changed() {
 
 	default:
 		{
-			Gtk::TextIter it = buf->get_iter_at_mark(buf->get_insert());
+			gtksourceview::SourceIter it = buf->get_iter_at_mark(buf->get_insert());
+			Gtk::TextIter end = buf->end();
 
 			Gtk::TextIter ps, pe;
-			if( it.forward_search(text, Gtk::TEXT_SEARCH_TEXT_ONLY, ps, pe) ) {
+			if( it.forward_search(text, gtksourceview::SEARCH_TEXT_ONLY | gtksourceview::SEARCH_CASE_INSENSITIVE, ps, pe, end) ) {
 				buf->place_cursor(pe);
 				buf->select_range(ps, pe);
 				page->view().scroll_to_iter(ps, 0.25);
@@ -193,13 +194,14 @@ bool LJMiniCmd::on_mini_cmd_key_press(GdkEventKey* event) {
 			assert( mini_cmd_entry_!=0 );
 			Glib::ustring text = mini_cmd_entry_->get_text();
 
-			Gtk::TextIter it = buf->get_insert()->get_iter();
+			gtksourceview::SourceIter it = buf->get_iter_at_mark(buf->get_insert());
+			Gtk::TextIter end = buf->begin();
 
 			Gtk::TextIter ps, pe;
-			if( !it.backward_search(text, Gtk::TEXT_SEARCH_TEXT_ONLY, ps, pe) ) {
+			if( !it.backward_search(text, gtksourceview::SEARCH_TEXT_ONLY | gtksourceview::SEARCH_CASE_INSENSITIVE, ps, pe, end) ) {
 				it.forward_to_end();
 
-				if( !it.backward_search(text, Gtk::TEXT_SEARCH_TEXT_ONLY, ps, pe) )
+				if( !it.backward_search(text, gtksourceview::SEARCH_TEXT_ONLY | gtksourceview::SEARCH_CASE_INSENSITIVE, ps, pe, end) )
 					return true;
 			}
 
@@ -215,15 +217,17 @@ bool LJMiniCmd::on_mini_cmd_key_press(GdkEventKey* event) {
 			assert( mini_cmd_entry_!=0 );
 			Glib::ustring text = mini_cmd_entry_->get_text();
 
-			Gtk::TextIter it = buf->get_insert()->get_iter();
+			gtksourceview::SourceIter it = buf->get_iter_at_mark(buf->get_insert());
+			Gtk::TextIter end = buf->end();
+
 			if( !it.forward_char() )
-				it.set_offset(0);
+				it = buf->begin();
 
 			Gtk::TextIter ps, pe;
-			if( !it.forward_search(text, Gtk::TEXT_SEARCH_TEXT_ONLY, ps, pe) ) {
-				it.set_offset(0);
+			if( !it.forward_search(text, gtksourceview::SEARCH_TEXT_ONLY | gtksourceview::SEARCH_CASE_INSENSITIVE, ps, pe, end) ) {
+				it = buf->begin();
 
-				if( !it.forward_search(text, Gtk::TEXT_SEARCH_TEXT_ONLY, ps, pe) )
+				if( !it.forward_search(text, gtksourceview::SEARCH_TEXT_ONLY | gtksourceview::SEARCH_CASE_INSENSITIVE, ps, pe, end) )
 					return true;
 			}
 

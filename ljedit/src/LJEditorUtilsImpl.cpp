@@ -10,9 +10,6 @@
 
 #include <gtksourceviewmm/init.h>
 
-#include <gtksourceviewmm/sourcebuffer.h>
-
-
 Glib::RefPtr<gtksourceview::SourceLanguagesManager> create_source_language_manager() {
     gtksourceview::init();
 
