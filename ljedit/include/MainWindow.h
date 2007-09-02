@@ -5,6 +5,7 @@
 #define LJED_INC_MAINWINDOW_H
 
 #include "DocManager.h"
+#include "CmdLine.h"
 
 class MainWindow : public Gtk::Window {
 protected:
@@ -19,6 +20,7 @@ public:
 
     virtual Gtk::Notebook&					left_panel() = 0;
     virtual DocManager&						doc_manager() = 0;
+	virtual CmdLine&						cmd_line() = 0;
     virtual Gtk::Notebook&					right_panel() = 0;
 
     virtual Gtk::Notebook&					bottom_panel() = 0;

@@ -8,7 +8,10 @@
 #include "RuntimeException.h"
 
 
-MainWindowImpl::MainWindowImpl() {
+MainWindowImpl::MainWindowImpl()
+	: cmd_cb_goto_(cmd_line_)
+	, cmd_cb_find_(cmd_line_)
+{
 }
 
 MainWindowImpl::~MainWindowImpl() {
@@ -53,9 +56,18 @@ void MainWindowImpl::create(const std::string& path) {
 			//right_hpaned->set_position(600);
 			right_vpaned->pack1(*right_hpaned, true, false);
 			{
-				// doc manager
-				doc_manager_.set_scrollable();
-				right_hpaned->pack1(doc_manager_, true, false);
+				// 
+				Gtk::VBox* doc_vbox = Gtk::manage(new Gtk::VBox());
+				{
+					// doc manager
+					doc_manager_.set_scrollable();
+					doc_vbox->pack_start(doc_manager_);
+
+					// cmd line
+					cmd_line_.create();
+					doc_vbox->pack_start(cmd_line_, false, false);
+				}
+				right_hpaned->pack1(*doc_vbox, true, false);
 
 				// right
 				right_panel_.set_size_request(200, -1);
@@ -92,7 +104,15 @@ void MainWindowImpl::create_ui_manager(const std::string& config_file) {
     action_group_->add( Gtk::Action::create("SaveAs", Gtk::Stock::SAVE,      "Save _As...", "Save to a file"),		sigc::mem_fun(this, &MainWindowImpl::on_file_save_as) );
     action_group_->add( Gtk::Action::create("Close",  Gtk::Stock::CLOSE,     "_Close",      "Close current file"),	sigc::mem_fun(doc_manager_, &DocManager::close_current_file) );
     action_group_->add( Gtk::Action::create("Quit",   Gtk::Stock::QUIT,      "_Quit",       "Quit"),				sigc::mem_fun(this, &MainWindowImpl::on_file_quit) );
-						       
+
+	action_group_->add( Gtk::Action::create("CmdLineFind", Gtk::Stock::FIND, "_find",  "active command line control")
+			, Gtk::AccelKey("<control>K")
+			, sigc::bind(sigc::mem_fun(cmd_line_, &CmdLineImpl::active), &cmd_cb_find_) );
+
+		action_group_->add( Gtk::Action::create("CmdLineGoto", Gtk::Stock::JUMP_TO, "_goto",  "active mini command control")
+			, Gtk::AccelKey("<control>I")
+			, sigc::bind(sigc::mem_fun(cmd_line_, &CmdLineImpl::active), &cmd_cb_goto_) );
+
     action_group_->add( Gtk::Action::create("About",  Gtk::Stock::ABOUT,     "About",       "About"),				sigc::mem_fun(this, &MainWindowImpl::on_help_about) );
 
     ui_manager_ = Gtk::UIManager::create();

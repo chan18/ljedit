@@ -190,6 +190,22 @@
 			Name="src"
 			>
 			<File
+				RelativePath=".\src\CmdLineCallbacks.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\CmdLineCallbacks.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\CmdLineImpl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\CmdLineImpl.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\dir_utils.h"
 				>
 			</File>
@@ -261,6 +277,10 @@
 		<Filter
 			Name="include"
 			>
+			<File
+				RelativePath=".\include\CmdLine.h"
+				>
+			</File>
 			<File
 				RelativePath=".\include\DocManager.h"
 				>

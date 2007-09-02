@@ -18,6 +18,8 @@
       <menuitem action='Copy'/>
       -->
       <separator/>
+      <menuitem action='CmdLineFind'/>
+      <menuitem action='CmdLineGoto'/>
     </menu>
     <menu action='PluginsMenu'>
     </menu>

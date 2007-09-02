@@ -7,7 +7,8 @@
 #include "MainWindow.h"
 
 #include "DocManagerImpl.h"
-
+#include "CmdLineImpl.h"
+#include "CmdLineCallbacks.h"
 
 class MainWindowImpl : public MainWindow {
 public:
@@ -23,6 +24,7 @@ public:
 
     virtual Gtk::Notebook&					left_panel()	{ return left_panel_;   }
     virtual DocManager&						doc_manager()	{ return doc_manager_;  }
+	virtual CmdLine&						cmd_line()		{ return cmd_line_;     }
     virtual Gtk::Notebook&					right_panel()	{ return right_panel_;  }
 
     virtual Gtk::Notebook&					bottom_panel()	{ return bottom_panel_; }
@@ -47,11 +49,16 @@ private:
 
     Gtk::Notebook					left_panel_;
     DocManagerImpl					doc_manager_;
+	CmdLineImpl						cmd_line_;
     Gtk::Notebook					right_panel_;
 
     Gtk::Notebook					bottom_panel_;
 
     Gtk::Statusbar					status_bar_;
+
+private:
+	CmdGotoCallback					cmd_cb_goto_;
+	CmdFindCallback					cmd_cb_find_;
 };
 
 #endif//LJED_INC_MAINWINDOWIMPL_H
