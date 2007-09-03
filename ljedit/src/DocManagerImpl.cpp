@@ -77,8 +77,12 @@ void DocManagerImpl::open_file(const std::string& filepath, int line) {
     open_page(abspath, filename, &ubuf, line);
 }
 
-void DocManagerImpl::on_page_close_button_clicked(DocPageImpl* page) {
-	close_page(*page);
+bool DocManagerImpl::on_page_label_button_press(GdkEventButton* event, DocPageImpl* page) {
+	if( event->button==2 ) {
+		// mouse mid button
+		close_page(*page);
+	}
+	return false;
 }
 
 bool DocManagerImpl::open_page(const std::string filepath
@@ -99,8 +103,9 @@ bool DocManagerImpl::open_page(const std::string filepath
 		buffer->signal_modified_changed().connect( sigc::bind(sigc::mem_fun(this, &DocManagerImpl::on_doc_modified_changed), page) );
 	}
 	
-	page->close_button().signal_clicked().connect( sigc::bind(sigc::mem_fun(this, &DocManagerImpl::on_page_close_button_clicked), page) );
-    int n = append_page(*page, page->label_widget());
+	page->label_event_box().signal_button_release_event().connect( sigc::bind(sigc::mem_fun(this, &DocManagerImpl::on_page_label_button_press), page) );
+
+    int n = append_page(*page, page->label_event_box());
     page->view().grab_focus();
     set_current_page(n);
 

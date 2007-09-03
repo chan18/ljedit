@@ -106,12 +106,12 @@ void MainWindowImpl::create_ui_manager(const std::string& config_file) {
     action_group_->add( Gtk::Action::create("Quit",   Gtk::Stock::QUIT,      "_Quit",       "Quit"),				sigc::mem_fun(this, &MainWindowImpl::on_file_quit) );
 
 	action_group_->add( Gtk::Action::create("CmdLineFind", Gtk::Stock::FIND, "_find",  "active command line control")
-			, Gtk::AccelKey("<control>K")
-			, sigc::bind(sigc::mem_fun(cmd_line_, &CmdLineImpl::active), &cmd_cb_find_) );
+		, Gtk::AccelKey("<control>K")
+		, sigc::bind(sigc::mem_fun(cmd_line_, &CmdLineImpl::active), &cmd_cb_find_) );
 
-		action_group_->add( Gtk::Action::create("CmdLineGoto", Gtk::Stock::JUMP_TO, "_goto",  "active mini command control")
-			, Gtk::AccelKey("<control>I")
-			, sigc::bind(sigc::mem_fun(cmd_line_, &CmdLineImpl::active), &cmd_cb_goto_) );
+	action_group_->add( Gtk::Action::create("CmdLineGoto", Gtk::Stock::JUMP_TO, "_goto",  "active mini command control")
+		, Gtk::AccelKey("<control>I")
+		, sigc::bind(sigc::mem_fun(cmd_line_, &CmdLineImpl::active), &cmd_cb_goto_) );
 
     action_group_->add( Gtk::Action::create("About",  Gtk::Stock::ABOUT,     "About",       "About"),				sigc::mem_fun(this, &MainWindowImpl::on_help_about) );
 

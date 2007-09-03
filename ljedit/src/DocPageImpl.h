@@ -24,11 +24,10 @@ public:
     virtual gtksourceview::SourceView& view()
         { return source_view(); }
 
-    Glib::ustring& filepath() { return filepath_; }
+    Glib::ustring& filepath()			{ return filepath_; }
 
-    Gtk::Label& label()			{ return label_; }
-	Gtk::Button& close_button()	{ return close_button_; }
-    Gtk::Widget& label_widget() { return label_widget_; }
+    Gtk::Label& label()					{ return label_; }
+	Gtk::EventBox& label_event_box()	{ return label_event_box_; }
 
     Glib::RefPtr<gtksourceview::SourceBuffer> source_buffer()
         { return source_view().get_source_buffer(); }
@@ -42,12 +41,10 @@ public:
 
 private:
 	DocPageImpl( Gtk::Label& label
-		, Gtk::Button& close_button
-		, Gtk::Widget& label_widget
+		, Gtk::EventBox& label_event_box
 		, gtksourceview::SourceView& view)
 			: label_(label)
-			, close_button_(close_button)
-			, label_widget_(label_widget)
+			, label_event_box_(label_event_box)
 			, view_(view) {}
 
     ~DocPageImpl() {}
@@ -55,8 +52,7 @@ private:
 private:
     Glib::ustring				filepath_;
     Gtk::Label&					label_;
-	Gtk::Button&				close_button_;
-	Gtk::Widget&				label_widget_;
+	Gtk::EventBox&				label_event_box_;
     gtksourceview::SourceView&	view_;
 };
 

@@ -39,6 +39,7 @@ protected:
 private:
     void on_doc_modified_changed(DocPageImpl* page);
 	void on_page_close_button_clicked(DocPageImpl* page);
+	bool on_page_label_button_press(GdkEventButton* event, DocPageImpl* page);
 
 private:
     int page_num_;
