@@ -17,8 +17,10 @@ PYFLAGS = -DENABLE_PYTHON_PLUGIN_ENGINE \
             -I/usr/include/pygtk-2.0
 PYLIBS = -lpython2.5
 
-LJEDOBJS = src/DocPageImpl.o         \
+LJEDOBJS = src/DocPageImpl.o             \
 	src/DocManagerImpl.o             \
+	src/CmdLineImpl.o                \
+	src/CmdLineCallbacks.o           \
 	src/LJEditorImpl.o               \
 	src/LJEditorUtilsImpl.o          \
 	src/MainWindowImpl.o             \
@@ -40,7 +42,6 @@ plugin :
 	cd plugins/ljed_ljcs;make
 	cd plugins/ljed_hello;make
 	cd plugins/ljed_indent;make
-	cd plugins/ljed_mini_cmd;make
 
 clean :
 	rm -f $(BIN)
@@ -51,6 +52,5 @@ clean_plugin :
 	cd plugins/ljed_ljcs;make clean
 	cd plugins/ljed_hello;make clean
 	cd plugins/ljed_indent;make clean
-	cd plugins/ljed_mini_cmd;make clean
 
 
