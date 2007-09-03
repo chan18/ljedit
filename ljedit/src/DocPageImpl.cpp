@@ -35,6 +35,7 @@ DocPageImpl* DocPageImpl::create(const std::string& filepath
 	Glib::RefPtr<gtksourceview::SourceBuffer> buffer = view->get_source_buffer();
 	buffer->set_language(lang);
 	buffer->set_highlight();
+	buffer->set_max_undo_levels(1024);
 
 #ifndef WIN32
 	view->modify_font(Pango::FontDescription("Courier 10 Pitch"));
