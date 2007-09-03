@@ -5,6 +5,7 @@
 #define LJCS_SEARCHER_H
 
 #include "ds.h"
+#include "parser.h"
 
 class IMatched {
 public:

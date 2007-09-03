@@ -40,6 +40,8 @@ public:
 	cpp::File* find_parsed(const std::string& filename);
 	cpp::File* find_parsed_in_include_path(const std::string& filename);
 
+	cpp::File* find_include_file(const cpp::Include& inc);
+
 public:
 	bool abspath_in_include_path(const std::string& abspath);
 	cpp::File* abspath_find_parsed(const std::string& abspath);

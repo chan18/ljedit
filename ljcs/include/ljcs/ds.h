@@ -223,13 +223,12 @@ public:
 class Include : public Element {
 public:
 	Include(File& file, const std::string& name, size_t sline, size_t eline, char view)
-		: Element(file, ET_INCLUDE, "include", sline, eline, view)
-		, include_file(0) {}
+		: Element(file, ET_INCLUDE, "include", sline, eline, view) {}
 
 public:
 	std::string	filename;
 	bool		sys_header;
-	File*		include_file;
+	//File*		include_file;	// BUG
 };
 
 class Var : public Element {

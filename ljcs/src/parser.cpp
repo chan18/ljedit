@@ -70,8 +70,29 @@ cpp::File* ParserEnviron::find_parsed_in_include_path(const std::string& filenam
 	for( ; it!=end && retval==0; ++it ) {
 		abspath = *it + filename;
 		ljcs_filepath_to_abspath(abspath);
-		retval = find_parsed(abspath);
+		retval = abspath_find_parsed(abspath);
 	}
+	return retval;
+}
+
+cpp::File* ParserEnviron::find_include_file(const cpp::Include& inc) {
+	cpp::File* retval = 0;
+
+	if( !inc.sys_header ) {
+		std::string abspath = inc.filename;
+		if( get_abspath_pos(inc.filename)==0 ) {
+			size_t pos = inc.file.filename.find_last_of('/');
+			if( pos!=std::string::npos )
+				abspath.insert(0, inc.file.filename, 0, pos+1 );
+		}
+
+		ljcs_filepath_to_abspath(abspath);
+		retval = abspath_find_parsed(abspath);
+	}
+
+	if( retval==0 )
+		retval = find_parsed_in_include_path(inc.filename);
+
 	return retval;
 }
 
@@ -110,7 +131,10 @@ private:
 	static cpp::FileMap		parsing_files_;
 
 public:
-	Parser(bool& stopsign) : stopsign_(stopsign) {}
+	Parser(ParserEnviron& env, bool& stopsign)
+		: env_(env)
+		, stopsign_(stopsign) {}
+
 	~Parser() {}
 
 	void reset() { reset_macros();	included_files_.clear(); }
@@ -126,14 +150,16 @@ public:
 	bool is_stopsign_set() const { return stopsign_; }
 
 private:
-	virtual void on_include(cpp::Include& inc, cpp::File& cur, const void* tag);
+	virtual void on_include(cpp::Include& inc, const void* tag);
 
 protected:
 	void include_file(cpp::File* file);
 
 protected:
-	cpp::FileMap	included_files_;
+	ParserEnviron&	env_;
 	bool&			stopsign_;
+
+	cpp::FileMap	included_files_;
 };
 
 //----------------------------------------------------------------
@@ -308,6 +334,7 @@ void Parser::include_file(cpp::File* file) {
 
 	if( included_files_.find(file->filename) != included_files_.end() )
 		return;
+
 	included_files_[file->filename] = file;
 	
 	// append macros into current lexer
@@ -324,8 +351,10 @@ void Parser::include_file(cpp::File* file) {
 			break;
 			
 		case cpp::ET_INCLUDE: {
-				cpp::Include& inc = *(cpp::Include*)(*it);
-				include_file( inc.include_file );
+				cpp::Include* inc = (cpp::Include*)(*it);
+				assert( inc != 0 );
+
+				include_file( env_.find_include_file(*inc) );
 			}
 			break;
 		}
@@ -333,27 +362,29 @@ void Parser::include_file(cpp::File* file) {
 	}
 }
 
-void Parser::on_include(cpp::Include& inc, cpp::File& cur, const void* tag) {
+void Parser::on_include(cpp::Include& inc, const void* tag) {
 	if( is_stopsign_set() )
 		return;
 
 	if( inc.filename.empty() )
 		return;
 
+	cpp::File* incfile = 0;
+
 	if( !inc.sys_header ) {
 		std::string abspath = inc.filename;
 		if( get_abspath_pos(inc.filename)==0 ) {
-			size_t pos = cur.filename.find_last_of('/');
+			size_t pos = inc.file.filename.find_last_of('/');
 			if( pos!=std::string::npos )
-				abspath.insert(0, cur.filename, 0, pos+1 );
+				abspath.insert(0, inc.file.filename, 0, pos+1 );
 		}
 
 		ljcs_filepath_to_abspath(abspath);
-		inc.include_file = parse(abspath);
+		incfile = parse(abspath);
 	}
 
-	if( inc.include_file==0 )
-		inc.include_file = parse_in_include_path(inc.filename);
+	if( incfile==0 )
+		parse_in_include_path(inc.filename);
 }
 
 }//anonymose namespace
@@ -363,21 +394,21 @@ cpp::File* ljcs_parse(const std::string& filepath, bool* stopsign) {
 	bool adapt_stopsign = false;
 	std::string abspath = filepath;
 	::ljcs_filepath_to_abspath(abspath);
-	return Parser(stopsign==0 ? adapt_stopsign : *stopsign).parse(abspath);
+	return Parser(ParserEnviron::self(), stopsign==0 ? adapt_stopsign : *stopsign).parse(abspath);
 }
 
 cpp::File* ljcs_parse_in_include_path(const std::string& filename, bool* stopsign) {
 	bool adapt_stopsign = false;
-	return Parser(stopsign==0 ? adapt_stopsign : *stopsign).parse_in_include_path(filename);
+	return Parser(ParserEnviron::self(), stopsign==0 ? adapt_stopsign : *stopsign).parse_in_include_path(filename);
 }
 
 cpp::File* ljcs_parse_text(const std::string& text, size_t sline, bool* stopsign) {
 	bool adapt_stopsign = false;
-	return Parser(stopsign==0 ? adapt_stopsign : *stopsign).parse_text(text, sline);
+	return Parser(ParserEnviron::self(), stopsign==0 ? adapt_stopsign : *stopsign).parse_text(text, sline);
 }
 
 void ljcs_parse_macro_replace(std::string& text, cpp::File* env) {
 	bool adapt_stopsign = false;
-	return Parser(adapt_stopsign).parse_macro_replace(text, env);
+	return Parser(ParserEnviron::self(), adapt_stopsign).parse_macro_replace(text, env);
 }
 

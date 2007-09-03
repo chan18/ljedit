@@ -254,6 +254,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\src\rmacro.h"
+			>
+		</File>
+		<File
 			RelativePath="src\searcher.cpp"
 			>
 		</File>

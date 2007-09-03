@@ -41,7 +41,7 @@ public:
 
 	void reset_macros() { macros_.clear(); }
 
-	virtual void on_include(cpp::Include& inc, cpp::File& cur, const void* tag) = 0;
+	virtual void on_include(cpp::Include& inc, const void* tag) = 0;
 
 private:
 	TRMacros				macros_;

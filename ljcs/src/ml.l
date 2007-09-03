@@ -854,7 +854,7 @@ void MLexer::on_macro_include( size_t line, const std::string& file, bool sys_he
 	macro->decl += sys_header ? '>' : '\"';
 
 	cpp::scope_insert(file_.scope, macro);
-	env_.on_include(*macro, file_, tag_);
+	env_.on_include(*macro, tag_);
 }
 
 //-----------------------------------------------------------------------------

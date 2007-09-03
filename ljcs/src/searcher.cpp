@@ -326,8 +326,11 @@ void Searcher::walk(cpp::File* file, const std::string& path) {
 
 	cpp::Includes::iterator it = file->includes.begin();
 	cpp::Includes::iterator end = file->includes.end();
-	for( ; searching() && (it != end); ++it )
-		walk( (*it)->include_file, path );
+	for( ; searching() && (it != end); ++it ) {
+		assert( *it != 0 );
+		cpp::File* incfile = ParserEnviron::self().find_include_file(**it);
+		walk( incfile, path );
+	}
 }
 
 void Searcher::do_walk(cpp::Scope& scope, SPath& path) {
