@@ -202,24 +202,6 @@ bool LJCSPluginImpl::on_key_press_event(GdkEventKey* event, DocPage* page) {
         return false;
     }
 
-	/*
-    switch( event->keyval ) {
-    case '(':
-    case '.':
-    case ':':
-    case '-':
-        if( tip_.tag()=='s' ) {
-            auto_complete(*page);
-        }
-        return false;
-	default:
-		if( tip_.tag() == 'f' ) {
-			tip_.hide();
-			return false;
-		}
-	}
-	*/
-
     switch( event->keyval ) {
     case GDK_Tab:
     //case GDK_Return:
@@ -309,10 +291,10 @@ bool LJCSPluginImpl::on_key_release_event(GdkEventKey* event, DocPage* page) {
         }
         break;
     default:
-        if( (event->keyval <= 0x7f) ) {
-            if( ::isalnum(event->keyval) || event->keyval=='_' )
-                show_hint(*page, it, end, 's');
-        }
+        if( (event->keyval <= 0x7f) && ::isalnum(event->keyval) || event->keyval=='_' )
+            show_hint(*page, it, end, 's');
+		else
+			tip_.hide();
         break;
     }
 
