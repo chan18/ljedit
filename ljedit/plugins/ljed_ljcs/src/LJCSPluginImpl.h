@@ -73,6 +73,7 @@ private:
     TipWindow	tip_;
     OutlinePage	outline_;
     PreviewPage	preview_;
+	int			preview_page_;
 
 private:
     LJEditor&				editor_;

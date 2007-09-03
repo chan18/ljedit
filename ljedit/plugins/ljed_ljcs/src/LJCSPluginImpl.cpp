@@ -13,8 +13,9 @@
 
 LJCSPluginImpl::LJCSPluginImpl(LJEditor& editor)
     : editor_(editor)
+	, tip_(editor)
     , preview_(editor)
-	, tip_(editor) {}
+	, preview_page_(-1) {}
 
 void LJCSPluginImpl::active_page(DocPage& page) {
 	Gtk::TextView& view = page.view();
@@ -135,7 +136,7 @@ void LJCSPluginImpl::create(const char* plugin_filename) {
 
     // preview
     preview_.create();
-    main_window.bottom_panel().append_page(preview_.get_widget(), "preview");
+    preview_page_ = main_window.bottom_panel().append_page(preview_.get_widget(), "preview");
 
 	// init parser environ
 	load_setup(plugin_path_);
@@ -360,6 +361,8 @@ bool LJCSPluginImpl::on_button_release_event(GdkEventButton* event, DocPage* pag
 		std::copy(mset.elems.begin(), mset.elems.end(), elems.begin());
 
         preview_.preview(elems);
+
+		editor_.main_window().bottom_panel().set_current_page(preview_page_);
     }
 
     return false;
