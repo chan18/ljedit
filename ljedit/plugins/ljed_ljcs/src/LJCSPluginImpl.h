@@ -48,6 +48,12 @@ private:	// auto complete
     void auto_complete(DocPage& page);
 
 private:
+	void set_show_hint_timer(DocPage& page);
+	void kill_show_hint_timer();
+
+	bool on_show_hint_timeout(DocPage* page, int tag);
+
+private:
 	void on_show_setup_dialog();
 
     void on_doc_page_added(Gtk::Widget* widget, guint page_num);
@@ -74,6 +80,10 @@ private:
     OutlinePage	outline_;
     PreviewPage	preview_;
 	int			preview_page_;
+
+private:
+	sigc::connection		show_hint_timer_;
+	int						show_hint_tag_;
 
 private:
     LJEditor&				editor_;

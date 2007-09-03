@@ -47,6 +47,8 @@ void LJCSPluginImpl::show_hint(DocPage& page
     , Gtk::TextBuffer::iterator& end
     , char tag)
 {
+	kill_show_hint_timer();
+
     LJEditorDocIter ps(it);
     LJEditorDocIter pe(end);
 	
@@ -97,6 +99,34 @@ void LJCSPluginImpl::auto_complete(DocPage& page) {
     
     buf->insert_at_cursor(selected->name.substr(finished));
     tip_.hide();
+}
+
+void LJCSPluginImpl::set_show_hint_timer(DocPage& page) {
+	kill_show_hint_timer();
+
+	++show_hint_tag_;
+	show_hint_timer_ = Glib::signal_timeout().connect( sigc::bind(sigc::mem_fun(this, &LJCSPluginImpl::on_show_hint_timeout), &page, show_hint_tag_), 200 );
+}
+
+void LJCSPluginImpl::kill_show_hint_timer() {
+	show_hint_timer_.disconnect();
+}
+
+bool LJCSPluginImpl::on_show_hint_timeout(DocPage* page, int tag) {
+	assert( page != 0 );
+
+	if( show_hint_tag_!=tag )
+		return false;
+	
+	if( editor_.main_window().doc_manager().get_current_document()!=page )
+		return false;
+
+    Glib::RefPtr<Gtk::TextBuffer> buf = page->buffer();
+    Gtk::TextBuffer::iterator it = buf->get_iter_at_mark(buf->get_insert());
+    Gtk::TextBuffer::iterator end = it;
+	show_hint(*page, it, end, 's');
+
+	return false;
 }
 
 void LJCSPluginImpl::create(const char* plugin_filename) {
@@ -205,14 +235,7 @@ bool LJCSPluginImpl::on_key_press_event(GdkEventKey* event, DocPage* page) {
     switch( event->keyval ) {
     case GDK_Tab:
     //case GDK_Return:
-		{
-            auto_complete(*page);
-            Glib::RefPtr<Gtk::TextBuffer> buf = page->buffer();
-            Glib::RefPtr<Gtk::TextMark> mark = buf->get_insert();
-            Gtk::TextBuffer::iterator it = buf->get_iter_at_mark(mark);
-            Gtk::TextBuffer::iterator end = it;
-            show_hint(*page, it, end, 'f');
-        }
+		auto_complete(*page);
         return true;
     case GDK_Up:
         tip_.select_prev();
@@ -246,6 +269,8 @@ bool LJCSPluginImpl::on_key_release_event(GdkEventKey* event, DocPage* page) {
 	case GDK_Shift_R:
         return false;
     }
+
+	//printf("%d - %s\n", event->keyval, event->string);
 
     Glib::RefPtr<Gtk::TextBuffer> buf = page->buffer();
     Glib::RefPtr<Gtk::TextMark> mark = buf->get_insert();
@@ -291,8 +316,8 @@ bool LJCSPluginImpl::on_key_release_event(GdkEventKey* event, DocPage* page) {
         }
         break;
     default:
-        if( (event->keyval <= 0x7f) && ::isalnum(event->keyval) || event->keyval=='_' )
-            show_hint(*page, it, end, 's');
+		if( (event->keyval <= 0x7f) && ::isalnum(event->keyval) || event->keyval=='_' )
+			set_show_hint_timer(*page);
 		else
 			tip_.hide();
         break;
@@ -317,8 +342,7 @@ bool LJCSPluginImpl::on_button_release_event(GdkEventButton* event, DocPage* pag
 
         // tag test
         Glib::RefPtr<Gtk::TextBuffer> buf = page->buffer();
-        Glib::RefPtr<Gtk::TextMark> mark = buf->get_insert();
-        Gtk::TextBuffer::iterator it = buf->get_iter_at_mark(mark);
+        Gtk::TextBuffer::iterator it = buf->get_iter_at_mark(buf->get_insert());
         char ch = (char)it.get_char();
         if( ::isalnum(ch) || ch=='_' ) {
             while( it.forward_word_end() ) {
