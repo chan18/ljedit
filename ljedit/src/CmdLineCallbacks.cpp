@@ -21,6 +21,7 @@ void CmdGotoCallback::on_active(void* tag) {
 		cmd_line_.entry().set_text(buf);
 	}
 
+	cmd_line_.label().set_text("goto:");
 	cmd_line_.entry().select_region(0, cmd_line_.entry().get_text_length());
 }
 
@@ -56,6 +57,7 @@ void CmdFindCallback::on_active(void* tag) {
 	if( buf->get_selection_bounds(ps, pe) )
 		cmd_line_.entry().set_text( buf->get_text(ps, pe) );
 
+	cmd_line_.label().set_text("find:");
 	cmd_line_.entry().select_region(0, cmd_line_.entry().get_text_length());
 }
 
