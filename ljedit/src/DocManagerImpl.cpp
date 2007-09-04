@@ -56,8 +56,19 @@ void DocManagerImpl::open_file(const std::string& filepath, int line) {
     std::string abspath = filepath;
     ::ljcs_filepath_to_abspath(abspath);
 
+	if( do_locate_file(abspath, line) )
+		return;
+
     std::string filename = Glib::path_get_basename(filepath);
 
+	Glib::ustring ubuf;
+	if( !LJEditorUtilsImpl::self().load_file(ubuf, abspath) )
+		return;
+
+    open_page(abspath, filename, &ubuf, line);
+}
+
+bool DocManagerImpl::do_locate_file(const std::string& abspath, int line) {
     Gtk::Notebook::PageList::iterator it = pages().begin();
     Gtk::Notebook::PageList::iterator end = pages().end();
     for( ; it!=end; ++it ) {
@@ -66,15 +77,18 @@ void DocManagerImpl::open_file(const std::string& filepath, int line) {
 
         if( page->filepath()==abspath ) {
             locate_page_line(it->get_page_num(), line);
-            return;
+            return true;
         }
     }
 
-	Glib::ustring ubuf;
-	if( !LJEditorUtilsImpl::self().load_file(ubuf, abspath) )
-		return;
+	return false;
+}
 
-    open_page(abspath, filename, &ubuf, line);
+bool DocManagerImpl::locate_file(const std::string& filepath, int line) {
+    std::string abspath = filepath;
+    ::ljcs_filepath_to_abspath(abspath);
+
+	return do_locate_file(abspath, line);
 }
 
 bool DocManagerImpl::on_page_label_button_press(GdkEventButton* event, DocPageImpl* page) {

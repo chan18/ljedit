@@ -29,6 +29,7 @@ public:
 
     virtual void create_new_file() = 0;
     virtual void open_file(const std::string& filepath, int line=0) = 0;
+    virtual bool locate_file(const std::string& filepath, int line=0) = 0;
     virtual void save_current_file() = 0;
     virtual void close_current_file() = 0;
     virtual void save_all_files() = 0;

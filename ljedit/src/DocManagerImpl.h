@@ -19,6 +19,7 @@ public:
 
     virtual void create_new_file();
     virtual void open_file(const std::string& filepath, int line=0);
+    virtual bool locate_file(const std::string& filepath, int line=0);
     virtual void save_current_file();
     virtual void close_current_file();
     virtual void save_all_files();
@@ -35,6 +36,8 @@ protected:
     void locate_page_line(int page_num, int line);
 
     bool scroll_to_file_pos();
+
+	bool do_locate_file(const std::string& abspath, int line=0);
 
 private:
     void on_doc_modified_changed(DocPageImpl* page);

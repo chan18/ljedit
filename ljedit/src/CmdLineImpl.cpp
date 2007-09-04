@@ -27,12 +27,16 @@ void CmdLineImpl::create(Gtk::Window& main_window) {
 	Gtk::HBox* hbox = Gtk::manage(new Gtk::HBox());
 	hbox->pack_start(label_, false, false);
 	hbox->pack_start(entry_);
-	hbox->show_all();
+	hbox->set_border_width(3);
 
-	add(*hbox);
+	Gtk::Frame* frame = Gtk::manage(new Gtk::Frame());
+	frame->set_shadow_type(Gtk::SHADOW_ETCHED_IN);
+	frame->add(*hbox);
+	frame->show_all();
+
+	add(*frame);
     resize(200, 24);
 	set_modal();
-    set_border_width(1);
 }
 
 void CmdLineImpl::do_active(CmdLine::ICallback* cb, int x, int y, void* tag) {
