@@ -16,10 +16,14 @@
       <separator/>
       <menuitem action='Cut'/>
       <menuitem action='Copy'/>
-      -->
       <separator/>
+      -->
       <menuitem action='CmdLineFind'/>
       <menuitem action='CmdLineGoto'/>
+      <separator/>
+      <menuitem action='GoBack'/>
+      <menuitem action='GoForward'/>
+      <separator/>
     </menu>
     <menu action='PluginsMenu'>
     </menu>
@@ -31,5 +35,8 @@
 	<toolbar name='ToolBar'>
     <toolitem action='Open'/>
     <toolitem action='Quit'/>
+    <separator/>
+    <toolitem action='GoBack'/>
+    <toolitem action='GoForward'/>
 	</toolbar>
 </ui>

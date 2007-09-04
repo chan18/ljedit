@@ -44,6 +44,8 @@ private:
 
 	void on_edit_find();
 	void on_edit_goto();
+	void on_edit_go_back();
+	void on_edit_go_forward();
 
     void on_help_about();
 

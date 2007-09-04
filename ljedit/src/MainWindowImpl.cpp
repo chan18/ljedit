@@ -87,27 +87,28 @@ void MainWindowImpl::create(const std::string& path) {
 void MainWindowImpl::create_ui_manager(const std::string& config_file) {
     action_group_ = Gtk::ActionGroup::create("Actions");
 
+	// main menu
     action_group_->add( Gtk::Action::create("FileMenu", "_File") );
     action_group_->add( Gtk::Action::create("EditMenu", "_Edit") );
     action_group_->add( Gtk::Action::create("PluginsMenu", "_Plugins") );
     action_group_->add( Gtk::Action::create("HelpMenu", "_Help") );
 
-    action_group_->add( Gtk::Action::create("New",    Gtk::Stock::NEW,       "_New",        "Create a new file"),	sigc::mem_fun(doc_manager_, &DocManager::create_new_file) );
-    action_group_->add( Gtk::Action::create("Open",   Gtk::Stock::OPEN,      "_Open",       "Open a file"),			sigc::mem_fun(this, &MainWindowImpl::on_file_open) );
-    action_group_->add( Gtk::Action::create("Save",   Gtk::Stock::SAVE,      "_Save",       "Save current file"),	sigc::mem_fun(doc_manager_, &DocManager::save_current_file) );
-    action_group_->add( Gtk::Action::create("SaveAs", Gtk::Stock::SAVE,      "Save _As...", "Save to a file"),		sigc::mem_fun(this, &MainWindowImpl::on_file_save_as) );
-    action_group_->add( Gtk::Action::create("Close",  Gtk::Stock::CLOSE,     "_Close",      "Close current file"),	sigc::mem_fun(doc_manager_, &DocManager::close_current_file) );
-    action_group_->add( Gtk::Action::create("Quit",   Gtk::Stock::QUIT,      "_Quit",       "Quit"),				sigc::mem_fun(this, &MainWindowImpl::on_file_quit) );
+	// file menu
+    action_group_->add( Gtk::Action::create("New",         Gtk::Stock::NEW,        "_New",        "Create a new file"),                                         sigc::mem_fun(doc_manager_, &DocManager::create_new_file) );
+    action_group_->add( Gtk::Action::create("Open",        Gtk::Stock::OPEN,       "_Open",       "Open a file"),                                               sigc::mem_fun(this, &MainWindowImpl::on_file_open) );
+    action_group_->add( Gtk::Action::create("Save",        Gtk::Stock::SAVE,       "_Save",       "Save current file"),                                         sigc::mem_fun(doc_manager_, &DocManager::save_current_file) );
+    action_group_->add( Gtk::Action::create("SaveAs",      Gtk::Stock::SAVE,       "Save _As...", "Save to a file"),                                            sigc::mem_fun(this, &MainWindowImpl::on_file_save_as) );
+    action_group_->add( Gtk::Action::create("Close",       Gtk::Stock::CLOSE,      "_Close",      "Close current file"),                                        sigc::mem_fun(doc_manager_, &DocManager::close_current_file) );
+    action_group_->add( Gtk::Action::create("Quit",        Gtk::Stock::QUIT,       "_Quit",       "Quit"),                                                      sigc::mem_fun(this, &MainWindowImpl::on_file_quit) );
 
-	action_group_->add( Gtk::Action::create("CmdLineFind", Gtk::Stock::FIND, "_find",  "active command line control")
-		, Gtk::AccelKey("<control>K")
-		, sigc::mem_fun(this, &MainWindowImpl::on_edit_find) );
+	// edit menu
+	action_group_->add( Gtk::Action::create("CmdLineFind", Gtk::Stock::FIND,       "_Find",       "Active command line control"), Gtk::AccelKey("<control>K"),  sigc::mem_fun(this, &MainWindowImpl::on_edit_find) );
+	action_group_->add( Gtk::Action::create("CmdLineGoto", Gtk::Stock::JUMP_TO,    "_Goto",       "Active mini command control"), Gtk::AccelKey("<control>I"),  sigc::mem_fun(this, &MainWindowImpl::on_edit_goto) );
+	action_group_->add( Gtk::Action::create("GoBack",      Gtk::Stock::GO_BACK,    "Go_Back",     "Go back position"),		                                    sigc::mem_fun(this, &MainWindowImpl::on_edit_go_back) );
+	action_group_->add( Gtk::Action::create("GoForward",   Gtk::Stock::GO_FORWARD, "Go_Forward",  "Go forward position"),	                                    sigc::mem_fun(this, &MainWindowImpl::on_edit_go_forward) );
 
-	action_group_->add( Gtk::Action::create("CmdLineGoto", Gtk::Stock::JUMP_TO, "_goto",  "active mini command control")
-		, Gtk::AccelKey("<control>I")
-		, sigc::mem_fun(this, &MainWindowImpl::on_edit_goto) );
-
-    action_group_->add( Gtk::Action::create("About",  Gtk::Stock::ABOUT,     "About",       "About"),				sigc::mem_fun(this, &MainWindowImpl::on_help_about) );
+	// help menu
+    action_group_->add( Gtk::Action::create("About",       Gtk::Stock::ABOUT,      "About",       "About"),				                                        sigc::mem_fun(this, &MainWindowImpl::on_help_about) );
 
     ui_manager_ = Gtk::UIManager::create();
     ui_manager_->insert_action_group(action_group_);
@@ -175,6 +176,13 @@ void MainWindowImpl::on_edit_goto() {
 	cmd_line_.active(&cmd_cb_goto_, x, y, view);
 }
 
+void MainWindowImpl::on_edit_go_back() {
+	Gtk::MessageDialog(*this, __FUNCTION__).run();
+}
+
+void MainWindowImpl::on_edit_go_forward() {
+	Gtk::MessageDialog(*this, __FUNCTION__).run();
+}
 
 void MainWindowImpl::on_help_about() {
     Gtk::MessageDialog(*this, __FUNCTION__).run();
