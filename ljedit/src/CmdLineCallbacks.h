@@ -8,26 +8,19 @@
 
 class CmdGotoCallback : public CmdLine::ICallback {
 public:
-	CmdGotoCallback(CmdLine& cmd_line) : cmd_line_(cmd_line) {}
+	CmdGotoCallback(CmdLine& cmd_line) : CmdLine::ICallback(cmd_line) {}
 
-	virtual void on_active();
-	virtual void on_key_changed();
-	virtual bool on_key_press(GdkEventKey* event);
-
-private:
-	CmdLine& cmd_line_;
+	virtual void on_active(void* tag);
+	virtual void on_key_changed(void* tag);
 };
 
 class CmdFindCallback : public CmdLine::ICallback {
 public:
-	CmdFindCallback(CmdLine& cmd_line) : cmd_line_(cmd_line) {}
+	CmdFindCallback(CmdLine& cmd_line) : CmdLine::ICallback(cmd_line) {}
 
-	virtual void on_active();
-	virtual void on_key_changed();
-	virtual bool on_key_press(GdkEventKey* event);
-
-private:
-	CmdLine& cmd_line_;
+	virtual void on_active(void* tag);
+	virtual void on_key_changed(void* tag);
+	virtual bool on_key_press(GdkEventKey* event, void* tag);
 };
 
 #endif//LJED_INC_CMDLINECALLBACKS_H

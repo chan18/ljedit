@@ -6,7 +6,7 @@
 
 #include "CmdLine.h"
 
-class CmdLineImpl : public Gtk::HBox, public CmdLine {
+class CmdLineImpl : public Gtk::Window, public CmdLine {
 public:
 	CmdLineImpl();
 	~CmdLineImpl();
@@ -17,7 +17,8 @@ public:
 	virtual Gtk::Label& label() { return label_; }
 	virtual Gtk::Entry& entry() { return entry_; }
 
-	virtual void active(ICallback* cb);
+	virtual void do_active(ICallback* cb, int x, int y, void* tag);
+	virtual void do_deactive();
 
 private:
 	void on_key_changed();
@@ -29,6 +30,7 @@ private:
 	Gtk::Entry		entry_;
 
 	ICallback*		cb_;
+	void*			tag_;
 };
 
 #endif//LJED_INC_CMDLINEIMPL_H

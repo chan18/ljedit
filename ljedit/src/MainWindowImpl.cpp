@@ -37,6 +37,9 @@ void MainWindowImpl::create(const std::string& path) {
 	toolbar->set_toolbar_style(Gtk::TOOLBAR_BOTH_HORIZ);
     vbox->pack_start(*toolbar, Gtk::PACK_SHRINK);
 
+	// cmd line
+	cmd_line_.create();
+
 	// body hpanel
 	Gtk::HPaned* hpaned = Gtk::manage(new Gtk::HPaned());
 	hpaned->set_border_width(3);
@@ -56,18 +59,9 @@ void MainWindowImpl::create(const std::string& path) {
 			//right_hpaned->set_position(600);
 			right_vpaned->pack1(*right_hpaned, true, false);
 			{
-				// 
-				Gtk::VBox* doc_vbox = Gtk::manage(new Gtk::VBox());
-				{
-					// doc manager
-					doc_manager_.set_scrollable();
-					doc_vbox->pack_start(doc_manager_);
-
-					// cmd line
-					cmd_line_.create();
-					doc_vbox->pack_start(cmd_line_, false, false);
-				}
-				right_hpaned->pack1(*doc_vbox, true, false);
+				// doc manager
+				doc_manager_.set_scrollable();
+				right_hpaned->pack1(doc_manager_, true, false);
 
 				// right
 				right_panel_.set_size_request(200, -1);
@@ -107,11 +101,11 @@ void MainWindowImpl::create_ui_manager(const std::string& config_file) {
 
 	action_group_->add( Gtk::Action::create("CmdLineFind", Gtk::Stock::FIND, "_find",  "active command line control")
 		, Gtk::AccelKey("<control>K")
-		, sigc::bind(sigc::mem_fun(cmd_line_, &CmdLineImpl::active), &cmd_cb_find_) );
+		, sigc::mem_fun(this, &MainWindowImpl::on_edit_find) );
 
 	action_group_->add( Gtk::Action::create("CmdLineGoto", Gtk::Stock::JUMP_TO, "_goto",  "active mini command control")
 		, Gtk::AccelKey("<control>I")
-		, sigc::bind(sigc::mem_fun(cmd_line_, &CmdLineImpl::active), &cmd_cb_goto_) );
+		, sigc::mem_fun(this, &MainWindowImpl::on_edit_goto) );
 
     action_group_->add( Gtk::Action::create("About",  Gtk::Stock::ABOUT,     "About",       "About"),				sigc::mem_fun(this, &MainWindowImpl::on_help_about) );
 
@@ -150,6 +144,37 @@ void MainWindowImpl::on_file_quit() {
 
 	Gtk::Main::quit();
 }
+
+void MainWindowImpl::on_edit_find() {
+	DocPage* page = doc_manager_.get_current_document();
+	if( page==0 )
+		return;
+
+    int x = 0, y = 0;
+	gtksourceview::SourceView* view = &page->view();
+	view->get_window(Gtk::TEXT_WINDOW_TEXT)->get_origin(x, y);
+
+	x -= 16;
+	y -= 16;
+
+	cmd_line_.active(&cmd_cb_find_, x, y, view);
+}
+
+void MainWindowImpl::on_edit_goto() {
+	DocPage* page = doc_manager_.get_current_document();
+	if( page==0 )
+		return;
+
+    int x = 0, y = 0;
+	gtksourceview::SourceView* view = &page->view();
+	view->get_window(Gtk::TEXT_WINDOW_TEXT)->get_origin(x, y);
+
+	x -= 16;
+	y -= 16;
+
+	cmd_line_.active(&cmd_cb_goto_, x, y, view);
+}
+
 
 void MainWindowImpl::on_help_about() {
     Gtk::MessageDialog(*this, __FUNCTION__).run();
