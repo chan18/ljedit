@@ -4,6 +4,7 @@
 	* linux(ubuntu 7.04) - gcc
 		libgtk-dev
 		libgtkmm-dev
+		libglademm-dev
 		libsourceview-dev
 		libsourceviewmm-dev
 		
