@@ -38,7 +38,7 @@ void MainWindowImpl::create(const std::string& path) {
     vbox->pack_start(*toolbar, Gtk::PACK_SHRINK);
 
 	// cmd line
-	cmd_line_.create();
+	cmd_line_.create(*this);
 
 	// body hpanel
 	Gtk::HPaned* hpaned = Gtk::manage(new Gtk::HPaned());

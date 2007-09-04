@@ -15,11 +15,14 @@ CmdLineImpl::CmdLineImpl()
 CmdLineImpl::~CmdLineImpl() {
 }
 
-void CmdLineImpl::create() {
+void CmdLineImpl::create(Gtk::Window& main_window) {
 	label_.set_text("cmd:");
 
 	entry_.signal_changed().connect( sigc::mem_fun(this, &CmdLineImpl::on_key_changed) );
 	entry_.signal_key_press_event().connect( sigc::mem_fun(this, &CmdLineImpl::on_key_press), false );
+
+	signal_button_press_event().connect( sigc::mem_fun(this, &CmdLineImpl::on_button_press), false );
+	main_window.signal_focus_out_event().connect( sigc::mem_fun(this, &CmdLineImpl::on_focus_out), false );
 
 	Gtk::HBox* hbox = Gtk::manage(new Gtk::HBox());
 	hbox->pack_start(label_, false, false);
@@ -43,9 +46,7 @@ void CmdLineImpl::do_active(CmdLine::ICallback* cb, int x, int y, void* tag) {
 	move(x, y);
 	show();
 
-	// bug : IME not work in Entry!
-	// 
-	entry_.set_flags( Gtk::HAS_FOCUS );
+	entry_.set_flags( Gtk::HAS_FOCUS );	// show cursor
 
 	GdkEvent* fevent = ::gdk_event_new(GDK_FOCUS_CHANGE);
 	if( fevent==0 ) {
@@ -78,5 +79,15 @@ bool CmdLineImpl::on_key_press(GdkEventKey* event) {
 		return false;
 
 	return cb_->on_key_press(event, tag_);
+}
+
+bool CmdLineImpl::on_button_press(GdkEventButton* event) {
+	deactive();
+	return false;
+}
+
+bool CmdLineImpl::on_focus_out(GdkEventFocus* event) {
+	deactive();
+	return false;
 }
 
