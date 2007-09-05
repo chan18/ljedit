@@ -104,8 +104,8 @@ void MainWindowImpl::create_ui_manager(const std::string& config_file) {
 	// edit menu
 	action_group_->add( Gtk::Action::create("CmdLineFind", Gtk::Stock::FIND,       "_Find",       "Active command line control"), Gtk::AccelKey("<control>K"),  sigc::mem_fun(this, &MainWindowImpl::on_edit_find) );
 	action_group_->add( Gtk::Action::create("CmdLineGoto", Gtk::Stock::JUMP_TO,    "_Goto",       "Active mini command control"), Gtk::AccelKey("<control>I"),  sigc::mem_fun(this, &MainWindowImpl::on_edit_goto) );
-	action_group_->add( Gtk::Action::create("GoBack",      Gtk::Stock::GO_BACK,    "Go_Back",     "Go back position"),		                                    sigc::mem_fun(this, &MainWindowImpl::on_edit_go_back) );
-	action_group_->add( Gtk::Action::create("GoForward",   Gtk::Stock::GO_FORWARD, "Go_Forward",  "Go forward position"),	                                    sigc::mem_fun(this, &MainWindowImpl::on_edit_go_forward) );
+	action_group_->add( Gtk::Action::create("GoBack",      Gtk::Stock::GO_BACK,    "Go_Back",     "Go back position"),		                                    sigc::mem_fun(doc_manager_, &DocManagerImpl::pos_back) );
+	action_group_->add( Gtk::Action::create("GoForward",   Gtk::Stock::GO_FORWARD, "Go_Forward",  "Go forward position"),	                                    sigc::mem_fun(doc_manager_, &DocManagerImpl::pos_forward) );
 
 	// help menu
     action_group_->add( Gtk::Action::create("About",       Gtk::Stock::ABOUT,      "About",       "About"),				                                        sigc::mem_fun(this, &MainWindowImpl::on_help_about) );
@@ -174,14 +174,6 @@ void MainWindowImpl::on_edit_goto() {
 	y -= 16;
 
 	cmd_line_.active(&cmd_cb_goto_, x, y, view);
-}
-
-void MainWindowImpl::on_edit_go_back() {
-	Gtk::MessageDialog(*this, __FUNCTION__).run();
-}
-
-void MainWindowImpl::on_edit_go_forward() {
-	Gtk::MessageDialog(*this, __FUNCTION__).run();
 }
 
 void MainWindowImpl::on_help_about() {

@@ -8,6 +8,14 @@
 #include "DocPageImpl.h"
 
 
+struct PosNode {
+	DocPageImpl*	page;
+	int				line;
+
+	PosNode*		next;
+	PosNode*		prev;
+};
+
 class DocManagerImpl : public DocManager {
 public:
     DocManagerImpl();
@@ -25,6 +33,11 @@ public:
     virtual void save_all_files();
     virtual void close_all_files();
 
+	void pos_add(DocPageImpl& page, int line);
+
+	void pos_forward();
+	void pos_back();
+
 protected:
     bool save_page(DocPageImpl& page);
     bool open_page(const std::string filepath
@@ -33,7 +46,7 @@ protected:
         , int line=0 );
     bool close_page(DocPageImpl& page);
 
-    void locate_page_line(int page_num, int line);
+    void locate_page_line(int page_num, int line, bool record_pos=true);
 
     bool scroll_to_file_pos();
 
@@ -41,12 +54,24 @@ protected:
 
 private:
     void on_doc_modified_changed(DocPageImpl* page);
-	void on_page_close_button_clicked(DocPageImpl* page);
 	bool on_page_label_button_press(GdkEventButton* event, DocPageImpl* page);
+	void on_page_removed(Gtk::Widget* widget, guint page_num);
 
-private:
-    int page_num_;
-    int line_num_;
+private:	// for locate_page_line
+    int		locate_page_num_;
+    int		locate_line_num_;
+	bool	locate_record_pos_;
+
+private:	// for pos forward & back
+	void pos_pool_init();
+
+	sigc::connection		sig_page_close_;
+
+	PosNode*				pos_cur_;
+	PosNode*				pos_first_;
+	std::vector<PosNode*>	pos_nodes_;
+
+	PosNode					_pos_pool_[128];
 };
 
 #endif//LJED_INC_DOCMANAGERIMPL_H

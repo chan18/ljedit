@@ -8,11 +8,15 @@
 #include "LJEditorUtilsImpl.h"
 #include "dir_utils.h"
 
-DocManagerImpl::DocManagerImpl() : page_num_(-1) {
+DocManagerImpl::DocManagerImpl() : locate_page_num_(-1) {
+	pos_pool_init();
+
+	sig_page_close_ = signal_page_removed().connect( sigc::mem_fun(this, &DocManagerImpl::on_page_removed) );
 }
 
 DocManagerImpl::~DocManagerImpl() {
-     close_all_files();
+	sig_page_close_.disconnect();
+    close_all_files();
 }
 
 void DocManagerImpl::create_new_file() {
@@ -21,33 +25,51 @@ void DocManagerImpl::create_new_file() {
     open_page("", noname);
 }
 
-void DocManagerImpl::locate_page_line(int page_num, int line) {
-    if( page_num_ < 0 ) {
-        page_num_ = page_num;
-        line_num_ = line;
+void DocManagerImpl::locate_page_line(int page_num, int line, bool record_pos) {
+    if( locate_page_num_ < 0 ) {
+        locate_page_num_ = page_num;
+        locate_line_num_ = line;
+		locate_record_pos_  = record_pos;
 
         Glib::signal_idle().connect( sigc::mem_fun(this, &DocManagerImpl::scroll_to_file_pos) );
     }
 }
 
 bool DocManagerImpl::scroll_to_file_pos() {
-    if( page_num_ < 0 )
+    if( locate_page_num_ < 0 )
         return false;
 
-    Gtk::Notebook::PageList::iterator it = pages().find(page_num_);
+	DocPageImpl* current_page = 0;
+	int          current_line = 0;
+	if( locate_record_pos_ && get_current()!=pages().end() ) {
+		current_page = (DocPageImpl*)get_current()->get_child();
+		
+        Glib::RefPtr<gtksourceview::SourceBuffer> buffer = current_page->source_buffer();
+		Gtk::TextIter it = buffer->get_iter_at_mark(buffer->get_insert());
+		current_line = it.get_line();
+	}
+
+    Gtk::Notebook::PageList::iterator it = pages().find(locate_page_num_);
     if( it != pages().end() ) {
-        set_current_page(page_num_);
+		if( current_page!=0 )
+			pos_add(*current_page, current_line);
+
+        set_current_page(locate_page_num_);
 
         DocPageImpl* page = (DocPageImpl*)get_current()->get_child();
         assert( page != 0 );
+        page->view().grab_focus();
 
         Glib::RefPtr<gtksourceview::SourceBuffer> buffer = page->source_buffer();
-        gtksourceview::SourceBuffer::iterator it = buffer->get_iter_at_line(line_num_);
+        gtksourceview::SourceBuffer::iterator it = buffer->get_iter_at_line(locate_line_num_);
         if( it != buffer->end() )
             buffer->place_cursor(it);
         page->view().scroll_to_iter(it, 0.25);
 
-        page_num_ = -1;
+        locate_page_num_ = -1;
+
+		if( locate_record_pos_ )
+			pos_add(*page, locate_line_num_);
     }
     return false;
 }
@@ -112,6 +134,7 @@ bool DocManagerImpl::open_page(const std::string filepath
 	    Glib::RefPtr<gtksourceview::SourceBuffer> buffer = page->source_buffer();
 		buffer->begin_not_undoable_action();
 		buffer->set_text(*text);
+		buffer->place_cursor(buffer->get_iter_at_line(line));
 		buffer->end_not_undoable_action();
 		buffer->set_modified(false);
 		buffer->signal_modified_changed().connect( sigc::bind(sigc::mem_fun(this, &DocManagerImpl::on_doc_modified_changed), page) );
@@ -120,8 +143,6 @@ bool DocManagerImpl::open_page(const std::string filepath
 	page->label_event_box().signal_button_release_event().connect( sigc::bind(sigc::mem_fun(this, &DocManagerImpl::on_page_label_button_press), page) );
 
     int n = append_page(*page, page->label_event_box());
-    page->view().grab_focus();
-    set_current_page(n);
 
     locate_page_line(n, line);
 
@@ -206,5 +227,93 @@ void DocManagerImpl::on_doc_modified_changed(DocPageImpl* page) {
             page->label().set_text(label);
         }
     }
+}
+
+void DocManagerImpl::on_page_removed(Gtk::Widget* widget, guint page_num) {
+	DocPage* page = (DocPageImpl*)widget;
+
+	for( PosNode* node = pos_first_; node != 0; node = node->next ) {
+		if( node->page == page ) {
+			if( pos_first_==node ) {
+				pos_first_ = node->next;
+				if( pos_first_!=0 )
+					pos_first_->prev = 0;
+			}
+
+			if( pos_cur_==node)
+				pos_cur_ = node->next;
+
+			if( node->prev != 0 )
+				node->prev->next = node->next;
+			if( node->next != 0 )
+				node->next->prev = node->prev;
+			pos_nodes_.push_back(node);
+		}
+	}
+}
+
+void DocManagerImpl::pos_pool_init() {
+	size_t count = sizeof(_pos_pool_) / sizeof(PosNode);
+	assert( count > 2 );
+	for( size_t i=0; i<count; ++i )
+		pos_nodes_.push_back(&_pos_pool_[i]);
+}
+
+void DocManagerImpl::pos_add(DocPageImpl& page, int line) {
+	PosNode* node = 0;
+
+	if( pos_cur_ != 0 ) {
+		if( pos_cur_->page==&page && pos_cur_->line==line )
+			return;
+
+		// remove forwards
+		for( node = pos_cur_->next; node!=0; node = node->next )
+			pos_nodes_.push_back(node);
+
+		if( pos_nodes_.empty() ) {
+			assert( pos_first_!=0 && pos_first_->next!=0 );
+			node = pos_first_;
+			pos_first_ = node->next;
+			pos_first_->prev = 0;
+
+		} else {
+			node = pos_nodes_.back();
+			pos_nodes_.pop_back();
+		}
+
+		pos_cur_->next = node;
+
+	} else {
+		for( node = pos_first_; node!=0; node = node->next )
+			pos_nodes_.push_back(node);
+
+		assert( !pos_nodes_.empty() );
+		pos_first_ = pos_nodes_.back();
+		pos_nodes_.pop_back();
+		node = pos_first_;
+	}
+
+	node->next = 0;
+	node->prev = pos_cur_;
+	node->page = &page;
+	node->line = line;
+
+	pos_cur_ = node;
+}
+
+void DocManagerImpl::pos_forward() {
+	if( pos_cur_==0 || pos_cur_->next==0 )
+		return;
+
+	pos_cur_ = pos_cur_->next;
+	locate_page_line(page_num(*pos_cur_->page), pos_cur_->line, false);
+}
+
+void DocManagerImpl::pos_back() {
+	if( pos_cur_==0 || pos_cur_->prev==0 )
+		return;
+
+	pos_cur_ = pos_cur_->prev;
+	locate_page_line(page_num(*pos_cur_->page), pos_cur_->line, false);
 }
 
