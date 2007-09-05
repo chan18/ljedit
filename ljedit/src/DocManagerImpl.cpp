@@ -263,6 +263,7 @@ void DocManagerImpl::pos_add(DocPageImpl& page, int line) {
 	PosNode* node = 0;
 
 	if( pos_cur_ != 0 ) {
+		// if last==current, not record
 		if( pos_cur_->page==&page && pos_cur_->line==line )
 			return;
 
@@ -310,7 +311,25 @@ void DocManagerImpl::pos_forward() {
 }
 
 void DocManagerImpl::pos_back() {
-	if( pos_cur_==0 || pos_cur_->prev==0 )
+	if( pos_cur_==0 )
+		return;
+
+	if( pos_cur_->next==0 ) {
+		// if last and different position, record current position
+		DocPageImpl* current_page = 0;
+		int          current_line = 0;
+		if( get_current()!=pages().end() ) {
+			current_page = (DocPageImpl*)get_current()->get_child();
+			
+			Glib::RefPtr<gtksourceview::SourceBuffer> buffer = current_page->source_buffer();
+			Gtk::TextIter it = buffer->get_iter_at_mark(buffer->get_insert());
+			current_line = it.get_line();
+
+			pos_add(*current_page, current_line);
+		}
+	}
+
+	if( pos_cur_->prev==0 )
 		return;
 
 	pos_cur_ = pos_cur_->prev;
