@@ -4,6 +4,7 @@
 #include "StdAfx.h"	// for vc precompile header
 
 #include "CmdLineCallbacks.h"
+#include "DocManagerImpl.h"
 
 // CmdGotoCallback
 
@@ -43,6 +44,23 @@ void CmdGotoCallback::on_key_changed(void* tag) {
 		}
 	}
 }
+
+bool CmdGotoCallback::on_key_press(GdkEventKey* event, void* tag) {
+	switch( event->keyval ) {
+	case GDK_Up:
+	case GDK_Left:
+		doc_mgr_.pos_back();
+		return true;
+
+	case GDK_Down:
+	case GDK_Right:
+		doc_mgr_.pos_forward();
+		return true;
+	}
+
+	return default_on_key_press(event, tag);
+}
+
 
 // CmdFindCallback
 
@@ -133,13 +151,8 @@ bool CmdFindCallback::on_key_press(GdkEventKey* event, void* tag) {
 			view->scroll_to_iter(ps, 0.3);
 		}
 		return true;
-
-	case GDK_Escape:
-	case GDK_Return:
-		cmd_line_.deactive();
-		return true;
 	}
 
-	return false;
+	return default_on_key_press(event, tag);
 }
 

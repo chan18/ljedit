@@ -11,6 +11,7 @@
 struct PosNode {
 	DocPageImpl*	page;
 	int				line;
+	int				lpos;
 
 	PosNode*		next;
 	PosNode*		prev;
@@ -26,14 +27,14 @@ public:
 		{ return ((DocPageImpl&)child); }
 
     virtual void create_new_file();
-    virtual void open_file(const std::string& filepath, int line=0);
-    virtual bool locate_file(const std::string& filepath, int line=0);
+    virtual void open_file(const std::string& filepath, int line=0, int line_offset=0);
+    virtual bool locate_file(const std::string& filepath, int line=0, int line_offset=0);
     virtual void save_current_file();
     virtual void close_current_file();
     virtual void save_all_files();
     virtual void close_all_files();
 
-	void pos_add(DocPageImpl& page, int line);
+	void pos_add(DocPageImpl& page, int line, int line_offset);
 
 	void pos_forward();
 	void pos_back();
@@ -43,14 +44,15 @@ protected:
     bool open_page(const std::string filepath
         , const std::string& displaty_name
         , const Glib::ustring* text = 0
-        , int line=0 );
+        , int line=0
+		, int line_offset=0);
     bool close_page(DocPageImpl& page);
 
-    void locate_page_line(int page_num, int line, bool record_pos=true);
+    void locate_page_line(int page_num, int line, int line_offset, bool record_pos=true);
 
     bool scroll_to_file_pos();
 
-	bool do_locate_file(const std::string& abspath, int line=0);
+	bool do_locate_file(const std::string& abspath, int line=0, int line_offset=0);
 
 private:
     void on_doc_modified_changed(DocPageImpl* page);
@@ -60,6 +62,7 @@ private:
 private:	// for locate_page_line
     int		locate_page_num_;
     int		locate_line_num_;
+    int		locate_line_offset_;
 	bool	locate_record_pos_;
 
 private:	// for pos forward & back

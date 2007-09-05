@@ -16,7 +16,11 @@ public:
 
 		virtual void on_key_changed(void* tag) {}
 
-		virtual bool on_key_press(GdkEventKey* event, void* tag) {
+		virtual bool on_key_press(GdkEventKey* event, void* tag)
+			{ return default_on_key_press(event, tag); }
+
+	protected:
+		bool default_on_key_press(GdkEventKey* event, void* tag) {
 			switch( event->keyval ) {
 			case GDK_Escape:
 			case GDK_Return:
@@ -26,6 +30,7 @@ public:
 
 			return false;
 		}
+
 
 	protected:
 		CmdLine&	cmd_line_;

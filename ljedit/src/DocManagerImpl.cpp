@@ -25,10 +25,11 @@ void DocManagerImpl::create_new_file() {
     open_page("", noname);
 }
 
-void DocManagerImpl::locate_page_line(int page_num, int line, bool record_pos) {
+void DocManagerImpl::locate_page_line(int page_num, int line, int line_offset, bool record_pos) {
     if( locate_page_num_ < 0 ) {
         locate_page_num_ = page_num;
         locate_line_num_ = line;
+		locate_line_offset_ = line_offset;
 		locate_record_pos_  = record_pos;
 
         Glib::signal_idle().connect( sigc::mem_fun(this, &DocManagerImpl::scroll_to_file_pos) );
@@ -41,18 +42,20 @@ bool DocManagerImpl::scroll_to_file_pos() {
 
 	DocPageImpl* current_page = 0;
 	int          current_line = 0;
+	int          current_lpos = 0;
 	if( locate_record_pos_ && get_current()!=pages().end() ) {
 		current_page = (DocPageImpl*)get_current()->get_child();
 		
         Glib::RefPtr<gtksourceview::SourceBuffer> buffer = current_page->source_buffer();
 		Gtk::TextIter it = buffer->get_iter_at_mark(buffer->get_insert());
 		current_line = it.get_line();
+		current_lpos = it.get_line_offset();
 	}
 
     Gtk::Notebook::PageList::iterator it = pages().find(locate_page_num_);
     if( it != pages().end() ) {
 		if( current_page!=0 )
-			pos_add(*current_page, current_line);
+			pos_add(*current_page, current_line, current_lpos);
 
         set_current_page(locate_page_num_);
 
@@ -61,20 +64,20 @@ bool DocManagerImpl::scroll_to_file_pos() {
         page->view().grab_focus();
 
         Glib::RefPtr<gtksourceview::SourceBuffer> buffer = page->source_buffer();
-        gtksourceview::SourceBuffer::iterator it = buffer->get_iter_at_line(locate_line_num_);
-        if( it != buffer->end() )
+        gtksourceview::SourceBuffer::iterator it = buffer->get_iter_at_line_offset(locate_line_num_, locate_line_offset_);
+		if( it != buffer->end() )
             buffer->place_cursor(it);
         page->view().scroll_to_iter(it, 0.25);
 
         locate_page_num_ = -1;
 
 		if( locate_record_pos_ )
-			pos_add(*page, locate_line_num_);
+			pos_add(*page, locate_line_num_, locate_line_offset_);
     }
     return false;
 }
 
-void DocManagerImpl::open_file(const std::string& filepath, int line) {
+void DocManagerImpl::open_file(const std::string& filepath, int line, int line_offset) {
     std::string abspath = filepath;
     ::ljcs_filepath_to_abspath(abspath);
 
@@ -87,10 +90,10 @@ void DocManagerImpl::open_file(const std::string& filepath, int line) {
 	if( !LJEditorUtilsImpl::self().load_file(ubuf, abspath) )
 		return;
 
-    open_page(abspath, filename, &ubuf, line);
+    open_page(abspath, filename, &ubuf, line, line_offset);
 }
 
-bool DocManagerImpl::do_locate_file(const std::string& abspath, int line) {
+bool DocManagerImpl::do_locate_file(const std::string& abspath, int line, int line_offset) {
     Gtk::Notebook::PageList::iterator it = pages().begin();
     Gtk::Notebook::PageList::iterator end = pages().end();
     for( ; it!=end; ++it ) {
@@ -98,7 +101,7 @@ bool DocManagerImpl::do_locate_file(const std::string& abspath, int line) {
         assert( page != 0 );
 
         if( page->filepath()==abspath ) {
-            locate_page_line(it->get_page_num(), line);
+            locate_page_line(it->get_page_num(), line, line_offset);
             return true;
         }
     }
@@ -106,11 +109,11 @@ bool DocManagerImpl::do_locate_file(const std::string& abspath, int line) {
 	return false;
 }
 
-bool DocManagerImpl::locate_file(const std::string& filepath, int line) {
+bool DocManagerImpl::locate_file(const std::string& filepath, int line, int line_offset) {
     std::string abspath = filepath;
     ::ljcs_filepath_to_abspath(abspath);
 
-	return do_locate_file(abspath, line);
+	return do_locate_file(abspath, line, line_offset);
 }
 
 bool DocManagerImpl::on_page_label_button_press(GdkEventButton* event, DocPageImpl* page) {
@@ -124,7 +127,8 @@ bool DocManagerImpl::on_page_label_button_press(GdkEventButton* event, DocPageIm
 bool DocManagerImpl::open_page(const std::string filepath
         , const std::string& displaty_name
         , const Glib::ustring* text
-        , int line)
+        , int line
+		, int line_offset)
 {
     DocPageImpl* page = DocPageImpl::create(filepath, displaty_name);
     if( page==0 )
@@ -144,7 +148,7 @@ bool DocManagerImpl::open_page(const std::string filepath
 
     int n = append_page(*page, page->label_event_box());
 
-    locate_page_line(n, line);
+    locate_page_line(n, line, line_offset);
 
     return true;
 }
@@ -259,13 +263,15 @@ void DocManagerImpl::pos_pool_init() {
 		pos_nodes_.push_back(&_pos_pool_[i]);
 }
 
-void DocManagerImpl::pos_add(DocPageImpl& page, int line) {
+void DocManagerImpl::pos_add(DocPageImpl& page, int line, int line_offset) {
 	PosNode* node = 0;
 
 	if( pos_cur_ != 0 ) {
 		// if last==current, not record
-		if( pos_cur_->page==&page && pos_cur_->line==line )
+		if( pos_cur_->page==&page && pos_cur_->line==line ) {
+			pos_cur_->lpos = line_offset;
 			return;
+		}
 
 		// remove forwards
 		for( node = pos_cur_->next; node!=0; node = node->next )
@@ -298,6 +304,7 @@ void DocManagerImpl::pos_add(DocPageImpl& page, int line) {
 	node->prev = pos_cur_;
 	node->page = &page;
 	node->line = line;
+	node->lpos = line_offset;
 
 	pos_cur_ = node;
 }
@@ -307,7 +314,7 @@ void DocManagerImpl::pos_forward() {
 		return;
 
 	pos_cur_ = pos_cur_->next;
-	locate_page_line(page_num(*pos_cur_->page), pos_cur_->line, false);
+	locate_page_line(page_num(*pos_cur_->page), pos_cur_->line, pos_cur_->lpos, false);
 }
 
 void DocManagerImpl::pos_back() {
@@ -316,16 +323,13 @@ void DocManagerImpl::pos_back() {
 
 	if( pos_cur_->next==0 ) {
 		// if last and different position, record current position
-		DocPageImpl* current_page = 0;
-		int          current_line = 0;
 		if( get_current()!=pages().end() ) {
-			current_page = (DocPageImpl*)get_current()->get_child();
+			DocPageImpl* current_page = (DocPageImpl*)get_current()->get_child();
 			
 			Glib::RefPtr<gtksourceview::SourceBuffer> buffer = current_page->source_buffer();
 			Gtk::TextIter it = buffer->get_iter_at_mark(buffer->get_insert());
-			current_line = it.get_line();
 
-			pos_add(*current_page, current_line);
+			pos_add(*current_page, it.get_line(), it.get_line_offset());
 		}
 	}
 
@@ -333,6 +337,6 @@ void DocManagerImpl::pos_back() {
 		return;
 
 	pos_cur_ = pos_cur_->prev;
-	locate_page_line(page_num(*pos_cur_->page), pos_cur_->line, false);
+	locate_page_line(page_num(*pos_cur_->page), pos_cur_->line, pos_cur_->lpos, false);
 }
 
