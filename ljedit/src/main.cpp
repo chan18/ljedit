@@ -6,32 +6,133 @@
 #include "LJEditorImpl.h"
 #include "PluginManager.h"
 
+int already_running();
+
 int main(int argc, char *argv[]) {
-    Gtk::Main kit(argc, argv);
+	// singleton pid
+	if( already_running() ) {
 
-	std::string path;
-	
-#ifdef WIN32
-    path = Glib::get_application_name();
-    path = Glib::find_program_in_path(path);
-	path = Glib::path_get_dirname(path);
+		
+	} else {
+		Gtk::Main kit(argc, argv);
 
-#else
-    path = argv[0];
-    path.erase(path.find_last_of('/'));
+		std::string path;
+		
+	#ifdef WIN32
+		path = Glib::get_application_name();
+		path = Glib::find_program_in_path(path);
+		path = Glib::path_get_dirname(path);
 
-#endif
+	#else
+		path = argv[0];
+		path.erase(path.find_last_of('/'));
 
-	PluginManager::self().add_plugins_path(path + "/plugins");
- 
-    LJEditorImpl& app = LJEditorImpl::self();
-    if( app.create(path) ) {
-        app.run();
-        app.destroy();
-    }
+	#endif
+
+		PluginManager::self().add_plugins_path(path + "/plugins");
+	 
+		LJEditorImpl& app = LJEditorImpl::self();
+		if( app.create(path) ) {
+			app.run();
+			app.destroy();
+		}
+	}
 
     return 0;
 }
+
+
+#ifdef WIN32
+	#include <windows.h>
+	#include <tchar.h>
+
+	int already_running() {
+		HANDLE m_hMutex = CreateMutex(NULL, FALSE, _T("ljedit_lock"));
+		if( GetLastError() == ERROR_ALREADY_EXISTS )
+			return 1;
+
+		return 0;
+	}
+
+#else
+	#include <unistd.h>
+	#include <stdlib.h>
+	#include <fcntl.h>
+	#include <syslog.h>
+	#include <string.h>
+	#include <errno.h>
+	#include <stdio.h>
+	#include <sys/stat.h>
+
+	#define PIDFILE "/tmp/ljedit.pid"
+
+	int lock_reg(int fd, off_t offset, int whence, off_t len) {
+		struct flock lock;
+
+		lock.l_type = F_WRLCK;
+		lock.l_start = offset;
+		lock.l_whence = whence;
+		lock.l_len = len;
+
+		return (fcntl(fd, F_SETLK, &lock));
+	}
+
+	int already_running() {
+		int fd, val;
+		char buf[16];
+
+		if( (fd = open(PIDFILE, O_WRONLY | O_CREAT, 0644)) < 0 ) {
+			perror("error[open lock file]");
+			exit(1);
+		}
+
+		// try and set a write lock on the entire file
+		if( lock_reg(fd, 0, SEEK_SET, 0) < 0 ) {
+			if(errno == EACCES || errno == EAGAIN) {
+				return 1;
+
+			}else {
+				perror("error[write_lock]");
+				close(fd);
+				exit(1);
+			}
+		}
+
+		// truncate to zero length, now that we have the lock
+		if( ftruncate(fd, 0) < 0 ) {
+			perror("error[ftruncate]");
+			close(fd);      
+			exit(1);
+		}
+
+		// write our process id
+		sprintf(buf, "%d\n", getpid());
+		if( write(fd, buf, strlen(buf)) != strlen(buf) ) {
+			perror("error[write]");
+			close(fd);      
+			exit(1);
+		}
+
+		// set close-on-exec flag for descriptor
+		if((val = fcntl(fd, F_GETFD, 0) < 0 )) {
+			perror("error[fcntl]");
+			close(fd);
+			exit(1);
+		}
+
+		val |= FD_CLOEXEC;
+		if( fcntl(fd, F_SETFD, val) < 0 ) {
+			perror("error[fcntl again]");
+			close(fd);
+			exit(1);
+		}
+
+		// leave file open until we terminate: lock will be held
+		return 0;
+	}
+
+#endif
+
 
 /*
 #include <pcre++.h>
