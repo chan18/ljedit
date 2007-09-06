@@ -43,18 +43,24 @@ bool DocManagerImpl::scroll_to_file_pos() {
 	DocPageImpl* current_page = 0;
 	int          current_line = 0;
 	int          current_lpos = 0;
-	if( locate_record_pos_ && get_current()!=pages().end() ) {
+	if( get_current()!=pages().end() ) {
 		current_page = (DocPageImpl*)get_current()->get_child();
 		
         Glib::RefPtr<gtksourceview::SourceBuffer> buffer = current_page->source_buffer();
 		Gtk::TextIter it = buffer->get_iter_at_mark(buffer->get_insert());
 		current_line = it.get_line();
+
+		if( locate_page_num_==get_current_page() && locate_line_num_==current_line ) {
+			locate_page_num_ = -1;
+			return false;
+		}
+
 		current_lpos = it.get_line_offset();
 	}
 
     Gtk::Notebook::PageList::iterator it = pages().find(locate_page_num_);
     if( it != pages().end() ) {
-		if( current_page!=0 )
+		if( locate_record_pos_ && current_page!=0 )
 			pos_add(*current_page, current_line, current_lpos);
 
         set_current_page(locate_page_num_);

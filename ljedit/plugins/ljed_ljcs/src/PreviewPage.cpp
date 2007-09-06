@@ -156,8 +156,8 @@ bool PreviewPage::on_sourceview_button_release_event(GdkEventButton* event) {
 	cpp::Element* elem = elems_[index_];
 	assert( elem != 0 );
 
-    // test CTRL state
-    if( (event->state & Gdk::CONTROL_MASK)== 0 )
+    // test ALT state
+    if( (event->state & Gdk::MOD1_MASK)== 0 )
 		return false;
 
     // tag test

@@ -10,30 +10,9 @@ class CmdLine {
 public:
 	class ICallback {
 	public:
-		ICallback(CmdLine& cmd_line) : cmd_line_(cmd_line) {}
-
-		virtual void on_active(void* tag) {}
-
-		virtual void on_key_changed(void* tag) {}
-
-		virtual bool on_key_press(GdkEventKey* event, void* tag)
-			{ return default_on_key_press(event, tag); }
-
-	protected:
-		bool default_on_key_press(GdkEventKey* event, void* tag) {
-			switch( event->keyval ) {
-			case GDK_Escape:
-			case GDK_Return:
-				cmd_line_.deactive();
-				return true;
-			}
-
-			return false;
-		}
-
-
-	protected:
-		CmdLine&	cmd_line_;
+		virtual bool on_active(void* tag) = 0;
+		virtual bool on_key_changed() = 0;
+		virtual bool on_key_press(GdkEventKey* event) = 0;
 	};
 
 public:

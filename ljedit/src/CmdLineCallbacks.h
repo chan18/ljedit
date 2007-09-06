@@ -6,28 +6,47 @@
 
 #include "CmdLine.h"
 
+class DocPageImpl;
 class DocManagerImpl;
 
-class CmdGotoCallback : public CmdLine::ICallback {
+class BaseCmdCallback : public CmdLine::ICallback {
 public:
-	CmdGotoCallback(CmdLine& cmd_line, DocManagerImpl& doc_mgr)
-		: CmdLine::ICallback(cmd_line), doc_mgr_(doc_mgr) {}
+	BaseCmdCallback(CmdLine& cmd_line, DocManagerImpl& doc_mgr)
+		: cmd_line_(cmd_line)
+		, doc_mgr_(doc_mgr)
+		, current_page_(0) {}
 
-	virtual void on_active(void* tag);
-	virtual void on_key_changed(void* tag);
-	virtual bool on_key_press(GdkEventKey* event, void* tag);
+protected:
+	bool base_active(void* tag);
 
-private:
+	bool base_on_key_press(GdkEventKey* event);
+
+protected:
+	CmdLine&		cmd_line_;
 	DocManagerImpl& doc_mgr_;
+	DocPageImpl*	current_page_;
+	Gtk::TextIter	last_pos_;
+	void*			tag_;
 };
 
-class CmdFindCallback : public CmdLine::ICallback {
+class CmdGotoCallback : public BaseCmdCallback {
 public:
-	CmdFindCallback(CmdLine& cmd_line) : CmdLine::ICallback(cmd_line) {}
+	CmdGotoCallback(CmdLine& cmd_line, DocManagerImpl& doc_mgr)
+		: BaseCmdCallback(cmd_line, doc_mgr) {}
 
-	virtual void on_active(void* tag);
-	virtual void on_key_changed(void* tag);
-	virtual bool on_key_press(GdkEventKey* event, void* tag);
+	virtual bool on_active(void* tag);
+	virtual bool on_key_changed();
+	virtual bool on_key_press(GdkEventKey* event);
+};
+
+class CmdFindCallback : public BaseCmdCallback {
+public:
+	CmdFindCallback(CmdLine& cmd_line, DocManagerImpl& doc_mgr)
+		: BaseCmdCallback(cmd_line, doc_mgr) {}
+
+	virtual bool on_active(void* tag);
+	virtual bool on_key_changed();
+	virtual bool on_key_press(GdkEventKey* event);
 };
 
 #endif//LJED_INC_CMDLINECALLBACKS_H

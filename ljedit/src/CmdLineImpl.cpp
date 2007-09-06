@@ -41,11 +41,13 @@ void CmdLineImpl::create(Gtk::Window& main_window) {
 
 void CmdLineImpl::do_active(CmdLine::ICallback* cb, int x, int y, void* tag) {
 	cb_ = cb;
-	tag_ = tag;
 	if( cb_ == 0 )
 		return;
 
-	cb_->on_active(tag_);
+	if( !cb_->on_active(tag) ) {
+		deactive();
+		return;
+	}
 
 	move(x, y);
 	show();
@@ -75,14 +77,15 @@ void CmdLineImpl::on_key_changed() {
 	if( cb_ == 0 )
 		return;
 
-	cb_->on_key_changed(tag_);
+	if( !cb_->on_key_changed() )
+		deactive();
 }
 
 bool CmdLineImpl::on_key_press(GdkEventKey* event) {
-	if( cb_ == 0 )
-		return false;
+	if( cb_ != 0 && !cb_->on_key_press(event) )
+		deactive();
 
-	return cb_->on_key_press(event, tag_);
+	return false;
 }
 
 bool CmdLineImpl::on_button_press(GdkEventButton* event) {

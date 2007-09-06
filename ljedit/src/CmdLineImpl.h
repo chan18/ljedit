@@ -32,7 +32,6 @@ private:
 	Gtk::Entry		entry_;
 
 	ICallback*		cb_;
-	void*			tag_;
 };
 
 #endif//LJED_INC_CMDLINEIMPL_H

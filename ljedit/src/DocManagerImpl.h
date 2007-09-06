@@ -34,6 +34,9 @@ public:
     virtual void save_all_files();
     virtual void close_all_files();
 
+	DocPageImpl* get_current_doc_page()
+		{ return pages().empty() ? 0 : (DocPageImpl*)(get_current()->get_child()); }
+
 	void pos_add(DocPageImpl& page, int line, int line_offset);
 
 	void pos_forward();

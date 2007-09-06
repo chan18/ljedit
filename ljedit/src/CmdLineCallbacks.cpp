@@ -6,32 +6,61 @@
 #include "CmdLineCallbacks.h"
 #include "DocManagerImpl.h"
 
-// CmdGotoCallback
 
-void CmdGotoCallback::on_active(void* tag) {
-	gtksourceview::SourceView* view = (gtksourceview::SourceView*)tag;
-	if( view==0 )
-		return;
+// BaseCmdCallback
 
-	Glib::RefPtr<gtksourceview::SourceBuffer> buf = view->get_source_buffer();
+bool BaseCmdCallback::base_active(void* tag) {
+	tag_ = tag;
 
-	Gtk::TextIter it = buf->get_iter_at_mark(buf->get_insert());
-	if( it != buf->end() ) {
-		char buf[64] = { '\0' };
-		sprintf(buf, "%d", it.get_line() + 1);
-		cmd_line_.entry().set_text(buf);
-	}
+	current_page_ = doc_mgr_.get_current_doc_page();
+	if( current_page_==0 )
+		return false;
 
-	cmd_line_.label().set_text("goto:");
-	cmd_line_.entry().select_region(0, cmd_line_.entry().get_text_length());
+	Glib::RefPtr<gtksourceview::SourceBuffer> buf = current_page_->buffer();
+	last_pos_ = buf->get_iter_at_mark(buf->get_insert());
+	return true;
 }
 
-void CmdGotoCallback::on_key_changed(void* tag) {
-	gtksourceview::SourceView* view = (gtksourceview::SourceView*)tag;
-	if( view==0 )
-		return;
+bool BaseCmdCallback::base_on_key_press(GdkEventKey* event) {
+	Glib::RefPtr<gtksourceview::SourceBuffer> buf = current_page_->buffer();
+	Gtk::TextIter it = buf->get_iter_at_mark(buf->get_insert());
 
-	Glib::RefPtr<gtksourceview::SourceBuffer> buf = view->get_source_buffer();
+	switch( event->keyval ) {
+
+	case GDK_Escape:
+		buf->place_cursor(last_pos_);
+		current_page_->view().scroll_to_iter(last_pos_, 0.3);
+		return false;
+
+	case GDK_Return:
+		doc_mgr_.pos_add(*current_page_, last_pos_.get_line(), last_pos_.get_line_offset());
+		doc_mgr_.pos_add(*current_page_, it.get_line(), it.get_line_offset());
+		return false;
+	}
+
+	return true;
+}
+
+// CmdGotoCallback
+
+bool CmdGotoCallback::on_active(void* tag) {
+	if( base_active(tag) ) {
+		char buf[64] = { '\0' };
+		sprintf(buf, "%d", last_pos_.get_line() + 1);
+		cmd_line_.entry().set_text(buf);
+
+		cmd_line_.label().set_text("goto:");
+		cmd_line_.entry().select_region(0, cmd_line_.entry().get_text_length());
+
+		return true;
+	}
+
+	return false;
+}
+
+bool CmdGotoCallback::on_key_changed() {
+	assert( current_page_ != 0 );
+	Glib::RefPtr<gtksourceview::SourceBuffer> buf = current_page_->buffer();
 
 	Glib::ustring text = cmd_line_.entry().get_text();
 
@@ -40,12 +69,14 @@ void CmdGotoCallback::on_key_changed(void* tag) {
 		Gtk::TextIter it = buf->get_iter_at_line(line_num - 1);
 		if( it != buf->end() ) {
 			buf->place_cursor(it);
-			view->scroll_to_iter(it, 0.25);
+			current_page_->view().scroll_to_iter(it, 0.25);
 		}
 	}
+
+	return true;
 }
 
-bool CmdGotoCallback::on_key_press(GdkEventKey* event, void* tag) {
+bool CmdGotoCallback::on_key_press(GdkEventKey* event) {
 	switch( event->keyval ) {
 	case GDK_Up:
 	case GDK_Left:
@@ -58,33 +89,33 @@ bool CmdGotoCallback::on_key_press(GdkEventKey* event, void* tag) {
 		return true;
 	}
 
-	return default_on_key_press(event, tag);
+	return base_on_key_press(event);
 }
 
 
 // CmdFindCallback
 
-void CmdFindCallback::on_active(void* tag) {
-	gtksourceview::SourceView* view = (gtksourceview::SourceView*)tag;
-	if( view==0 )
-		return;
+bool CmdFindCallback::on_active(void* tag) {
+	if( base_active(tag) ) {
+		assert( current_page_ != 0 );
+		Glib::RefPtr<gtksourceview::SourceBuffer> buf = current_page_->buffer();
 
-	Glib::RefPtr<gtksourceview::SourceBuffer> buf = view->get_source_buffer();
+		Gtk::TextIter ps, pe;
+		if( buf->get_selection_bounds(ps, pe) )
+			cmd_line_.entry().set_text( buf->get_text(ps, pe) );
 
-	Gtk::TextIter ps, pe;
-	if( buf->get_selection_bounds(ps, pe) )
-		cmd_line_.entry().set_text( buf->get_text(ps, pe) );
+		cmd_line_.label().set_text("find:");
+		cmd_line_.entry().select_region(0, cmd_line_.entry().get_text_length());
 
-	cmd_line_.label().set_text("find:");
-	cmd_line_.entry().select_region(0, cmd_line_.entry().get_text_length());
+		return true;
+	}
+
+	return false;
 }
 
-void CmdFindCallback::on_key_changed(void* tag) {
-	gtksourceview::SourceView* view = (gtksourceview::SourceView*)tag;
-	if( view==0 )
-		return;
-
-	Glib::RefPtr<gtksourceview::SourceBuffer> buf = view->get_source_buffer();
+bool CmdFindCallback::on_key_changed() {
+	assert( current_page_ != 0 );
+	Glib::RefPtr<gtksourceview::SourceBuffer> buf = current_page_->buffer();
 
 	gtksourceview::SourceIter it = buf->get_iter_at_mark(buf->get_insert());
 	Gtk::TextIter end = buf->end();
@@ -96,19 +127,19 @@ void CmdFindCallback::on_key_changed(void* tag) {
 		it = buf->begin();
 
 		if( !it.forward_search(text, gtksourceview::SEARCH_TEXT_ONLY | gtksourceview::SEARCH_CASE_INSENSITIVE, ps, pe, end) )
-			return;
+			return true;
 	}
 
 	buf->place_cursor(pe);
 	buf->select_range(ps, pe);
-	view->scroll_to_iter(ps, 0.25);
+	current_page_->view().scroll_to_iter(ps, 0.25);
+
+	return true;
 }
 
-bool CmdFindCallback::on_key_press(GdkEventKey* event, void* tag) {
-	gtksourceview::SourceView* view = (gtksourceview::SourceView*)tag;
-	if( view==0 )
-		return false;
-	Glib::RefPtr<gtksourceview::SourceBuffer> buf = view->get_source_buffer();
+bool CmdFindCallback::on_key_press(GdkEventKey* event) {
+	assert( current_page_ != 0 );
+	Glib::RefPtr<gtksourceview::SourceBuffer> buf = current_page_->buffer();
 
 	switch( event->keyval ) {
 	case GDK_Up: {
@@ -126,7 +157,7 @@ bool CmdFindCallback::on_key_press(GdkEventKey* event, void* tag) {
 			}
 
 			buf->select_range(ps, pe);
-			view->scroll_to_iter(ps, 0.3);
+			current_page_->view().scroll_to_iter(ps, 0.3);
 		}
 		return true;
 
@@ -148,11 +179,11 @@ bool CmdFindCallback::on_key_press(GdkEventKey* event, void* tag) {
 			}
 
 			buf->select_range(ps, pe);
-			view->scroll_to_iter(ps, 0.3);
+			current_page_->view().scroll_to_iter(ps, 0.3);
 		}
 		return true;
 	}
 
-	return default_on_key_press(event, tag);
+	return base_on_key_press(event);
 }
 
