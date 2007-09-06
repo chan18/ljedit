@@ -6,6 +6,7 @@
 #include "PreviewPage.h"
 #include "LJCSPluginUtils.h"
 
+
 PreviewPage::PreviewPage(LJEditor& editor)
     : editor_(editor)
     , view_(0)
@@ -188,7 +189,7 @@ bool PreviewPage::on_sourceview_button_release_event(GdkEventButton* event) {
 		std::copy(mset.elems.begin(), mset.elems.end(), elems_.begin());
 		cpp::ref_all_elems(elems_);
 
-		preview(elems_);
+		preview(elems_, find_best_matched_index(elems_));
 	}
 
     return false;

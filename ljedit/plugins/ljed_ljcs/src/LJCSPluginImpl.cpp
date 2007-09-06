@@ -329,47 +329,56 @@ bool LJCSPluginImpl::on_key_release_event(GdkEventKey* event, DocPage* page) {
 bool LJCSPluginImpl::on_button_release_event(GdkEventButton* event, DocPage* page) {
     assert( page != 0 );
 
-    // test CTRL state
-    if( event->state & Gdk::CONTROL_MASK ) {
-        if( tip_.is_visible() )
-            tip_.hide();
+    if( tip_.is_visible() )
+        tip_.hide();
 
-        cpp::File* file = ParserEnviron::self().find_parsed(page->filepath());
-        if( file==0 )
-            return false;
+    cpp::File* file = ParserEnviron::self().find_parsed(page->filepath());
+    if( file==0 )
+        return false;
 
-        // include test
+    // include test
 
-        // tag test
-        Glib::RefPtr<Gtk::TextBuffer> buf = page->buffer();
-        Gtk::TextBuffer::iterator it = buf->get_iter_at_mark(buf->get_insert());
-        char ch = (char)it.get_char();
-        if( ::isalnum(ch) || ch=='_' ) {
-            while( it.forward_word_end() ) {
-                ch = it.get_char();
-                if( ch=='_' )
-                    continue;
-                break;
-            }
+    // tag test
+    Glib::RefPtr<Gtk::TextBuffer> buf = page->buffer();
+    Gtk::TextBuffer::iterator it = buf->get_iter_at_mark(buf->get_insert());
+    char ch = (char)it.get_char();
+    if( ::isalnum(ch) || ch=='_' ) {
+        while( it.forward_word_end() ) {
+            ch = it.get_char();
+            if( ch=='_' )
+                continue;
+            break;
         }
-        Gtk::TextBuffer::iterator end = it;
+    }
+    Gtk::TextBuffer::iterator end = it;
 
-        StrVector keys;
-        if( !find_keys(keys, it, end, file) )
-            return false;
+    StrVector keys;
+    if( !find_keys(keys, it, end, file) )
+        return false;
 
-        size_t line = (size_t)it.get_line() + 1;
-        MatchedSet mset;
-        ::search_keys(keys, mset, *file, line);
+    size_t line = (size_t)it.get_line() + 1;
+    MatchedSet mset;
+    ::search_keys(keys, mset, *file, line);
 
+	// test CTRL state
+	if( event->state & Gdk::CONTROL_MASK ) {
+		// jump to
+		cpp::Element* elem = find_best_matched_element(mset.elems);
+		if( elem != 0 ) {
+			DocManager& dm = editor_.main_window().doc_manager();
+			dm.open_file(elem->file.filename, int(elem->sline - 1));
+		}
+
+	} else {
+		// preview
 		cpp::Elements elems;
 		elems.resize(mset.elems.size());
 		std::copy(mset.elems.begin(), mset.elems.end(), elems.begin());
 
-        preview_.preview(elems);
+		preview_.preview(elems, find_best_matched_index(elems));
 
 		editor_.main_window().bottom_panel().set_current_page(preview_page_);
-    }
+	}
 
     return false;
 }

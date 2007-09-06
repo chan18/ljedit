@@ -38,5 +38,9 @@ bool find_keys( StrVector& keys
     , Gtk::TextBuffer::iterator& end
     , cpp::File* file);
 
+size_t find_best_matched_index(cpp::Elements& elems);
+
+cpp::Element* find_best_matched_element(cpp::ElementSet& eset);
+
 #endif//LJED_INC_LJCSPLUGINUTILS_H
 
