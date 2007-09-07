@@ -30,15 +30,17 @@ bool BaseCmdCallback::base_on_key_press(GdkEventKey* event) {
 	case GDK_Escape:
 		buf->place_cursor(last_pos_);
 		current_page_->view().scroll_to_iter(last_pos_, 0.3);
-		return false;
+		cmd_line_.deactive();
+		return true;
 
 	case GDK_Return:
 		doc_mgr_.pos_add(*current_page_, last_pos_.get_line(), last_pos_.get_line_offset());
 		doc_mgr_.pos_add(*current_page_, it.get_line(), it.get_line_offset());
-		return false;
+		cmd_line_.deactive();
+		return true;
 	}
 
-	return true;
+	return false;
 }
 
 // CmdGotoCallback
@@ -58,7 +60,7 @@ bool CmdGotoCallback::on_active(void* tag) {
 	return false;
 }
 
-bool CmdGotoCallback::on_key_changed() {
+void CmdGotoCallback::on_key_changed() {
 	assert( current_page_ != 0 );
 	Glib::RefPtr<gtksourceview::SourceBuffer> buf = current_page_->buffer();
 
@@ -72,24 +74,38 @@ bool CmdGotoCallback::on_key_changed() {
 			current_page_->view().scroll_to_iter(it, 0.25);
 		}
 	}
-
-	return true;
 }
 
 bool CmdGotoCallback::on_key_press(GdkEventKey* event) {
+	// array keys
+	// ------------
+	//    i
+	//  j   l
+	//    k
+	// 
+	// ------------
+	// 
 	switch( event->keyval ) {
 	case GDK_Up:
 	case GDK_Left:
+	case 'j':
 		doc_mgr_.pos_back();
 		return true;
 
 	case GDK_Down:
 	case GDK_Right:
+	case 'l':
 		doc_mgr_.pos_forward();
 		return true;
 	}
 
-	return base_on_key_press(event);
+	if( base_on_key_press(event) )
+		return true;
+
+	if( event->keyval < '0' || event->keyval > '9' )
+		return true;
+
+	return false;
 }
 
 
@@ -113,7 +129,7 @@ bool CmdFindCallback::on_active(void* tag) {
 	return false;
 }
 
-bool CmdFindCallback::on_key_changed() {
+void CmdFindCallback::on_key_changed() {
 	assert( current_page_ != 0 );
 	Glib::RefPtr<gtksourceview::SourceBuffer> buf = current_page_->buffer();
 
@@ -127,14 +143,12 @@ bool CmdFindCallback::on_key_changed() {
 		it = buf->begin();
 
 		if( !it.forward_search(text, gtksourceview::SEARCH_TEXT_ONLY | gtksourceview::SEARCH_CASE_INSENSITIVE, ps, pe, end) )
-			return true;
+			return;
 	}
 
 	buf->place_cursor(pe);
 	buf->select_range(ps, pe);
 	current_page_->view().scroll_to_iter(ps, 0.25);
-
-	return true;
 }
 
 bool CmdFindCallback::on_key_press(GdkEventKey* event) {

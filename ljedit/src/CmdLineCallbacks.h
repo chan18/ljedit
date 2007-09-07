@@ -35,7 +35,7 @@ public:
 		: BaseCmdCallback(cmd_line, doc_mgr) {}
 
 	virtual bool on_active(void* tag);
-	virtual bool on_key_changed();
+	virtual void on_key_changed();
 	virtual bool on_key_press(GdkEventKey* event);
 };
 
@@ -45,7 +45,7 @@ public:
 		: BaseCmdCallback(cmd_line, doc_mgr) {}
 
 	virtual bool on_active(void* tag);
-	virtual bool on_key_changed();
+	virtual void on_key_changed();
 	virtual bool on_key_press(GdkEventKey* event);
 };
 

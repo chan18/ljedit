@@ -77,13 +77,12 @@ void CmdLineImpl::on_key_changed() {
 	if( cb_ == 0 )
 		return;
 
-	if( !cb_->on_key_changed() )
-		deactive();
+	cb_->on_key_changed();
 }
 
 bool CmdLineImpl::on_key_press(GdkEventKey* event) {
-	if( cb_ != 0 && !cb_->on_key_press(event) )
-		deactive();
+	if( cb_ != 0 )
+		return cb_->on_key_press(event);
 
 	return false;
 }
