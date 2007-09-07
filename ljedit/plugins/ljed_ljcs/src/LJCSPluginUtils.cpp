@@ -21,12 +21,13 @@ bool is_in_comment(Gtk::TextBuffer::iterator& it) {
 bool find_keys( StrVector& keys
     , Gtk::TextBuffer::iterator& it
     , Gtk::TextBuffer::iterator& end
-    , cpp::File* file)
+    , cpp::File* file
+	, bool find_startswith)
 {
     LJEditorDocIter ps(it);
     LJEditorDocIter pe(end);
     std::string key;
-    if( !find_key(key, ps, pe) )
+    if( !find_key(key, ps, pe, find_startswith) )
         return false;
     keys.push_back(key);
 

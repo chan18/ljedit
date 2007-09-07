@@ -32,8 +32,8 @@ void iter_skip_pair(IDocIter& it, char sch, char ech) {
 	}
 }
 
-bool find_key(std::string& key, IDocIter& ps, IDocIter& pe) {
-	char type = 'S';
+bool find_key(std::string& key, IDocIter& ps, IDocIter& pe, bool find_startswith) {
+	char type = find_startswith ? 'S' : '*';
 	std::string word;
 	char ch = ps.prev();
 	switch( ch ) {
@@ -168,7 +168,7 @@ bool find_key(std::string& key, IDocIter& ps, IDocIter& pe) {
 	return true;
 }
 
-bool parse_key(std::string& key, const std::string& text) {
+bool parse_key(std::string& key, const std::string& text, bool find_startswith) {
 	class ParseKeyIter : public IDocIter {
 	public:
 		ParseKeyIter(const std::string& text)
@@ -193,6 +193,6 @@ bool parse_key(std::string& key, const std::string& text) {
 
 	ParseKeyIter ps(text);
 	ParseKeyIter pe(text);
-	return find_key(key, ps, pe);
+	return find_key(key, ps, pe, find_startswith);
 }
 

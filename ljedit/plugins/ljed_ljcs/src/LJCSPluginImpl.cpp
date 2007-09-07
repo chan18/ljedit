@@ -59,7 +59,7 @@ void LJCSPluginImpl::show_hint(DocPage& page
 
     size_t line = (size_t)it.get_line() + 1;
     StrVector keys;
-    if( !find_keys(keys, it, end, file) )
+    if( !find_keys(keys, it, end, file, true) )
         return;
 
     MatchedSet mset;
@@ -342,18 +342,22 @@ bool LJCSPluginImpl::on_button_release_event(GdkEventButton* event, DocPage* pag
     Glib::RefPtr<Gtk::TextBuffer> buf = page->buffer();
     Gtk::TextBuffer::iterator it = buf->get_iter_at_mark(buf->get_insert());
     char ch = (char)it.get_char();
-    if( ::isalnum(ch) || ch=='_' ) {
-        while( it.forward_word_end() ) {
-            ch = it.get_char();
-            if( ch=='_' )
-                continue;
-            break;
-        }
+    if( isalnum(ch)==0 && ch!='_' )
+		return false;
+
+	// find key end position
+	while( it.forward_char() ) {
+        ch = it.get_char();
+        if( ch > 0 && (::isalnum(ch) || ch=='_') )
+            continue;
+        break;
     }
-    Gtk::TextBuffer::iterator end = it;
+
+	// find keys
+	Gtk::TextBuffer::iterator end = it;
 
     StrVector keys;
-    if( !find_keys(keys, it, end, file) )
+    if( !find_keys(keys, it, end, file, false) )
         return false;
 
     size_t line = (size_t)it.get_line() + 1;

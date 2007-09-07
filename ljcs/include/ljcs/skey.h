@@ -47,9 +47,9 @@ private:
 	char cur_;
 };
 
-bool find_key(std::string& key, IDocIter& ps, IDocIter& pe);
+bool find_key(std::string& key, IDocIter& ps, IDocIter& pe, bool find_startswith=true);
 
-bool parse_key(std::string& key, const std::string& text);
+bool parse_key(std::string& key, const std::string& text, bool find_startswith=false);
 
 #endif//LJCS_SKEY_H
 

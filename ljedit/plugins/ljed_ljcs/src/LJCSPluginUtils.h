@@ -36,7 +36,8 @@ bool is_in_comment(Gtk::TextBuffer::iterator& it);
 bool find_keys( StrVector& keys
     , Gtk::TextBuffer::iterator& it
     , Gtk::TextBuffer::iterator& end
-    , cpp::File* file);
+    , cpp::File* file
+	, bool find_startswith);
 
 size_t find_best_matched_index(cpp::Elements& elems);
 

@@ -176,7 +176,7 @@ bool PreviewPage::on_sourceview_button_release_event(GdkEventButton* event) {
     }
 
     StrVector keys;
-	if( !find_keys(keys, it, end, &(elem->file)) )
+	if( !find_keys(keys, it, end, &(elem->file), false) )
         return false;
 
     size_t line = (size_t)it.get_line() + 1;

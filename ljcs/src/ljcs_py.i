@@ -185,21 +185,21 @@ protected:
 
 %{
 
-std::string py_find_key(IDocIter& ps, IDocIter& pe) {
+std::string py_find_key(IDocIter& ps, IDocIter& pe, bool find_startswith=true) {
 	std::string retval;
-	find_key(retval, ps, pe);
+	find_key(retval, ps, pe, find_startswith);
 	return retval;
 }
 
-std::string parse_key(const std::string& text) {
+std::string py_parse_key(const std::string& text, bool find_startswith=false) {
 	std::string retval;
-	parse_key(retval, text);
+	parse_key(retval, text, find_startswith);
 	return retval;
 }
 
 %}
 
-std::string py_find_key(IDocIter& ps, IDocIter& pe);
+std::string py_find_key(IDocIter& ps, IDocIter& pe, bool find_startswith=true);
 
-std::string parse_key(const std::string& text);
+std::string py_parse_key(const std::string& text, bool find_startswith=false);
 
