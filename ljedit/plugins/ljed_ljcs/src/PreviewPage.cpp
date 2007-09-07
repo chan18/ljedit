@@ -4,6 +4,9 @@
 #include "StdAfx.h"	// for vc precompile header
 
 #include "PreviewPage.h"
+
+#include <sstream>
+
 #include "LJCSPluginUtils.h"
 
 
@@ -23,6 +26,7 @@ void PreviewPage::create() {
 	number_button_ = Gtk::manage(new Gtk::Button());
 	number_button_->set_label("0/0");
 	number_button_->signal_clicked().connect(sigc::mem_fun(this, &PreviewPage::on_number_btn_clicked));
+	number_button_->signal_button_release_event().connect(sigc::mem_fun(this, &PreviewPage::on_number_btn_release_event), false);
 
 	Gtk::Button* btn = Gtk::manage(new Gtk::Button());
 	btn->set_relief(Gtk::RELIEF_HALF);
@@ -120,6 +124,33 @@ void PreviewPage::preview(cpp::Elements& elems, size_t index) {
 
 void PreviewPage::on_number_btn_clicked() {
 	preview(elems_, index_ + 1);
+}
+
+bool PreviewPage::on_number_btn_release_event(GdkEventButton* event) {
+	if( event->button!=3 )
+		return false;
+
+	// make popup menu
+	Gtk::Menu::MenuList& menulist = number_menu_.items();
+	menulist.clear();
+
+	if( elems_.empty() ) {
+		menulist.push_back( Gtk::Menu_Helpers::MenuElem("empty") );
+
+	} else {
+		for( size_t i=0; i<elems_.size(); ++i ) {
+			std::ostringstream oss;
+			oss << (char)((i==index_) ? '*' : ' ') << ' ' << elems_[i]->file.filename << ':' << elems_[i]->sline;
+			menulist.push_back( Gtk::Menu_Helpers::MenuElem(oss.str(), sigc::bind(sigc::mem_fun(this, &PreviewPage::on_number_menu_selected), i)) );
+		}
+	}
+
+	number_menu_.popup(event->button, event->time);
+	return true;
+}
+
+void PreviewPage::on_number_menu_selected(size_t index) {
+	preview(elems_, index);
 }
 
 void PreviewPage::on_filename_btn_clicked() {

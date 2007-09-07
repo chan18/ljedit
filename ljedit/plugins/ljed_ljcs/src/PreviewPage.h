@@ -23,6 +23,8 @@ public:
 
 private:
 	void on_number_btn_clicked();
+	bool on_number_btn_release_event(GdkEventButton* event);
+	void on_number_menu_selected(size_t index);
 	void on_filename_btn_clicked();
     bool on_scroll_to_define_line();
 	bool on_sourceview_button_release_event(GdkEventButton* event);
@@ -33,6 +35,7 @@ private:
 private:
 	Gtk::VBox					vbox_;
 
+	Gtk::Menu					number_menu_;
 	Gtk::Button*				number_button_;
 	Gtk::Label*					filename_label_;
 
