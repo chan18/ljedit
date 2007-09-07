@@ -364,8 +364,8 @@ bool LJCSPluginImpl::on_button_release_event(GdkEventButton* event, DocPage* pag
     MatchedSet mset;
     ::search_keys(keys, mset, *file, line);
 
-	// test ALT state
-	if( event->state & Gdk::MOD1_MASK ) {
+	// test CTRL state
+	if( event->state & Gdk::CONTROL_MASK ) {
 		// jump to
 		cpp::Element* elem = find_best_matched_element(mset.elems);
 		if( elem != 0 ) {
