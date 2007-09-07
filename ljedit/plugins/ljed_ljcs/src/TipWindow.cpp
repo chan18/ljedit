@@ -148,6 +148,24 @@ void TipWindow::show_tip(int x, int y, cpp::ElementSet& mset, char tag) {
 	show();
 }
 
+bool TipWindow::locate_sub(int x, int y, Glib::ustring key) {
+	if( tag_=='s' ) {
+		Gtk::TreeModel::iterator it = elems_store_->children().begin();
+		Gtk::TreeModel::iterator end = elems_store_->children().end();
+		for( ; it!=end; ++it ) {
+			Glib::ustring name = it->get_value(columns_.name);
+			if( name.find(key)==0 ) {
+				Glib::RefPtr<Gtk::TreeSelection> selection = elems_view_.get_selection();
+				selection->select(it);
+				elems_view_.scroll_to_row(elems_store_->get_path(it));
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 cpp::Element* TipWindow::get_selected() {
     cpp::Element* result = 0;
     if( !elems_store_->children().empty() ) {
@@ -155,7 +173,7 @@ cpp::Element* TipWindow::get_selected() {
         if( selection->get_selected_rows().size() > 0 ) {
             Gtk::TreeModel::iterator it = selection->get_selected();
             if( it!=elems_store_->children().end() )
-                it->get_value(2, result);
+                result = it->get_value(columns_.elem);
         }
     }
     return result;

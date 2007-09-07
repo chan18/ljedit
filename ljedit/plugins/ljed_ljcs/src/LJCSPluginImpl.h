@@ -44,6 +44,7 @@ private:	// auto complete
         , Gtk::TextBuffer::iterator& it
         , Gtk::TextBuffer::iterator& end
         , char tag);
+	void locate_sub_hint(DocPage& page);
 
     void auto_complete(DocPage& page);
 

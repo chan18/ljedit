@@ -15,6 +15,8 @@ public:
 
     void show_tip(int x, int y, cpp::ElementSet& element_set, char tag);
 
+	bool locate_sub(int x, int y, Glib::ustring key);
+
     cpp::Element* get_selected();
 
     char tag() const { return tag_; }

@@ -80,6 +80,37 @@ void LJCSPluginImpl::show_hint(DocPage& page
     tip_.show_tip(view_x + cursor_x, view_y + cursor_y + rect.get_height() + 2, mset.elems, tag);
 }
 
+void LJCSPluginImpl::locate_sub_hint(DocPage& page) {
+    Glib::RefPtr<Gtk::TextBuffer> buf = page.buffer();
+    Gtk::TextIter it = buf->get_iter_at_mark(buf->get_insert());
+	Gtk::TextIter end = it;
+	while( it.backward_char() ) {
+		char ch = it.get_char();
+		if( ch > 0 && (::isalnum(ch) || ch=='_') )
+			continue;
+
+		it.forward_char();
+		break;
+	}
+
+	Glib::ustring text = buf->get_text(it, end);
+	
+    int view_x = 0;
+    int view_y = 0;
+    Gtk::TextView& view = page.view();
+    view.get_window(Gtk::TEXT_WINDOW_TEXT)->get_origin(view_x, view_y);
+    
+    Gdk::Rectangle rect;
+    view.get_iter_location(end, rect);
+
+    int cursor_x = rect.get_x();
+    int cursor_y = rect.get_y();
+    view.buffer_to_window_coords(Gtk::TEXT_WINDOW_TEXT, cursor_x, cursor_y, cursor_x, cursor_y);
+
+	if( !tip_.locate_sub(view_x + cursor_x, view_y + cursor_y + rect.get_height() + 2, text) )
+		set_show_hint_timer(page);
+}
+
 void LJCSPluginImpl::auto_complete(DocPage& page) {
     cpp::Element* selected = tip_.get_selected();
     if( selected == 0 )
@@ -106,13 +137,16 @@ void LJCSPluginImpl::set_show_hint_timer(DocPage& page) {
 
 	++show_hint_tag_;
 	show_hint_timer_ = Glib::signal_timeout().connect( sigc::bind(sigc::mem_fun(this, &LJCSPluginImpl::on_show_hint_timeout), &page, show_hint_tag_), 200 );
+	printf("set %d\n", show_hint_tag_);
 }
 
 void LJCSPluginImpl::kill_show_hint_timer() {
 	show_hint_timer_.disconnect();
+	printf("kill %d\n", show_hint_tag_);
 }
 
 bool LJCSPluginImpl::on_show_hint_timeout(DocPage* page, int tag) {
+	printf("on : %d", tag);
 	assert( page != 0 );
 
 	if( show_hint_tag_!=tag )
@@ -273,9 +307,8 @@ bool LJCSPluginImpl::on_key_release_event(GdkEventKey* event, DocPage* page) {
 	//printf("%d - %s\n", event->keyval, event->string);
 
     Glib::RefPtr<Gtk::TextBuffer> buf = page->buffer();
-    Glib::RefPtr<Gtk::TextMark> mark = buf->get_insert();
-    Gtk::TextBuffer::iterator it = buf->get_iter_at_mark(mark);
-    Gtk::TextBuffer::iterator end = it;
+    Gtk::TextIter it = buf->get_iter_at_mark(buf->get_insert());
+    Gtk::TextIter end = it;
 
     if( is_in_comment(it) )
         return false;
@@ -316,10 +349,17 @@ bool LJCSPluginImpl::on_key_release_event(GdkEventKey* event, DocPage* page) {
         }
         break;
     default:
-		if( (event->keyval <= 0x7f) && ::isalnum(event->keyval) || event->keyval=='_' )
-			set_show_hint_timer(*page);
-		else
+		if( (event->keyval <= 0x7f) && ::isalnum(event->keyval) || event->keyval=='_' ) {
+			if( tip_.is_visible() ) {
+				if( tip_.tag()=='s' )
+					locate_sub_hint(*page);
+
+			} else {
+				set_show_hint_timer(*page);
+			}
+		} else {
 			tip_.hide();
+		}
         break;
     }
 
