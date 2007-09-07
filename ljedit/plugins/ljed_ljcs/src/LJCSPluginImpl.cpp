@@ -137,16 +137,13 @@ void LJCSPluginImpl::set_show_hint_timer(DocPage& page) {
 
 	++show_hint_tag_;
 	show_hint_timer_ = Glib::signal_timeout().connect( sigc::bind(sigc::mem_fun(this, &LJCSPluginImpl::on_show_hint_timeout), &page, show_hint_tag_), 200 );
-	printf("set %d\n", show_hint_tag_);
 }
 
 void LJCSPluginImpl::kill_show_hint_timer() {
 	show_hint_timer_.disconnect();
-	printf("kill %d\n", show_hint_tag_);
 }
 
 bool LJCSPluginImpl::on_show_hint_timeout(DocPage* page, int tag) {
-	printf("on : %d", tag);
 	assert( page != 0 );
 
 	if( show_hint_tag_!=tag )
