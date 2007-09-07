@@ -70,7 +70,6 @@ private:	// outline
     void outline_update_page();
 
     void outline_on_switch_page(GtkNotebookPage*, guint);
-    bool outline_on_timeout();
     void outline_on_elem_actived(const cpp::Element& elem);
 
 private:

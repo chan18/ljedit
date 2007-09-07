@@ -23,6 +23,7 @@ public:
 
 public:
     bool create(const std::string& path);
+	void add_open_file(const char* filename);
     void run();
     void destroy();
 

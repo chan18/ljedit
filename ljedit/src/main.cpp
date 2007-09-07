@@ -9,9 +9,13 @@
 int already_running();
 
 int main(int argc, char *argv[]) {
+	const char* open_filename = 0;
+	if( argc > 1 )
+		open_filename = argv[1];
+
 	// singleton pid
 	if( already_running() ) {
-
+		// TODO : notify ljedit open file
 		
 	} else {
 		Gtk::Main kit(argc, argv);
@@ -30,9 +34,10 @@ int main(int argc, char *argv[]) {
 	#endif
 
 		PluginManager::self().add_plugins_path(path + "/plugins");
-	 
+
 		LJEditorImpl& app = LJEditorImpl::self();
 		if( app.create(path) ) {
+			app.add_open_file(open_filename);
 			app.run();
 			app.destroy();
 		}

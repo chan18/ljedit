@@ -24,8 +24,6 @@ private:
 	void on_key_changed();
 	bool on_key_press(GdkEventKey* event);
 	void on_editing_done();
-	bool on_button_press(GdkEventButton* event);
-	bool on_focus_out(GdkEventFocus* event);
 
 private:
 	Gtk::Label		label_;

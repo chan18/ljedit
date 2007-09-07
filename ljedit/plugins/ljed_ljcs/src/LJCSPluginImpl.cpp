@@ -191,9 +191,9 @@ void LJCSPluginImpl::create(const char* plugin_filename) {
     outline_.create();
     main_window.right_panel().append_page(outline_.get_widget(), "outline");
 
-    cons.push_back(	outline_.signal_elem_actived.connect(	sigc::mem_fun(this, &LJCSPluginImpl::outline_on_elem_actived)	) );
-    cons.push_back(	dm.signal_switch_page().connect(		sigc::mem_fun(this, &LJCSPluginImpl::outline_on_switch_page)	) );
-    cons.push_back(	Glib::signal_timeout().connect(			sigc::mem_fun(this, &LJCSPluginImpl::outline_on_timeout), 500	) );
+    cons.push_back(	outline_.signal_elem_actived.connect( sigc::mem_fun(this, &LJCSPluginImpl::outline_on_elem_actived)	) );
+    cons.push_back(	dm.signal_switch_page().connect( sigc::mem_fun(this, &LJCSPluginImpl::outline_on_switch_page)	) );
+	cons.push_back(	Glib::signal_timeout().connect( sigc::bind_return(sigc::mem_fun(this, &LJCSPluginImpl::outline_update_page), true), 500	) );
 
     // preview
     preview_.create();
@@ -455,11 +455,6 @@ void LJCSPluginImpl::outline_update_page() {
 
 void LJCSPluginImpl::outline_on_switch_page(GtkNotebookPage*, guint) {
     outline_update_page();
-}
-
-bool LJCSPluginImpl::outline_on_timeout() {
-    outline_update_page();
-    return true;
 }
 
 void LJCSPluginImpl::outline_on_elem_actived(const cpp::Element& elem) {

@@ -21,8 +21,8 @@ void CmdLineImpl::create(Gtk::Window& main_window) {
 	entry_.signal_changed().connect( sigc::mem_fun(this, &CmdLineImpl::on_key_changed) );
 	entry_.signal_key_press_event().connect( sigc::mem_fun(this, &CmdLineImpl::on_key_press), false );
 
-	signal_button_press_event().connect( sigc::mem_fun(this, &CmdLineImpl::on_button_press), false );
-	main_window.signal_focus_out_event().connect( sigc::mem_fun(this, &CmdLineImpl::on_focus_out), false );
+	signal_button_press_event().connect( sigc::bind_return(sigc::hide(sigc::mem_fun(this, &CmdLineImpl::deactive)), false), false );
+	main_window.signal_focus_out_event().connect( sigc::bind_return(sigc::hide(sigc::mem_fun(this, &CmdLineImpl::deactive)), false), false );
 
 	Gtk::HBox* hbox = Gtk::manage(new Gtk::HBox());
 	hbox->pack_start(label_, false, false);
@@ -74,26 +74,14 @@ void CmdLineImpl::do_deactive() {
 }
 
 void CmdLineImpl::on_key_changed() {
-	if( cb_ == 0 )
-		return;
-
-	cb_->on_key_changed();
+	if( cb_ != 0 )
+		cb_->on_key_changed();
 }
 
 bool CmdLineImpl::on_key_press(GdkEventKey* event) {
 	if( cb_ != 0 )
 		return cb_->on_key_press(event);
 
-	return false;
-}
-
-bool CmdLineImpl::on_button_press(GdkEventButton* event) {
-	deactive();
-	return false;
-}
-
-bool CmdLineImpl::on_focus_out(GdkEventFocus* event) {
-	deactive();
 	return false;
 }
 
