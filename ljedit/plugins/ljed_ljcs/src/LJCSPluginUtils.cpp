@@ -33,7 +33,7 @@ bool find_keys( StrVector& keys
 
     std::string rkey = it.get_text(end);
     ljcs_parse_macro_replace(rkey, file);
-	parse_key(rkey, rkey);
+	parse_key(rkey, rkey, find_startswith);
     if( !rkey.empty() && rkey!=key )
         keys.push_back(rkey);
 
