@@ -64,8 +64,6 @@ int main(int argc, char *argv[]) {
 	#include <stdio.h>
 	#include <sys/stat.h>
 
-	#define PIDFILE "/tmp/ljedit.pid"
-
 	int lock_reg(int fd, off_t offset, int whence, off_t len) {
 		struct flock lock;
 
@@ -81,7 +79,16 @@ int main(int argc, char *argv[]) {
 		int fd, val;
 		char buf[16];
 
-		if( (fd = open(PIDFILE, O_WRONLY | O_CREAT, 0644)) < 0 ) {
+		char pid_file[256] = { '\0' };
+		strncpy(pid_file, "/tmp/ljedit.pid.", 256);
+
+		sprintf(buf, "%d", getuid());
+		strncat(pid_file, buf, 256);
+
+		// TODO : same user multi-login
+		// ...
+
+		if( (fd = open(pid_file, O_WRONLY | O_CREAT, 0644)) < 0 ) {
 			perror("error[open lock file]");
 			exit(1);
 		}
