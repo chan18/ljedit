@@ -8,6 +8,17 @@
 
 namespace cpp {
 
+class KeyElement : public cpp::Element {
+public:
+	KeyElement(const std::string& key) : cpp::Element(noused_file(), '\0', key, 0, 0, '\0') {}
+
+private:
+	static cpp::File& noused_file() {
+		static cpp::File nouse_file_("");
+		return nouse_file_;
+	}
+};
+
 void scope_insert(Scope& scope, Element* elem);
 
 inline void scope_insert_elems(Scope& scope, Elements& elems) {

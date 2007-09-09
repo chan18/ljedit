@@ -49,8 +49,9 @@ typedef std::vector<Element*>					Elements;
 typedef std::set<cpp::Element*>					ElementSet;
 typedef std::vector<File*>						Files;
 typedef std::map<std::string, File*>			FileMap;
-typedef std::multimap<std::string, Element*>	IndexMap;
 
+struct IndexCompFun;
+typedef std::multiset<Element*, IndexCompFun>	IndexMap;
 
 class Element {
 protected:
@@ -85,6 +86,13 @@ public:
 	std::string	decl;
 };
 
+struct IndexCompFun {
+	bool operator()(const Element* left, const Element* right) const {
+		assert( left != 0 && right != 0 );
+		return left->name < right->name;
+	}
+};
+
 class Include;
 class Using;
 
@@ -112,7 +120,7 @@ public:
 
 	void insert_index(Element* elem) {
 		assert( elem != 0 );
-		imap.insert( std::make_pair(elem->name, elem) );
+		imap.insert(elem);
 	}
 
 public:

@@ -24,34 +24,34 @@ Scope& get_index_scope(File& file, Scope& scope, const std::string& nskey) {
 		return scope;
 
 	Scope* retval = &scope;
-	std::string key;
+	cpp::KeyElement	key("");
 	size_t ps = 0;
 	size_t pe = ps;
 	while( ps != nskey.npos ) {
 		pe = nskey.find('.', ps);
 		if( pe!=nskey.npos ) {
-			key = nskey.substr(ps, pe-ps);
+			key.name = nskey.substr(ps, pe-ps);
 			++pe;
 		} else {
-			key = nskey.substr(ps);
-			assert( !key.empty() );
+			key.name = nskey.substr(ps);
+			assert( !key.name.empty() );
 		}
 		ps = pe;
 		
-		cpp::IndexMap::iterator it = retval->imap.lower_bound(key);
-		cpp::IndexMap::iterator end = retval->imap.upper_bound(key);
+		cpp::IndexMap::iterator it = retval->imap.lower_bound(&key);
+		cpp::IndexMap::iterator end = retval->imap.upper_bound(&key);
 		for( ; it!=end; ++it ) {
-			assert( it->second != 0 );
-			if( it->second->type==ET_NCSCOPE )
+			assert( *it != 0 );
+			if( (*it)->type==ET_NCSCOPE )
 			{
-				NCScope* p = (NCScope*)(it->second);
+				NCScope* p = (NCScope*)(*it);
 				retval = &(p->scope);
 				break;
 			}
 		}
 		
 		if( it==end ) {
-			NCScope* p = Element::create<NCScope>(file, key, 0, 0);
+			NCScope* p = Element::create<NCScope>(file, key.name, 0, 0);
 			retval->__index_used_elems.push_back(p);
 			retval->insert_index(p);
 			retval = &(p->scope);
