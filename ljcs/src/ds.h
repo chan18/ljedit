@@ -286,7 +286,7 @@ public:
 public:
 	std::string	filename;
 	bool		sys_header;
-	//File*		include_file;	// BUG
+	std::string	include_file;
 };
 
 class Var : public Element {

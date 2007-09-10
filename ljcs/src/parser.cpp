@@ -384,7 +384,10 @@ void Parser::on_include(cpp::Include& inc, const void* tag) {
 	}
 
 	if( incfile==0 )
-		parse_in_include_path(inc.filename);
+		incfile = parse_in_include_path(inc.filename);
+
+	if( incfile != 0 )
+		inc.include_file = incfile->filename;
 }
 
 }//anonymose namespace
