@@ -45,6 +45,10 @@ private:
 	void on_edit_find();
 	void on_edit_goto();
 
+	void on_view_left();
+	void on_view_right();
+	void on_view_bottom();
+
     void on_help_about();
 
 private:

@@ -90,6 +90,7 @@ void MainWindowImpl::create_ui_manager(const std::string& config_file) {
 	// main menu
     action_group_->add( Gtk::Action::create("FileMenu", "_File") );
     action_group_->add( Gtk::Action::create("EditMenu", "_Edit") );
+    action_group_->add( Gtk::Action::create("ViewMenu", "_View") );
     action_group_->add( Gtk::Action::create("PluginsMenu", "_Plugins") );
     action_group_->add( Gtk::Action::create("HelpMenu", "_Help") );
 
@@ -106,6 +107,11 @@ void MainWindowImpl::create_ui_manager(const std::string& config_file) {
 	action_group_->add( Gtk::Action::create("CmdLineGoto", Gtk::Stock::JUMP_TO,    "_Goto",       "Active mini command control"), Gtk::AccelKey("<control>I"),  sigc::mem_fun(this, &MainWindowImpl::on_edit_goto) );
 	action_group_->add( Gtk::Action::create("GoBack",      Gtk::Stock::GO_BACK,    "Go_Back",     "Go back position"),		                                    sigc::mem_fun(doc_manager_, &DocManagerImpl::pos_back) );
 	action_group_->add( Gtk::Action::create("GoForward",   Gtk::Stock::GO_FORWARD, "Go_Forward",  "Go forward position"),	                                    sigc::mem_fun(doc_manager_, &DocManagerImpl::pos_forward) );
+
+	// view menu
+	action_group_->add( Gtk::ToggleAction::create("LeftPanel",   Gtk::Stock::INFO, "LeftPanel",   "Show/Hide left panel",    true),                             sigc::mem_fun(this, &MainWindowImpl::on_view_left) );
+	action_group_->add( Gtk::ToggleAction::create("RightPanel",  Gtk::Stock::INFO, "RightPanel",  "Show/Hide right panel",   true),	                            sigc::mem_fun(this, &MainWindowImpl::on_view_right) );
+	action_group_->add( Gtk::ToggleAction::create("BottomPanel", Gtk::Stock::INFO, "BottomPanel", "Show/Hide bottom panel",  true),	                            sigc::mem_fun(this, &MainWindowImpl::on_view_bottom) );
 
 	// help menu
     action_group_->add( Gtk::Action::create("About",       Gtk::Stock::ABOUT,      "About",       "About"),				                                        sigc::mem_fun(this, &MainWindowImpl::on_help_about) );
@@ -175,6 +181,31 @@ void MainWindowImpl::on_edit_goto() {
 
 	cmd_line_.active(&cmd_cb_goto_, x, y, view);
 }
+
+void MainWindowImpl::on_view_left() {
+	if( left_panel_.is_visible() )
+		left_panel_.hide();
+	else
+		left_panel_.show();
+}
+
+
+void MainWindowImpl::on_view_right() {
+	if( right_panel_.is_visible() )
+		right_panel_.hide();
+	else
+		right_panel_.show();
+}
+
+
+void MainWindowImpl::on_view_bottom() {
+	if( bottom_panel_.is_visible() )
+		bottom_panel_.hide();
+	else
+		bottom_panel_.show();
+}
+
+
 
 void MainWindowImpl::on_help_about() {
     Gtk::MessageDialog(*this, __FUNCTION__).run();

@@ -5,54 +5,6 @@ import pygtk
 pygtk.require('2.0')
 import gobject, gtk
 
-folderxpm = [
-	"17 16 7 1",
-	"  c #000000",
-	". c #808000",
-	"X c yellow",
-	"o c #808080",
-	"O c #c0c0c0",
-	"+ c white",
-	"@ c None",
-	"@@@@@@@@@@@@@@@@@",
-	"@@@@@@@@@@@@@@@@@",
-	"@@+XXXX.@@@@@@@@@",
-	"@+OOOOOO.@@@@@@@@",
-	"@+OXOXOXOXOXOXO. ",
-	"@+XOXOXOXOXOXOX. ",
-	"@+OXOXOXOXOXOXO. ",
-	"@+XOXOXOXOXOXOX. ",
-	"@+OXOXOXOXOXOXO. ",
-	"@+XOXOXOXOXOXOX. ",
-	"@+OXOXOXOXOXOXO. ",
-	"@+XOXOXOXOXOXOX. ",
-	"@+OOOOOOOOOOOOO. ",
-	"@                ",
-	"@@@@@@@@@@@@@@@@@",
-	"@@@@@@@@@@@@@@@@@"
-	]
-folderpb = gtk.gdk.pixbuf_new_from_xpm_data(folderxpm)
-
-filexpm = [
-	"12 12 3 1",
-	"  c #000000",
-	". c #ffff04",
-	"X c #b2c0dc",
-	"X        XXX",
-	"X ...... XXX",
-	"X ......   X",
-	"X .    ... X",
-	"X ........ X",
-	"X .   .... X",
-	"X ........ X",
-	"X .     .. X",
-	"X ........ X",
-	"X .     .. X",
-	"X ........ X",
-	"X          X"
-	]
-filepb = gtk.gdk.pixbuf_new_from_xpm_data(filexpm)
-
 def get_win32_drivers():
 	drivers = []
 	if sys.platform=='win32':
@@ -169,6 +121,9 @@ class FileExplorer(gtk.VBox):
 	def __init__(self):
 		gtk.VBox.__init__(self)
 		
+		self.folderpb = self.render_icon(gtk.STOCK_DIRECTORY, gtk.ICON_SIZE_MENU)
+		self.filepb   = self.render_icon(gtk.STOCK_FILE, gtk.ICON_SIZE_MENU)
+		
 		self.fchooser = gtk.FileChooserButton('choose folder')
 		self.fchooser.set_action(gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER)
 		self.fchooser.set_border_width(3)
@@ -238,9 +193,9 @@ class FileExplorer(gtk.VBox):
 	def cb_file_icon(self, column, cell, model, iter):
 		sign = model[iter][2]
 		if sign=='file':
-			pb = filepb
+			pb = self.filepb
 		else:
-			pb = folderpb
+			pb = self.folderpb
 		cell.set_property('pixbuf', pb)
 		
 	def cb_file_name(self, column, cell, model, iter):

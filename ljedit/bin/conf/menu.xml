@@ -25,6 +25,11 @@
       <menuitem action='GoForward'/>
       <separator/>
     </menu>
+    <menu action='ViewMenu'>
+      <menuitem action='LeftPanel'/>
+      <menuitem action='RightPanel'/>
+      <menuitem action='BottomPanel'/>
+    </menu>
     <menu action='PluginsMenu'>
     </menu>
     <menu action='HelpMenu'>
@@ -38,5 +43,11 @@
     <separator/>
     <toolitem action='GoBack'/>
     <toolitem action='GoForward'/>
+    <!--
+    <separator/>
+    <toolitem action='LeftPanel'/>
+    <toolitem action='RightPanel'/>
+    <toolitem action='BottomPanel'/>
+	-->
 	</toolbar>
 </ui>
