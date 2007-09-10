@@ -3,7 +3,6 @@
 #include "crt_debug.h"
 
 #include "searcher.h"
-#include "ds_utils.h"
 
 #include <sstream>
 #include <list>
@@ -361,7 +360,7 @@ void Searcher::do_walk(cpp::Scope& scope, SPath& path) {
 		}
     }
 
-	cpp::KeyElement key( path.cur().substr(2) );
+	std::string key = path.cur().substr(2);
 
 	if( type=='S' ) {
 		// search start with
@@ -371,19 +370,18 @@ void Searcher::do_walk(cpp::Scope& scope, SPath& path) {
 		cpp::IndexMap::iterator it = scope.imap.begin();
 		cpp::IndexMap::iterator end = scope.imap.end();
 		for( ; searching() && (it != end); ++it ) {
-			if( (*it)->name.size() < key.name.size() )
+			if( (*it)->size() < key.size() )
 				continue;
 
-			if( (*it)->name.compare(0, key.name.size(), key.name)==0 )
-				add_matched(*it);
+			if( (*it)->compare(0, key.size(), key)==0 )
+				add_matched(&scope.imap.get(it));
 		}
 		
 	} else {
-		cpp::IndexMap::iterator it = scope.imap.lower_bound(&key);
-		cpp::IndexMap::iterator end = scope.imap.upper_bound(&key);
+		cpp::IndexMap::iterator it = scope.imap.lower_bound(key);
+		cpp::IndexMap::iterator end = scope.imap.upper_bound(key);
 		for( ; searching() && (it != end); ++it ) {
-			assert( *it != 0 );
-			cpp::Element& elem = **it;
+			cpp::Element& elem = scope.imap.get(it);
 			if( path.has_next() ) {
 				cpp::Scope* sub = 0;
 

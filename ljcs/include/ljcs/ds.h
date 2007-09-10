@@ -50,8 +50,8 @@ typedef std::set<cpp::Element*>					ElementSet;
 typedef std::vector<File*>						Files;
 typedef std::map<std::string, File*>			FileMap;
 
-struct IndexCompFun;
-typedef std::multiset<Element*, IndexCompFun>	IndexMap;
+//struct IndexCompFun;
+//typedef std::multiset<Element*, IndexCompFun>	IndexMap;
 
 class Element {
 protected:
@@ -86,11 +86,60 @@ public:
 	std::string	decl;
 };
 
-struct IndexCompFun {
-	bool operator()(const Element* left, const Element* right) const {
-		assert( left != 0 && right != 0 );
-		return left->name < right->name;
+//struct IndexCompFun {
+//	bool operator()(const Element* left, const Element* right) const {
+//		assert( left != 0 && right != 0 );
+//		return left->name < right->name;
+//	}
+//};
+
+class IndexMap {
+private:
+	struct IndexLess {
+		bool operator()(const std::string* left, const std::string* right) const {
+			assert( left != 0 && right != 0 );
+			return *left < *right;
+		}
+	};
+
+	typedef std::multiset<const std::string*, IndexLess>	TIndexSet;
+
+public:
+	typedef TIndexSet::iterator iterator;
+
+	bool empty() const { return iset_.empty(); }
+
+	void insert(cpp::Element& elem) {
+		// now, can insert more times
+		// todo : can insert only once
+
+		iset_.insert(elem_to_key(&elem));
 	}
+
+	cpp::Element& get(const iterator& it) {
+		assert( it != end() && key_to_elem(*it) != 0 );
+		return *key_to_elem(*it);
+	}
+
+	iterator begin() { return iset_.begin(); }
+
+	iterator end()   { return iset_.end(); }
+
+	iterator lower_bound(const std::string& key)
+		{ return iset_.lower_bound(&key); }
+
+	iterator upper_bound(const std::string& key)
+		{ return iset_.upper_bound(&key); }
+
+private:
+	const std::string* elem_to_key(cpp::Element* elem)
+		{ return &elem->name; }
+
+	cpp::Element* key_to_elem(const std::string* key)
+		{ return (cpp::Element*)(((char*)key) - ((char*)elem_to_key(0))); }
+
+private:
+	TIndexSet	iset_;
 };
 
 class Include;
@@ -120,7 +169,7 @@ public:
 
 	void insert_index(Element* elem) {
 		assert( elem != 0 );
-		imap.insert(elem);
+		imap.insert(*elem);
 	}
 
 public:
@@ -129,6 +178,7 @@ public:
 public:	// for index
 	Usings		usings;	// not use delete
 	IndexMap	imap;	// not use delete
+
 
 	Elements    __index_used_elems;	// need delete
 };
