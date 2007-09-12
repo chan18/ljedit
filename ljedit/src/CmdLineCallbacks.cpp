@@ -77,32 +77,19 @@ void CmdGotoCallback::on_key_changed() {
 }
 
 bool CmdGotoCallback::on_key_press(GdkEventKey* event) {
-	// array keys
-	// ------------
-	//    i
-	//  j   l
-	//    k
-	// 
-	// ------------
-	// 
 	switch( event->keyval ) {
 	case GDK_Up:
 	case GDK_Left:
-	case 'j':
 		doc_mgr_.pos_back();
 		return true;
 
 	case GDK_Down:
 	case GDK_Right:
-	case 'l':
 		doc_mgr_.pos_forward();
 		return true;
 	}
 
 	if( base_on_key_press(event) )
-		return true;
-
-	if( event->keyval < '0' || event->keyval > '9' )
 		return true;
 
 	return false;
