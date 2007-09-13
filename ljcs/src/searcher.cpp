@@ -7,8 +7,8 @@
 #include <sstream>
 #include <list>
 
-//#include <Windows.h>
-//int __s = 0;
+//---#include <Windows.h>
+//---int __s = 0;
 
 namespace {
 
@@ -373,7 +373,7 @@ private:	// inner
 	typedef std::map<std::string, FileSet>	WalkedFileMap;
 
 	bool walked(cpp::File* f, SPath& path) {
-		//DWORD sss = GetTickCount();
+		//---DWORD sss = GetTickCount();
 		if( f != 0 ) {
 			path.get_union_key(__key);
 			FileSet& files = walked_[__key];
@@ -381,14 +381,12 @@ private:	// inner
 			if( it==files.end() ) {
 				files.insert(f);
 				
-				//DWORD eee = GetTickCount();
-				//__s += (eee-sss);
+				//---__s += (GetTickCount()-sss);
 				return false;
 			}
 		}
 		
-		//DWORD eee = GetTickCount();
-		//__s += (eee-sss);
+		//---__s += (GetTickCount()-sss);
 		return true;
 	}
 
@@ -715,13 +713,13 @@ void search( const std::string& key
 {
 	Searcher searcher(cb);
 	
-	//__s = 0;
-	//DWORD sss = GetTickCount();
+	//---__s = 0;
+	//---DWORD sss = GetTickCount();
 	searcher.start(key, file, line);
 
-	//char buf[128];
-	//sprintf(buf, "%d - %d", GetTickCount() - sss, __s);
-	//MessageBoxA(NULL, buf, "debug", MB_OK);
+	//---char buf[128];
+	//---sprintf(buf, "%d - %d", GetTickCount() - sss, __s);
+	//---MessageBoxA(NULL, buf, "debug", MB_OK);
 }
 
 void search_keys(const StrVector& keys, IMatched& cb, cpp::File& file, size_t line) {
