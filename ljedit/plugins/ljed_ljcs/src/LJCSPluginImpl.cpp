@@ -292,7 +292,7 @@ bool LJCSPluginImpl::on_key_release_event(GdkEventKey* event, DocPage* page) {
 
     switch( event->keyval ) {
     case GDK_Tab:
-    case GDK_Return:
+    //case GDK_Return:
     case GDK_Up:
     case GDK_Down:
     case GDK_Escape:
