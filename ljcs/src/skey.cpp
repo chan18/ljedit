@@ -33,8 +33,10 @@ void iter_skip_pair(IDocIter& it, char sch, char ech) {
 }
 
 bool find_key(std::string& key, IDocIter& ps, IDocIter& pe, bool find_startswith) {
-	char type = find_startswith ? 'S' : '*';
-	std::string word;
+	std::ostringstream oss;
+	if( !find_startswith )
+		oss << '$';
+
 	char ch = ps.prev();
 	switch( ch ) {
 	case '\0':
@@ -42,21 +44,20 @@ bool find_key(std::string& key, IDocIter& ps, IDocIter& pe, bool find_startswith
 	case '.':
 		if( ps.prev_char()=='.' )
 			return false;
-		type = 'v';
-		break;
-	case '(':
-	case '<':
-		type = '*';
 		break;
 	case '>':
 		if( ps.prev()!='-' )
 			return false;
-		type = 'v';
+		oss << ch;
+		ch = '-';
+		break;
+	case '(':
+	case '<':
 		break;
 	case ':':
 		if( ps.prev()!=':' )
 			return false;
-		type = '?';
+		oss << ch;
 		break;
 	default:
 		if( ch <= 0 )
@@ -64,67 +65,59 @@ bool find_key(std::string& key, IDocIter& ps, IDocIter& pe, bool find_startswith
 
 		if( ch!='_' && !isalnum(ch) )
 			return false;
-		word += ch;
 	}
-
-	std::ostringstream oss;
-	if( type=='v' || type=='?' )
-		oss << 'S' << ':';
+	oss << ch;
 
 	bool loop_sign = true;
+	bool no_word = true;
 	while( loop_sign && ((ch=ps.prev()) != '\0') ) {
 		switch( ch ) {
 		case '.':
-			if( word.empty() )
+			if( no_word )
 				return false;
-			oss << word << type << ':';
-			word.clear();
-			type = 'v';
+			no_word = true;
+			oss << ch;
 			break;
 
 		case ':':
-			if( word.empty() )
+			if( no_word )
 				return false;
-			oss << word << type << ':';
-			word.clear();
+			no_word = true;
 
 			if( ps.prev_char()==':' ) {
 				ps.prev();
-				type = '?';
+				oss << ch << ch;
 			} else {
-				type = '\0';
+				loop_sign = false;
 			}
 			break;
 
 		case ']':
 			iter_skip_pair(ps, '[', ']');
+			oss << ']' << '[';
 			break;
 			
 		case ')':
 			iter_skip_pair(ps, '(', ')');
-			if( type != 'v' )
-				return false;
-			type = 'f';
+			oss << ')' << '(';
 			break;
 			
 		case '>':
-			if( word.empty() ) {
-				if( ps.prev_char() != '>' )
+			if( no_word ) {
+				if( ps.prev_char() != '>' ) {
 					iter_skip_pair(ps, '<', '>');
-				else
+					oss << '>' << '<';
+				}
+				else {
 					loop_sign = false;
+				}
 
 			} else {
 				if( ps.prev_char()=='-' ) {
 					ps.prev();
-					oss << word << type << ':';
-					word.clear();
-					type = 'v';
+					oss << '>' << '-';
 					
 				} else {
-					oss << word << type << ':';
-					word.clear();
-					type = '\0';
 					loop_sign = false;
 				}
 			}
@@ -132,34 +125,13 @@ bool find_key(std::string& key, IDocIter& ps, IDocIter& pe, bool find_startswith
 			
 		default:
 			if( ch>0 && (::isalnum(ch) || ch=='_') ) {
-				word += ch;
-				break;
-				
+				oss << ch;
+				no_word = false;
 			} else {
-				if( !word.empty() ) {
-					if( word=="siht" ) 	// this
-						oss << 'L' << ':';
-					else
-						oss << word << type << ':';
-					word.clear();
-					type = '\0';
-				}
 				loop_sign = false;
 			}
 		}
 	}
-
-	if( ch=='\0' && !word.empty() ) {
-		if( word=="siht" ) 	// this
-			oss << 'L' << ':';
-		else
-			oss << word << type << ':';
-		word.clear();
-		type = '\0';
-	}
-
-	if( type=='?' )
-		oss << 'R' << ':';
 
 	key = oss.str();
 	std::reverse(key.begin(), key.end());

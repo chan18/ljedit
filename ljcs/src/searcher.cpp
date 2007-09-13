@@ -9,52 +9,6 @@
 
 namespace {
 
-class SPath {
-public:
-	SPath(const std::string& path) : cur_(0) {
-        parse(path);
-    }
-
-    bool empty() const { return path_.empty(); }
-
-    size_t size() const { return path_.size(); }
-
-    std::string& operator [] (size_t pos) {
-        assert( pos < size() );
-        return path_[pos];
-    }
-
-    bool has_next() const { return (cur_ + 1) < size(); }
-
-    void next() {
-		assert( has_next() );
-		++cur_;
-    }
-
-	std::string& cur()		{ return (*this)[pos()]; }
-
-	size_t pos() const		{ return cur_; }
-	void pos(size_t val)	{ cur_ = val; }
-	void reset()			{ pos(0); }
-
-private:
-    void parse(const std::string& path) {
-        if( path.size() < 2 )
-            return;
-
-        size_t ps = 0;
-        while( ps != path.npos && (ps + 2) <= path.size() ) {
-            size_t pe = path.find(':', ps + 2);
-            path_.push_back( path.substr(ps, (pe - ps)) );
-            ps = pe;
-        }
-    }
-
-private:
-    std::vector<std::string>    path_;
-    size_t cur_;
-};
-
 // type的含义为:
 //    n : namespace
 //    ? : namespace or type(class or enum or typedef)
@@ -81,85 +35,300 @@ bool follow_type(char& last, char cur) {
 	return true;
 }
 
-void loop_insert(std::vector<std::string>& paths, SPath& path, const std::string& rep) {
-    assert( rep.size() >= 2 );
-    size_t root_num = (rep[1]=='R') ? 1 : path.pos() + 1;
-    for( ; root_num > 0; --root_num ) {
-        size_t i;
-        std::ostringstream oss;
+struct SKey {
+	char		type;
+	std::string	value;
+};
+
+class SPath {
+public:
+	SPath() : cur_(0) {}
+
+    bool empty() const { return path_.empty(); }
+
+	void swap(SPath& o) {
+		path_.swap(o.path_);
+		cur_ = o.cur_;
+	}
+
+    size_t size() const { return path_.size(); }
+
+	SKey& operator [] (size_t pos) {
+        assert( pos < size() );
+        return path_[pos];
+    }
+
+	const SKey& operator [] (size_t pos) const {
+        assert( pos < size() );
+        return path_[pos];
+    }
+
+    bool has_next() const { return (cur_ + 1) < size(); }
+
+    void next() {
+		assert( has_next() );
+		++cur_;
+    }
+
+	SKey& cur()				{ return (*this)[pos()]; }
+
+	size_t pos() const		{ return cur_; }
+	void pos(size_t val)	{ cur_ = val; }
+	void reset()			{ pos(0); }
+
+	std::string key() {
+		std::ostringstream oss;
+		std::vector<SKey>::iterator it  = path_.begin();
+		std::vector<SKey>::iterator end = path_.end();
+		for( ; it!=end; ++it )
+			oss << ':' << it->type << it->value;
+		return oss.str();
+	}
+
+public:
+    static bool parse(SPath& out, const std::string& path) {
+		char ch = '\0';
+		char ch_next = '\0';
+		size_t ps = 0;
+		size_t pe = 0;
+		SKey key;
+
+		if( path.size() >= 2 && path[0]==':' && path[1]==':' ) {
+			if( path.size() > 2 ) {
+				ch = path[2];
+				if( ch<0 || !(::isalpha(ch) || ch=='_') )
+					return false;
+			}
+
+			key.type = 'R';
+			out.path_.push_back(key);
+			ps = 2;
+
+			if( path.size()==2 ) {
+				key.type = 'S';
+				key.value.clear();
+				out.path_.push_back(key);
+				return true;
+			}
+
+		} else if( path.size() >=4 && path.compare(0, 4, "this")==0 ) {
+			if( path.size()==4 || path[4]<0 || !(path[4]=='_' || ::isalnum(path[4])) ) {
+				key.type = 'L';
+				out.path_.push_back(key);
+				ps = 4;
+			}
+		}
+
+		while( ps < path.size() ) {
+			// key
+			for( pe = ps; pe < path.size(); ++pe ) {
+				ch = path[pe];
+				if( ch > 0 && (::isalnum(ch) || ch=='_') )
+					continue;
+				break;
+			}
+
+			key.value.assign(path, ps, pe-ps);
+			ps = pe;
+
+			// type
+			if( ps < path.size() ) {
+				ch = path[ps++];
+				ch_next = (ps < path.size()) ? path[ps] : '\0';
+				switch( ch ) {
+				case ':':
+					if( key.value.empty() )
+						return false;
+					if( ch_next != ':' )
+						return false;
+
+					key.type = '?';
+					out.path_.push_back(key);
+
+					++ps;
+					ch_next = (ps < path.size()) ? path[ps] : '\0';
+
+					if( ch_next=='\0' ) {
+						key.type = 'S';
+						key.value.clear();
+						out.path_.push_back(key);
+					}
+					break;
+
+				case '-':
+					if( ch_next!='>' )
+						return false;
+					++ps;
+					ch_next = (ps < path.size()) ? path[ps] : '\0';
+					// no break;
+
+				case '.':
+					if( !key.value.empty() ) {
+						key.type = 'v';
+						out.path_.push_back(key);
+					}
+
+					if( ch_next=='\0' ) {
+						key.type = 'S';
+						key.value.clear();
+						out.path_.push_back(key);
+					}
+					break;
+
+				case '(':
+					if( key.value.empty() )
+						return false;
+
+					if( ch_next=='\0' ) {
+						key.type = 'f';
+						out.path_.push_back(key);
+
+					} else if( ch_next==')' ) {
+						key.type = 'f';
+						out.path_.push_back(key);
+						++ps;
+
+					} else {
+						return false;
+					}
+					break;
+
+				case '<':
+					if( key.value.empty() )
+						return false;
+					if( ch_next != '>' )
+						return false;
+					++ps;
+					break;
+
+				case '[':
+					if( key.value.empty() )
+						return false;
+					if( ch_next != ']' )
+						return false;
+					++ps;
+					key.type = 'v';
+					out.path_.push_back(key);
+					break;
+
+				case '$':
+					key.type = '*';
+					out.path_.push_back(key);
+					return true;
+
+				default:
+					return false;
+				}
+
+			} else {
+				key.type = 'S';
+				out.path_.push_back(key);
+			}
+        }
+
+		return true;
+    }
+
+	bool create(const SPath& path, size_t rep_begin, size_t rep_end, const std::vector<SKey>& rep) {
+		size_t i;
 		char last = '?';
 		bool ok = true;
-		for( i=0; ok && i<(root_num - 1); ++i ) {
-			ok = follow_type(last, path[i][1]);
+		for( i=0; ok && i<rep_begin; ++i ) {
+			ok = follow_type(last, path[i].type);
 			if( ok ) {
-				oss << ':' << last;
-				oss.write(&path[i][2], std::streamsize(path[i].size() - 2));
+				path_.push_back(path[i]);
+				path_.back().type = last;
 			}
 		}
 
 		for( i=0; ok && i<rep.size(); ++i ) {
-			oss << rep[i];
-			if( rep[i]==':' ) {
-				++i;
-				assert( i < rep.size() );
-				ok = follow_type(last, rep[i]);
-				if( ok )
-					oss << last;
-			}
-		}
-
-		for( i=path.pos() + 1; ok && i<path.size(); ++i ) {
-			ok = follow_type(last, path[i][1]);
+			path_.push_back(rep[i]);
+			ok = follow_type(last, rep[i].type);
 			if( ok ) {
-				oss << ':' << last;
-				oss.write(&path[i][2], std::streamsize(path[i].size() - 2));
+				path_.back().type = last;
 			}
 		}
 
-		if( ok )
-			paths.push_back(oss.str());
-    }
+		for( i=rep_end; ok && i<path.size(); ++i ) {
+			ok = follow_type(last, path[i].type);
+			if( ok ) {
+				path_.push_back(path[i]);
+				path_.back().type = last;
+			}
+		}
+
+		return ok;
+	}
+
+private:
+    std::vector<SKey>	path_;
+    size_t				cur_;
+};
+
+void loop_insert(std::list<SPath>& paths, SPath& path, const std::vector<SKey>& rep) {
+	assert( !rep.empty() );
+
+	int ps = rep[0].type=='R' ? 0 : (int)path.pos();
+	int pe = (int)path.pos() + 1;
+	for( ; ps >= 0; --ps) {
+		SPath rep_path;
+		if( rep_path.create(path, ps, pe, rep) )
+			paths.push_back(rep_path);
+	}
 }
 
-std::string key_to_rep(const std::string& key, char mtype, char etype) {
+void key_to_rep(std::vector<SKey>& out, const std::string& key, char mtype, char etype) {
 	assert( !key.empty() );
+	out.clear();
+
 	size_t ps = 0;
-	std::ostringstream oss;
+	size_t pe = 0;
+	SKey skey;
+
 	if( key[0]=='.' ) {
-		oss << ":R";
+		skey.value.clear();
+		skey.type = 'R';
+		out.push_back(skey);
 		++ps;
 	}
-	
-	size_t pe = ps;
+
 	while( ps != key.npos ) {
 		pe = key.find('.', ps);
 		if( pe!=key.npos ) {
-			oss << ':' << mtype << key.substr(ps, pe-ps);
+			skey.type = mtype;
+			skey.value.assign(key, ps, pe-ps);
 			++pe;
 		} else {
-			oss << ':' << etype << key.substr(ps);
+			skey.type = mtype;
+			skey.value.assign(key, ps, key.size()-ps);
 		}
+		out.push_back(skey);
 		ps = pe;
 	}
-	return oss.str();
 }
 
-inline std::string typekey_to_rep(const std::string& typekey) {
-	return key_to_rep(typekey, '?', 't');
+inline void typekey_to_rep(std::vector<SKey>& out, const std::string& typekey) {
+	key_to_rep(out, typekey, '?', 't');
 }
 
-inline void loop_insert_typekey(std::vector<std::string>& paths, SPath& path, const std::string& typekey) {
-	if( !typekey.empty() )
-		loop_insert(paths, path, typekey_to_rep(typekey));
+inline void loop_insert_typekey(std::list<SPath>& paths, SPath& path, const std::string& typekey) {
+	if( !typekey.empty() ) {
+		std::vector<SKey> rep;
+		typekey_to_rep(rep, typekey);
+		loop_insert(paths, path, rep);
+	}
 }
 
-inline std::string ns_to_rep(const std::string& nskey) {
-	return key_to_rep(nskey, 'n', 'n');
+inline void ns_to_rep(std::vector<SKey>& out, const std::string& nskey) {
+	key_to_rep(out, nskey, 'n', 'n');
 }
 
-inline void loop_insert_nskey(std::vector<std::string>& paths, SPath& path, const std::string& nskey) {
-	if( !nskey.empty() )
-		loop_insert(paths, path, ns_to_rep(nskey));
+inline void loop_insert_nskey(std::list<SPath>& paths, SPath& path, const std::string& nskey) {
+	if( !nskey.empty() ) {
+		std::vector<SKey> rep;
+		ns_to_rep(rep, nskey);
+		loop_insert(paths, path, rep);
+	}
 }
 
 class Searcher {
@@ -179,15 +348,14 @@ public:
 	}
 
 private:
-	void locate(cpp::Scope& scope, size_t line, const std::string& path);
+	void locate(cpp::Scope& scope, size_t line, SPath& path);
 
 	void do_locate(cpp::Scope& scope
 		, size_t line
-		, const std::string& path
-		, const std::string& ns
+		, SPath& path
 		, bool& need_walk);
 
-	void walk(cpp::File* file, const std::string& path);
+	void walk(cpp::File* file, SPath& path);
 
 	void do_walk(cpp::Scope& scope, SPath& path);
 
@@ -195,9 +363,9 @@ private:	// inner
 	typedef std::set<cpp::File*>			FileSet;
 	typedef std::map<std::string, FileSet>	WalkedFileMap;
 
-	bool walked(cpp::File* f, const std::string& path) {
+	bool walked(cpp::File* f, SPath& path) {
 		if( f != 0 ) {
-			FileSet& files = walked_[path];
+			FileSet& files = walked_[path.key()];
 			FileSet::iterator it = files.find(f);
 			if( it==files.end() ) {
 				files.insert(f);
@@ -208,7 +376,7 @@ private:	// inner
 	}
 
 private:
-	std::vector<std::string>	paths_;
+	std::list<SPath>			paths_;
 	WalkedFileMap				walked_;
 	std::set<cpp::Scope*>		walked_scopes_;
 	IMatched&					cb_;
@@ -216,32 +384,31 @@ private:
 };
 
 void Searcher::start(const std::string& path, cpp::File& file, size_t line) {
-	if( path.size() < 2 )
+	if( path.empty() )
+		return;
+
+	SPath key;
+	if( !SPath::parse(key, path) )
 		return;
 
 	searching_ = true;
-
-	locate(file.scope, line, path);
+	locate(file.scope, line, key);
 
 	// 先不进行优化操作
 	while( !paths_.empty() ) {
-		std::string key = paths_[0];
+		key.swap(paths_.front());
 		paths_.erase(paths_.begin());
-
-		//std::cout << "walk : " << key << std::endl;
 
 		walk(&file, key);
 	}
 }
 
-void Searcher::locate(cpp::Scope& scope, size_t line, const std::string& path) {
-	static const std::string root_ns = "";
-
-	assert( path.size() >= 2 );
+void Searcher::locate(cpp::Scope& scope, size_t line, SPath& path) {
+	assert( !path.empty() );
 
 	bool need_walk = true;
-	if( line != 0 && path[1]!='R' )
-		do_locate(scope, line, path, root_ns, need_walk);
+	if( line != 0 && path[0].type!='R' )
+		do_locate(scope, line, path, need_walk);
 
 	if( need_walk )
 		paths_.push_back(path);
@@ -251,11 +418,11 @@ void Searcher::locate(cpp::Scope& scope, size_t line, const std::string& path) {
 // 
 void Searcher::do_locate(cpp::Scope& scope
 	, size_t line
-	, const std::string& path
-	, const std::string& ns
+	, SPath& path
 	, bool& need_walk)
 {
-	assert( path.size() >= 2 );
+	if( path.pos() >= path.size() )
+		return;
 
 	cpp::Elements::iterator it = scope.elems.begin();
 	cpp::Elements::iterator end = scope.elems.end();
@@ -270,26 +437,45 @@ void Searcher::do_locate(cpp::Scope& scope
 		switch( elem.type ) {
 		case cpp::ET_FUN: {
 				cpp::Function& r = (cpp::Function&)elem;
-				if( path[1]!='L' ) {
-					SPath spath(path);
-					do_walk(r.impl, spath);
+				if( path.cur().type!='L' ) {
+					size_t pos = path.pos();
+					do_walk(r.impl, path);
+					path.pos(pos);
 				}
 
-				if( !r.nskey.empty() )
-					paths_.push_back(ns + typekey_to_rep(r.nskey) + path);
+				if( !r.nskey.empty() ) {
+					std::vector<SKey>	rep;
+					typekey_to_rep(rep, r.nskey);
+					
+					size_t ps = rep[0].type=='R' ? 0 : path.pos();
+					size_t pe = path.pos();
+					SPath rep_path;
+					if( rep_path.create(path, ps, pe, rep) )
+						paths_.push_back(rep_path);
+				}
 			}
 			break;
 
 		case cpp::ET_CLASS: {
 				cpp::Class& r = (cpp::Class&)elem;
 				if( !r.scope.empty() ) {
-					std::string cur_ns = ns + ":t" + r.name;
-					do_locate(r.scope, line, path, cur_ns, need_walk);
+					std::vector<SKey>	rep(1);
+					SKey& skey = rep.back();
+					skey.type = 't';
+					skey.value = r.name;
 
-					if( need_walk ) {
-						if( path[1]=='L' )
-							need_walk = false;
-						paths_.push_back(cur_ns + path);
+					size_t ps = rep[0].type=='R' ? 0 : path.pos();
+					size_t pe = path.pos();
+					SPath rep_path;
+					if( rep_path.create(path, ps, pe, rep) ) {
+						rep_path.pos(path.pos() + 1);
+						do_locate(r.scope, line, rep_path, need_walk);
+
+						if( need_walk ) {
+							if( path.cur().type=='L' )
+								need_walk = false;
+							paths_.push_back(rep_path);
+						}
 					}
 				}
 			}
@@ -298,31 +484,40 @@ void Searcher::do_locate(cpp::Scope& scope
 		case cpp::ET_NAMESPACE: {
 				cpp::Namespace& r = (cpp::Namespace&)elem;
 				if( !r.scope.empty() ) {
-					std::string cur_ns = ns + ":n" + r.name;
-					do_locate(r.scope, line, path, cur_ns, need_walk);
+					std::vector<SKey>	rep(1);
+					SKey& skey = rep.back();
+					skey.type = 'n';
+					skey.value = r.name;
 
-					if( need_walk )
-						paths_.push_back(cur_ns + path);
+					size_t ps = rep[0].type=='R' ? 0 : path.pos();
+					size_t pe = path.pos();
+					SPath rep_path;
+					if( rep_path.create(path, ps, pe, rep) ) {
+						rep_path.pos(path.pos() + 1);
+						do_locate(r.scope, line, rep_path, need_walk);
+
+						if( need_walk )
+							paths_.push_back(rep_path);
+					}
 				}
 			}
 			break;
 		}
-		
 		break;	// only find first cpp::Element
 	}
 }
 
-void Searcher::walk(cpp::File* file, const std::string& path) {
-	if( path.size() < 2 || walked(file, path) )
+void Searcher::walk(cpp::File* file, SPath& path) {
+	path.reset();
+	if( walked(file, path) )
 		return;
 
-	if( path.size() > 128 )
+	if( path.size() > 8 )
 		return;
 
 	assert( file != 0 );
 
-	SPath tpath(path);
-	do_walk(file->scope, tpath);
+	do_walk(file->scope, path);
 
 	cpp::Includes::iterator it = file->includes.begin();
 	cpp::Includes::iterator end = file->includes.end();
@@ -337,7 +532,7 @@ void Searcher::walk(cpp::File* file, const std::string& path) {
 }
 
 void Searcher::do_walk(cpp::Scope& scope, SPath& path) {
-    char type = path.cur()[1];
+    char type = path.cur().type;
 	if( type=='L' )
 		return;
 
@@ -345,7 +540,7 @@ void Searcher::do_walk(cpp::Scope& scope, SPath& path) {
 		if( !path.has_next() )
 			return;
 		path.next();
-    	type = path.cur()[1];
+    	type = path.cur().type;
 	}
 
     if( walked_scopes_.find(&scope) == walked_scopes_.end() ) {
@@ -363,7 +558,7 @@ void Searcher::do_walk(cpp::Scope& scope, SPath& path) {
 		}
     }
 
-	std::string key = path.cur().substr(2);
+	std::string& key = path.cur().value;
 
 	if( type=='S' ) {
 		// search start with
@@ -379,91 +574,92 @@ void Searcher::do_walk(cpp::Scope& scope, SPath& path) {
 			if( (*it)->compare(0, key.size(), key)==0 )
 				add_matched(&scope.imap.get(it));
 		}
-		
-	} else {
-		cpp::IndexMap::iterator it = scope.imap.lower_bound(key);
-		cpp::IndexMap::iterator end = scope.imap.upper_bound(key);
-		for( ; searching() && (it != end); ++it ) {
-			cpp::Element& elem = scope.imap.get(it);
-			if( path.has_next() ) {
-				cpp::Scope* sub = 0;
 
-				switch( elem.type ) {
-				case cpp::ET_NCSCOPE:
-					if( type=='?' || type=='t' || type=='n' ) {
-						sub = &(((cpp::NCScope&)elem).scope);
-					}
-					break;
-				case cpp::ET_CLASS:
-					if( type=='?' || type=='t' ) {
-						cpp::Class& r = (cpp::Class&)elem;
-						std::vector<std::string>::iterator ps = r.inhers.begin();
-						std::vector<std::string>::iterator pe = r.inhers.end();
-						for( ; ps != pe; ++ps ) {
-							path.cur()[1] = 't';
-							assert( !ps->empty() );
-							loop_insert_typekey(paths_, path, *ps);
-							path.cur()[1] = type;
-						}
-						
-						sub = &r.scope;
-					}
-					break;
-				case cpp::ET_ENUM:
-					if( type=='?' || type=='t' ) {
-						sub = &(((cpp::Enum&)elem).scope);
-					}
-					break;
-				case cpp::ET_NAMESPACE:
-					if( type=='?' || type=='n' ) {
-						sub = &(((cpp::Namespace&)elem).scope);
-					}
-					break;
-				case cpp::ET_TYPEDEF:
-					if( type=='?' || type=='t' ) {
-						loop_insert_typekey(paths_, path, ((cpp::Typedef&)elem).typekey);
-					}
-					break;
-				case cpp::ET_FUN:
-					if( type=='f' ) {
-						loop_insert_typekey(paths_, path, ((cpp::Function&)elem).typekey);
-					}
-					break;
-				case cpp::ET_VAR:
-					if( type=='v' ) {
-						loop_insert_typekey(paths_, path, ((cpp::Var&)elem).typekey);
-					}
-					break;
-				case cpp::ET_USING:
-					if( type=='?' || type=='t' ) {
-						assert( !((cpp::Using&)elem).isns );
-						loop_insert_nskey(paths_, path, ((cpp::Using&)elem).nskey);
-					}
-					break;
+		return;
+	}
+
+	cpp::IndexMap::iterator it = scope.imap.lower_bound(key);
+	cpp::IndexMap::iterator end = scope.imap.upper_bound(key);
+	for( ; searching() && (it != end); ++it ) {
+		cpp::Element& elem = scope.imap.get(it);
+		if( !path.has_next() ) {
+			switch( elem.type ) {
+			case cpp::ET_USING:
+				if( type=='?' || type=='t' || type=='*' ) {
+					assert( !((cpp::Using&)elem).isns );
+					loop_insert_typekey(paths_, path, elem.name);
 				}
+				break;
+			}
+			
+			add_matched(&elem);
+			continue;
+		}
 
-				if( sub!=0 ) {
-					size_t old = path.pos();
-					path.next();
-					if( elem.type==cpp::ET_CLASS && path.cur()[1]=='L' && path.has_next() )
-						path.next();
-							
-					do_walk(*sub, path);
-					path.pos(old);
-				}
+		cpp::Scope* sub = 0;
 
-			} else {
-				switch( elem.type ) {
-				case cpp::ET_USING:
-					if( type=='?' || type=='t' || type=='*' ) {
-						assert( !((cpp::Using&)elem).isns );
-						loop_insert_typekey(paths_, path, elem.name);
-					}
-					break;
+		switch( elem.type ) {
+		case cpp::ET_NCSCOPE:
+			if( type=='?' || type=='t' || type=='n' ) {
+				sub = &(((cpp::NCScope&)elem).scope);
+			}
+			break;
+		case cpp::ET_CLASS:
+			if( type=='?' || type=='t' ) {
+				cpp::Class& r = (cpp::Class&)elem;
+				std::vector<std::string>::iterator ps = r.inhers.begin();
+				std::vector<std::string>::iterator pe = r.inhers.end();
+				for( ; ps != pe; ++ps ) {
+					path.cur().type = 't';
+					assert( !ps->empty() );
+					loop_insert_typekey(paths_, path, *ps);
+					path.cur().type = type;
 				}
 				
-				add_matched(&elem);
+				sub = &r.scope;
 			}
+			break;
+		case cpp::ET_ENUM:
+			if( type=='?' || type=='t' ) {
+				sub = &(((cpp::Enum&)elem).scope);
+			}
+			break;
+		case cpp::ET_NAMESPACE:
+			if( type=='?' || type=='n' ) {
+				sub = &(((cpp::Namespace&)elem).scope);
+			}
+			break;
+		case cpp::ET_TYPEDEF:
+			if( type=='?' || type=='t' ) {
+				loop_insert_typekey(paths_, path, ((cpp::Typedef&)elem).typekey);
+			}
+			break;
+		case cpp::ET_FUN:
+			if( type=='f' ) {
+				loop_insert_typekey(paths_, path, ((cpp::Function&)elem).typekey);
+			}
+			break;
+		case cpp::ET_VAR:
+			if( type=='v' ) {
+				loop_insert_typekey(paths_, path, ((cpp::Var&)elem).typekey);
+			}
+			break;
+		case cpp::ET_USING:
+			if( type=='?' || type=='t' ) {
+				assert( !((cpp::Using&)elem).isns );
+				loop_insert_nskey(paths_, path, ((cpp::Using&)elem).nskey);
+			}
+			break;
+		}
+
+		if( sub!=0 ) {
+			size_t old = path.pos();
+			path.next();
+			if( elem.type==cpp::ET_CLASS && path.cur().type=='L' && path.has_next() )
+				path.next();
+					
+			do_walk(*sub, path);
+			path.pos(old);
 		}
 	}
 }
