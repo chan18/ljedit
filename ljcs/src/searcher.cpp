@@ -7,6 +7,9 @@
 #include <sstream>
 #include <list>
 
+//#include <Windows.h>
+//int __s = 0;
+
 namespace {
 
 // type的含义为:
@@ -76,17 +79,19 @@ public:
 	void pos(size_t val)	{ cur_ = val; }
 	void reset()			{ pos(0); }
 
-	std::string key() {
-		std::ostringstream oss;
+	void get_union_key(std::string& key) {
+		key.clear();
 		std::vector<SKey>::iterator it  = path_.begin();
 		std::vector<SKey>::iterator end = path_.end();
-		for( ; it!=end; ++it )
-			oss << ':' << it->type << it->value;
-		return oss.str();
+		for( ; it!=end; ++it ) {
+			key += ':';
+			key += it->type;
+			key += it->value;
+		}
 	}
 
 public:
-    static bool parse(SPath& out, const std::string& path) {
+    bool parse(const std::string& path) {
 		char ch = '\0';
 		char ch_next = '\0';
 		size_t ps = 0;
@@ -101,20 +106,20 @@ public:
 			}
 
 			key.type = 'R';
-			out.path_.push_back(key);
+			path_.push_back(key);
 			ps = 2;
 
 			if( path.size()==2 ) {
 				key.type = 'S';
 				key.value.clear();
-				out.path_.push_back(key);
+				path_.push_back(key);
 				return true;
 			}
 
 		} else if( path.size() >=4 && path.compare(0, 4, "this")==0 ) {
 			if( path.size()==4 || path[4]<0 || !(path[4]=='_' || ::isalnum(path[4])) ) {
 				key.type = 'L';
-				out.path_.push_back(key);
+				path_.push_back(key);
 				ps = 4;
 			}
 		}
@@ -143,7 +148,7 @@ public:
 						return false;
 
 					key.type = '?';
-					out.path_.push_back(key);
+					path_.push_back(key);
 
 					++ps;
 					ch_next = (ps < path.size()) ? path[ps] : '\0';
@@ -151,7 +156,7 @@ public:
 					if( ch_next=='\0' ) {
 						key.type = 'S';
 						key.value.clear();
-						out.path_.push_back(key);
+						path_.push_back(key);
 					}
 					break;
 
@@ -165,13 +170,13 @@ public:
 				case '.':
 					if( !key.value.empty() ) {
 						key.type = 'v';
-						out.path_.push_back(key);
+						path_.push_back(key);
 					}
 
 					if( ch_next=='\0' ) {
 						key.type = 'S';
 						key.value.clear();
-						out.path_.push_back(key);
+						path_.push_back(key);
 					}
 					break;
 
@@ -181,11 +186,11 @@ public:
 
 					if( ch_next=='\0' ) {
 						key.type = 'f';
-						out.path_.push_back(key);
+						path_.push_back(key);
 
 					} else if( ch_next==')' ) {
 						key.type = 'f';
-						out.path_.push_back(key);
+						path_.push_back(key);
 						++ps;
 
 					} else {
@@ -208,12 +213,12 @@ public:
 						return false;
 					++ps;
 					key.type = 'v';
-					out.path_.push_back(key);
+					path_.push_back(key);
 					break;
 
 				case '$':
 					key.type = '*';
-					out.path_.push_back(key);
+					path_.push_back(key);
 					return true;
 
 				default:
@@ -222,7 +227,7 @@ public:
 
 			} else {
 				key.type = 'S';
-				out.path_.push_back(key);
+				path_.push_back(key);
 			}
         }
 
@@ -265,15 +270,19 @@ private:
     size_t				cur_;
 };
 
-void loop_insert(std::list<SPath>& paths, SPath& path, const std::vector<SKey>& rep) {
+typedef std::list<SPath*>	SPathList;
+
+void loop_insert(SPathList& paths, SPath& path, const std::vector<SKey>& rep) {
 	assert( !rep.empty() );
 
 	int ps = rep[0].type=='R' ? 0 : (int)path.pos();
 	int pe = (int)path.pos() + 1;
 	for( ; ps >= 0; --ps) {
-		SPath rep_path;
-		if( rep_path.create(path, ps, pe, rep) )
+		SPath* rep_path = new SPath;
+		if( rep_path->create(path, ps, pe, rep) )
 			paths.push_back(rep_path);
+		else
+			delete rep_path;
 	}
 }
 
@@ -311,7 +320,7 @@ inline void typekey_to_rep(std::vector<SKey>& out, const std::string& typekey) {
 	key_to_rep(out, typekey, '?', 't');
 }
 
-inline void loop_insert_typekey(std::list<SPath>& paths, SPath& path, const std::string& typekey) {
+inline void loop_insert_typekey(SPathList& paths, SPath& path, const std::string& typekey) {
 	if( !typekey.empty() ) {
 		std::vector<SKey> rep;
 		typekey_to_rep(rep, typekey);
@@ -323,7 +332,7 @@ inline void ns_to_rep(std::vector<SKey>& out, const std::string& nskey) {
 	key_to_rep(out, nskey, 'n', 'n');
 }
 
-inline void loop_insert_nskey(std::list<SPath>& paths, SPath& path, const std::string& nskey) {
+inline void loop_insert_nskey(SPathList& paths, SPath& path, const std::string& nskey) {
 	if( !nskey.empty() ) {
 		std::vector<SKey> rep;
 		ns_to_rep(rep, nskey);
@@ -348,7 +357,7 @@ public:
 	}
 
 private:
-	void locate(cpp::Scope& scope, size_t line, SPath& path);
+	void locate(cpp::Scope& scope, size_t line, const std::string& path);
 
 	void do_locate(cpp::Scope& scope
 		, size_t line
@@ -364,54 +373,75 @@ private:	// inner
 	typedef std::map<std::string, FileSet>	WalkedFileMap;
 
 	bool walked(cpp::File* f, SPath& path) {
+		//DWORD sss = GetTickCount();
 		if( f != 0 ) {
-			FileSet& files = walked_[path.key()];
+			path.get_union_key(__key);
+			FileSet& files = walked_[__key];
 			FileSet::iterator it = files.find(f);
 			if( it==files.end() ) {
 				files.insert(f);
+				
+				//DWORD eee = GetTickCount();
+				//__s += (eee-sss);
 				return false;
 			}
 		}
+		
+		//DWORD eee = GetTickCount();
+		//__s += (eee-sss);
 		return true;
 	}
 
 private:
-	std::list<SPath>			paths_;
-	WalkedFileMap				walked_;
-	std::set<cpp::Scope*>		walked_scopes_;
-	IMatched&					cb_;
-	bool						searching_;
+	SPathList				paths_;
+	WalkedFileMap			walked_;
+	std::set<cpp::Scope*>	walked_scopes_;
+	IMatched&				cb_;
+	bool					searching_;
+
+	std::string				__key;
 };
 
 void Searcher::start(const std::string& path, cpp::File& file, size_t line) {
 	if( path.empty() )
 		return;
 
-	SPath key;
-	if( !SPath::parse(key, path) )
-		return;
+	__key.resize(4096);
 
 	searching_ = true;
-	locate(file.scope, line, key);
+	locate(file.scope, line, path);
 
 	// 先不进行优化操作
 	while( !paths_.empty() ) {
-		key.swap(paths_.front());
+		SPath* spath = paths_.front();
 		paths_.erase(paths_.begin());
 
-		walk(&file, key);
+		walk(&file, *spath);
+
+		delete spath;
 	}
 }
 
-void Searcher::locate(cpp::Scope& scope, size_t line, SPath& path) {
+void Searcher::locate(cpp::Scope& scope, size_t line, const std::string& path) {
 	assert( !path.empty() );
 
+	SPath* spath = new SPath();
+	if( spath == 0 )
+		return;
+
+	if( !spath->parse(path) ) {
+		delete spath;
+		return;
+	}
+
 	bool need_walk = true;
-	if( line != 0 && path[0].type!='R' )
-		do_locate(scope, line, path, need_walk);
+	if( line != 0 && (*spath)[0].type!='R' )
+		do_locate(scope, line, *spath, need_walk);
 
 	if( need_walk )
-		paths_.push_back(path);
+		paths_.push_back(spath);
+	else
+		delete spath;
 }
 
 // 上下文相关搜索, 定位key所在的域, 并搜索定位时所经过的路径
@@ -449,9 +479,11 @@ void Searcher::do_locate(cpp::Scope& scope
 					
 					size_t ps = rep[0].type=='R' ? 0 : path.pos();
 					size_t pe = path.pos();
-					SPath rep_path;
-					if( rep_path.create(path, ps, pe, rep) )
+					SPath* rep_path = new SPath;
+					if( rep_path->create(path, ps, pe, rep) )
 						paths_.push_back(rep_path);
+					else
+						delete rep_path;
 				}
 			}
 			break;
@@ -466,16 +498,20 @@ void Searcher::do_locate(cpp::Scope& scope
 
 					size_t ps = rep[0].type=='R' ? 0 : path.pos();
 					size_t pe = path.pos();
-					SPath rep_path;
-					if( rep_path.create(path, ps, pe, rep) ) {
-						rep_path.pos(path.pos() + 1);
-						do_locate(r.scope, line, rep_path, need_walk);
+					SPath* rep_path = new SPath;
+					if( rep_path->create(path, ps, pe, rep) ) {
+						rep_path->pos(path.pos() + 1);
+						do_locate(r.scope, line, *rep_path, need_walk);
 
 						if( need_walk ) {
 							if( path.cur().type=='L' )
 								need_walk = false;
 							paths_.push_back(rep_path);
+						} else {
+							delete rep_path;
 						}
+					} else {
+						delete rep_path;
 					}
 				}
 			}
@@ -491,13 +527,17 @@ void Searcher::do_locate(cpp::Scope& scope
 
 					size_t ps = rep[0].type=='R' ? 0 : path.pos();
 					size_t pe = path.pos();
-					SPath rep_path;
-					if( rep_path.create(path, ps, pe, rep) ) {
-						rep_path.pos(path.pos() + 1);
-						do_locate(r.scope, line, rep_path, need_walk);
+					SPath* rep_path = new SPath;
+					if( rep_path->create(path, ps, pe, rep) ) {
+						rep_path->pos(path.pos() + 1);
+						do_locate(r.scope, line, *rep_path, need_walk);
 
 						if( need_walk )
 							paths_.push_back(rep_path);
+						else
+							delete rep_path;
+					} else {
+						delete rep_path;
 					}
 				}
 			}
@@ -674,7 +714,14 @@ void search( const std::string& key
 	, size_t line )
 {
 	Searcher searcher(cb);
+	
+	//__s = 0;
+	//DWORD sss = GetTickCount();
 	searcher.start(key, file, line);
+
+	//char buf[128];
+	//sprintf(buf, "%d - %d", GetTickCount() - sss, __s);
+	//MessageBoxA(NULL, buf, "debug", MB_OK);
 }
 
 void search_keys(const StrVector& keys, IMatched& cb, cpp::File& file, size_t line) {
