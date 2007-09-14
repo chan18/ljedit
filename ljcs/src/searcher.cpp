@@ -7,12 +7,41 @@
 #include <sstream>
 #include <list>
 
-//---#include <Windows.h>
-//---int __s = 0;
+#ifdef WIN32
+	#include <Windows.h>
+	
+	inline size_t lj_get_current_time() { return GetTickCount(); }
+	
+#else
+	#include <sys/time.h>
+	
+	inline size_t lj_get_current_time() {
+		timeval tv;
+		gettimeofday(&tv, 0);
+		return tv.tv_usec;
+	}
+
+#endif
+
+class ljdebug_time_count {
+public:
+	ljdebug_time_count(size_t& val) : val_(val)
+		{ s_ = lj_get_current_time(); }
+		
+	~ljdebug_time_count()
+		{ val_ += (lj_get_current_time() - s_); }
+
+private:
+	size_t& val_;
+	size_t	s_;
+};
+
+size_t __walked_call_time__ = 0;
+size_t __search_call_time__ = 0;
 
 namespace {
 
-// typeµÄº¬ÒåÎª:
+// typeçš„å«ä¹‰ä¸º:
 //    n : namespace
 //    ? : namespace or type(class or enum or typedef)
 //    t : type
@@ -373,20 +402,17 @@ private:	// inner
 	typedef std::map<std::string, FileSet>	WalkedFileMap;
 
 	bool walked(cpp::File* f, SPath& path) {
-		//---DWORD sss = GetTickCount();
+		ljdebug_time_count __count__(__walked_call_time__);
+		
 		if( f != 0 ) {
 			path.get_union_key(__key);
 			FileSet& files = walked_[__key];
 			FileSet::iterator it = files.find(f);
 			if( it==files.end() ) {
 				files.insert(f);
-				
-				//---__s += (GetTickCount()-sss);
 				return false;
 			}
 		}
-		
-		//---__s += (GetTickCount()-sss);
 		return true;
 	}
 
@@ -407,9 +433,12 @@ void Searcher::start(const std::string& path, cpp::File& file, size_t line) {
 	__key.resize(4096);
 
 	searching_ = true;
+	
+	ljdebug_time_count __count__(__search_call_time__);
+	
 	locate(file.scope, line, path);
 
-	// ÏÈ²»½øĞĞÓÅ»¯²Ù×÷
+	// å…ˆä¸è¿›è¡Œä¼˜åŒ–æ“ä½œ
 	while( !paths_.empty() ) {
 		SPath* spath = paths_.front();
 		paths_.erase(paths_.begin());
@@ -442,7 +471,7 @@ void Searcher::locate(cpp::Scope& scope, size_t line, const std::string& path) {
 		delete spath;
 }
 
-// ÉÏÏÂÎÄÏà¹ØËÑË÷, ¶¨Î»keyËùÔÚµÄÓò, ²¢ËÑË÷¶¨Î»Ê±Ëù¾­¹ıµÄÂ·¾¶
+// ä¸Šä¸‹æ–‡ç›¸å…³æœç´¢, å®šä½keyæ‰€åœ¨çš„åŸŸ, å¹¶æœç´¢å®šä½æ—¶æ‰€ç»è¿‡çš„è·¯å¾„
 // 
 void Searcher::do_locate(cpp::Scope& scope
 	, size_t line
@@ -712,14 +741,21 @@ void search( const std::string& key
 	, size_t line )
 {
 	Searcher searcher(cb);
-	
-	//---__s = 0;
-	//---DWORD sss = GetTickCount();
-	searcher.start(key, file, line);
 
-	//---char buf[128];
-	//---sprintf(buf, "%d - %d", GetTickCount() - sss, __s);
-	//---MessageBoxA(NULL, buf, "debug", MB_OK);
+	__walked_call_time__ = 0;
+	__search_call_time__ = 0;
+
+	searcher.start(key, file, line);
+	
+	//ljdebug_trace("search : %d - walked : %d\n", __walked_call_time__, __search_call_time__);
+
+	printf("search : %d - walked : %d\n", __walked_call_time__, __search_call_time__);
+
+#ifdef WIN32
+	char buf[512];
+	sprintf(buf, "search : %d - walked : %d\n", __walked_call_time__, __search_call_time__);
+	::OutputDebugStringA(buf);
+#endif
 }
 
 void search_keys(const StrVector& keys, IMatched& cb, cpp::File& file, size_t line) {
