@@ -747,13 +747,13 @@ void search( const std::string& key
 
 	searcher.start(key, file, line);
 	
-	//ljdebug_trace("search : %d - walked : %d\n", __walked_call_time__, __search_call_time__);
-
-	printf("search : %d - walked : %d\n", __walked_call_time__, __search_call_time__);
+	//ljdebug_trace(...);
+	
+	printf("search : %d - walked : %d\n", __search_call_time__, __walked_call_time__);
 
 #ifdef WIN32
 	char buf[512];
-	sprintf(buf, "search : %d - walked : %d\n", __walked_call_time__, __search_call_time__);
+	sprintf(buf, "search : %d - walked : %d\n", __search_call_time__, __walked_call_time__);
 	::OutputDebugStringA(buf);
 #endif
 }
