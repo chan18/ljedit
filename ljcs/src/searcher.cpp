@@ -36,7 +36,6 @@ private:
 	size_t	s_;
 };
 
-size_t __walked_call_time__ = 0;
 size_t __search_call_time__ = 0;
 
 namespace {
@@ -397,40 +396,23 @@ private:
 
 	void do_walk(cpp::Scope& scope, SPath& path);
 
-private:	// inner
-	typedef std::set<cpp::File*>			FileSet;
-	typedef std::map<std::string, FileSet>	WalkedFileMap;
-
-	bool walked(cpp::File* f, SPath& path) {
-		ljdebug_time_count __count__(__walked_call_time__);
-		
-		if( f != 0 ) {
-			path.get_union_key(__key);
-			FileSet& files = walked_[__key];
-			FileSet::iterator it = files.find(f);
-			if( it==files.end() ) {
-				files.insert(f);
-				return false;
-			}
-		}
-		return true;
-	}
-
 private:
 	SPathList				paths_;
-	WalkedFileMap			walked_;
+	std::set<std::string>	walked_spaths_;
 	std::set<cpp::Scope*>	walked_scopes_;
 	IMatched&				cb_;
 	bool					searching_;
 
-	std::string				__key;
+private:	// inner
+	// for walk()
+	typedef std::set<cpp::File*>			FileSet;
+
+	FileSet					__walked_;
 };
 
 void Searcher::start(const std::string& path, cpp::File& file, size_t line) {
 	if( path.empty() )
 		return;
-
-	__key.resize(4096);
 
 	searching_ = true;
 	
@@ -438,12 +420,20 @@ void Searcher::start(const std::string& path, cpp::File& file, size_t line) {
 	
 	locate(file.scope, line, path);
 
+	std::string key;
+
 	// 先不进行优化操作
 	while( !paths_.empty() ) {
 		SPath* spath = paths_.front();
 		paths_.erase(paths_.begin());
 
-		walk(&file, *spath);
+		spath->get_union_key(key);
+		if( walked_spaths_.find(key)==walked_spaths_.end() ) {
+			walked_spaths_.insert(key);
+
+			__walked_.clear();
+			walk(&file, *spath);
+		}
 
 		delete spath;
 	}
@@ -471,8 +461,7 @@ void Searcher::locate(cpp::Scope& scope, size_t line, const std::string& path) {
 		delete spath;
 }
 
-// 上下文相关搜索, 定位key所在的域, 并搜索定位时所经过的路径
-// 
+// 上下文相关搜�? 定位key所在的�? 并搜索定位时所经过的路�?// 
 void Searcher::do_locate(cpp::Scope& scope
 	, size_t line
 	, SPath& path
@@ -575,9 +564,11 @@ void Searcher::do_locate(cpp::Scope& scope
 }
 
 void Searcher::walk(cpp::File* file, SPath& path) {
-	path.reset();
-	if( walked(file, path) )
+	if( __walked_.find(file) != __walked_.end() )
 		return;
+	__walked_.insert(file);
+
+	path.reset();
 
 	if( path.size() > 8 )
 		return;
@@ -742,18 +733,17 @@ void search( const std::string& key
 {
 	Searcher searcher(cb);
 
-	__walked_call_time__ = 0;
 	__search_call_time__ = 0;
 
 	searcher.start(key, file, line);
 	
 	//ljdebug_trace(...);
 	
-	printf("search : %d - walked : %d\n", __search_call_time__, __walked_call_time__);
+	printf("search : %d\n", __search_call_time__);
 
 #ifdef WIN32
 	char buf[512];
-	sprintf(buf, "search : %d - walked : %d\n", __search_call_time__, __walked_call_time__);
+	sprintf(buf, "search : %d\n", __search_call_time__);
 	::OutputDebugStringA(buf);
 #endif
 }
