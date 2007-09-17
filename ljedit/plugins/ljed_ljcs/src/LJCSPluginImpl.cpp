@@ -392,18 +392,18 @@ bool LJCSPluginImpl::on_button_release_event(GdkEventButton* event, DocPage* pag
 
 	// find keys
 	Gtk::TextBuffer::iterator end = it;
-
-    StrVector keys;
-    if( !find_keys(keys, it, end, file, false) )
-        return false;
-
-    size_t line = (size_t)it.get_line() + 1;
-    MatchedSet mset;
-    ::search_keys(keys, mset, *file, line);
+	size_t line = (size_t)it.get_line() + 1;
 
 	// test CTRL state
 	if( event->state & Gdk::CONTROL_MASK ) {
 		// jump to
+		StrVector keys;
+		if( !find_keys(keys, it, end, file, false) )
+			return false;
+
+		MatchedSet mset;
+		::search_keys(keys, mset, *file, line);
+
 		cpp::Element* elem = find_best_matched_element(mset.elems);
 		if( elem != 0 ) {
 			DocManager& dm = editor_.main_window().doc_manager();
@@ -412,11 +412,15 @@ bool LJCSPluginImpl::on_button_release_event(GdkEventButton* event, DocPage* pag
 
 	} else {
 		// preview
-		cpp::Elements elems;
-		elems.resize(mset.elems.size());
-		std::copy(mset.elems.begin(), mset.elems.end(), elems.begin());
+		LJEditorDocIter ps(it);
+		LJEditorDocIter pe(end);
+		std::string key;
+		if( !find_key(key, ps, pe, false) )
+			return false;
 
-		preview_.preview(elems, find_best_matched_index(elems));
+		std::string key_text = it.get_text(end);
+
+		preview_.preview(key, key_text, *file, line);
 
 		editor_.main_window().bottom_panel().set_current_page(preview_page_);
 	}

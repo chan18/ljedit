@@ -19,7 +19,10 @@ public:
     PreviewPage(LJEditor& editor);
     virtual ~PreviewPage();
 
-    void preview(cpp::Elements& elems, size_t index=0);
+	void preview(const std::string& key, const std::string& key_text, cpp::File& file, size_t line);
+
+private:
+    void do_preview(cpp::Elements& elems, size_t index=0);
 
 private:
 	void on_number_btn_clicked();
@@ -31,6 +34,18 @@ private:
 
 private:
     LJEditor&					editor_;
+
+private:
+	struct SearchContent {
+		std::string key;
+		std::string key_text;
+		cpp::File*  file;
+		size_t      line;
+
+		SearchContent() : file(0) {}
+	};
+
+	void search_preview_elements();
 
 private:
 	Gtk::VBox					vbox_;

@@ -70,16 +70,25 @@ void PreviewPage::create() {
 	vbox_.pack_start(*hbox, false, true);
     vbox_.pack_start(*sw);
     vbox_.show_all();
+
+	// thread
+	//search_thread_ = Glib::Thread::create( sigc::mem_fun(this, &PreviewPage::search_preview_elements), true );
 }
 
 void PreviewPage::destroy() {
+	//Glib::Thread* thread = search_thread_;
+	//search_thread_ = 0;
+	//if( thread!=0 )
+	//	search_thread_->join();
+
     cpp::unref_all_elems(elems_);
 	elems_.clear();
 	delete view_;
     view_ = 0;
+
 }
 
-void PreviewPage::preview(cpp::Elements& elems, size_t index) {
+void PreviewPage::do_preview(cpp::Elements& elems, size_t index) {
 	if( &elems!=&elems_ ) {
 		cpp::unref_all_elems(elems_);
 		elems_.swap(elems);
@@ -126,7 +135,7 @@ void PreviewPage::preview(cpp::Elements& elems, size_t index) {
 }
 
 void PreviewPage::on_number_btn_clicked() {
-	preview(elems_, index_ + 1);
+	do_preview(elems_, index_ + 1);
 }
 
 bool PreviewPage::on_number_btn_release_event(GdkEventButton* event) {
@@ -153,7 +162,7 @@ bool PreviewPage::on_number_btn_release_event(GdkEventButton* event) {
 }
 
 void PreviewPage::on_number_menu_selected(size_t index) {
-	preview(elems_, index);
+	do_preview(elems_, index);
 }
 
 void PreviewPage::on_filename_btn_clicked() {
@@ -208,24 +217,98 @@ bool PreviewPage::on_sourceview_button_release_event(GdkEventButton* event) {
         }
     }
     Gtk::TextBuffer::iterator end = it;
-
-    StrVector keys;
-	if( !find_keys(keys, it, end, &(elem->file), false) )
-        return false;
-
     size_t line = (size_t)it.get_line() + 1;
-    MatchedSet mset;
-    search_keys(keys, mset, elem->file, line);
 
-	if( !mset.elems.empty() ) {
-		cpp::unref_all_elems(elems_);
-		elems_.resize(mset.elems.size());
-		std::copy(mset.elems.begin(), mset.elems.end(), elems_.begin());
-		cpp::ref_all_elems(elems_);
+	LJEditorDocIter ps(it);
+	LJEditorDocIter pe(end);
+	std::string key;
+	if( !find_key(key, ps, pe) )
+		return false;
+	
+	std::string key_text = it.get_text(end);
 
-		preview(elems_, find_best_matched_index(elems_));
-	}
+	preview(key, key_text, elem->file, line);
 
     return false;
+}
+
+void PreviewPage::search_preview_elements() {
+	/*
+	volatile size_t id = search_content_id_;
+	SearchContent sc;
+	StrVector     keys;
+	MatchedSet    mset;
+	cpp::Elements elems;
+
+	while( search_thread_ != 0 ) {
+		if( id == search_content_id_ ) {
+			//sleep(1);
+			continue;
+		}
+
+		id = search_content_id_;
+
+		search_content_mutex_.lock();
+		sc = search_content_;
+		search_content_mutex_.unlock();
+
+		keys.empty();
+
+		keys.push_back(sc.key);
+
+		ljcs_parse_macro_replace(sc.key_text, sc.file);
+		parse_key(sc.key_text, sc.key_text);
+		if( !sc.key_text.empty() && sc.key_text!=sc.key )
+			keys.push_back(sc.key_text);
+
+		::search_keys(keys, mset, *sc.file, sc.line);
+
+		elems.resize(mset.elems.size());
+		std::copy(mset.elems.begin(), mset.elems.end(), elems.begin());
+
+		::gdk_threads_enter();
+		do_preview(elems, find_best_matched_index(elems));
+		::gdk_threads_leave();
+	}
+	*/
+}
+
+void PreviewPage::preview(const std::string& key, const std::string& key_text, cpp::File& file, size_t line) {
+	/*
+	search_content_mutex_.lock();
+
+	if( search_content_.file != 0 )
+		search_content_.file->unref();
+
+	search_content_.key = key;
+	search_content_.key_text = key_text;
+	search_content_.file = file.ref();
+	search_content_.line = line;
+
+	++search_content_id_;
+
+	search_content_mutex_.unlock();
+	*/
+	
+
+	StrVector     keys;
+
+	keys.push_back(key);
+
+	std::string rkey;
+	ljcs_parse_macro_replace(rkey, &file);
+	parse_key(rkey, key_text);
+	if( !rkey.empty() && rkey!=key )
+		keys.push_back(rkey);
+
+	MatchedSet    mset;
+	::search_keys(keys, mset, file, line);
+
+    cpp::unref_all_elems(elems_);
+	elems_.resize(mset.elems.size());
+	std::copy(mset.elems.begin(), mset.elems.end(), elems_.begin());
+	cpp::ref_all_elems(elems_);
+
+	do_preview(elems_, find_best_matched_index(elems_));
 }
 
