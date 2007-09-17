@@ -86,7 +86,7 @@ void PreviewPage::preview(cpp::Elements& elems, size_t index) {
 		cpp::ref_all_elems(elems_);
 	}
 
-    Glib::RefPtr<Gtk::TextBuffer> buffer = view_->get_buffer();
+	Glib::RefPtr<gtksourceview::SourceBuffer> buffer = view_->get_source_buffer();
     Glib::ustring text;
     if( !elems_.empty() ) {
 		index_ = index % elems_.size();
@@ -107,14 +107,17 @@ void PreviewPage::preview(cpp::Elements& elems, size_t index) {
 			last_preview_file_ = &(elem->file);
 
 			Glib::ustring text;
-			if( editor_.utils().load_file(text, elem->file.filename) )
+			if( editor_.utils().load_file(text, elem->file.filename) ) {
 				buffer->set_text(text);
+			}
         }
 
     } else {
         filename_label_->set_text("");
 		number_button_->set_label("0/0");
+		buffer->begin_not_undoable_action();
         buffer->set_text(text);
+		buffer->end_not_undoable_action();
 
 		last_preview_file_ = 0;
     }
