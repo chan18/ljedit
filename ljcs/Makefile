@@ -2,8 +2,8 @@
 # 
 
 CXX = g++
-#CXXFLAGS = -pthread -g -DSHOW_PARSE_DEBUG_INFOS
-CXXFLAGS = -pthread -o2 -DNDEBUG
+#CXXFLAGS = -g -DSHOW_PARSE_DEBUG_INFOS
+CXXFLAGS = -o2 -DNDEBUG
 
 CPOBJS = src/cps/next_block.o   \
 	src/cps/utils.o         \
