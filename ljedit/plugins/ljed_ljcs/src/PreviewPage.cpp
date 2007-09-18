@@ -9,14 +9,6 @@
 
 #include "LJCSPluginUtils.h"
 
-#ifdef WIN32
-	#include <windows.h>
-
-	#ifndef sleep
-		#define sleep(sec)	::Sleep(sec*1000);
-	#endif
-#endif
-
 
 PreviewPage::PreviewPage(LJEditor& editor)
     : editor_(editor)
