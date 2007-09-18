@@ -60,6 +60,8 @@ def fill_folder(model, parent_iter, pathname):
 		fs = os.listdir(pathname)
 		fs.sort(lambda a, b : sort_file(a, b, pathname))
 		for f in fs:
+			if f.startswith('.'):
+				continue
 			sp = os.path.join(pathname, f)
 			sign = 'dir' if is_dir(sp) else 'file'
 			model.append(parent_iter, [f.decode(sys.getfilesystemencoding()), sp, sign, f])
