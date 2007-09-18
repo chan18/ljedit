@@ -126,8 +126,11 @@ class FileExplorer(gtk.VBox):
         self.folderpb = self.render_icon(gtk.STOCK_DIRECTORY, gtk.ICON_SIZE_MENU)
         self.filepb   = self.render_icon(gtk.STOCK_FILE, gtk.ICON_SIZE_MENU)
         
-        self.refreshbutton = gtk.Button('ref')
-        self.refreshbutton.connect('clicked', self.on_refresh_clicked)
+        img = gtk.Image()
+        img.set_from_stock(gtk.STOCK_REFRESH, gtk.ICON_SIZE_MENU)
+        refreshbutton = gtk.Button()
+        refreshbutton.set_image(img)
+        refreshbutton.connect('clicked', self.on_refresh_clicked)
         
         self.fchooser = gtk.FileChooserButton('choose folder')
         self.fchooser.set_action(gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER)
@@ -135,7 +138,7 @@ class FileExplorer(gtk.VBox):
         self.fchooser.connect('current-folder-changed', self.on_folder_changed)
         
         hbox = gtk.HBox()
-        hbox.pack_start(self.refreshbutton, False, True)
+        hbox.pack_start(refreshbutton, False, True)
         hbox.pack_start(self.fchooser, True, True)
         self.pack_start(hbox, False, True)
         
@@ -158,12 +161,12 @@ class FileExplorer(gtk.VBox):
         self.treeview.expand_to_path(path)
         
     def on_refresh_clicked(self, btn):
-        selected = self.treeview.get_selection().get_selected()
-        if selected==None:
+        m, i = self.treeview.get_selection().get_selected()
+        if m==None or i==None:
             self.refresh()
             self.on_folder_changed(self.fchooser)
         else:
-            filename = selected[0][selected[1]][1]
+            filename = m[i][1]
             self.refresh()
             self.locate_to_file(filename)
         
@@ -183,7 +186,6 @@ class FileExplorer(gtk.VBox):
             self.treeview.expand_to_path(path)
             self.treeview.scroll_to_cell(path)
             gobject.idle_add(self.treeview.scroll_to_cell, path)
-            print 'vvvv'
         
     def make_root_model(self):
         model = gtk.TreeStore(str, str, str, str)   # display, path, [file, dir, dir-expanded, name]
