@@ -739,7 +739,7 @@ void search( const std::string& key
 	
 	//ljdebug_trace(...);
 	
-	printf("search : %d\n", __search_call_time__);
+	//printf("search : %d\n", __search_call_time__);
 
 #ifdef WIN32
 	char buf[512];
