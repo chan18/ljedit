@@ -2,6 +2,7 @@
 1. how to setup develop environment?
 
 	* linux(ubuntu 7.04) - gcc
+		libpthread-dev
 		libgtk-dev
 		libgtkmm-dev
 		libglademm-dev
@@ -15,6 +16,7 @@
 			pycairo-dev
 
 	* windows - vc8
+		pthread-win32
 		gtk-dev-2.10.11-win32-1.exe
 		gtkmm-win32-devel-2.10.8-1.exe
 		gtksourceview-1.0-win-port-dev.rar (include gtksourceviewmm static library for vc8) http://groups.google.com/group/freeLJ/files

@@ -7,32 +7,29 @@
 
 #include <set>
 
+// WIN32 : ftp://sourceware.org/pub/pthreads-win32/prebuilt-dll-2-8-0-release
+// 
+
+#include <pthread.h>
+
 #ifdef WIN32
-    #include <windows.h>
-    inline void sleep(int sec) { ::Sleep(sec * 1000); }
-#else
-    #include <pthread.h>
+	#include <windows.h>
+
+	#ifndef sleep
+		#define sleep(sec)	::Sleep(sec*1000);
+	#endif
 #endif
 
 class ParseThread {
 public:
     void run() {
-#ifdef WIN32
-        DWORD tid = 0;
-        pid_ = ::CreateThread(NULL, 0, &ParseThread::wrap_thread, this, 0, &tid);
-#else
         pthread_create(&pid_, NULL, &ParseThread::wrap_thread, this);
-#endif
     }
 
     void stop() {
         stopsign_ = true;
-#ifdef WIN32
-        ::CloseHandle(pid_);
-        ::WaitForSingleObject(pid_, 5000);
-#else
+
         pthread_join(pid_, 0);
-#endif
     }
 
     void add(const std::string& filename) {
@@ -40,17 +37,13 @@ public:
     }
 
 private:
-#ifdef WIN32
-    static DWORD WINAPI wrap_thread(LPVOID args) { return ((ParseThread*)args)->thread(); }
-#else
-    static void* wrap_thread(void* args)		 { return ((ParseThread*)args)->thread(); }
-#endif
+    static void* wrap_thread(void* args) {
+		((ParseThread*)args)->thread();
+		pthread_exit(0);
+		return 0;
+	}
 
-#ifdef WIN32
-    DWORD thread()
-#else
-    void* thread()
-#endif
+    void thread()
     {
         stopsign_ = false;
 
@@ -66,8 +59,6 @@ private:
 
             ljcs_parse(filename, &stopsign_);
         }
-
-        return 0;
     }
 
 private:
@@ -75,11 +66,7 @@ private:
 
     bool					stopsign_;
 
-#ifdef WIN32
-    HANDLE					pid_;
-#else
     pthread_t				pid_;
-#endif
 };
 
 #endif//EEINC_PARSE_THREAD_H

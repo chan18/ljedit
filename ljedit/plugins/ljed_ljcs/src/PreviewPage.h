@@ -8,6 +8,9 @@
 
 #include "ljcs/ljcs.h"
 
+#include <pthread.h>
+#include <semaphore.h>
+
 class PreviewPage {
 public:
     Gtk::Widget& get_widget() { return vbox_; }
@@ -22,7 +25,8 @@ public:
 	void preview(const std::string& key, const std::string& key_text, cpp::File& file, size_t line);
 
 private:
-    void do_preview(cpp::Elements& elems, size_t index=0);
+    void do_preview(size_t index=0);
+    void do_preview_impl(size_t index=0);
 
 private:
 	void on_number_btn_clicked();
@@ -35,7 +39,15 @@ private:
 private:
     LJEditor&					editor_;
 
-private:
+private:	// thread
+    static void* wrap_thread(void* args)		 {
+		((PreviewPage*)args)->search_thread();
+		pthread_exit(0);
+		return 0;
+	}
+
+	void search_thread();
+
 	struct SearchContent {
 		std::string key;
 		std::string key_text;
@@ -45,7 +57,18 @@ private:
 		SearchContent() : file(0) {}
 	};
 
-	void search_preview_elements();
+	SearchContent				search_content_;
+
+    bool						search_stopsign_;
+    bool						search_resultsign_;
+
+    pthread_t					search_pid_;
+	sem_t						search_run_sem_;
+	pthread_mutex_t				search_key_mutex_;
+	pthread_mutex_t				search_result_mutex_;
+
+private:	// timeout
+	bool on_update_timeout();
 
 private:
 	Gtk::VBox					vbox_;
