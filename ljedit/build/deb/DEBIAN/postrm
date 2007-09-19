@@ -3,5 +3,6 @@ set -e
 
 if [ -x "`which update-menus 2>/dev/null`" ]; then update-menus ; fi
 
-unlink /usr/bin/ljedit
+if [ -f /usr/bin/ljedit ]; then unlink /usr/bin/ljedit; fi
+
 
