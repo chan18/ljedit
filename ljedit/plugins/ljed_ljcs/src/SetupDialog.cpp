@@ -89,10 +89,18 @@ void load_includes(const std::string& includes) {
 	}
 }
 
+std::string get_config_filepath(const std::string& plugin_path) {
+	#ifdef WIN32
+		return Glib::build_filename(plugin_path, "ljcs.conf");
+	#else
+		return Glib::build_filename(Glib::get_home_dir(), "ljcs.conf");
+	#endif
+}
+
 void load_setup(const std::string& plugin_path) {
 	std::string text;
+	std::string filename = get_config_filepath(plugin_path);
 
-	std::string filename = Glib::build_filename(plugin_path, "ljcs.conf");
 	std::ifstream ifs(filename.c_str());
 	if( ifs ) {
 		std::string line;
@@ -115,7 +123,7 @@ void load_setup(const std::string& plugin_path) {
 }
 
 void save_setup(const std::string& plugin_path, const std::string& includes) {
-	std::string filename = Glib::build_filename(plugin_path, "ljcs.conf");
+	std::string filename = get_config_filepath(plugin_path);
 	std::ofstream ofs(filename.c_str());
 	if( ofs ) {
 		ofs << includes;
