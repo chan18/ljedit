@@ -119,7 +119,17 @@ void load_setup(const std::string& plugin_path) {
 				"d:/mingw32/include/c++/3.4.2/\n";
 	}
 
+	// include path
 	load_includes(text);
+
+	// pre parse files
+	std::string ppfile =
+#ifdef WIN32
+		Glib::build_filename(plugin_path, "ljcs_pre_parse.mingw32");
+#else
+		Glib::build_filename(plugin_path, "ljcs_pre_parse.linux");
+#endif
+	ParserEnviron::self().pre_parse_files.push_back(ppfile);
 }
 
 void save_setup(const std::string& plugin_path, const std::string& includes) {
