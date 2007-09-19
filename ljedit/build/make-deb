@@ -1,0 +1,15 @@
+#!/bin/sh
+
+cd deb
+
+DST_DIR=usr/share/ljedit
+
+mkdir -p $DST_DIR
+cp ../../bin/* $DST_DIR/ -a
+rm $DST_DIR/*.pyc -rf
+rm $DST_DIR/plugins/*.pyc -rf
+
+dpkg -b . ../ljedit-1.0.0.deb
+
+rm $DST_DIR -rf
+
