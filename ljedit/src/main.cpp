@@ -28,8 +28,7 @@ int main(int argc, char *argv[]) {
 		path = Glib::path_get_dirname(path);
 
 	#else
-		path = argv[0];
-		path.erase(path.find_last_of('/'));
+		path = "/usr/lib/ljedit";
 
 	#endif
 

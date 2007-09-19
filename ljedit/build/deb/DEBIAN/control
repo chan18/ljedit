@@ -1,0 +1,10 @@
+Package: ljedit
+Version: 1.0.0-0ubuntu1
+Section: devel
+Priority: optional
+Architecture: i386
+Depends: libgtksourceviewmm-1.0-2 (>= 0.3.0-0ubuntu1), python2.5 (>= 2.5), python-gtk2 (>= 2.10.4-0ubuntu3), libglade2-0 (>= 1:2.6.0-3)
+Installed-Size: 512
+Maintainer: LJ Louis <louisliangjun@gmail.com>
+Description: SourceEditor for C/C++
+ Homepage: http://ljedit.googlecode.com/
