@@ -1,18 +1,34 @@
 #!/bin/sh
 
-cd deb
+if [ "`whoami`" = "root" ]
+then
+	echo "ljedit make deb"
+else
+	echo "ERROR : need root user!"
+	exit 1
+fi
 
-DST_DIR=usr/share/ljedit
+mkdir .build
+mkdir -p .build/usr/share/ljedit
 
-mkdir -p $DST_DIR
-cp ../../bin/* $DST_DIR/ -a
-rm $DST_DIR/*.pyc -rf
-rm $DST_DIR/plugins/*.pyc -rf
-rm $DST_DIR/.svn -rf
-rm $DST_DIR/conf/.svn -rf
-rm $DST_DIR/plugins/.svn -rf
+cp -rf deb/* .build/
+cp -rf ../bin/* .build/usr/share/ljedit/
 
+rm -rf .build/.svn
+rm -rf .build/DEBIAN/.svn
+rm -rf .build/usr/.svn
+rm -rf .build/usr/share/.svn
+rm -rf .build/usr/share/applications/.svn
+rm -rf .build/usr/share/ljedit/.svn
+rm -rf .build/usr/share/ljedit/conf/.svn
+rm -rf .build/usr/share/ljedit/plugins/.svn
+
+rm -rf .build/usr/share/ljedit/*.pyc
+rm -rf .build/usr/share/plugins/*.pyc
+
+cd .build
 dpkg -b . ../ljedit-1.0.0.deb
 
-rm $DST_DIR -rf
+cd ..
+rm -rf .build
 
