@@ -8,6 +8,9 @@ mkdir -p $DST_DIR
 cp ../../bin/* $DST_DIR/ -a
 rm $DST_DIR/*.pyc -rf
 rm $DST_DIR/plugins/*.pyc -rf
+rm $DST_DIR/.svn -rf
+rm $DST_DIR/conf/.svn -rf
+rm $DST_DIR/plugins/.svn -rf
 
 dpkg -b . ../ljedit-1.0.0.deb
 
