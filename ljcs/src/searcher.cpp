@@ -461,7 +461,7 @@ void Searcher::locate(cpp::Scope& scope, size_t line, const std::string& path) {
 		delete spath;
 }
 
-// 上下文相关搜�? 定位key所在的�? 并搜索定位时所经过的路�?// 
+// 上下文相关搜? 定位key所在的? 并搜索定位时所经过的路?// 
 void Searcher::do_locate(cpp::Scope& scope
 	, size_t line
 	, SPath& path
