@@ -564,6 +564,9 @@ void Searcher::do_locate(cpp::Scope& scope
 }
 
 void Searcher::walk(cpp::File* file, SPath& path) {
+	if( file==0 )
+		return;
+
 	if( __walked_.find(file) != __walked_.end() )
 		return;
 	__walked_.insert(file);
@@ -577,6 +580,10 @@ void Searcher::walk(cpp::File* file, SPath& path) {
 
 	do_walk(file->scope, path);
 
+	std::string str;
+	size_t      pos;
+	size_t      len;
+
 	cpp::Includes::iterator it = file->includes.begin();
 	cpp::Includes::iterator end = file->includes.end();
 	for( ; searching() && (it != end); ++it ) {
@@ -584,8 +591,31 @@ void Searcher::walk(cpp::File* file, SPath& path) {
 		if( (*it)->include_file.empty() )
 			continue;
 
-		cpp::File* incfile = ParserEnviron::self().abspath_find_parsed((*it)->include_file);
+		str = (*it)->include_file;
+		cpp::File* incfile = ParserEnviron::self().abspath_find_parsed(str);
 		walk( incfile, path );
+		
+		pos = str.find_last_of('.');
+		if( pos==str.npos )
+			continue;
+
+		len = str.size() - pos;
+		if( len==2 ) {
+			if( str.compare(pos, len, ".h")!=0 )
+				continue;
+		} else if( len==3 ) {
+			if( str.compare(pos, len, ".hh")==0 )
+				continue;
+		} else if( len==4 ) {
+			if( str.compare(pos, len, ".hpp")==0 )
+				continue;
+		} else {
+			continue;
+		}
+
+		str.replace(pos, len, ".cpp");
+		cpp::File* implfile = ParserEnviron::self().abspath_find_parsed(str);
+		walk( implfile, path );
 	}
 }
 
