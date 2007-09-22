@@ -577,13 +577,37 @@ void Searcher::walk(cpp::File* file, SPath& path) {
 		return;
 
 	assert( file != 0 );
-
 	do_walk(file->scope, path);
 
-	std::string str;
-	size_t      pos;
-	size_t      len;
+	// search in implements file
+	size_t pos = file->filename.find_last_of('.');
+	if( pos!=file->filename.npos ) {
+		std::string str = file->filename;
+		size_t len = str.size() - pos;
+		if( len==2 ) {
+			if( str.compare(pos, len, ".h")==0 ) {
+				str.replace(pos, len, ".c");
+				walk( ParserEnviron::self().abspath_find_parsed(str), path );
 
+				str.append("pp");
+				walk( ParserEnviron::self().abspath_find_parsed(str), path );
+			}
+
+		} else if( len==3 ) {
+			if( str.compare(pos, len, ".hh")==0 ) {
+				str.replace(pos, len, ".cc");
+				walk( ParserEnviron::self().abspath_find_parsed(str), path );
+			}
+
+		} else if( len==4 ) {
+			if( str.compare(pos, len, ".hpp")==0 ) {
+				str.replace(pos, len, ".cpp");
+				walk( ParserEnviron::self().abspath_find_parsed(str), path );
+			}
+		}
+	}
+
+	// search in includes file
 	cpp::Includes::iterator it = file->includes.begin();
 	cpp::Includes::iterator end = file->includes.end();
 	for( ; searching() && (it != end); ++it ) {
@@ -591,31 +615,8 @@ void Searcher::walk(cpp::File* file, SPath& path) {
 		if( (*it)->include_file.empty() )
 			continue;
 
-		str = (*it)->include_file;
-		cpp::File* incfile = ParserEnviron::self().abspath_find_parsed(str);
+		cpp::File* incfile = ParserEnviron::self().abspath_find_parsed((*it)->include_file);
 		walk( incfile, path );
-		
-		pos = str.find_last_of('.');
-		if( pos==str.npos )
-			continue;
-
-		len = str.size() - pos;
-		if( len==2 ) {
-			if( str.compare(pos, len, ".h")!=0 )
-				continue;
-		} else if( len==3 ) {
-			if( str.compare(pos, len, ".hh")==0 )
-				continue;
-		} else if( len==4 ) {
-			if( str.compare(pos, len, ".hpp")==0 )
-				continue;
-		} else {
-			continue;
-		}
-
-		str.replace(pos, len, ".cpp");
-		cpp::File* implfile = ParserEnviron::self().abspath_find_parsed(str);
-		walk( implfile, path );
 	}
 }
 
