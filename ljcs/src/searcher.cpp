@@ -7,6 +7,15 @@
 #include <sstream>
 #include <list>
 
+// TODO : 需要创建索引集概念了
+// 
+// parse还是只完成分析功能
+// 
+// search工作先创建索引集（如：stl, ace, xxxx, project）
+// 
+// search不再遍历include文件，而是直接在所引用的索引集中搜索
+// 
+
 #ifdef WIN32
 	#include <Windows.h>
 	
@@ -40,7 +49,7 @@ size_t __search_call_time__ = 0;
 
 namespace {
 
-// type鐨勫惈涔変负:
+// type的含义为:
 //    n : namespace
 //    ? : namespace or type(class or enum or typedef)
 //    t : type
@@ -422,7 +431,7 @@ void Searcher::start(const std::string& path, cpp::File& file, size_t line) {
 
 	std::string key;
 
-	// 鍏堜笉杩涜浼樺寲鎿嶄綔
+	// 先不进行优化操作
 	while( !paths_.empty() ) {
 		SPath* spath = paths_.front();
 		paths_.erase(paths_.begin());
@@ -461,7 +470,7 @@ void Searcher::locate(cpp::Scope& scope, size_t line, const std::string& path) {
 		delete spath;
 }
 
-// 涓婁笅鏂囩浉鍏虫悳? 瀹氫綅key鎵�鍦ㄧ殑? 骞舵悳绱㈠畾浣嶆椂鎵�缁忚繃鐨勮矾?// 
+// 上下文相关搜? 定位key所在的? 并搜索定位时所经过的路?// 
 void Searcher::do_locate(cpp::Scope& scope
 	, size_t line
 	, SPath& path
