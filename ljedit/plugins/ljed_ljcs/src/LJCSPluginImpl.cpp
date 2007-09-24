@@ -463,6 +463,6 @@ void LJCSPluginImpl::outline_on_switch_page(GtkNotebookPage*, guint) {
 
 void LJCSPluginImpl::outline_on_elem_actived(const cpp::Element& elem) {
     DocManager& dm = editor_.main_window().doc_manager();
-    dm.open_file(elem.file.filename, int(elem.sline - 1));
+	dm.locate_file(elem.file.filename, int(elem.sline - 1));
 }
 

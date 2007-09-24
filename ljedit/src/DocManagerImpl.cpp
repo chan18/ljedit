@@ -87,7 +87,7 @@ void DocManagerImpl::open_file(const std::string& filepath, int line, int line_o
     std::string abspath = filepath;
     ::ljcs_filepath_to_abspath(abspath);
 
-	if( do_locate_file(abspath, line) )
+	if( do_locate_file(abspath, line, line_offset) )
 		return;
 
     std::string filename = Glib::path_get_basename(filepath);
@@ -107,7 +107,13 @@ bool DocManagerImpl::do_locate_file(const std::string& abspath, int line, int li
         assert( page != 0 );
 
         if( page->filepath()==abspath ) {
-            locate_page_line(it->get_page_num(), line, line_offset);
+			if( line < 0 ) {
+				set_current_page(it->get_page_num());
+				page->view().grab_focus();
+
+			} else {
+				locate_page_line(it->get_page_num(), line, line_offset);
+			}
             return true;
         }
     }
@@ -139,6 +145,12 @@ bool DocManagerImpl::open_page(const std::string filepath
     DocPageImpl* page = DocPageImpl::create(filepath, displaty_name);
     if( page==0 )
     	return false;
+
+	if( line < 0 )
+		line = 0;
+
+	if( line_offset < 0 )
+		line_offset = 0;
 
 	if( text != 0 ) {
 	    Glib::RefPtr<gtksourceview::SourceBuffer> buffer = page->source_buffer();
