@@ -43,7 +43,7 @@ def is_dir(pathname):
         filestat = os.stat(pathname)
         if stat.S_ISDIR(filestat.st_mode):
             return True
-    except:
+    except Exception:
         pass
     return False
 
@@ -64,22 +64,24 @@ def fill_folder(model, parent_iter, pathname):
                 continue
             sp = os.path.join(pathname, f)
             sign = 'dir' if is_dir(sp) else 'file'
-            model.append(parent_iter, [f.decode(sys.getfilesystemencoding()), sp, sign, f])
-    except:
+            iter = model.append(parent_iter, [f.decode(sys.getfilesystemencoding()), sp, sign, f])
+            if sign=='dir':
+            	model.append(iter, ['loading...', 'loading...', 'loading...', 'loading...'])
+        
+    except Exception, e:
         pass
+
+    try:
+        # remove 'loading...' child
+        iter = model.iter_children(parent_iter)
+        if model[iter][2]=='loading...':
+            del model[iter]
+    except Exception, e:
+    	pass
 
 def fill_subs(model, parent_iter):
     row = model[parent_iter]
-    if row[2]=='dir-expanded':
-        iter = model.iter_children(parent_iter)
-        while iter != None:
-            row = model[iter]
-            if row[2] == 'dir':
-                row[2] = 'dir-expanded'
-                fill_folder(model, iter, row[1])
-            iter = model.iter_next(iter)
-        
-    elif row[2]=='dir':
+    if row[2]=='dir':
         row[2] = 'dir-expanded'
         fill_folder(model, parent_iter, row[1])
         #iter = model.iter_children(parent_iter)
@@ -91,8 +93,8 @@ def fill_subs(model, parent_iter):
         row[2] = 'win32root-expanded'
         drivers = get_win32_drivers()
         for volume, driver in drivers:
-            iter = model.append(parent_iter, [volume, driver, 'dir-expanded', driver.lower()[:2]])
-            fill_folder(model, iter, driver)
+            iter = model.append(parent_iter, [volume, driver, 'dir', driver.lower()[:2]])
+            model.append(iter, ['loading...', 'loading...', 'loading...', 'loading...'])
 
 def locate_to(model, it, paths):
     if len(paths)==0:
@@ -285,6 +287,6 @@ try:
         left = ljedit.main_window.left_panel
         left.remove_page(explorer.page_id)
 
-except:
+except Exception:
     pass
 
