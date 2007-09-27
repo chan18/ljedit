@@ -24,7 +24,7 @@ PYTHON_LIB=python2.5
 #PYTHON_LIB=python2.4
 
 #LJMLOBJS = src/mlexer_d.o src/parser.o src/main_ml.o src/ds_utils.o
-LJCSOBJS = src/use_mlexer.o src/parser.o src/cp.o src/skey.o src/searcher.o src/ds_utils.o $(CPOBJS)
+LJCSOBJS = src/use_mlexer.o src/parser.o src/cp.o src/skey.o src/searcher.o src/index.o src/ds_utils.o $(CPOBJS)
 LJCS_PYOBJS = $(LJCSOBJS) src/ljcs_py_wrap.o
 
 all : lib/libljcs.so	# lib/_ljcs_py.so
@@ -34,6 +34,7 @@ lib/libljcs.so : $(LJCSOBJS)
 	cp src/ds.h include/ljcs/
 	cp src/parser.h include/ljcs/
 	cp src/searcher.h include/ljcs/
+	cp src/index.h include/ljcs/
 	cp src/skey.h include/ljcs/
 	cp src/ljcs.h include/ljcs/
 	cp src/crt_debug.h include/ljcs/
