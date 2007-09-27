@@ -3,9 +3,9 @@
 #ifndef EEINC_PARSE_THREAD_H
 #define EEINC_PARSE_THREAD_H
 
-#include "ljcs/parser.h"
-
 #include <set>
+
+#include "LJCSEnv.h"
 
 // WIN32 : ftp://sourceware.org/pub/pthreads-win32/prebuilt-dll-2-8-0-release
 // 
@@ -57,7 +57,20 @@ private:
             std::string filename = *it;
             set_.erase(it);
 
-            ljcs_parse(filename, &stopsign_);
+			cpp::File* old_file = ParserEnviron::self().find_parsed(filename);
+			if( old_file!=0 )
+				old_file->ref();
+
+			cpp::File* new_file = ljcs_parse(filename, &stopsign_);
+
+			if( old_file!=0 ) {
+				if( old_file!=new_file )
+					LJCSEnv::self().stree.remove(*old_file);
+				old_file->unref();
+			}
+
+			if( new_file!=0 )
+				LJCSEnv::self().stree.add(*new_file);
         }
     }
 

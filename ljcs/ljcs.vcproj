@@ -79,7 +79,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy src\ds.h include\ljcs\&#x0D;&#x0A;copy src\parser.h include\ljcs\&#x0D;&#x0A;copy src\skey.h include\ljcs\&#x0D;&#x0A;copy src\searcher.h include\ljcs\&#x0D;&#x0A;copy src\crt_debug.h include\ljcs\&#x0D;&#x0A;copy src\ljcs.h include\ljcs\&#x0D;&#x0A;"
+				CommandLine="copy src\ds.h include\ljcs\"
 			/>
 		</Configuration>
 		<Configuration
@@ -142,7 +142,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy src\ds.h include\ljcs\&#x0D;&#x0A;copy src\parser.h include\ljcs\&#x0D;&#x0A;copy src\skey.h include\ljcs\&#x0D;&#x0A;copy src\searcher.h include\ljcs\&#x0D;&#x0A;copy src\crt_debug.h include\ljcs\&#x0D;&#x0A;copy src\ljcs.h include\ljcs\&#x0D;&#x0A;"
+				CommandLine="copy src\ds.h include\ljcs\&#x0D;&#x0A;copy src\parser.h include\ljcs\&#x0D;&#x0A;copy src\skey.h include\ljcs\&#x0D;&#x0A;copy src\index.h include\ljcs\&#x0D;&#x0A;copy src\searcher.h include\ljcs\&#x0D;&#x0A;copy src\crt_debug.h include\ljcs\&#x0D;&#x0A;copy src\ljcs.h include\ljcs\&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -235,6 +235,14 @@
 		</File>
 		<File
 			RelativePath="src\ds_utils.h"
+			>
+		</File>
+		<File
+			RelativePath=".\src\index.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\src\index.h"
 			>
 		</File>
 		<File

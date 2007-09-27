@@ -5,6 +5,7 @@
 
 #include "LJCSPluginImpl.h"
 #include "LJCSPluginUtils.h"
+#include "LJCSEnv.h"
 
 #include "SetupDialog.h"
 
@@ -63,7 +64,7 @@ void LJCSPluginImpl::show_hint(DocPage& page
         return;
 
     MatchedSet mset;
-    ::search_keys(keys, mset, *file, line);
+	::search_keys(keys, mset, LJCSEnv::self().stree, file, line);
 
     int view_x = 0;
     int view_y = 0;
@@ -402,7 +403,7 @@ bool LJCSPluginImpl::on_button_release_event(GdkEventButton* event, DocPage* pag
 			return false;
 
 		MatchedSet mset;
-		::search_keys(keys, mset, *file, line);
+		::search_keys(keys, mset, LJCSEnv::self().stree, file, line);
 
 		cpp::Element* elem = find_best_matched_element(mset.elems);
 		if( elem != 0 ) {

@@ -7,15 +7,6 @@
 #include <sstream>
 #include <list>
 
-// TODO : 需要创建索引集概念了
-// 
-// parse还是只完成分析功能
-// 
-// search工作先创建索引集（如：stl, ace, xxxx, project）
-// 
-// search不再遍历include文件，而是直接在所引用的索引集中搜索
-// 
-
 #ifdef WIN32
 	#include <Windows.h>
 	
@@ -379,13 +370,20 @@ inline void loop_insert_nskey(SPathList& paths, SPath& path, const std::string& 
 
 class Searcher {
 public:
-	Searcher(IMatched& cb) : cb_(cb), searching_(false) {}
+	Searcher(cpp::STree& stree, IMatched& cb) : stree_(stree), cb_(cb), searching_(false) {}
 
-	void start(const std::string& path, cpp::File& file, size_t line = 0);
+	void start(const std::string& path, cpp::File* file=0, size_t line=0);
 
 	bool searching() const { return searching_; }
 
 	void stop() { searching_ = false; }
+
+	void add_matched(cpp::ElementSet& elems) {
+		cpp::ElementSet::iterator it = elems.begin();
+		cpp::ElementSet::iterator end = elems.end();
+		for( ; it!=end; ++it )
+			add_matched(*it);
+	}
 
 	void add_matched(cpp::Element* elem) {
 		assert( elem != 0 );
@@ -394,32 +392,27 @@ public:
 	}
 
 private:
-	void locate(cpp::Scope& scope, size_t line, const std::string& path);
+	void locate(cpp::File* file, size_t line, const std::string& path);
 
 	void do_locate(cpp::Scope& scope
 		, size_t line
 		, SPath& path
 		, bool& need_walk);
 
-	void walk(cpp::File* file, SPath& path);
+	void walk(SPath& path);
 
-	void do_walk(cpp::Scope& scope, SPath& path);
+	void do_walk(cpp::SNode& node, SPath& path);
 
 private:
 	SPathList				paths_;
 	std::set<std::string>	walked_spaths_;
-	std::set<cpp::Scope*>	walked_scopes_;
+	std::set<cpp::SNode*>	walked_nodes_;
+	cpp::STree&				stree_;
 	IMatched&				cb_;
 	bool					searching_;
-
-private:	// inner
-	// for walk()
-	typedef std::set<cpp::File*>			FileSet;
-
-	FileSet					__walked_;
 };
 
-void Searcher::start(const std::string& path, cpp::File& file, size_t line) {
+void Searcher::start(const std::string& path, cpp::File* file, size_t line) {
 	if( path.empty() )
 		return;
 
@@ -427,7 +420,7 @@ void Searcher::start(const std::string& path, cpp::File& file, size_t line) {
 	
 	ljdebug_time_count __count__(__search_call_time__);
 	
-	locate(file.scope, line, path);
+	locate(file, line, path);
 
 	std::string key;
 
@@ -440,15 +433,14 @@ void Searcher::start(const std::string& path, cpp::File& file, size_t line) {
 		if( walked_spaths_.find(key)==walked_spaths_.end() ) {
 			walked_spaths_.insert(key);
 
-			__walked_.clear();
-			walk(&file, *spath);
+			walk(*spath);
 		}
 
 		delete spath;
 	}
 }
 
-void Searcher::locate(cpp::Scope& scope, size_t line, const std::string& path) {
+void Searcher::locate(cpp::File* file, size_t line, const std::string& path) {
 	assert( !path.empty() );
 
 	SPath* spath = new SPath();
@@ -461,8 +453,8 @@ void Searcher::locate(cpp::Scope& scope, size_t line, const std::string& path) {
 	}
 
 	bool need_walk = true;
-	if( line != 0 && (*spath)[0].type!='R' )
-		do_locate(scope, line, *spath, need_walk);
+	if( file!=0 && line != 0 && (*spath)[0].type!='R' )
+		do_locate(file->scope, line, *spath, need_walk);
 
 	if( need_walk )
 		paths_.push_back(spath);
@@ -494,7 +486,9 @@ void Searcher::do_locate(cpp::Scope& scope
 				cpp::Function& r = (cpp::Function&)elem;
 				if( path.cur().type!='L' ) {
 					size_t pos = path.pos();
-					do_walk(r.impl, path);
+					cpp::STree fun_impl_stree;
+					fun_impl_stree.add(r.impl);
+					do_walk(fun_impl_stree.root(), path);
 					path.pos(pos);
 				}
 
@@ -572,64 +566,20 @@ void Searcher::do_locate(cpp::Scope& scope
 	}
 }
 
-void Searcher::walk(cpp::File* file, SPath& path) {
-	if( file==0 )
-		return;
-
-	if( __walked_.find(file) != __walked_.end() )
-		return;
-	__walked_.insert(file);
-
+void Searcher::walk(SPath& path) {
 	path.reset();
 
 	if( path.size() > 8 )
 		return;
 
-	assert( file != 0 );
-	do_walk(file->scope, path);
-
-	// search in implements file
-	size_t pos = file->filename.find_last_of('.');
-	if( pos!=file->filename.npos ) {
-		std::string str = file->filename;
-		size_t len = str.size() - pos;
-		if( len==2 ) {
-			if( str.compare(pos, len, ".h")==0 ) {
-				str.replace(pos, len, ".c");
-				walk( ParserEnviron::self().abspath_find_parsed(str), path );
-
-				str.append("pp");
-				walk( ParserEnviron::self().abspath_find_parsed(str), path );
-			}
-
-		} else if( len==3 ) {
-			if( str.compare(pos, len, ".hh")==0 ) {
-				str.replace(pos, len, ".cc");
-				walk( ParserEnviron::self().abspath_find_parsed(str), path );
-			}
-
-		} else if( len==4 ) {
-			if( str.compare(pos, len, ".hpp")==0 ) {
-				str.replace(pos, len, ".cpp");
-				walk( ParserEnviron::self().abspath_find_parsed(str), path );
-			}
-		}
-	}
-
-	// search in includes file
-	cpp::Includes::iterator it = file->includes.begin();
-	cpp::Includes::iterator end = file->includes.end();
-	for( ; searching() && (it != end); ++it ) {
-		assert( *it != 0 );
-		if( (*it)->include_file.empty() )
-			continue;
-
-		cpp::File* incfile = ParserEnviron::self().abspath_find_parsed((*it)->include_file);
-		walk( incfile, path );
-	}
+	do_walk(stree_.root(), path);
 }
 
-void Searcher::do_walk(cpp::Scope& scope, SPath& path) {
+void Searcher::do_walk(cpp::SNode& node, SPath& path) {
+	if( node.empty() )
+		return;
+	cpp::SMap& smap = node.sub();
+
     char type = path.cur().type;
 	if( type=='L' )
 		return;
@@ -641,18 +591,20 @@ void Searcher::do_walk(cpp::Scope& scope, SPath& path) {
     	type = path.cur().type;
 	}
 
-    if( walked_scopes_.find(&scope) == walked_scopes_.end() ) {
-        walked_scopes_.insert(&scope);
+    if( walked_nodes_.find(&node) == walked_nodes_.end() ) {
+        walked_nodes_.insert(&node);
 
 		if( type=='?' || type=='n' ) {
-			if( !scope.usings.empty() ) {
-				cpp::Usings::iterator ps = scope.usings.begin ();
-				cpp::Usings::iterator pe = scope.usings.end();
+			/*
+			if( !node.usings.empty() ) {
+				cpp::Usings::iterator ps = node.usings.begin ();
+				cpp::Usings::iterator pe = node.usings.end();
 				for( ; ps != pe; ++ps ) {
 					cpp::Using& elem = **ps;
 					loop_insert_nskey(paths_, path, elem.nskey);
 				}
 			}
+			*/
 		}
     }
 
@@ -663,23 +615,29 @@ void Searcher::do_walk(cpp::Scope& scope, SPath& path) {
 		if( path.has_next() )	// bad logic
 			return;
 
-		cpp::IndexMap::iterator it = scope.imap.begin();
-		cpp::IndexMap::iterator end = scope.imap.end();
+		cpp::SMap::iterator it = smap.begin();
+		cpp::SMap::iterator end = smap.end();
 		for( ; searching() && (it != end); ++it ) {
-			if( (*it)->size() < key.size() )
+			if( it->first.size() < key.size() )
 				continue;
 
-			if( (*it)->compare(0, key.size(), key)==0 )
-				add_matched(&scope.imap.get(it));
+			if( it->first.compare(0, key.size(), key)==0 )
+				add_matched(it->second.elems());
 		}
 
 		return;
 	}
 
-	cpp::IndexMap::iterator it = scope.imap.lower_bound(key);
-	cpp::IndexMap::iterator end = scope.imap.upper_bound(key);
+	cpp::SMap::iterator snode_iter = smap.find(key);
+	if( snode_iter==smap.end() )
+		return;
+	cpp::SNode& sub_node = snode_iter->second;
+
+	cpp::ElementSet::iterator it = sub_node.elems().begin();
+	cpp::ElementSet::iterator end = sub_node.elems().end();
 	for( ; searching() && (it != end); ++it ) {
-		cpp::Element& elem = scope.imap.get(it);
+		assert( *it != 0 );
+		cpp::Element& elem = **it;
 		if( !path.has_next() ) {
 			switch( elem.type ) {
 			case cpp::ET_USING:
@@ -694,13 +652,12 @@ void Searcher::do_walk(cpp::Scope& scope, SPath& path) {
 			continue;
 		}
 
-		cpp::Scope* sub = 0;
+		bool next_sign = false;
 
 		switch( elem.type ) {
 		case cpp::ET_NCSCOPE:
-			if( type=='?' || type=='t' || type=='n' ) {
-				sub = &(((cpp::NCScope&)elem).scope);
-			}
+			if( type=='?' || type=='t' || type=='n' )
+				next_sign = true;
 			break;
 		case cpp::ET_CLASS:
 			if( type=='?' || type=='t' ) {
@@ -713,18 +670,18 @@ void Searcher::do_walk(cpp::Scope& scope, SPath& path) {
 					loop_insert_typekey(paths_, path, *ps);
 					path.cur().type = type;
 				}
-				
-				sub = &r.scope;
+
+				next_sign = true;
 			}
 			break;
 		case cpp::ET_ENUM:
 			if( type=='?' || type=='t' ) {
-				sub = &(((cpp::Enum&)elem).scope);
+				next_sign = true;
 			}
 			break;
 		case cpp::ET_NAMESPACE:
 			if( type=='?' || type=='n' ) {
-				sub = &(((cpp::Namespace&)elem).scope);
+				next_sign = true;
 			}
 			break;
 		case cpp::ET_TYPEDEF:
@@ -750,13 +707,13 @@ void Searcher::do_walk(cpp::Scope& scope, SPath& path) {
 			break;
 		}
 
-		if( sub!=0 ) {
+		if( next_sign ) {
 			size_t old = path.pos();
 			path.next();
 			if( elem.type==cpp::ET_CLASS && path.cur().type=='L' && path.has_next() )
 				path.next();
 					
-			do_walk(*sub, path);
+			do_walk(sub_node, path);
 			path.pos(old);
 		}
 	}
@@ -768,18 +725,15 @@ void Searcher::do_walk(cpp::Scope& scope, SPath& path) {
 // 
 void search( const std::string& key
 	, IMatched& cb
-	, cpp::File& file
-	, size_t line )
+	, cpp::STree& stree
+	, cpp::File* file
+	, size_t line)
 {
-	Searcher searcher(cb);
+	Searcher searcher(stree, cb);
 
 	__search_call_time__ = 0;
 
 	searcher.start(key, file, line);
-	
-	//ljdebug_trace(...);
-	
-	//printf("search : %d\n", __search_call_time__);
 
 #ifdef WIN32
 	char buf[512];
@@ -788,7 +742,12 @@ void search( const std::string& key
 #endif
 }
 
-void search_keys(const StrVector& keys, IMatched& cb, cpp::File& file, size_t line) {
+void search_keys( const StrVector& keys
+	, IMatched& cb
+	, cpp::STree& stree
+	, cpp::File* file
+	, size_t line )
+{
 	MatchedSet mset;
 
 	// search
@@ -796,7 +755,7 @@ void search_keys(const StrVector& keys, IMatched& cb, cpp::File& file, size_t li
 		StrVector::const_iterator it = keys.begin();
 		StrVector::const_iterator end = keys.end();
 		for( ; it!=end; ++it )
-			search(*it, mset, file, line);
+			search(*it, mset, stree, file, line);
 	}
 
 	// return

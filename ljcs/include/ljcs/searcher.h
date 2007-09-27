@@ -6,6 +6,7 @@
 
 #include "ds.h"
 #include "parser.h"
+#include "index.h"
 
 class IMatched {
 public:
@@ -33,10 +34,15 @@ public:
 
 void search( const std::string& key
 	, IMatched& cb
-	, cpp::File& file
-	, size_t line = 0);
+	, cpp::STree& stree
+	, cpp::File* file=0
+	, size_t line=0 );
 
-void search_keys(const StrVector& keys, IMatched& cb, cpp::File& file, size_t line=0);
+void search_keys( const StrVector& keys
+	, IMatched& cb
+	, cpp::STree& stree
+	, cpp::File* file=0
+	, size_t line=0 );
 
 #endif//LJCS_SEARCHER_H
 

@@ -8,7 +8,7 @@
 #include <sstream>
 
 #include "LJCSPluginUtils.h"
-
+#include "LJCSEnv.h"
 
 PreviewPage::PreviewPage(LJEditor& editor)
     : editor_(editor)
@@ -277,7 +277,7 @@ void PreviewPage::search_thread() {
 		if( !sc.key_text.empty() && sc.key_text!=sc.key )
 			keys.push_back(sc.key_text);
 
-		::search_keys(keys, mset, *sc.file, sc.line);
+		::search_keys(keys, mset, LJCSEnv::self().stree, sc.file, sc.line);
 
 		pthread_mutex_lock(&search_result_mutex_);
 		cpp::unref_all_elems(elems_);
