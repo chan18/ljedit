@@ -328,7 +328,19 @@
 			</Filter>
 		</Filter>
 		<File
+			RelativePath=".\ljedit.ico"
+			>
+		</File>
+		<File
+			RelativePath=".\ljedit.rc"
+			>
+		</File>
+		<File
 			RelativePath=".\readme.txt"
+			>
+		</File>
+		<File
+			RelativePath=".\resource.h"
 			>
 		</File>
 		<File
