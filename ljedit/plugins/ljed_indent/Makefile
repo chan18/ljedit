@@ -2,8 +2,8 @@
 # 
 
 CXX = g++
-CXXFLAGS = -pthread -g -fpic
-#CXXFLAGS = -pthread -o2 -DNDEBUG -fpic
+#CXXFLAGS = -pthread -g -fpic
+CXXFLAGS = -pthread -o2 -DNDEBUG -fpic
 
 GTKMMFLAGS = `pkg-config --cflags libgtksourceviewmm-1.0`
 CXXFLAGS += $(GTKMMFLAGS)

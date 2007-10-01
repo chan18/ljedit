@@ -12,7 +12,7 @@ public:
     virtual const char* get_plugin_name() { return "LJHello"; }
 
 protected:
-    virtual bool on_create(const char* plugin_filename)  {
+    virtual bool on_create(const char* plugin_filename) {
         /*
         Gtk::MessageDialog dlg(__FUNCTION__, false, Gtk::MESSAGE_INFO);
         dlg.set_title("LJHello");

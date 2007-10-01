@@ -2,8 +2,8 @@
 # 
 
 CXX = g++
-CXXFLAGS = -pthread -g -Iinclude
-#CXXFLAGS = -pthread -o2 -DNDEBUG -Iinclude
+#CXXFLAGS = -pthread -g -Iinclude
+CXXFLAGS = -pthread -o2 -DNDEBUG -Iinclude
 
 # gtkmm & sourceviewmm
 # 

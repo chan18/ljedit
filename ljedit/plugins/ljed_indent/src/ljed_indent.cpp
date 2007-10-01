@@ -12,7 +12,7 @@ public:
     virtual const char* get_plugin_name() { return "LJIndent"; }
 
 protected:
-    virtual bool on_create(const char* plugin_filename)  {
+    virtual bool on_create(const char* plugin_filename) {
 		// menu
 		action_group_ = Gtk::ActionGroup::create("IndentActions");
 
