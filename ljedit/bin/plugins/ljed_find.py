@@ -27,8 +27,10 @@ def find_in_file(results, find_text, filepath):
 		return
 		
 	for line, text in enumerate(lines):
-		if find_text in text:
-			results.append([filepath, line+1, text.strip(), 0])
+		offset = text.find(find_text)
+		if offset < 0:
+			continue
+		results.append([filepath, line+1, text.strip(), offset])
 
 def find_in_opened_file(results, find_text, page_num):
 	if page_num >= 0:
