@@ -27,9 +27,11 @@ public:
 		{ return ((DocPageImpl&)child); }
 
     virtual void create_new_file();
+	virtual void show_open_dialog();
     virtual void open_file(const std::string& filepath, int line=0, int line_offset=0);
     virtual bool locate_file(const std::string& filepath, int line=0, int line_offset=0);
     virtual void save_current_file();
+	virtual void save_current_file_as();
     virtual void close_current_file();
     virtual void save_all_files();
     virtual void close_all_files();
@@ -43,7 +45,7 @@ public:
 	void pos_back();
 
 protected:
-    bool save_page(DocPageImpl& page);
+    bool save_page(DocPageImpl& page, bool is_save_as);
     bool open_page(const std::string filepath
         , const std::string& displaty_name
         , const Glib::ustring* text = 0

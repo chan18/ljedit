@@ -96,10 +96,11 @@ void MainWindowImpl::create_ui_manager(const std::string& config_file) {
 
 	// file menu
     action_group_->add( Gtk::Action::create("New",         Gtk::Stock::NEW,        "_New",        "Create a new file"),                                         sigc::mem_fun(doc_manager_, &DocManager::create_new_file) );
-    action_group_->add( Gtk::Action::create("Open",        Gtk::Stock::OPEN,       "_Open",       "Open a file"),                                               sigc::mem_fun(this, &MainWindowImpl::on_file_open) );
+    action_group_->add( Gtk::Action::create("Open",        Gtk::Stock::OPEN,       "_Open",       "Open a file"),                                               sigc::mem_fun(doc_manager_, &DocManager::show_open_dialog) );
     action_group_->add( Gtk::Action::create("Save",        Gtk::Stock::SAVE,       "_Save",       "Save current file"),                                         sigc::mem_fun(doc_manager_, &DocManager::save_current_file) );
-    action_group_->add( Gtk::Action::create("SaveAs",      Gtk::Stock::SAVE,       "Save _As...", "Save to a file"),                                            sigc::mem_fun(this, &MainWindowImpl::on_file_save_as) );
+    action_group_->add( Gtk::Action::create("SaveAs",      Gtk::Stock::SAVE,       "Save _As...", "Save to a file"),       Gtk::AccelKey("<control><shift>S"),  sigc::mem_fun(doc_manager_, &DocManager::save_current_file_as) );
     action_group_->add( Gtk::Action::create("Close",       Gtk::Stock::CLOSE,      "_Close",      "Close current file"),                                        sigc::mem_fun(doc_manager_, &DocManager::close_current_file) );
+
     action_group_->add( Gtk::Action::create("Quit",        Gtk::Stock::QUIT,       "_Quit",       "Quit"),                                                      sigc::mem_fun(this, &MainWindowImpl::on_file_quit) );
 
 	// edit menu
@@ -127,29 +128,10 @@ void MainWindowImpl::destroy() {
 	doc_manager_.close_all_files();
 }
 
-void MainWindowImpl::on_file_open() {
-    Gtk::FileChooserDialog dlg("open...");
-    dlg.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
-    dlg.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
-    dlg.set_select_multiple();
-    if( dlg.run()!=Gtk::RESPONSE_OK )
-        return;
-
-    Glib::SListHandle<Glib::ustring> filenames = dlg.get_filenames();
-    Glib::SListHandle<Glib::ustring>::iterator it = filenames.begin();
-    Glib::SListHandle<Glib::ustring>::iterator end = filenames.end();
-    for( ; it!=end; ++it )
-        doc_manager_.open_file(*it);
-}
-
-void MainWindowImpl::on_file_save_as() {
-    Gtk::MessageDialog(*this, __FUNCTION__).run();
-}
-
 void MainWindowImpl::on_file_quit() {
 	destroy();
 
-	Gtk::Main::quit();
+	hide();
 }
 
 void MainWindowImpl::on_edit_find() {
@@ -208,6 +190,10 @@ void MainWindowImpl::on_view_bottom() {
 
 
 void MainWindowImpl::on_help_about() {
-    Gtk::MessageDialog(*this, __FUNCTION__).run();
+	const char* info = "welcome to use ljedit!\n"
+		"\n"
+		"homepage - <span  foreground='blue'><u>http://ljedit.googlecode.com</u></span>";
+
+	Gtk::MessageDialog(info, true, Gtk::MESSAGE_INFO).run();
 }
 

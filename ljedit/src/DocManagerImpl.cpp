@@ -19,12 +19,6 @@ DocManagerImpl::~DocManagerImpl() {
     close_all_files();
 }
 
-void DocManagerImpl::create_new_file() {
-    static std::string noname = "noname";
-
-    open_page("", noname);
-}
-
 void DocManagerImpl::locate_page_line(int page_num, int line, int line_offset, bool record_pos) {
     if( locate_page_num_ < 0 ) {
         locate_page_num_ = page_num;
@@ -81,6 +75,27 @@ bool DocManagerImpl::scroll_to_file_pos() {
 			pos_add(*page, locate_line_num_, locate_line_offset_);
     }
     return false;
+}
+
+void DocManagerImpl::create_new_file() {
+    static std::string noname = "noname";
+
+    open_page("", noname);
+}
+
+void DocManagerImpl::show_open_dialog() {
+    Gtk::FileChooserDialog dlg("open...");
+    dlg.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
+    dlg.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+    dlg.set_select_multiple();
+    if( dlg.run()!=Gtk::RESPONSE_OK )
+        return;
+
+    Glib::SListHandle<Glib::ustring> filenames = dlg.get_filenames();
+    Glib::SListHandle<Glib::ustring>::iterator it = filenames.begin();
+    Glib::SListHandle<Glib::ustring>::iterator end = filenames.end();
+    for( ; it!=end; ++it )
+        open_file(*it);
 }
 
 void DocManagerImpl::open_file(const std::string& filepath, int line, int line_offset) {
@@ -171,18 +186,18 @@ bool DocManagerImpl::open_page(const std::string filepath
     return true;
 }
 
-bool DocManagerImpl::save_page(DocPageImpl& page) {
-    if( !page.modified() )
-        return true;
-
+bool DocManagerImpl::save_page(DocPageImpl& page, bool is_save_as) {
     Glib::ustring& filepath = page.filepath();
-    if( filepath.empty() ) {
-        Gtk::FileChooserDialog dlg("save...", Gtk::FILE_CHOOSER_ACTION_SAVE);
+	if( is_save_as ) {
+        Gtk::FileChooserDialog dlg("save as ...", Gtk::FILE_CHOOSER_ACTION_SAVE);
         dlg.add_button(Gtk::Stock::SAVE_AS, Gtk::RESPONSE_OK);
         dlg.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
         if( dlg.run()!=Gtk::RESPONSE_OK )
             return true;
         filepath = dlg.get_filename();
+
+		Glib::ustring u_display_name = Glib::path_get_basename(filepath);
+		page.label().set_text(u_display_name);
     }
 
     try {
@@ -205,7 +220,19 @@ void DocManagerImpl::save_current_file() {
     Gtk::Widget* widget = get_current()->get_child();
     if( widget==0 )
         return;
-    save_page( *((DocPageImpl*)widget) );
+
+	DocPageImpl& page = *((DocPageImpl*)widget);
+    if( !page.modified() )
+        return;
+
+    save_page( page, page.filepath().empty() );
+}
+
+void DocManagerImpl::save_current_file_as() {
+    Gtk::Widget* widget = get_current()->get_child();
+    if( widget==0 )
+        return;
+    save_page( *((DocPageImpl*)widget), true );
 }
 
 void DocManagerImpl::close_current_file() {
@@ -223,7 +250,11 @@ void DocManagerImpl::save_all_files() {
         Gtk::Widget* widget = get_current()->get_child();
         assert( widget != 0 );
 
-        save_page( *(DocPageImpl*)(it->get_child()) );
+		DocPageImpl& page = *((DocPageImpl*)widget);
+		if( !page.modified() )
+			continue;
+
+		save_page( page, page.filepath().empty() );
     }
 }
 
