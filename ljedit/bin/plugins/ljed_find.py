@@ -19,8 +19,14 @@ UI_INFO = """	<ui>
 """
 
 def find_in_file(results, find_text, filepath):
-	f = open(filepath, 'r')
-	for line, text in enumerate(f.readlines()):
+	try:
+		f = open(filepath, 'r')
+		lines = f.readlines()
+		f.close()
+	except Exception:
+		return
+		
+	for line, text in enumerate(lines):
 		if find_text in text:
 			results.append([filepath, line+1, text.strip(), 0])
 
