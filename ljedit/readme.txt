@@ -18,8 +18,9 @@
 	* windows - vc8
 		pthread-win32
 		gtk-dev-2.10.11-win32-1.exe
-		gtkmm-win32-devel-2.10.8-1.exe
-		gtksourceview-1.0-win-port-dev.rar (include gtksourceviewmm static library for vc8) http://groups.google.com/group/freeLJ/files
+		gtkmm-win32-devel-2.10.11-1.exe
+		gtksourceview-1.8.5			http://ftp.gnome.org/pub/GNOME/binaries/win32/gtksourceview/1.8/
+		gtksourceviewmm-vc8.rar			http://ljedit.googlecode.com/files/gtksourceviewmm-vc8-src.rar
 		
 		# if need use python plugin engine
 			python-2.5.1
