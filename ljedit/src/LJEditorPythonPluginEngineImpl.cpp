@@ -55,7 +55,8 @@ PyObject* ljedit_doc_manager_open_file(PyObject* self, PyObject* args) {
 	PyObject* py_c_ljedit = 0;
 	const char* filepath = 0;
 	int line = 0;
-	if(!PyArg_ParseTuple(args, "Osi:ljedit_doc_manager_open_file", &py_c_ljedit, &filepath, &line))
+	int offset = 0;
+	if(!PyArg_ParseTuple(args, "Osii:ljedit_doc_manager_open_file", &py_c_ljedit, &filepath, &line, &offset))
 		return 0;
 
 	LJEditorImpl* ljedit = (LJEditorImpl*)PyCObject_AsVoidPtr(py_c_ljedit);
@@ -65,7 +66,7 @@ PyObject* ljedit_doc_manager_open_file(PyObject* self, PyObject* args) {
 		return 0;
 	}
 
-	ljedit->main_window().doc_manager().open_file(filepath, line);
+	ljedit->main_window().doc_manager().open_file(filepath, line, offset);
 
 	Py_INCREF(Py_None);
 	return Py_None;

@@ -159,7 +159,7 @@ class FindWindow:
 	def on_ResultView_row_activated(self, treeview, path, column):
 		iter = self.result_model.get_iter(path)
 		file, line, text, offset = self.result_model[iter]
-		ljedit.main_window.doc_manager.open_file(file, line-1)
+		ljedit.main_window.doc_manager.open_file(file, line-1, offset)
 
 find_window = FindWindow()
 
