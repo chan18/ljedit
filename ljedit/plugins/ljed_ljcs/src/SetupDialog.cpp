@@ -91,9 +91,9 @@ void load_includes(const std::string& includes) {
 
 std::string get_config_filepath(const std::string& plugin_path) {
 	#ifdef WIN32
-		return Glib::build_filename(plugin_path, "ljcs.conf");
+		return Glib::build_filename(plugin_path, ".ljcs.conf");
 	#else
-		return Glib::build_filename(Glib::get_home_dir(), "ljcs.conf");
+		return Glib::build_filename(Glib::get_home_dir(), ".ljcs.conf");
 	#endif
 }
 
