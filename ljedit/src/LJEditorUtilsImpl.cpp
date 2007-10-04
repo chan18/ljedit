@@ -30,7 +30,7 @@ LJEditorUtilsImpl::LJEditorUtilsImpl() {
 #ifdef WIN32
 	//font_ = "simsun 9";
 #else
-	font_ = "Courier 10 Pitch";
+	font_ = "Courier 10 Pitch 10";
 #endif
 }
 
