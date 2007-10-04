@@ -26,13 +26,21 @@ TStrCoderList init_coders() {
 	return coders;
 }
 
+LJEditorUtilsImpl::LJEditorUtilsImpl() {
+#ifdef WIN32
+	//font_ = "simsun 9";
+#else
+	font_ = "Courier 10 Pitch";
+#endif
+}
+
+LJEditorUtilsImpl::~LJEditorUtilsImpl() {
+}
+
 gtksourceview::SourceView* LJEditorUtilsImpl::create_gtk_source_view() {
     gtksourceview::SourceView* view = new gtksourceview::SourceView();
     if( view != 0 ) {
-		
-#ifndef WIN32
-		view->modify_font(Pango::FontDescription("Courier 10 Pitch"));
-#endif
+		view->modify_font(Pango::FontDescription(font_));
 		view->set_wrap_mode(Gtk::WRAP_NONE);
         view->set_tabs_width(4);
     }

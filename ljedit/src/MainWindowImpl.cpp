@@ -6,6 +6,7 @@
 #include "MainWindowImpl.h"
 
 #include "RuntimeException.h"
+#include "LJEditorUtilsImpl.h"
 
 
 MainWindowImpl::MainWindowImpl()
@@ -85,12 +86,13 @@ void MainWindowImpl::create(const std::string& path) {
 }
 
 void MainWindowImpl::create_ui_manager(const std::string& config_file) {
-    action_group_ = Gtk::ActionGroup::create("Actions");
+    action_group_ = Gtk::ActionGroup::create("LJEditActions");
 
 	// main menu
     action_group_->add( Gtk::Action::create("FileMenu", "_File") );
     action_group_->add( Gtk::Action::create("EditMenu", "_Edit") );
     action_group_->add( Gtk::Action::create("ViewMenu", "_View") );
+    action_group_->add( Gtk::Action::create("ToolsMenu", "_Tools") );
     action_group_->add( Gtk::Action::create("PluginsMenu", "_Plugins") );
     action_group_->add( Gtk::Action::create("HelpMenu", "_Help") );
 
@@ -110,18 +112,39 @@ void MainWindowImpl::create_ui_manager(const std::string& config_file) {
 	action_group_->add( Gtk::Action::create("GoForward",   Gtk::Stock::GO_FORWARD, "Go_Forward",  "Go forward position"),	                                    sigc::mem_fun(doc_manager_, &DocManagerImpl::pos_forward) );
 
 	// view menu
+	action_group_->add( Gtk::ToggleAction::create("FullScreen",   Gtk::Stock::INFO, "FullScreen",   "Set/Unset fullscreen",  false), Gtk::AccelKey("F11"),      sigc::mem_fun(this, &MainWindowImpl::on_view_fullscreen) );
+
 	action_group_->add( Gtk::ToggleAction::create("LeftPanel",   Gtk::Stock::INFO, "LeftPanel",   "Show/Hide left panel",    true),                             sigc::mem_fun(this, &MainWindowImpl::on_view_left) );
 	action_group_->add( Gtk::ToggleAction::create("RightPanel",  Gtk::Stock::INFO, "RightPanel",  "Show/Hide right panel",   true),	                            sigc::mem_fun(this, &MainWindowImpl::on_view_right) );
 	action_group_->add( Gtk::ToggleAction::create("BottomPanel", Gtk::Stock::INFO, "BottomPanel", "Show/Hide bottom panel",  true),	                            sigc::mem_fun(this, &MainWindowImpl::on_view_bottom) );
 
-	// help menu
-    action_group_->add( Gtk::Action::create("About",       Gtk::Stock::ABOUT,      "About",       "About"),				                                        sigc::mem_fun(this, &MainWindowImpl::on_help_about) );
+	//action_group_->add( Gtk::Action::create("NextDocPage", "_Next Document"), Gtk::AccelKey("<control>Tab"), sigc::bind(sigc::mem_fun(this, &MainWindowImpl::bottom_panel_active_page), 2) );
+	action_group_->add( Gtk::Action::create("BottomPages", "Bottom Pages") );
+	{
+		// view menu / bottom pages
+		action_group_->add( Gtk::Action::create("BottomPage1", "bottom page _1"), Gtk::AccelKey("<control>1"), sigc::bind(sigc::mem_fun(this, &MainWindowImpl::bottom_panel_active_page), 0) );
+		action_group_->add( Gtk::Action::create("BottomPage2", "bottom page _2"), Gtk::AccelKey("<control>2"), sigc::bind(sigc::mem_fun(this, &MainWindowImpl::bottom_panel_active_page), 1) );
+		action_group_->add( Gtk::Action::create("BottomPage3", "bottom page _3"), Gtk::AccelKey("<control>3"), sigc::bind(sigc::mem_fun(this, &MainWindowImpl::bottom_panel_active_page), 2) );
+		action_group_->add( Gtk::Action::create("BottomPage4", "bottom page _4"), Gtk::AccelKey("<control>4"), sigc::bind(sigc::mem_fun(this, &MainWindowImpl::bottom_panel_active_page), 3) );
+		action_group_->add( Gtk::Action::create("BottomPage5", "bottom page _5"), Gtk::AccelKey("<control>5"), sigc::bind(sigc::mem_fun(this, &MainWindowImpl::bottom_panel_active_page), 4) );
+		action_group_->add( Gtk::Action::create("BottomPage6", "bottom page _6"), Gtk::AccelKey("<control>6"), sigc::bind(sigc::mem_fun(this, &MainWindowImpl::bottom_panel_active_page), 5) );
+		action_group_->add( Gtk::Action::create("BottomPage7", "bottom page _7"), Gtk::AccelKey("<control>7"), sigc::bind(sigc::mem_fun(this, &MainWindowImpl::bottom_panel_active_page), 6) );
+		action_group_->add( Gtk::Action::create("BottomPage8", "bottom page _8"), Gtk::AccelKey("<control>8"), sigc::bind(sigc::mem_fun(this, &MainWindowImpl::bottom_panel_active_page), 7) );
+		action_group_->add( Gtk::Action::create("BottomPage9", "bottom page _9"), Gtk::AccelKey("<control>9"), sigc::bind(sigc::mem_fun(this, &MainWindowImpl::bottom_panel_active_page), 8) );
+		action_group_->add( Gtk::Action::create("BottomPage0", "bottom page _0"), Gtk::AccelKey("<control>0"), sigc::bind(sigc::mem_fun(this, &MainWindowImpl::bottom_panel_active_page), 9) );
+	}
 
-    ui_manager_ = Gtk::UIManager::create();
+	// tools menu
+	action_group_->add( Gtk::Action::create("Font",    "_Font",       "Font"),    sigc::mem_fun(this, &MainWindowImpl::on_tools_font) );
+	action_group_->add( Gtk::Action::create("Options", "_Options...", "Options"), sigc::mem_fun(this, &MainWindowImpl::on_tools_options) );
+
+	// help menu
+    action_group_->add( Gtk::Action::create("About", Gtk::Stock::ABOUT, "About", "About"), sigc::mem_fun(this, &MainWindowImpl::on_help_about) );
+
+	ui_manager_ = Gtk::UIManager::create();
+    ui_manager_->add_ui_from_file(config_file);
     ui_manager_->insert_action_group(action_group_);
     add_accel_group( ui_manager_->get_accel_group() );
-
-    ui_manager_->add_ui_from_file(config_file);
 }
 
 void MainWindowImpl::destroy() {
@@ -164,13 +187,22 @@ void MainWindowImpl::on_edit_goto() {
 	cmd_line_.active(&cmd_cb_goto_, x, y, view);
 }
 
+void MainWindowImpl::on_view_fullscreen() {
+	// now easy implement
+	static bool is_fullscreen = false;
+	is_fullscreen = !is_fullscreen;
+	if( is_fullscreen )
+		fullscreen();
+	else
+		unfullscreen();
+}
+
 void MainWindowImpl::on_view_left() {
 	if( left_panel_.is_visible() )
 		left_panel_.hide();
 	else
 		left_panel_.show();
 }
-
 
 void MainWindowImpl::on_view_right() {
 	if( right_panel_.is_visible() )
@@ -179,7 +211,6 @@ void MainWindowImpl::on_view_right() {
 		right_panel_.show();
 }
 
-
 void MainWindowImpl::on_view_bottom() {
 	if( bottom_panel_.is_visible() )
 		bottom_panel_.hide();
@@ -187,7 +218,21 @@ void MainWindowImpl::on_view_bottom() {
 		bottom_panel_.show();
 }
 
+void MainWindowImpl::on_tools_font() {
+	Gtk::FontSelectionDialog dlg("seletct font...");
 
+	if( !LJEditorUtilsImpl::self().font().empty() )
+		dlg.set_font_name(LJEditorUtilsImpl::self().font());
+
+	if( dlg.run()==Gtk::RESPONSE_OK ) {
+		LJEditorUtilsImpl::self().font() = dlg.get_font_name();
+		doc_manager_.modify_all_views_font(dlg.get_font_name());
+	}
+}
+
+void MainWindowImpl::on_tools_options() {
+	Gtk::MessageDialog("not implement", true, Gtk::MESSAGE_INFO).run();
+}
 
 void MainWindowImpl::on_help_about() {
 	const char* info = "welcome to use ljedit!\n"
@@ -195,5 +240,9 @@ void MainWindowImpl::on_help_about() {
 		"homepage - <span  foreground='blue'><u>http://ljedit.googlecode.com</u></span>";
 
 	Gtk::MessageDialog(info, true, Gtk::MESSAGE_INFO).run();
+}
+
+void MainWindowImpl::bottom_panel_active_page(int page_id) {
+	bottom_panel_.set_current_page(page_id);
 }
 

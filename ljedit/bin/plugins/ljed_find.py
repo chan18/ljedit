@@ -4,7 +4,7 @@
 import ljedit
 
 import os
-import gtk
+import gobject, gtk
 from gtk import glade
 
 GLADE_FILE = os.path.join(os.path.dirname(__file__), 'find.glade')
@@ -56,7 +56,6 @@ class FindWindow:
 		callbacks = {
 			  'on_FindPanel_FindNextButton_clicked'		: self.on_FindNextButton_clicked
 			, 'on_FindPanel_ResultView_row_activated'	: self.on_ResultView_row_activated
-			, 'on_FindPanel_FindText_key_press_event'	: self.on_FindText_key_press_event
 		}
 		
 		wtree = glade.XML(GLADE_FILE, 'FindPanel')
@@ -90,7 +89,12 @@ class FindWindow:
 		self.menu_id = ui_manager.add_ui_from_string(UI_INFO)
 		ui_manager.ensure_update()
 		
+		# on active
+		self.switch_id = ljedit.main_window.bottom_panel.connect('switch_page', self.on_switch_page)
+		self.find_text_entry.get_child().connect('key_press_event', self.on_FindText_key_press)
+		
 	def free(self):
+		ljedit.main_window.bottom_panel.disconnect(self.switch_id)
 		ljedit.main_window.ui_manager.remove_ui(self.menu_id)
 		
 	def set_results(self, results):
@@ -147,16 +151,22 @@ class FindWindow:
 			
 		self.set_results(results)
 		
-	def on_FindPanel_activate(self, action):
-		ljedit.main_window.bottom_panel.set_current_page(find_window.page_id)
-		self.find_text_entry.grab_focus()
+	def on_switch_page(self, notebook, page, page_num):
+		if page_num==self.page_num:
+			gobject.idle_add(self.find_text_entry.grab_focus)
 		
-	def on_FindText_key_press_event(self, *args):
-		print args
-		self.do_find()
+	def on_FindPanel_activate(self, action):
+		ljedit.main_window.bottom_panel.set_current_page(find_window.page_num)
+		self.find_text_entry.grab_focus()
 		
 	def on_FindNextButton_clicked(self, widget):
 		self.do_find()
+		
+	def on_FindText_key_press(self, widget, event):
+		#print event.keyval, event.string, hex(event.keyval)
+		if event.keyval==gtk.keysyms.Return:
+			self.do_find()
+		return False
 		
 	def on_ResultView_row_activated(self, treeview, path, column):
 		iter = self.result_model.get_iter(path)
@@ -167,10 +177,10 @@ find_window = FindWindow()
 
 def active():
 	bottom = ljedit.main_window.bottom_panel
-	find_window.page_id = bottom.append_page(find_window.panel, gtk.Label('Find'))
+	find_window.page_num = bottom.append_page(find_window.panel, gtk.Label('Find'))
 
 def deactive():
 	find_window.free()
 	bottom = ljedit.main_window.bottom_panel
-	bottom.remove_page(find_window.page_id)
+	bottom.remove_page(find_window.page_num)
 

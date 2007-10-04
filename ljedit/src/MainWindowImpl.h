@@ -41,11 +41,17 @@ private:
 	void on_edit_find();
 	void on_edit_goto();
 
+	void on_view_fullscreen();
 	void on_view_left();
 	void on_view_right();
 	void on_view_bottom();
 
+	void on_tools_options();
+	void on_tools_font();
+
     void on_help_about();
+
+	void bottom_panel_active_page(int page_id);
 
 private:
     Glib::RefPtr<Gtk::UIManager>	ui_manager_;

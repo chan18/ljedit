@@ -19,9 +19,12 @@ public:
 
 	virtual void destroy_gtk_source_view(gtksourceview::SourceView* view);
 
+	const Glib::ustring& font() const	{ return font_; }
+	Glib::ustring& font()				{ return font_; }
+
 private:
-    LJEditorUtilsImpl() {}
-    ~LJEditorUtilsImpl() {}
+    LJEditorUtilsImpl();
+    ~LJEditorUtilsImpl();
 
     LJEditorUtilsImpl(const LJEditorUtilsImpl&);
     LJEditorUtilsImpl& operator = (const LJEditorUtilsImpl&);
@@ -30,6 +33,9 @@ private:
 	virtual Glib::RefPtr<gtksourceview::SourceLanguagesManager> do_get_source_language_manager();
 
 	virtual bool do_load_file(Glib::ustring& out, const std::string& filename);
+
+private:
+	Glib::ustring font_;
 };
 
 #endif//LJED_INC_LJEDITORUTILSIMPL_H

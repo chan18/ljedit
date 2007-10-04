@@ -56,10 +56,6 @@ DocPageImpl* DocPageImpl::create(const std::string& filepath
 	buffer->set_highlight();
 	buffer->set_max_undo_levels(1024);
 
-#ifndef WIN32
-	view->modify_font(Pango::FontDescription("Courier 10 Pitch"));
-#endif
-
 	view->set_highlight_current_line(true);
     view->set_wrap_mode(Gtk::WRAP_NONE);
     view->set_tabs_width(4);

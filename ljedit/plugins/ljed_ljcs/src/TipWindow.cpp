@@ -39,7 +39,7 @@ void TipWindow::create() {
 	infos_view_->set_cursor_visible(false);
 
 	Gdk::Color bg_color;
-	bg_color.set_rgb_p(0.9, 0.9, 0.7);
+	bg_color.set_rgb_p(0.96, 0.96, 1.0);
 	infos_view_->modify_base(Gtk::STATE_NORMAL, bg_color);
 
 	Gtk::ScrolledWindow* sw = Gtk::manage(new Gtk::ScrolledWindow());

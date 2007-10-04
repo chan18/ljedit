@@ -56,9 +56,11 @@ void PreviewPage::create() {
 	view_->set_show_line_numbers(true);
 	view_->set_editable(false);
 
+	/*
 	Gdk::Color bg_color;
 	bg_color.set_rgb_p(0.9, 0.9, 0.7);
 	view_->modify_base(Gtk::STATE_NORMAL, bg_color);
+	*/
 
 	view_->signal_button_release_event().connect( sigc::mem_fun(this, &PreviewPage::on_sourceview_button_release_event), false );
 

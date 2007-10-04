@@ -26,9 +26,32 @@
       <separator/>
     </menu>
     <menu action='ViewMenu'>
+      <menuitem action='FullScreen'/>
+      <separator/>
       <menuitem action='LeftPanel'/>
       <menuitem action='RightPanel'/>
       <menuitem action='BottomPanel'/>
+      <!--
+      <separator/>
+      <menuitem action='NextDocPage'/>
+      -->
+      <separator/>
+      <menu action='BottomPages'>
+        <menuitem action='BottomPage1'/>
+        <menuitem action='BottomPage2'/>
+        <menuitem action='BottomPage3'/>
+        <menuitem action='BottomPage4'/>
+        <menuitem action='BottomPage5'/>
+        <menuitem action='BottomPage6'/>
+        <menuitem action='BottomPage7'/>
+        <menuitem action='BottomPage8'/>
+        <menuitem action='BottomPage9'/>
+        <menuitem action='BottomPage0'/>
+      </menu>
+    </menu>
+    <menu action='ToolsMenu'>
+      <menuitem action='Font'/>
+      <menuitem action='Options'/>
     </menu>
     <menu action='PluginsMenu'>
     </menu>

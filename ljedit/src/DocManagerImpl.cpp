@@ -247,7 +247,7 @@ void DocManagerImpl::save_all_files() {
     PageList::iterator it = pages().begin();
     PageList::iterator end = pages().end();
     for( ; it!=end; ++it ) {
-        Gtk::Widget* widget = get_current()->get_child();
+        Gtk::Widget* widget = it->get_child();
         assert( widget != 0 );
 
 		DocPageImpl& page = *((DocPageImpl*)widget);
@@ -387,5 +387,19 @@ void DocManagerImpl::pos_back() {
 
 	pos_cur_ = pos_cur_->prev;
 	locate_page_line(page_num(*pos_cur_->page), pos_cur_->line, pos_cur_->lpos, false);
+}
+
+void DocManagerImpl::modify_all_views_font(const Glib::ustring& font) {
+	Pango::FontDescription font_desc(font);
+
+    PageList::iterator it = pages().begin();
+    PageList::iterator end = pages().end();
+    for( ; it!=end; ++it ) {
+        Gtk::Widget* widget = it->get_child();
+        assert( widget != 0 );
+
+		DocPageImpl& page = *((DocPageImpl*)widget);
+		page.view().modify_font(font_desc);
+    }
 }
 

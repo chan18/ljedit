@@ -44,6 +44,8 @@ public:
 	void pos_forward();
 	void pos_back();
 
+	void modify_all_views_font(const Glib::ustring& font);
+
 protected:
     bool save_page(DocPageImpl& page, bool is_save_as);
     bool open_page(const std::string filepath
