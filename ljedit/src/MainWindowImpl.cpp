@@ -152,8 +152,6 @@ void MainWindowImpl::destroy() {
 }
 
 void MainWindowImpl::on_file_quit() {
-	destroy();
-
 	hide();
 }
 

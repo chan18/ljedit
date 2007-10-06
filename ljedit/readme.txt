@@ -1,13 +1,19 @@
 
 1. how to setup develop environment?
 
-	* linux(ubuntu 7.04) - gcc
+	* linux(ubuntu 7.10) - gcc
 		libpthread-dev
 		libgtk-dev
 		libgtkmm-dev
 		libglademm-dev
-		libsourceview-dev
-		libsourceviewmm-dev
+		libsourceview-2.0-dev
+		libsourceviewmm-2.0-dev
+		
+		!!! libsourceviewmm-2.0 1.9.2 version need modify gtksourceviewmm-2.0.pc
+		!!! change this line :
+			!!! Requires: gtksourceview-1.0 gtkmm-2.4
+			!!! to 
+			!!! Requires: gtksourceview-2.0 gtkmm-2.4
 		
 		# if need use python plugin engine
 			python2.5-dev
@@ -19,27 +25,13 @@
 		pthread-win32
 		gtk-dev-2.10.11-win32-1.exe
 		gtkmm-win32-devel-2.10.11-1.exe
-		gtksourceview-1.8.5			http://ftp.gnome.org/pub/GNOME/binaries/win32/gtksourceview/1.8/
-		gtksourceviewmm-vc8.rar			http://ljedit.googlecode.com/files/gtksourceviewmm-vc8-src.rar
+		
+		gtksourceview-2.0, gtksourceviewmm-2.0, glib-2.14.1
+			=> http://ljedit.googlecode.com/files/libgtksourceviewmm-1.9.3%282.0%29-msvc-src.rar
 		
 		# if need use python plugin engine
 			python-2.5.1
 			pygobject-2.12.3-1.win32-py2.5.exe
 			pygtk-2.10.4-1.win32-py2.5.exe
 			pycairo-1.2.6-1.win32-py2.5.exe
-		
-
-		# gtk has some bugs on windows(chinese language) )
-		# 
-		#  1. can not use(input/show) Enter in Gtk::TextView
-		# 
-		#     if you select gtk theme : MS-Windows, you need 
-		#       * edit <GTK install path>/share/themes/MS-Windows/gtk-2.0/gtkrc
-		#       * find and modify it:
-		#                 style "msw-default"
-		#                 {
-		#                     font_name="simsun 9"   <<< add this line, set font & size
-		# 
-		#       * your Gtk::TextView will work now!
-		# 
 

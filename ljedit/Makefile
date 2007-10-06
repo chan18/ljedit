@@ -7,8 +7,8 @@ CXXFLAGS = -pthread -o2 -DNDEBUG -Iinclude
 
 # gtkmm & sourceviewmm
 # 
-CXXFLAGS += `pkg-config --cflags libgtksourceviewmm-2.0`
-LJEDLIBS += `pkg-config --libs libgtksourceviewmm-2.0`
+CXXFLAGS += `pkg-config --cflags gtksourceviewmm-2.0`
+LJEDLIBS += `pkg-config --libs gtksourceviewmm-2.0`
 
 # python plugin engine
 # 
@@ -17,7 +17,7 @@ PYFLAGS = -DENABLE_PYTHON_PLUGIN_ENGINE \
             -I/usr/include/pygtk-2.0
 PYLIBS = -lpython2.5
 
-LJEDOBJS = src/DocPageImpl.o             \
+LJEDOBJS = src/DocPageImpl.o         \
 	src/DocManagerImpl.o             \
 	src/CmdLineImpl.o                \
 	src/CmdLineCallbacks.o           \

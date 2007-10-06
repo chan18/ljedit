@@ -5,13 +5,13 @@ CXX = g++
 #CXXFLAGS = -pthread -g -fpic
 CXXFLAGS = -pthread -o2 -DNDEBUG -fpic
 
-GTKMMFLAGS = `pkg-config --cflags libgtksourceviewmm-2.0`
+GTKMMFLAGS = `pkg-config --cflags gtksourceviewmm-2.0`
 CXXFLAGS += $(GTKMMFLAGS)
 
 LJEDINC = -I../../include
 CXXFLAGS += $(LJEDINC)
 
-GTKMMLIBS = `pkg-config --libs libgtksourceviewmm-2.0`
+GTKMMLIBS = `pkg-config --libs gtksourceviewmm-2.0`
 
 OBJS = src/ljed_indent.o
 
