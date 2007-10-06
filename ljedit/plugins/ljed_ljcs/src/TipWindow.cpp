@@ -30,10 +30,10 @@ void TipWindow::create() {
     if( infos_view_ == 0 )
 		return;
 
-	Glib::RefPtr<gtksourceview::SourceLanguage> lang = editor_.utils().get_source_language_manager()->get_language_from_mime_type("text/x-c++hdr");
+	Glib::RefPtr<gtksourceview::SourceLanguage> lang = editor_.utils().get_language_by_filename("a.cpp");
 	Glib::RefPtr<gtksourceview::SourceBuffer> buffer = infos_view_->get_source_buffer();
 	buffer->set_language(lang);
-	buffer->set_highlight();
+	buffer->set_highlight_syntax();
 
 	infos_view_->set_editable(false);
 	infos_view_->set_cursor_visible(false);

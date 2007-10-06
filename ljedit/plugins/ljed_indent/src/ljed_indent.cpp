@@ -74,7 +74,7 @@ void LJIndent::on_indent() {
 			--eline;
 
 		Glib::ustring tab = page->view().get_insert_spaces_instead_of_tabs()
-			? Glib::ustring(page->view().get_tabs_width(), ' ')
+			? Glib::ustring(page->view().get_tab_width(), ' ')
 			: "\t";
 
 		Gtk::TextIter it;
@@ -133,7 +133,7 @@ void LJIndent::on_unindent() {
 				}
 
 				if( spaces > 0 ) {
-					guint tabs_size = page->view().get_tabs_width();
+					guint tabs_size = page->view().get_tab_width();
 					guint tabs = spaces / tabs_size;
 					spaces -= (tabs * tabs_size);
 

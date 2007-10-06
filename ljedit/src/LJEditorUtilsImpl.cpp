@@ -5,17 +5,11 @@
 
 #include "LJEditorUtilsImpl.h"
 
-#include <fstream>
 #include <sys/stat.h>
+#include <fstream>
+#include <sstream>
 
-#include <gtksourceviewmm/init.h>
-
-Glib::RefPtr<gtksourceview::SourceLanguagesManager> create_source_language_manager() {
-    gtksourceview::init();
-
-    return gtksourceview::SourceLanguagesManager::create();
-}
-
+#include <gtksourceview/gtksourcelanguage.h>
 
 typedef std::list<std::string> TStrCoderList;
 
@@ -37,12 +31,43 @@ LJEditorUtilsImpl::LJEditorUtilsImpl() {
 LJEditorUtilsImpl::~LJEditorUtilsImpl() {
 }
 
+void LJEditorUtilsImpl::create(const std::string& path) {
+	// get language map
+	//
+	Glib::RefPtr<gtksourceview::SourceLanguageManager> mgr = gtksourceview::SourceLanguageManager::get_default();
+	
+	Glib::StringArrayHandle ids = mgr->get_language_ids();
+	Glib::StringArrayHandle::iterator it = ids.begin();
+	Glib::StringArrayHandle::iterator end = ids.end();
+	for( ; it!=end; ++it ) {
+		Glib::RefPtr<gtksourceview::SourceLanguage> lang = mgr->get_language(*it);
+		if( !lang )
+			continue;
+		
+		// TODO : use regex
+		// 
+		Glib::StringArrayHandle globs = gtk_source_language_get_globs(lang->gobj());
+		Glib::StringArrayHandle::iterator ps = globs.begin();
+		Glib::StringArrayHandle::iterator pe = globs.end();
+		for( ; ps!=pe; ++ps ) {
+			Glib::ustring glob = *ps;
+			if( glob.size() > 2 && glob[0]=='*' && glob[1]=='.' ) {
+				glob.erase(0, 2);
+				language_map_[glob] = lang->get_id();
+			} else {
+				// TODO : now not finish
+				language_map_[glob] = lang->get_id();
+			}
+		}
+	}
+}
+
 gtksourceview::SourceView* LJEditorUtilsImpl::create_gtk_source_view() {
     gtksourceview::SourceView* view = new gtksourceview::SourceView();
     if( view != 0 ) {
 		view->modify_font(Pango::FontDescription(font_));
 		view->set_wrap_mode(Gtk::WRAP_NONE);
-        view->set_tabs_width(4);
+        view->set_tab_width(4);
     }
 
 	return view;
@@ -52,9 +77,24 @@ void LJEditorUtilsImpl::destroy_gtk_source_view(gtksourceview::SourceView* view)
 	delete view;
 }
 
-Glib::RefPtr<gtksourceview::SourceLanguagesManager> LJEditorUtilsImpl::do_get_source_language_manager() {
-	static Glib::RefPtr<gtksourceview::SourceLanguagesManager> mgr = create_source_language_manager();
-	return mgr;
+const Glib::ustring& LJEditorUtilsImpl::get_language_id_by_filename(const Glib::ustring& filename) {
+	static Glib::ustring default_retval = "";
+
+	// TODO : now implement not finish
+
+	Glib::ustring name = filename;
+	{
+		size_t pos = name.find_last_of("/.");
+		if( pos != name.npos ) {
+			name.erase(0, pos+1);
+		}
+	}
+
+	std::map<Glib::ustring, Glib::ustring>::iterator it = language_map_.find(name);
+	if( it != language_map_.end() )
+		return it->second;
+
+	return default_retval;
 }
 
 bool LJEditorUtilsImpl::do_load_file(Glib::ustring& out, const std::string& filename) {

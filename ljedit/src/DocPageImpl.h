@@ -6,8 +6,6 @@
 
 #include "DocPage.h"
 
-#include <gtksourceviewmm/sourceview.h>
-
 class DocPageImpl : public DocPage, public Gtk::ScrolledWindow
 {
 public:

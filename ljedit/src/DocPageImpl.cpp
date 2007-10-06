@@ -31,34 +31,15 @@ DocPageImpl* DocPageImpl::create(const std::string& filepath
 		return 0;
 	view->set_show_line_numbers();
 
-	Glib::RefPtr<gtksourceview::SourceLanguagesManager> mgr = LJEditorUtilsImpl::self().get_source_language_manager();
-	Glib::RefPtr<gtksourceview::SourceLanguage> lang;
-
-	// TODO : get mime-type form file .xxx name
-	{
-		size_t pos = display_name.find_last_of('.');
-		if( pos != display_name.npos ) {
-			std::string filetype = display_name.substr(pos);
-			if( filetype==".py" ) {
-				lang = mgr->get_language_from_mime_type("text/x-python");
-
-			} else if( filetype==".xml" ) {
-				lang = mgr->get_language_from_mime_type("text/xml");
-			}
-		}
-	}
-
-	if( !lang )
-		lang = mgr->get_language_from_mime_type("text/x-c++hdr");
-
+	Glib::RefPtr<gtksourceview::SourceLanguage> lang = LJEditorUtilsImpl::self().get_language_by_filename(display_name);
 	Glib::RefPtr<gtksourceview::SourceBuffer> buffer = view->get_source_buffer();
 	buffer->set_language(lang);
-	buffer->set_highlight();
+	buffer->set_highlight_syntax();
 	buffer->set_max_undo_levels(1024);
 
 	view->set_highlight_current_line(true);
     view->set_wrap_mode(Gtk::WRAP_NONE);
-    view->set_tabs_width(4);
+    view->set_tab_width(4);
 	view->set_auto_indent(true);
 
     DocPageImpl* page = Gtk::manage(new DocPageImpl(*label, *label_event_box, *view));

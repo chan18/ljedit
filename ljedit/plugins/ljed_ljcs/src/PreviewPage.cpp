@@ -47,10 +47,10 @@ void PreviewPage::create() {
     if( view_ == 0 )
 		return;
 
-	Glib::RefPtr<gtksourceview::SourceLanguage> lang = editor_.utils().get_source_language_manager()->get_language_from_mime_type("text/x-c++hdr");
+	Glib::RefPtr<gtksourceview::SourceLanguage> lang = editor_.utils().get_language_by_filename("a.cpp");
 	Glib::RefPtr<gtksourceview::SourceBuffer> buffer = view_->get_source_buffer();
 	buffer->set_language(lang);
-	buffer->set_highlight();
+	buffer->set_highlight_syntax();
 
 	view_->set_highlight_current_line(true);
 	view_->set_show_line_numbers(true);

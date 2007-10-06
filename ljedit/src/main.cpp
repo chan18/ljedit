@@ -19,6 +19,7 @@ int main(int argc, char *argv[]) {
 		
 	} else {
 		Gtk::Main kit(argc, argv);
+		gtksourceview::init();
 
 		std::string path;
 		

@@ -18,7 +18,9 @@ LJEditorImpl::~LJEditorImpl() {
 
 bool LJEditorImpl::create(const std::string& path) {
     try {
+		LJEditorUtilsImpl::self().create(path);
         main_window_.create(path);
+
     } catch( const Glib::Exception& e ) {
         Gtk::MessageDialog dlg(e.what(), false, Gtk::MESSAGE_ERROR);
         dlg.set_title("LJEdit ERROR");

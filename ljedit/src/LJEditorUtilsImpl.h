@@ -6,8 +6,6 @@
 
 #include "LJEditorUtils.h"
 
-#include <gtksourceviewmm/sourceview.h>
-
 class LJEditorUtilsImpl : public LJEditorUtils {
 public:
     static LJEditorUtilsImpl& self() {
@@ -15,9 +13,13 @@ public:
         return me;
     }
 
+    void create(const std::string& path);
+
 	virtual gtksourceview::SourceView* create_gtk_source_view();
 
 	virtual void destroy_gtk_source_view(gtksourceview::SourceView* view);
+
+	virtual const Glib::ustring& get_language_id_by_filename(const Glib::ustring& filename);
 
 	const Glib::ustring& font() const	{ return font_; }
 	Glib::ustring& font()				{ return font_; }
@@ -30,12 +32,12 @@ private:
     LJEditorUtilsImpl& operator = (const LJEditorUtilsImpl&);
 
 private:
-	virtual Glib::RefPtr<gtksourceview::SourceLanguagesManager> do_get_source_language_manager();
-
 	virtual bool do_load_file(Glib::ustring& out, const std::string& filename);
 
 private:
 	Glib::ustring font_;
+	
+	std::map<Glib::ustring, Glib::ustring>	language_map_;
 };
 
 #endif//LJED_INC_LJEDITORUTILSIMPL_H

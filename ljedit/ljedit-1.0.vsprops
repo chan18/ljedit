@@ -7,11 +7,11 @@
 	>
 	<Tool
 		Name="VCCLCompilerTool"
-		AdditionalIncludeDirectories="&quot;$(GTKMM_BASEPATH)\include\gtksourceview-1.0&quot;;&quot;$(GTKMM_BASEPATH)\include\gtksourceviewmm-1.0&quot;;&quot;$(SolutionDir)include&quot;"
+		AdditionalIncludeDirectories="&quot;$(GTKMM_BASEPATH)\include\gtksourceview-2.0&quot;;&quot;$(GTKMM_BASEPATH)\include\gtksourceviewmm-2.0&quot;;&quot;$(SolutionDir)include&quot;"
 		DisableSpecificWarnings="4250;4520"
 	/>
 	<Tool
 		Name="VCLinkerTool"
-		AdditionalDependencies="libgtksourceview-1.0.lib libgtksourceviewmm_vc8_static_MD-1.0.lib pthreadVC2.lib"
+		AdditionalDependencies="libgtksourceview-2.0-0.lib libgtksourceviewmm-1.9.3-static-md.lib pthreadVC2.lib"
 	/>
 </VisualStudioPropertySheet>

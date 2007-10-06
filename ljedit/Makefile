@@ -7,8 +7,8 @@ CXXFLAGS = -pthread -o2 -DNDEBUG -Iinclude
 
 # gtkmm & sourceviewmm
 # 
-CXXFLAGS += `pkg-config --cflags libgtksourceviewmm-1.0`
-LJEDLIBS += `pkg-config --libs libgtksourceviewmm-1.0`
+CXXFLAGS += `pkg-config --cflags libgtksourceviewmm-2.0`
+LJEDLIBS += `pkg-config --libs libgtksourceviewmm-2.0`
 
 # python plugin engine
 # 
