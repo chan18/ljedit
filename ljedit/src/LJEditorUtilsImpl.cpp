@@ -58,7 +58,7 @@ void LJEditorUtilsImpl::create(const std::string& path) {
 				// TODO : now not finish
 				language_map_[glob] = lang->get_id();
 			}
-			printf("%s:%s\n", glob.c_str(), lang->get_id().c_str());
+			//printf("%s:%s\n", glob.c_str(), lang->get_id().c_str());
 		}
 	}
 }
