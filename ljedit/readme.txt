@@ -27,7 +27,10 @@
 		gtkmm-win32-devel-2.10.11-1.exe
 		
 		gtksourceview-2.0, gtksourceviewmm-2.0, glib-2.14.1
-			=> http://ljedit.googlecode.com/files/libgtksourceviewmm-1.9.3%282.0%29-msvc-src.rar
+			=> http://ljedit.googlecode.com/files/gtksourceviewmm2.0-dev-msvc-with-glib2.14.1.rar
+			
+			if can not use, download this source & re compiler it
+				=> http://ljedit.googlecode.com/files/libgtksourceviewmm-1.9.3%282.0%29-msvc-src.rar
 		
 		# if need use python plugin engine
 			python-2.5.1
