@@ -6,6 +6,12 @@ import ljedit, __ljedit
 
 import gtk, os, sys
 
+try:
+	import gtksourceview2
+except Exception:
+	pass
+
+
 ljedit.main_window.doc_manager.create_new_file    = lambda : __ljedit.ljedit_doc_manager_create_new_file(__ljedit.__c_ljedit)
 ljedit.main_window.doc_manager.save_current_file  = lambda : __ljedit.ljedit_doc_manager_save_current_file(__ljedit.__c_ljedit)
 ljedit.main_window.doc_manager.close_current_file = lambda : __ljedit.ljedit_doc_manager_close_current_file(__ljedit.__c_ljedit)
