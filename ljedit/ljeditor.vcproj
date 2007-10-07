@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(ProjectDir)bin\$(ProjectName).exe"
+				OutputFile="$(ProjectDir)bin\_$(ProjectName).exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories=""
 				IgnoreDefaultLibraryNames=""
@@ -145,7 +145,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(ProjectDir)bin\$(ProjectName).exe"
+				OutputFile="$(ProjectDir)bin\_$(ProjectName).exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="false"
@@ -328,19 +328,7 @@
 			</Filter>
 		</Filter>
 		<File
-			RelativePath=".\ljedit.ico"
-			>
-		</File>
-		<File
-			RelativePath=".\ljedit.rc"
-			>
-		</File>
-		<File
 			RelativePath=".\readme.txt"
-			>
-		</File>
-		<File
-			RelativePath=".\resource.h"
 			>
 		</File>
 		<File
