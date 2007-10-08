@@ -24,10 +24,7 @@ private:
 	cpp::FileMap	parsed_files_;
 
 public:
-	static ParserEnviron& self() {
-		static ParserEnviron me_;
-		return me_;
-	}
+	static ParserEnviron& self();
 
 	bool in_include_path(const std::string& path);
 

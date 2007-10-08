@@ -15,6 +15,11 @@
 //---------------------------------------------------------------
 // ParserEnviron
 
+ParserEnviron& ParserEnviron::self() {
+	static ParserEnviron me_;
+	return me_;
+}
+
 bool ParserEnviron::in_include_path(const std::string& path) {
 	std::string abspath = path;
 	::ljcs_filepath_to_abspath(abspath);
