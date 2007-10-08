@@ -118,10 +118,10 @@ bool LJEditorUtilsImpl::do_load_file(Glib::ustring& out, const std::string& file
 
 	Glib::ustring ubuf;
 	{
-		//try {
-		//	ubuf = Glib::locale_to_utf8(buf);
+		try {
+			ubuf = Glib::locale_to_utf8(buf);
 
-		//} catch(const Glib::ConvertError&) {
+		} catch(const Glib::ConvertError&) {
 			static TStrCoderList coders = init_coders();
 
 			TStrCoderList::const_iterator it = coders.begin();
@@ -136,7 +136,7 @@ bool LJEditorUtilsImpl::do_load_file(Glib::ustring& out, const std::string& file
 
 			if( it==end )
 				return false;
-		//}
+		}
 	}
 
 	out.swap(ubuf);
