@@ -1,0 +1,9 @@
+#Makefile
+
+../bin/ljedit.exe : main.cpp ljedit.res
+	g++ -o2 -DNDEBUG -mwindows -o $@ main.cpp ljedit.res
+	strip $@
+
+ljedit.res : ljedit.rc
+	windres -i ljedit.rc --input-format=rc -o ljedit.res -O coff
+

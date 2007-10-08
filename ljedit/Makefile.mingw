@@ -28,7 +28,7 @@ LJEDOBJS = src/DocPageImpl.o         \
 	src/LJEditorPythonPluginEngine.o \
 	src/main.o
 
-all : bin/_ljedit.exe bin/ljedit.exe plugin
+all : bin/ljedit.exe bin/_ljedit.exe plugin
 
 bin/_ljedit.exe : $(LJEDOBJS)
 	$(CXX) -mwindows $(CXXFLAGS) -o $@ $(LJEDOBJS) -lpthreadGC2 $(LJEDLIBS) $(PYLIBS)
@@ -42,9 +42,8 @@ plugin :
 	cd plugins/ljed_hello;make -f Makefile.mingw
 	cd plugins/ljed_indent;make -f Makefile.mingw
 
-bin/ljedit.exe : win32_boot/main.cpp
-	g++ -o2 -DNDEBUG -mwindows -o $@ $<
-	strip $@
+bin/ljedit.exe :
+	cd win32_boot;make -f Makefile.mingw
 
 clean :
 	rm -f src/*.o
