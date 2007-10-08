@@ -24,9 +24,10 @@ int main(int argc, char *argv[]) {
 		std::string path;
 		
 	#ifdef WIN32
-		path = Glib::get_application_name();
-		path = Glib::find_program_in_path(path);
-		path = Glib::path_get_dirname(path);
+		path.resize(4096);
+		path.resize( GetModuleFileNameA(0, &path[0], 4096) );
+		path.erase( path.rfind("\\") );
+		path = Glib::locale_to_utf8(path);
 
 	#else
 		path = argv[0];

@@ -9,18 +9,7 @@
 #ifdef WIN32
     #include <windows.h>
 
-	#ifdef UNICODE
-		inline HMODULE dlopen(const char* lib, int /*nouse*/) {
-			assert( lib != 0 );
-			std::string str(lib);
-		    std::wstring wlib;
-			wlib.resize(str.size());
-			std::copy(str.begin(), str.end(), wlib.begin());
-			return ::LoadLibrary(wlib.c_str());
-		}
-	#else
-		#define dlopen(lib, nouse)   LoadLibrary(lib)
-	#endif
+	#define dlopen(lib, nouse)   LoadLibraryA(lib)
 
     #define RTLD_LAZY 0
 
@@ -106,7 +95,13 @@ bool PluginManager::plugin_create(DllPlugin& dllplugin, const std::string& plugi
     dllplugin.dll = 0;
     dllplugin.plugin = 0;
 
+#ifdef WIN32
+	std::string dllname = Glib::locale_from_utf8(plugin_filename);
+	dllplugin.dll = dlopen( dllname.c_str(), RTLD_LAZY );
+#else
 	dllplugin.dll = dlopen( plugin_filename.c_str(), RTLD_LAZY );
+#endif
+
     if( dllplugin.dll != 0 ) {
 		TPluginCreateFn createfn = (TPluginCreateFn)dlsym( dllplugin.dll, PLUGIN_CREATE_FUN_NAME );
         TPluginDestroyFn destroyfn = (TPluginDestroyFn)dlsym( dllplugin.dll, PLUGIN_DESTROY_FUN_NAME );
