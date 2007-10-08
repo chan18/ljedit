@@ -46,7 +46,7 @@ inline void ljcs_filepath_to_abspath(std::string& filepath) {
 			char buf[LJCS_MAX_PATH_SIZE];
 			buf[0] = '\0';
 			::getcwd(buf, LJCS_MAX_PATH_SIZE);
-			size_t sz = strnlen(buf, LJCS_MAX_PATH_SIZE);
+			size_t sz = strlen(buf);
 			if( !is_split_char(filepath[0]) ) {
 				buf[sz] = '/';
 				sz += 1;

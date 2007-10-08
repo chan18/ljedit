@@ -1,0 +1,59 @@
+# makefile ljcs
+# 
+
+CXX = g++
+#CXXFLAGS = -g -Iinclude
+CXXFLAGS = -o2 -DNDEBUG -Iinclude
+
+# gtkmm & sourceviewmm
+# 
+CXXFLAGS += `pkg-config --cflags gtksourceviewmm-2.0`
+LJEDLIBS += `pkg-config --libs gtksourceviewmm-2.0`
+
+# python plugin engine
+# 
+PYFLAGS = -DENABLE_PYTHON_PLUGIN_ENGINE \
+            -I/c/Python25/include \
+            -I/c/Python25/include/pygtk-2.0
+PYLIBS = -L/c/Python25/Libs -lpython25
+
+LJEDOBJS = src/DocPageImpl.o         \
+	src/DocManagerImpl.o             \
+	src/CmdLineImpl.o                \
+	src/CmdLineCallbacks.o           \
+	src/LJEditorImpl.o               \
+	src/LJEditorUtilsImpl.o          \
+	src/MainWindowImpl.o             \
+	src/PluginManager.o              \
+	src/LJEditorPythonPluginEngine.o \
+	src/main.o
+
+all : bin/_ljedit.exe bin/ljedit.exe plugin
+
+bin/_ljedit.exe : $(LJEDOBJS)
+	$(CXX) -mwindows $(CXXFLAGS) -o $@ $(LJEDOBJS) -lpthreadGC2 $(LJEDLIBS) $(PYLIBS)
+	strip $@
+
+src/LJEditorPythonPluginEngine.o : src/LJEditorPythonPluginEngine.cpp src/LJEditorPythonPluginEngineImpl.cpp
+	$(CXX) $(CXXFLAGS) $(PYFLAGS) -c -o $@ $<
+
+plugin :
+	cd plugins/ljed_ljcs;make -f Makefile.mingw
+	cd plugins/ljed_hello;make -f Makefile.mingw
+	cd plugins/ljed_indent;make -f Makefile.mingw
+
+bin/ljedit.exe : win32_boot/main.cpp
+	g++ -o2 -DNDEBUG -mwindows -o $@ $<
+	strip $@
+
+clean :
+	rm -f src/*.o
+	rm -f bin/_ljedit.exe
+	rm -f bin/ljedit.exe
+	make -f Makefile.mingw clean_plugin
+
+clean_plugin :
+	cd plugins/ljed_ljcs;make -f Makefile.mingw clean
+	cd plugins/ljed_hello;make -f Makefile.mingw clean
+	cd plugins/ljed_indent;make -f Makefile.mingw clean
+

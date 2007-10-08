@@ -1,0 +1,32 @@
+# makefile ljcs
+# 
+
+CXX = g++
+#CXXFLAGS = -g
+CXXFLAGS = -o2 -DNDEBUG
+
+GTKMMFLAGS = `pkg-config --cflags gtksourceviewmm-2.0`
+GTKMMLIBS = `pkg-config --libs gtksourceviewmm-2.0`
+
+CXXFLAGS += $(GTKMMFLAGS)
+
+LJEDINC = -I../../include
+CXXFLAGS += $(LJEDINC)
+
+
+OBJS = src/ljed_indent.o
+
+BIN = ../../bin/plugins/ljed_indent.dll
+
+all : $(BIN)
+
+$(BIN) : $(OBJS)
+	$(CXX) $(CXXFLAGS) -shared -o $@ $(OBJS) -lpthreadGC2 $(GTKMMLIBS)
+	strip $@
+
+clean :
+	rm -f ../../bin/plugins/$(BIN)
+	rm -f $(BIN)
+	rm -f src/*.o
+
+

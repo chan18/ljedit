@@ -1,0 +1,40 @@
+# makefile ljcs
+# 
+
+CXX = g++
+#CXXFLAGS = -g -DSHOW_PARSE_DEBUG_INFOS
+CXXFLAGS = -o2 -DNDEBUG
+
+GTKMMFLAGS = `pkg-config --cflags gtksourceviewmm-2.0` `pkg-config --cflags libglademm-2.4`
+GTKMMLIBS = `pkg-config --libs gtksourceviewmm-2.0` `pkg-config --libs libglademm-2.4`
+
+CXXFLAGS += $(GTKMMFLAGS)
+
+LJEDINC = -I../../include
+CXXFLAGS += $(LJEDINC)
+
+LJCSINC = -I../../../ljcs/include
+LJCSLIB = -L../../../ljcs/lib -lljcs
+CXXFLAGS += $(LJCSINC)
+
+OBJS = src/LJCSPlugin.o   \
+    src/LJCSPluginImpl.o  \
+    src/LJCSPluginUtils.o \
+    src/OutlinePage.o     \
+    src/PreviewPage.o     \
+    src/TipWindow.o       \
+    src/SetupDialog.o
+
+BIN = ../../bin/plugins/ljed_ljcs.dll
+all : $(BIN)
+
+$(BIN) : $(OBJS)
+	$(CXX) $(CXXFLAGS) -shared -o $@ $(OBJS) -lpthreadGC2 $(GTKMMLIBS) $(LJCSLIB)
+	strip $@
+	cp ../../../ljcs/lib/libljcs.dll ../../bin/
+
+clean :
+	rm -f $(BIN)
+	rm -f src/*.o
+
+
