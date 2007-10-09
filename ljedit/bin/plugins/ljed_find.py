@@ -3,11 +3,12 @@
 
 import ljedit
 
-import os
+import os, sys
 import gobject, gtk
 from gtk import glade
 
-GLADE_FILE = os.path.join(os.path.dirname(__file__), 'find.glade')
+
+GLADE_FILE = os.path.join(os.path.dirname(__file__), 'find.glade').decode(sys.getfilesystemencoding())
 
 UI_INFO = """	<ui>
 					<menubar name='MenuBar'>

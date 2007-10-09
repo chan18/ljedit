@@ -32,7 +32,24 @@ import gobject
 import gtk
 import pango
 
+import ljedit
+
 __all__ = ('PythonConsole', 'OutFile')
+
+def encode_to_utf8(text, TRY_CODES = ['ascii', 'utf8', 'mbcs']):
+	succeed = False
+	for code in TRY_CODES:
+		try:
+			text = text.decode(code)
+			succeed = True
+		except Exception:
+			pass
+
+	if succeed:
+		try:
+			return text.decode('utf8')
+		except Exception:
+			pass
 
 class PythonConsole(gtk.ScrolledWindow):
 	def __init__(self, namespace = {}):
@@ -229,13 +246,15 @@ class PythonConsole(gtk.ScrolledWindow):
 		return False
 
 	def write(self, text, tag = None):
-		buffer = self.view.get_buffer()
-		if tag is None:
-			buffer.insert(buffer.get_end_iter(), text)
-		else:
-			buffer.insert_with_tags(buffer.get_end_iter(), text, tag)
-		gobject.idle_add(self.scroll_to_end)
- 	
+		text = encode_to_utf8(text)
+		if text:
+			buffer = self.view.get_buffer()
+			if tag is None:
+				buffer.insert(buffer.get_end_iter(), text)
+			else:
+				buffer.insert_with_tags(buffer.get_end_iter(), text, tag)
+			gobject.idle_add(self.scroll_to_end)
+
  	def eval(self, command, display_command = False):
 		buffer = self.view.get_buffer()
 		lin = buffer.get_mark("input-line")
@@ -262,7 +281,7 @@ class PythonConsole(gtk.ScrolledWindow):
  	def __run(self, command):
 		sys.stdout, self.stdout = self.stdout, sys.stdout
 		sys.stderr, self.stderr = self.stderr, sys.stderr
-		
+
 		try:
 			try:
 				r = eval(command, self.namespace, self.namespace)
@@ -282,7 +301,7 @@ class PythonConsole(gtk.ScrolledWindow):
 	def destroy(self):
 		pass
 		#gtk.ScrolledWindow.destroy(self)
-		
+
 class OutFile:
 	"""A fake output file object. It sends output to a TK test widget,
 	and if asked for a file number, returns one set on instance creation"""
