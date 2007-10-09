@@ -24,20 +24,11 @@ def run():
 	os.environ['PYTHONPATH'] = pypath
 	os.environ['PATH'] = gtkbin
 
-	i = os.path.join(gtkbin, 'gdk-pixbuf-query-loaders.exe')
-	o = os.path.join(gtkpath, 'etc\\gtk-2.0\\gdk-pixbuf.loaders')
-	pipe_run(i, o)
+	pipe_run('gdk-pixbuf-query-loaders.exe', os.path.join(gtkpath, 'etc\\gtk-2.0\\gdk-pixbuf.loaders'))
+	pipe_run('gtk-query-immodules-2.0.exe',  os.path.join(gtkpath, 'etc\\gtk-2.0\\gtk.immodules'))
+	pipe_run('pango-querymodules.exe',       os.path.join(gtkpath, 'etc\\pango\\pango.modules'))
 
-	i = os.path.join(gtkbin, 'gtk-query-immodules-2.0.exe')
-	o = os.path.join(gtkpath, 'etc\\gtk-2.0\\gtk.immodules')
-	pipe_run(i, o)
-
-	i = os.path.join(gtkbin, 'pango-querymodules.exe')
-	o = os.path.join(gtkpath, 'etc\\pango\\pango.modules')
-	pipe_run(i, o)
-
-	ljedit = os.path.join(path, '_ljedit.exe')
-	os.execl(ljedit)
+	os.execl(os.path.join(path, '_ljedit.exe'))
 
 if __name__=='__main__':
 	run()
