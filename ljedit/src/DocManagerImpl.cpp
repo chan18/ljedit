@@ -94,8 +94,12 @@ void DocManagerImpl::show_open_dialog() {
     Glib::SListHandle<Glib::ustring> filenames = dlg.get_filenames();
     Glib::SListHandle<Glib::ustring>::iterator it = filenames.begin();
     Glib::SListHandle<Glib::ustring>::iterator end = filenames.end();
-    for( ; it!=end; ++it )
+	for( ; it!=end; ++it ) {
+		// BUG : need convert *it to filesystem coding!!!
+		// utf8 filename not fit fopen....
+		// 
         open_file(*it);
+	}
 }
 
 void DocManagerImpl::open_file(const std::string& filepath, int line, int line_offset) {
@@ -121,7 +125,7 @@ bool DocManagerImpl::do_locate_file(const std::string& abspath, int line, int li
         DocPageImpl* page = (DocPageImpl*)it->get_child();
         assert( page != 0 );
 
-        if( page->filepath()==abspath ) {
+		if( abspath.compare(page->filepath().c_str())==0 ) {
 			if( line < 0 ) {
 				set_current_page(it->get_page_num());
 				page->view().grab_focus();

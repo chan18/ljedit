@@ -106,11 +106,26 @@ bool LJEditorUtilsImpl::do_load_file(Glib::ustring& out, const std::string& file
 		return false;
 
 	std::string buf;
+	size_t sz = st.st_size;
 	try {
-		buf.resize(st.st_size);
+		buf.resize(sz);
 
-		std::ifstream ifs(filename.c_str(), std::ios::in | std::ios::binary);
-		ifs.read(&buf[0], (std::streamsize)buf.size());
+		FILE* fp = fopen(filename.c_str(), "rb");
+		if( fp==0 )
+			return false;
+
+		sz = fread(&buf[0], 1, sz, fp);
+		fclose(fp);
+
+		//Glib::RefPtr<Glib::IOChannel> ifs = Glib::IOChannel::create_from_file(filename, "r");
+		//std::ifstream ifs(filename.c_str(), std::ios::in | std::ios::binary);
+		//if( !ifs )
+		//	return false;
+		//ifs->read(&buf[0], sz, sz);
+		//ifs->read(&buf[0], (std::streamsize)buf.size());
+
+		if( sz != st.st_size )
+			return false;
 
 	} catch(const std::exception&) {
 		return false;
