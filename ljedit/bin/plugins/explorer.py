@@ -93,7 +93,7 @@ def fill_subs(model, parent_iter):
         row[2] = 'win32root-expanded'
         drivers = get_win32_drivers()
         for volume, driver in drivers:
-            iter = model.append(parent_iter, [volume, driver, 'dir', driver.lower()[:2]])
+            iter = model.append(parent_iter, [volume.decode(sys.getfilesystemencoding()), driver, 'dir', driver.lower()[:2]])
             model.append(iter, ['loading...', 'loading...', 'loading...', 'loading...'])
 
 def locate_to(model, it, paths):
@@ -192,9 +192,9 @@ class FileExplorer(gtk.VBox):
     def make_root_model(self):
         model = gtk.TreeStore(str, str, str, str)   # display, path, [file, dir, dir-expanded, name]
         if sys.platform=='win32':
-            iter = model.append(None, ['my computer', '', 'win32root', ''])
+            iter = model.append(None, ['my computer', u'', 'win32root', ''])
         else:
-            iter = model.append(None, ['/', '/', 'dir', ''])
+            iter = model.append(None, ['/', u'/', 'dir', ''])
         fill_subs(model, iter)
         return model
         
@@ -226,7 +226,7 @@ class FileExplorer(gtk.VBox):
     def cb_file_name(self, column, cell, model, iter):
         cell.set_property('text', model.get_value(iter, 0))
         
-    def cb_file_activated(self, filename):
+    def cb_file_activated(self, ufilename, filename):
         # test
         #self.locate_to_file('d:/mingw32/include/c++/3.4.2/bits/stl_list.h')
         print filename
@@ -240,7 +240,7 @@ class FileExplorer(gtk.VBox):
         model = treeview.get_model()
         iter = model.get_iter(path)
         if model[iter][2]=='file':
-            self.cb_file_activated(model[iter][1])
+            self.cb_file_activated(model[iter][1], model[iter][3])
         else:
             if treeview.row_expanded(path):
                 treeview.collapse_row(path)
@@ -265,8 +265,8 @@ try:
         def __init__(self):
             FileExplorer.__init__(self)
             
-        def cb_file_activated(self, filename):
-            ljedit.main_window.doc_manager.open_file(filename)
+        def cb_file_activated(self, ufilename, filename):
+            ljedit.main_window.doc_manager.open_file(ufilename)
 
     explorer = LJEditExplorer()
 
@@ -278,6 +278,8 @@ try:
         
         def on_switch_page(nb, gp, page):
             filepath = ljedit.main_window.doc_manager.get_file_path(page)
+            ufilepath = filepath.decode('utf8')
+            filepath = ufilepath.encode(sys.getfilesystemencoding())
             explorer.locate_to_file(filepath)
             
         explorer.switch_page_id = ljedit.main_window.doc_manager.connect('switch-page', on_switch_page)

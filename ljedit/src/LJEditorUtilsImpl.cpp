@@ -99,40 +99,23 @@ const Glib::ustring& LJEditorUtilsImpl::get_language_id_by_filename(const Glib::
 }
 
 bool LJEditorUtilsImpl::do_load_file(Glib::ustring& out, const std::string& filename) {
-	struct stat st;
-	::memset(&st, 0, sizeof(st));
+	//if( !Glib::file_test(filename, Glib::FILE_TEST_EXISTS) )
+	//	return false;
 
-	if( ::stat(filename.c_str(), &st)!=0 )
-		return false;
+	Glib::ustring buf;
+	Glib::ustring ubuf;
 
-	std::string buf;
-	size_t sz = st.st_size;
 	try {
-		buf.resize(sz);
+		buf = Glib::file_get_contents(filename);
 
-		FILE* fp = fopen(filename.c_str(), "rb");
-		if( fp==0 )
-			return false;
-
-		sz = fread(&buf[0], 1, sz, fp);
-		fclose(fp);
-
-		//Glib::RefPtr<Glib::IOChannel> ifs = Glib::IOChannel::create_from_file(filename, "r");
-		//std::ifstream ifs(filename.c_str(), std::ios::in | std::ios::binary);
-		//if( !ifs )
-		//	return false;
-		//ifs->read(&buf[0], sz, sz);
-		//ifs->read(&buf[0], (std::streamsize)buf.size());
-
-		if( sz != st.st_size )
-			return false;
-
-	} catch(const std::exception&) {
+	} catch(const Glib::FileError&) {
 		return false;
 	}
 
-	Glib::ustring ubuf;
-	{
+	if( ::g_utf8_validate(buf.c_str(), buf.size(), 0) ) {
+		ubuf = buf;
+
+	} else {
 		try {
 			ubuf = Glib::locale_to_utf8(buf);
 
