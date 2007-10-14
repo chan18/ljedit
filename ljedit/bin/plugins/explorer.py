@@ -147,6 +147,7 @@ class FileExplorer(gtk.VBox):
         self.treeview = self.make_file_view()
         self.treeview.set_headers_visible(False)
         self.refresh()
+        self.on_folder_changed(self.fchooser)
         
         self.scrolledwindow = gtk.ScrolledWindow()
         self.scrolledwindow.add(self.treeview)
