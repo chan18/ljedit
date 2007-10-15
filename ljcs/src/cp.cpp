@@ -12,7 +12,7 @@ namespace cxx_parser {
 void parse(Lexer& lexer, bool& stopsign) {
 	cpp::File& file = lexer.file();
 	LexerEnviron env(file);
-	Block block(env);
+	Block block(env, 0);
 	BlockLexer blexer(block);
 	TParseFn fn = 0;
 

@@ -227,7 +227,7 @@ class FileExplorer(gtk.VBox):
     def cb_file_name(self, column, cell, model, iter):
         cell.set_property('text', model.get_value(iter, 0))
         
-    def cb_file_activated(self, ufilename, filename):
+    def cb_file_activated(self, filename):
         # test
         #self.locate_to_file('d:/mingw32/include/c++/3.4.2/bits/stl_list.h')
         print filename
@@ -241,7 +241,7 @@ class FileExplorer(gtk.VBox):
         model = treeview.get_model()
         iter = model.get_iter(path)
         if model[iter][2]=='file':
-            self.cb_file_activated(model[iter][1], model[iter][3])
+            self.cb_file_activated(model[iter][1])
         else:
             if treeview.row_expanded(path):
                 treeview.collapse_row(path)
@@ -266,7 +266,8 @@ try:
         def __init__(self):
             FileExplorer.__init__(self)
             
-        def cb_file_activated(self, ufilename, filename):
+        def cb_file_activated(self, filename):
+            ufilename = filename.decode(sys.getfilesystemencoding()).encode('utf8')
             ljedit.main_window.doc_manager.open_file(ufilename)
 
     explorer = LJEditExplorer()

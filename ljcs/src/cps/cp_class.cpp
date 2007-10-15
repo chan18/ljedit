@@ -70,7 +70,7 @@ void parse_class(BlockLexer& lexer, Scope& scope) {
 	throw_parse_error_if(lexer.token().type != '{');
 	lexer.next();
 
-	parse_scope(lexer, p->scope);
+	parse_scope(lexer, p->scope, p);
 
 	throw_parse_error_if( lexer.token().type!='}' );
 	lexer.next();

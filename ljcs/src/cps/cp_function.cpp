@@ -183,10 +183,34 @@ void do_parse_function(BlockLexer& lexer, Scope& scope) {
 			lexer.next();
 				
 		} else {
-			// no return value function
-			lexer.pos(fptrypos);
+			// no return type function
+			if( ns.empty() )
+				throw_parse_error("Error when parse_function!");
 
-			name = ns;
+			Element* p = lexer.block().parent();
+			if( p!=0 && p->type==ET_CLASS ) {
+				name = p->name;
+
+			} else {
+				size_t pos = ns.find('.');
+				if( pos==ns.npos )
+					throw_parse_error("Error when parse_function!");
+
+				name = ns.substr(pos+1);
+				ns.erase(pos);
+			}
+			
+			if( name==ns ) {
+				// constructor
+
+			} else if( ns.size()==(name.size() + 1) && ns[0]=='~' && ns.compare(1, ns.size()-1, name)==0 ) {
+				// destructor
+
+			} else {
+				throw_parse_error("Error when parse_function!");
+			}
+
+			lexer.pos(fptrypos);
 		}
 
 	} else {

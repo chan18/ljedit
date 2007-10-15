@@ -35,7 +35,7 @@ struct ParseError {};
 
 #else
 
-	#define throw_parse_error(reason) throw ParseError();
+	#define throw_parse_error(reason) throw ParseError()
 	#define throw_parse_error_if(condition) if(condition) throw_parse_error(#condition)
 	#define parse_warning(reason)
 	#define parse_warning_if(condition)
@@ -61,13 +61,15 @@ class ParseNextBlockLexer;
 class Block {
 	friend class ParseNextBlockLexer;
 public:
-	Block(LexerEnviron& env)
+	Block(LexerEnviron& env, cpp::Element* parent)
 		: env_(env)
+		, parent_(parent)
 		, begin_(0)
 		, end_(0) {}
 
-	Block(LexerEnviron& env, size_t begin, size_t end)
+	Block(LexerEnviron& env, cpp::Element* parent, size_t begin, size_t end)
 		: env_(env)
+		, parent_(parent)
 		, begin_(begin)
 		, end_(end) {}
 
@@ -84,6 +86,7 @@ public:
 
 	const LexerEnviron& env() const     { return env_; }
 	LexerEnviron& env()                 { return env_; }
+	cpp::Element* parent()              { return parent_; }
 	const Tokens& tokens() const        { return env_.tokens; }
 	Tokens& tokens()                    { return env_.tokens; }
 
@@ -123,6 +126,8 @@ public:
 
 private:
 	LexerEnviron&   env_;
+	cpp::Element*	parent_;
+
 	size_t          begin_;
 	size_t          end_;
 };

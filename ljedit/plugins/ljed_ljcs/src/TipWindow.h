@@ -8,18 +8,21 @@
 
 #include <ljcs/ljcs.h>
 
-class TipWindow : public Gtk::Window {
+class TipWindow {
 public:
     TipWindow(LJEditor& editor);
     virtual ~TipWindow();
 
-    void show_tip(int x, int y, cpp::ElementSet& element_set, char tag);
+    void show_list_tip(int x, int y, cpp::ElementSet& mset);
+    void show_decl_tip(int x, int y, cpp::ElementSet& mset);
+	void hide_all_tip();
+
+	Gtk::Window& list_window() const { return *list_window_; }
+	Gtk::Window& decl_window() const { return *decl_window_; }
 
 	bool locate_sub(int x, int y, Glib::ustring key);
 
     cpp::Element* get_selected();
-
-    char tag() const { return tag_; }
 
     void select_next();
 
@@ -34,18 +37,19 @@ private:
 private:
 	typedef std::map<std::string, cpp::Element*> ElementMap;
 
-	void clear_define_store();
+	void clear_list_store();
 
-	void fill_define_store(ElementMap& emap);
+	void fill_list_store(ElementMap& emap);
 
 private:
 	LJEditor&						editor_;
 
-	Gtk::Notebook					pages_;
-    Gtk::TreeView					elems_view_;
-	gtksourceview::SourceView*		infos_view_;
+	Gtk::Window*					decl_window_;
+	gtksourceview::SourceView*		decl_view_;
 
-    Glib::RefPtr<Gtk::ListStore>	elems_store_;
+	Gtk::Window*					list_window_;
+    Gtk::TreeView					list_view_;
+    Glib::RefPtr<Gtk::ListStore>	list_store_;
 
     struct ModelColumns : public Gtk::TreeModelColumnRecord {
 		Gtk::TreeModelColumn< Glib::RefPtr<Gdk::Pixbuf> >	icon;
@@ -56,9 +60,6 @@ private:
     };
 
     const ModelColumns columns_;
-
-private:
-    char			tag_;
 };
 
 #endif//LJED_INC_TIPWINDOW_H

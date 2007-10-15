@@ -233,8 +233,8 @@ void parse_value(BlockLexer& lexer) {
 	}
 }
 
-void parse_scope(BlockLexer& lexer, Scope& scope) {
-	Block subblock(lexer.block().env(), lexer.pos(), lexer.block().end());
+void parse_scope(BlockLexer& lexer, Scope& scope, Element* parent) {
+	Block subblock(lexer.block().env(), parent, lexer.pos(), lexer.block().end());
 	TParseFn fn = 0;
 	while( next_block(subblock, fn, 0) ) {
 		assert( fn != 0 );
@@ -269,7 +269,7 @@ void parse_skip_block(BlockLexer& lexer, Scope& scope) {
 }
 
 void parse_impl_scope(BlockLexer& lexer, Scope& scope) {
-	Block subblock(lexer.block().env(), lexer.pos(), lexer.block().end());
+	Block subblock(lexer.block().env(), 0, lexer.pos(), lexer.block().end());
 	TParseFn fn = 0;
 	while( next_fun_impl_block(subblock, fn) ) {
 		assert( fn != 0 );

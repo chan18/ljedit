@@ -78,7 +78,25 @@ void LJCSPluginImpl::show_hint(DocPage& page
     int cursor_y = rect.get_y();
     view.buffer_to_window_coords(Gtk::TEXT_WINDOW_TEXT, cursor_x, cursor_y, cursor_x, cursor_y);
 
-    tip_.show_tip(view_x + cursor_x, view_y + cursor_y + rect.get_height() + 2, mset.elems, tag);
+	int x = view_x + cursor_x;
+	int y = view_y + cursor_y + rect.get_height() + 2;
+
+	if( tag=='s' ) {
+		tip_.show_list_tip(x, y, mset.elems);
+
+		if( tip_.decl_window().is_visible() ) {
+			if( y >= (tip_.list_window().get_height() + 16) ) {
+				y -= (tip_.list_window().get_height() + 16);
+
+			} else {
+				y += ( tip_.decl_window().get_height() + 5 );
+			}
+			tip_.list_window().move(x, y);
+		}
+
+	} else {
+		tip_.show_decl_tip(x, y, mset.elems);
+	}
 }
 
 void LJCSPluginImpl::locate_sub_hint(DocPage& page) {
@@ -130,7 +148,7 @@ void LJCSPluginImpl::auto_complete(DocPage& page) {
     }
     
     buf->insert_at_cursor(selected->name.substr(finished));
-    tip_.hide();
+    tip_.list_window().hide();
 }
 
 void LJCSPluginImpl::set_show_hint_timer(DocPage& page) {
@@ -256,29 +274,47 @@ void LJCSPluginImpl::on_doc_page_removed(Gtk::Widget* widget, guint page_num) {
 bool LJCSPluginImpl::on_key_press_event(GdkEventKey* event, DocPage* page) {
     assert( page != 0 );
 
-    if( !tip_.is_visible() )
-        return false;
-
     if( event->state & (Gdk::CONTROL_MASK | Gdk::MOD1_MASK) ) {
-        tip_.hide();
+        tip_.hide_all_tip();
         return false;
     }
 
-    switch( event->keyval ) {
-    case GDK_Tab:
-    //case GDK_Return:
-		auto_complete(*page);
-        return true;
-    case GDK_Up:
-        tip_.select_prev();
-        return true;
-    case GDK_Down:
-        tip_.select_next();
-        return true;
-    case GDK_Escape:
-        tip_.hide();
-        return true;
-    }
+	switch( event->keyval ) {
+	case GDK_Tab:
+		if( tip_.list_window().is_visible() ) {
+			auto_complete(*page);
+			return true;
+		}
+		break;
+
+	case GDK_Return:
+		tip_.hide_all_tip();
+		break;
+
+	case GDK_Up:
+		if( tip_.list_window().is_visible() ) {
+			tip_.select_prev();
+			return true;
+		}
+
+		if( tip_.decl_window().is_visible() )
+			tip_.decl_window().hide();
+		break;
+
+	case GDK_Down:
+		if( tip_.list_window().is_visible() ) {
+			tip_.select_next();
+			return true;
+		}
+
+		if( tip_.decl_window().is_visible() )
+			tip_.decl_window().hide();
+		break;
+
+	case GDK_Escape:
+		tip_.hide_all_tip();
+		return true;
+	}
 
     return false;
 }
@@ -287,13 +323,13 @@ bool LJCSPluginImpl::on_key_release_event(GdkEventKey* event, DocPage* page) {
     assert( page != 0 );
 
     if( event->state & (Gdk::CONTROL_MASK | Gdk::MOD1_MASK) ) {
-        tip_.hide();
+        tip_.hide_all_tip();
         return false;
     }
 
     switch( event->keyval ) {
     case GDK_Tab:
-    //case GDK_Return:
+    case GDK_Return:
     case GDK_Up:
     case GDK_Down:
     case GDK_Escape:
@@ -317,19 +353,6 @@ bool LJCSPluginImpl::on_key_release_event(GdkEventKey* event, DocPage* page) {
             show_hint(*page, it, end, 's');
         }
         break;
-    case '(':
-        {
-            show_hint(*page, it, end, 'f');
-        }
-        break;
-    case '<':
-        {
-            if( it.backward_chars(2) && it.get_char()!='<' ) {
-                it.forward_chars(2);
-                show_hint(*page, it, end, 'f');
-            }
-        }
-        break;
     case ':':
         {
             if( it.backward_chars(2) && it.get_char()==':' ) {
@@ -338,25 +361,47 @@ bool LJCSPluginImpl::on_key_release_event(GdkEventKey* event, DocPage* page) {
             }
         }
         break;
+    case '(':
+        {
+            show_hint(*page, it, end, 'f');
+        }
+        break;
+	case ')':
+		{
+			if( tip_.decl_window().is_visible() ) {
+				tip_.decl_window().hide();
+			}
+		}
+		break;
+    case '<':
+        {
+            if( it.backward_chars(2) && it.get_char()!='<' ) {
+                it.forward_chars(2);
+                show_hint(*page, it, end, 'f');
+            }
+        }
+        break;
     case '>':
         {
             if( it.backward_chars(2) && it.get_char()=='-' ) {
                 it.forward_chars(2);
                 show_hint(*page, it, end, 's');
-            }
+
+			} else if( tip_.decl_window().is_visible() ) {
+				tip_.decl_window().hide();
+			}
         }
         break;
     default:
 		if( (event->keyval <= 0x7f) && ::isalnum(event->keyval) || event->keyval=='_' ) {
-			if( tip_.is_visible() ) {
-				if( tip_.tag()=='s' )
-					locate_sub_hint(*page);
+			if( tip_.list_window().is_visible() ) {
+				locate_sub_hint(*page);
 
 			} else {
 				set_show_hint_timer(*page);
 			}
 		} else {
-			tip_.hide();
+			tip_.list_window().hide();
 		}
         break;
     }
@@ -367,8 +412,7 @@ bool LJCSPluginImpl::on_key_release_event(GdkEventKey* event, DocPage* page) {
 bool LJCSPluginImpl::on_button_release_event(GdkEventButton* event, DocPage* page) {
     assert( page != 0 );
 
-    if( tip_.is_visible() )
-        tip_.hide();
+    tip_.hide_all_tip();
 
     cpp::File* file = ParserEnviron::self().find_parsed(page->filepath());
     if( file==0 )
@@ -379,6 +423,9 @@ bool LJCSPluginImpl::on_button_release_event(GdkEventButton* event, DocPage* pag
     // tag test
     Glib::RefPtr<Gtk::TextBuffer> buf = page->buffer();
     Gtk::TextBuffer::iterator it = buf->get_iter_at_mark(buf->get_insert());
+    if( is_in_comment(it) )
+        return false;
+
     char ch = (char)it.get_char();
     if( isalnum(ch)==0 && ch!='_' )
 		return false;
@@ -434,7 +481,7 @@ bool LJCSPluginImpl::on_motion_notify_event(GdkEventMotion* event, DocPage* page
 }
 
 bool LJCSPluginImpl::on_focus_out_event(GdkEventFocus* event, DocPage* page) {
-    tip_.hide();
+    tip_.hide_all_tip();
     return true;
 }
 

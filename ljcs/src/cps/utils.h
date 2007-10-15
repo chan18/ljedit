@@ -40,7 +40,7 @@ void parse_id(BlockLexer& lexer, std::string& ns);
 
 void parse_value(BlockLexer& lexer);
 
-void parse_scope(BlockLexer& lexer, Scope& scope);
+void parse_scope(BlockLexer& lexer, Scope& scope, Element* parent=0);
 
 void parse_skip_block(BlockLexer& lexer, Scope& scope);
 

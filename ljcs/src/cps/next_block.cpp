@@ -317,7 +317,7 @@ TParseFn ParseNextBlockLexer::do_next_fun_impl_block() {
 		case '=':	fn = &parse_var;			break;
 		case '{':	fn = &parse_impl_block;		stop_with_blance = true;	break;
 		case '}':	fn = &parse_throw_breakout;	stop_with_blance = true;	break;
-		case '(':	fn = use_template ? &parse_template : &parse_fun_or_var;		stop_with_blance = true;	break;
+		case '(':	fn = use_template ? &parse_template : &parse_var;		stop_with_blance = true;	break;
 		case ':':
 			if( (pos() - startpos)==2 ) {
 				fn = &parse_label;
