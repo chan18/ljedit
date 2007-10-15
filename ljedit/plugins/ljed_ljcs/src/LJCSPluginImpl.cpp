@@ -6,11 +6,12 @@
 #include "LJCSPluginImpl.h"
 #include "LJCSPluginUtils.h"
 #include "LJCSEnv.h"
-
+#include "LJCSIcons.h"
 #include "SetupDialog.h"
 
 #include "DocManager.h"
 #include "LJEditor.h"
+
 
 LJCSPluginImpl::LJCSPluginImpl(LJEditor& editor)
     : editor_(editor)
@@ -201,6 +202,9 @@ void LJCSPluginImpl::create(const char* plugin_filename) {
 
 	main_window.ui_manager()->insert_action_group(action_group_);
 	menu_id_ = main_window.ui_manager()->add_ui_from_string(ui_info);
+
+	// icons
+	LJCSIcons::self().create(plugin_path_);
 
     // auto complete
     cons.push_back( dm.signal_page_added().connect( sigc::mem_fun(this, &LJCSPluginImpl::on_doc_page_added) ) );

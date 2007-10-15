@@ -32,8 +32,6 @@ private:
     void create();
     void destroy();
 
-	Glib::RefPtr<Gdk::Pixbuf> get_icon_from_elem(cpp::Element& elem);
-
 private:
 	typedef std::map<std::string, cpp::Element*> ElementMap;
 

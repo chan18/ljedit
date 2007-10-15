@@ -4,6 +4,8 @@
 #include "StdAfx.h"	// for vc precompile header
 
 #include "TipWindow.h"
+#include "LJCSIcons.h"
+
 
 TipWindow::TipWindow(LJEditor& editor)
     : editor_(editor)
@@ -76,11 +78,6 @@ void TipWindow::destroy() {
 	clear_list_store();
 }
 
-Glib::RefPtr<Gdk::Pixbuf> TipWindow::get_icon_from_elem(cpp::Element& elem) {
-	static Glib::RefPtr<Gdk::Pixbuf> icon = list_window_->render_icon(Gtk::Stock::JUMP_TO, Gtk::ICON_SIZE_MENU);
-	return icon;
-}
-
 void TipWindow::clear_list_store() {
 	Gtk::TreeIter it = list_store_->children().begin();
 	Gtk::TreeIter end = list_store_->children().end();
@@ -100,7 +97,7 @@ void TipWindow::fill_list_store(ElementMap& emap) {
 		elem->file.ref();
 
 		Gtk::TreeRow row = *(list_store_->append());
-		row[columns_.icon] = get_icon_from_elem(*elem);
+		row[columns_.icon] = LJCSIcons::self().get_icon_from_elem(*elem);
 		row[columns_.name] = elem->name;
 		row[columns_.elem] = elem;
 	}
@@ -118,8 +115,16 @@ void TipWindow::show_list_tip(int x, int y, cpp::ElementSet& mset) {
 	{
 		cpp::ElementSet::iterator it = mset.begin();
 		cpp::ElementSet::iterator end = mset.end();
-		for( ; it!=end; ++it )
-			emap[(*it)->name] = *it;
+		for( ; it!=end; ++it ) {
+			ElementMap::iterator p = emap.find((*it)->name);
+			if( p==emap.end() ) {
+				emap[(*it)->name] = *it;
+				continue;
+			}
+
+			if( (*it)->type==cpp::ET_CLASS )
+				p->second = *it;
+		}
 	}
 
 	fill_list_store(emap);

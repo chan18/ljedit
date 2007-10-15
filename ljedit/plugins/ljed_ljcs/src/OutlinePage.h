@@ -41,11 +41,11 @@ private:
 private:
     struct ModelColumns : public Gtk::TreeModelColumnRecord
     {
-        Gtk::TreeModelColumn<char>					type;
-        Gtk::TreeModelColumn<Glib::ustring>			decl;
-        Gtk::TreeModelColumn<const cpp::Element*>	elem;
+		Gtk::TreeModelColumn< Glib::RefPtr<Gdk::Pixbuf> >	icon;
+        Gtk::TreeModelColumn<Glib::ustring>					decl;
+        Gtk::TreeModelColumn<const cpp::Element*>			elem;
 
-        ModelColumns() { add(type); add(decl); add(elem); }
+        ModelColumns() { add(icon); add(decl); add(elem); }
     };
 
   const ModelColumns columns_;

@@ -189,6 +189,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\LJCSIcons.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\LJCSIcons.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\LJCSPlugin.cpp"
 				>
 			</File>

@@ -4,6 +4,8 @@
 #include "StdAfx.h"	// for vc precompile header
 
 #include "OutlinePage.h"
+#include "LJCSIcons.h"
+
 
 OutlinePage::OutlinePage() : file_(0), line_(0) {
 }
@@ -59,9 +61,9 @@ void OutlinePage::set_file(cpp::File* file, int line) {
 }
 
 void OutlinePage::add_columns() {
-    // type
+    // icon
     {
-        //view_.append_column("type", Gtk::CellRendererPixbuf());
+		view_.append_column("icon", columns_.icon);
     }
 
     // decl
@@ -76,6 +78,7 @@ void OutlinePage::add_columns() {
 
 void OutlinePage::view_add_elem(const cpp::Element* elem, const Gtk::TreeNodeChildren& parent) {
     Gtk::TreeRow row = *(store_->append(parent));
+	row[columns_.icon] = LJCSIcons::self().get_icon_from_elem(*elem);
     row[columns_.decl] = elem->decl;
     row[columns_.elem] = elem;
 

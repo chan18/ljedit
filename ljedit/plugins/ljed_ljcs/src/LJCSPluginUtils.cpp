@@ -5,6 +5,7 @@
 
 #include "LJCSPluginUtils.h"
 
+
 bool is_in_comment(Gtk::TextBuffer::iterator& it) {
     typedef Glib::SListHandle< Glib::RefPtr<Gtk::TextTag> > TagList;
     TagList tags = it.get_tags();
