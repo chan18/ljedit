@@ -16,7 +16,9 @@ LJCSINC = -I../../../ljcs/include
 LJCSLIB = -L../../../ljcs/lib -lljcs
 CXXFLAGS += $(LJCSINC)
 
-OBJS = src/LJCSPlugin.o   \
+OBJS = src/LJCSEnv.o      \
+    src/LJCSIcons.o       \
+    src/LJCSPlugin.o      \
     src/LJCSPluginImpl.o  \
     src/LJCSPluginUtils.o \
     src/OutlinePage.o     \
