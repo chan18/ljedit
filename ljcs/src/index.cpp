@@ -134,9 +134,6 @@ void STree::add(SNode& parent, Element& elem) {
 }
 
 void STree::remove(SNode& node, File& file) {
-	if( !node.has_sub() )
-		return;
-
 	{
 		SMap& smap = node.sub();
 		SMap::iterator it = smap.begin();

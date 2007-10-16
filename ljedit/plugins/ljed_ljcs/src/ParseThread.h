@@ -63,14 +63,22 @@ private:
 
 			cpp::File* new_file = ljcs_parse(filename, &stopsign_);
 
+			::pthread_rwlock_wrlock(&LJCSEnv::self().stree_rwlock);
+			//printf("sssssssssssssssssssssssssssssss\n");
+
 			if( old_file!=0 ) {
-				if( old_file!=new_file )
+				if( old_file != new_file ) {
 					LJCSEnv::self().stree.remove(*old_file);
+				}
 				old_file->unref();
 			}
 
-			if( new_file!=0 )
+			if( new_file!=0 ) {
 				LJCSEnv::self().stree.add(*new_file);
+			}
+
+			::pthread_rwlock_unlock(&LJCSEnv::self().stree_rwlock);
+			//printf("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\n");
         }
     }
 

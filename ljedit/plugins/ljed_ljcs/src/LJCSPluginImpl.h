@@ -66,6 +66,11 @@ private:
     bool on_motion_notify_event(GdkEventMotion* event, DocPage* page);
     bool on_focus_out_event(GdkEventFocus* event, DocPage* page);
 
+	void on_modified_changed(DocPage* page);
+
+private:
+	void do_button_release_event(GdkEventButton* event, DocPage* page, cpp::File* file);
+
 private:	// outline
     void outline_update_page();
 

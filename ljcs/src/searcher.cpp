@@ -760,8 +760,8 @@ void search_keys( const StrVector& keys
 
 	// return
 	{
-		cpp::ElementSet::iterator it = mset.elems.begin(); 
-		cpp::ElementSet::iterator end = mset.elems.end(); 
+		cpp::ElementSet::iterator it = mset.begin(); 
+		cpp::ElementSet::iterator end = mset.end(); 
 		for( ; it!=end; ++it )
 			cb.on_matched(**it);
 	}

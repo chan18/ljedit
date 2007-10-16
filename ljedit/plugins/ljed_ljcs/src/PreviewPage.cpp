@@ -270,7 +270,7 @@ void PreviewPage::search_thread() {
 		pthread_mutex_unlock(&search_key_mutex_);
 		
 		keys.clear();
-		mset.elems.clear();
+		mset.clear();
 
 		keys.push_back(sc.key);
 
@@ -279,12 +279,14 @@ void PreviewPage::search_thread() {
 		if( !sc.key_text.empty() && sc.key_text!=sc.key )
 			keys.push_back(sc.key_text);
 
+		pthread_rwlock_rdlock(&LJCSEnv::self().stree_rwlock);
 		::search_keys(keys, mset, LJCSEnv::self().stree, sc.file, sc.line);
+		pthread_rwlock_unlock(&LJCSEnv::self().stree_rwlock);
 
 		pthread_mutex_lock(&search_result_mutex_);
 		cpp::unref_all_elems(elems_);
-		elems_.resize(mset.elems.size());
-		std::copy(mset.elems.begin(), mset.elems.end(), elems_.begin());
+		elems_.resize(mset.size());
+		std::copy(mset.begin(), mset.end(), elems_.begin());
 		cpp::ref_all_elems(elems_);
 
 		search_resultsign_ = true;

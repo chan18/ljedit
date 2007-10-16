@@ -5,25 +5,23 @@
 #define LJED_INC_LJCSENV_H
 
 #include "ljcs/ljcs.h"
+#include <pthread.h>
+
 
 class LJCSEnv {
 public:
-	static LJCSEnv& self() {
-		static LJCSEnv me_;
-		return me_;
-	}
+	static LJCSEnv& self();
 
 private:
-	LJCSEnv() {}
-	~LJCSEnv() {}
+	LJCSEnv();
+	~LJCSEnv();
 
 	LJCSEnv(const LJCSEnv& o);
 	LJCSEnv& operator = (const LJCSEnv& o);
 
 public:
-	// TODO : now just simple implement
-	// 
-	cpp::STree stree;
+	cpp::STree			stree;
+	pthread_rwlock_t	stree_rwlock;
 };
 
 #endif//LJED_INC_LJCSENV_H

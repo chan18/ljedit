@@ -30,7 +30,9 @@ void LJCSPluginImpl::active_page(DocPage& page) {
     cons.push_back( view.signal_motion_notify_event().connect(	sigc::bind( sigc::mem_fun(this, &LJCSPluginImpl::on_motion_notify_event),	&page )		   ) );
     cons.push_back( view.signal_focus_out_event().connect(		sigc::bind( sigc::mem_fun(this, &LJCSPluginImpl::on_focus_out_event),		&page )		   ) );
 
-    if( !page.filepath().empty() ) {
+    cons.push_back( view.get_buffer()->signal_modified_changed().connect( sigc::bind( sigc::mem_fun(this, &LJCSPluginImpl::on_modified_changed), &page ) ) );
+
+	if( !page.filepath().empty() ) {
         std::string filename = page.filepath();
         parse_thread_.add(filename);
     }
@@ -65,7 +67,11 @@ void LJCSPluginImpl::show_hint(DocPage& page
         return;
 
     MatchedSet mset;
-	::search_keys(keys, mset, LJCSEnv::self().stree, file, line);
+	timespec timeout = { 0, 500 };
+	if( pthread_rwlock_timedrdlock(&LJCSEnv::self().stree_rwlock, &timeout)==0 ) {
+		::search_keys(keys, mset, LJCSEnv::self().stree, file, line);
+		pthread_rwlock_unlock(&LJCSEnv::self().stree_rwlock);
+	}
 
     int view_x = 0;
     int view_y = 0;
@@ -83,7 +89,7 @@ void LJCSPluginImpl::show_hint(DocPage& page
 	int y = view_y + cursor_y + rect.get_height() + 2;
 
 	if( tag=='s' ) {
-		tip_.show_list_tip(x, y, mset.elems);
+		tip_.show_list_tip(x, y, mset.elems());
 
 		if( tip_.decl_window().is_visible() ) {
 			if( y >= (tip_.list_window().get_height() + 16) ) {
@@ -96,7 +102,7 @@ void LJCSPluginImpl::show_hint(DocPage& page
 		}
 
 	} else {
-		tip_.show_decl_tip(x, y, mset.elems);
+		tip_.show_decl_tip(x, y, mset.elems());
 	}
 }
 
@@ -265,7 +271,15 @@ void LJCSPluginImpl::on_doc_page_added(Gtk::Widget* widget, guint page_num) {
     assert( widget != 0 );
 
     DocPage& page = editor_.main_window().doc_manager().child_to_page(*widget);
-	active_page(page);
+	
+	if( check_cpp_files(page.filepath()) ) {
+		active_page(page);
+
+		if( !page.buffer()->get_language() ) {
+			Glib::RefPtr<gtksourceview::SourceLanguage> lang = editor_.utils().get_language_by_filename("a.h");
+			page.buffer()->set_language(lang);
+		}
+	}
 }
 
 void LJCSPluginImpl::on_doc_page_removed(Gtk::Widget* widget, guint page_num) {
@@ -413,26 +427,18 @@ bool LJCSPluginImpl::on_key_release_event(GdkEventKey* event, DocPage* page) {
     return true;
 }
 
-bool LJCSPluginImpl::on_button_release_event(GdkEventButton* event, DocPage* page) {
-    assert( page != 0 );
-
-    tip_.hide_all_tip();
-
-    cpp::File* file = ParserEnviron::self().find_parsed(page->filepath());
-    if( file==0 )
-        return false;
-
+void LJCSPluginImpl::do_button_release_event(GdkEventButton* event, DocPage* page, cpp::File* file) {
     // include test
 
     // tag test
     Glib::RefPtr<Gtk::TextBuffer> buf = page->buffer();
     Gtk::TextBuffer::iterator it = buf->get_iter_at_mark(buf->get_insert());
     if( is_in_comment(it) )
-        return false;
+        return;
 
     char ch = (char)it.get_char();
     if( isalnum(ch)==0 && ch!='_' )
-		return false;
+		return;
 
 	// find key end position
 	while( it.forward_char() ) {
@@ -451,12 +457,16 @@ bool LJCSPluginImpl::on_button_release_event(GdkEventButton* event, DocPage* pag
 		// jump to
 		StrVector keys;
 		if( !find_keys(keys, it, end, file, false) )
-			return false;
+			return;
 
 		MatchedSet mset;
-		::search_keys(keys, mset, LJCSEnv::self().stree, file, line);
+		timespec timeout = { 0, 500 };
+		if( pthread_rwlock_timedrdlock(&LJCSEnv::self().stree_rwlock, &timeout)==0 ) {
+			::search_keys(keys, mset, LJCSEnv::self().stree, file, line);
+			pthread_rwlock_unlock(&LJCSEnv::self().stree_rwlock);
+		}
 
-		cpp::Element* elem = find_best_matched_element(mset.elems);
+		cpp::Element* elem = find_best_matched_element(mset.elems());
 		if( elem != 0 ) {
 			DocManager& dm = editor_.main_window().doc_manager();
 			dm.open_file(elem->file.filename, int(elem->sline - 1));
@@ -468,7 +478,7 @@ bool LJCSPluginImpl::on_button_release_event(GdkEventButton* event, DocPage* pag
 		LJEditorDocIter pe(end);
 		std::string key;
 		if( !find_key(key, ps, pe, false) )
-			return false;
+			return;
 
 		std::string key_text = it.get_text(end);
 
@@ -476,6 +486,23 @@ bool LJCSPluginImpl::on_button_release_event(GdkEventButton* event, DocPage* pag
 
 		editor_.main_window().bottom_panel().set_current_page(preview_page_);
 	}
+}
+
+bool LJCSPluginImpl::on_button_release_event(GdkEventButton* event, DocPage* page) {
+    assert( page != 0 );
+
+    tip_.hide_all_tip();
+
+    cpp::File* file = ParserEnviron::self().find_parsed(page->filepath());
+    if( file==0 )
+        return false;
+
+	// BUG : has thread problem
+	file->ref();
+
+	do_button_release_event(event, page, file);
+
+	file->unref();
 
     return false;
 }
@@ -487,6 +514,15 @@ bool LJCSPluginImpl::on_motion_notify_event(GdkEventMotion* event, DocPage* page
 bool LJCSPluginImpl::on_focus_out_event(GdkEventFocus* event, DocPage* page) {
     tip_.hide_all_tip();
     return true;
+}
+
+void LJCSPluginImpl::on_modified_changed(DocPage* page) {
+	assert( page != 0 );
+
+	if( !page->filepath().empty() ) {
+        std::string filename = page->filepath();
+        parse_thread_.add(filename);
+    }
 }
 
 void LJCSPluginImpl::outline_update_page() {

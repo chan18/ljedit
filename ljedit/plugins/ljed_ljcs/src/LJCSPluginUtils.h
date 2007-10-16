@@ -43,5 +43,7 @@ size_t find_best_matched_index(cpp::Elements& elems);
 
 cpp::Element* find_best_matched_element(cpp::ElementSet& eset);
 
+bool check_cpp_files(const std::string& filepath);
+
 #endif//LJED_INC_LJCSPLUGINUTILS_H
 

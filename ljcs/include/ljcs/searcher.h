@@ -25,10 +25,30 @@ public:
 
 class MatchedSet : public IMatched {
 public:
-	cpp::ElementSet elems;
+	MatchedSet() {}
+	~MatchedSet() { clear(); }
+
+	cpp::ElementSet elems_;
 
 	virtual void on_matched(cpp::Element& elem) {
-		elems.insert(&elem);
+		cpp::ElementSet::iterator it = elems_.find(&elem);
+		if( it==elems_.end() ) {
+			elem.file.ref();
+			elems_.insert(&elem);
+		}
+	}
+
+	cpp::ElementSet& elems()          { return elems_; }
+
+	size_t size() const               { return elems_.size(); }
+
+	cpp::ElementSet::iterator begin() { return elems_.begin(); }
+
+	cpp::ElementSet::iterator end()   { return elems_.end(); }
+
+	void clear() {
+		cpp::unref_all_elems(elems_);
+		elems_.clear();
 	}
 };
 

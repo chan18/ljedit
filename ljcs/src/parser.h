@@ -6,6 +6,9 @@
 
 #include "ds.h"
 
+// TODO : ParserEnviron改为多线程版本实现
+// 
+
 cpp::File* ljcs_parse(const std::string& filepath, bool* stopsign=0);
 cpp::File* ljcs_parse_in_include_path(const std::string& filename, bool* stopsign=0);
 cpp::File* ljcs_parse_text(const std::string& text, size_t sline=1, bool* stopsign=0);

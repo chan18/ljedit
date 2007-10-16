@@ -159,3 +159,37 @@ cpp::Element* find_best_matched_element(cpp::ElementSet& eset) {
 	return matched;
 }
 
+std::set<std::string> init_exts() {
+	std::set<std::string> exts;
+	exts.insert("c");
+	exts.insert("h");
+	exts.insert("cpp");
+	exts.insert("hpp");
+	exts.insert("cc");
+	exts.insert("hh");
+	exts.insert("inl");
+	exts.insert("cxx");
+	exts.insert("hxx");
+
+	return exts;
+}
+
+bool check_cpp_files(const std::string& filepath) {
+	std::string name = Glib::path_get_basename(filepath);
+	size_t pos = name.find('.');
+	if( pos!=name.npos ) {
+		// check ext filename is .c .h .cpp .hpp .cc .hh .inl ...
+		name.erase(0, pos+1);
+		std::transform(name.begin(), name.end(), name.begin(), tolower);
+
+		static std::set<std::string> exts = init_exts();
+		return ( exts.find(name) != exts.end() );
+
+	} else {
+		// if no ext filename, check path in system header path
+		return ParserEnviron::self().in_include_path(filepath);
+	}
+
+	return false;
+}
+

@@ -185,6 +185,10 @@
 			Name="src"
 			>
 			<File
+				RelativePath=".\src\LJCSEnv.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\LJCSEnv.h"
 				>
 			</File>
