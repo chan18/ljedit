@@ -15,6 +15,7 @@ void STree::add(File& file) {
 	add(file.scope);
 }
 
+/*
 void STree::remove(File& file) {
 	FileSet::iterator it = files_.find(&file);
 	if( it==files_.end() )
@@ -24,6 +25,7 @@ void STree::remove(File& file) {
 
 	remove(root_, file);
 }
+*/
 
 void STree::add(Scope& scope) {
 	Elements::iterator it = scope.elems.begin();
@@ -58,8 +60,9 @@ SNode& STree::get_index_scope_node(File& file, SNode& parent, const std::string&
 
 void STree::add(SNode& parent, Element& elem) {
 	switch( elem.type ) {
-	case ET_INCLUDE: {
-			File* file = ParserEnviron::self().find_parsed(((Include&)elem).include_file);
+	case ET_INCLUDE:
+		if( env_ != 0 ) {
+			File* file = env_->pe_find_parsed(((Include&)elem).include_file);
 			if( file != 0 )
 				add( *file );
 		}
@@ -133,6 +136,7 @@ void STree::add(SNode& parent, Element& elem) {
 	}
 }
 
+/*
 void STree::remove(SNode& node, File& file) {
 	{
 		SMap& smap = node.sub();
@@ -159,6 +163,7 @@ void STree::remove(SNode& node, File& file) {
 		}
 	}
 }
+*/
 
 }//namespace cpp
 

@@ -21,6 +21,8 @@ public:
 
 	virtual const Glib::ustring& get_language_id_by_filename(const Glib::ustring& filename);
 
+	virtual void format_filekey(std::string& filename);
+
 	const Glib::ustring& font() const	{ return font_; }
 	Glib::ustring& font()				{ return font_; }
 

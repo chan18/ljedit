@@ -6,7 +6,9 @@
 #include "DocManagerImpl.h"
 
 #include "LJEditorUtilsImpl.h"
-#include "dir_utils.h"
+
+#include <windows.h>
+
 
 DocManagerImpl::DocManagerImpl() : locate_page_num_(-1) {
 	pos_pool_init();
@@ -78,7 +80,7 @@ bool DocManagerImpl::scroll_to_file_pos() {
 }
 
 void DocManagerImpl::create_new_file() {
-    static std::string noname = "noname";
+    static Glib::ustring noname = "noname";
 
     open_page("", noname);
 }
@@ -103,29 +105,29 @@ void DocManagerImpl::show_open_dialog() {
 }
 
 void DocManagerImpl::open_file(const std::string& filepath, int line, int line_offset) {
-    std::string abspath = filepath;
-    ::ljcs_filepath_to_abspath(abspath);
+	std::string filekey = filepath;
+	LJEditorUtilsImpl::self().format_filekey(filekey);
 
-	if( do_locate_file(abspath, line, line_offset) )
+	if( do_locate_file(filekey, line, line_offset) )
+		return;
+
+	Glib::ustring ubuf;
+	if( !LJEditorUtilsImpl::self().load_file(ubuf, filekey) )
 		return;
 
     std::string filename = Glib::path_get_basename(filepath);
 
-	Glib::ustring ubuf;
-	if( !LJEditorUtilsImpl::self().load_file(ubuf, abspath) )
-		return;
-
-    open_page(abspath, filename, &ubuf, line, line_offset);
+    open_page(filekey, filename, &ubuf, line, line_offset);
 }
 
-bool DocManagerImpl::do_locate_file(const std::string& abspath, int line, int line_offset) {
+bool DocManagerImpl::do_locate_file(const std::string& filepath, int line, int line_offset) {
     Gtk::Notebook::PageList::iterator it = pages().begin();
     Gtk::Notebook::PageList::iterator end = pages().end();
     for( ; it!=end; ++it ) {
         DocPageImpl* page = (DocPageImpl*)it->get_child();
         assert( page != 0 );
 
-		if( abspath.compare(page->filepath().c_str())==0 ) {
+		if( filepath.compare(page->filepath().c_str())==0 ) {
 			if( line < 0 ) {
 				set_current_page(it->get_page_num());
 				page->view().grab_focus();
@@ -141,10 +143,9 @@ bool DocManagerImpl::do_locate_file(const std::string& abspath, int line, int li
 }
 
 bool DocManagerImpl::locate_file(const std::string& filepath, int line, int line_offset) {
-    std::string abspath = filepath;
-    ::ljcs_filepath_to_abspath(abspath);
-
-	return do_locate_file(abspath, line, line_offset);
+	std::string filekey = filepath;
+	LJEditorUtilsImpl::self().format_filekey(filekey);
+	return do_locate_file(filekey, line, line_offset);
 }
 
 bool DocManagerImpl::on_page_label_button_press(GdkEventButton* event, DocPageImpl* page) {
@@ -156,7 +157,7 @@ bool DocManagerImpl::on_page_label_button_press(GdkEventButton* event, DocPageIm
 }
 
 bool DocManagerImpl::open_page(const std::string filepath
-        , const std::string& displaty_name
+        , const Glib::ustring& displaty_name
         , const Glib::ustring* text
         , int line
 		, int line_offset)

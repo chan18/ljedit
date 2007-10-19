@@ -10,7 +10,7 @@
 #include <fstream>
 #include <libglademm.h>
 
-#include "ljcs/parser.h"
+#include "LJCSEnv.h"
 
 
 class LJCSSetupException : public Glib::Exception
@@ -56,8 +56,9 @@ public:
 		Glib::RefPtr<Gtk::TextBuffer> text_buffer = dlg->includes_->get_buffer();
 		assert( text_buffer != 0 );
 
-		StrVector::iterator it = ParserEnviron::self().include_paths.begin();
-		StrVector::iterator end = ParserEnviron::self().include_paths.end();
+		StrVector paths = LJCSEnv::self().get_include_paths();
+		StrVector::iterator it = paths.begin();
+		StrVector::iterator end = paths.end();
 		for( ; it!=end; ++it ) {
 			text_buffer->insert_at_cursor(*it);
 			text_buffer->insert_at_cursor("\n");
@@ -78,15 +79,17 @@ private:
 };
 
 void load_includes(const std::string& includes) {
-	ParserEnviron::self().include_paths.clear();
+	StrVector paths;
 			
 	std::istringstream iss(includes);
 	std::string line;
 	while( std::getline(iss, line) ) {
 		if( line.empty() )
 			continue;
-		ParserEnviron::self().append_include_path(line);
+		paths.push_back(line);
 	}
+
+	LJCSEnv::self().set_include_paths(paths);
 }
 
 std::string get_config_filepath(const std::string& plugin_path) {
@@ -123,13 +126,15 @@ void load_setup(const std::string& plugin_path) {
 	load_includes(text);
 
 	// pre parse files
+	StrVector ppfils;
 	std::string ppfile =
 #ifdef WIN32
 		Glib::build_filename(plugin_path, "ljcs_pre_parse.mingw32");
 #else
 		Glib::build_filename(plugin_path, "ljcs_pre_parse.linux");
 #endif
-	ParserEnviron::self().pre_parse_files.push_back(ppfile);
+	ppfils.push_back(ppfile);
+	LJCSEnv::self().set_pre_parse_files(ppfils);
 }
 
 void save_setup(const std::string& plugin_path, const std::string& includes) {

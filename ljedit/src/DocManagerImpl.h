@@ -49,7 +49,7 @@ public:
 protected:
     bool save_page(DocPageImpl& page, bool is_save_as);
     bool open_page(const std::string filepath
-        , const std::string& displaty_name
+        , const Glib::ustring& displaty_name
         , const Glib::ustring* text = 0
         , int line=0
 		, int line_offset=0);

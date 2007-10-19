@@ -55,55 +55,57 @@ void LJCSPluginImpl::show_hint(DocPage& page
 
     LJEditorDocIter ps(it);
     LJEditorDocIter pe(end);
-	
+
+	LJCSEnv& env = LJCSEnv::self();
     std::string filename = page.filepath();
-    cpp::File* file = ParserEnviron::self().find_parsed(filename);
+    cpp::File* file = env.find_parsed(filename);
     if( file==0 )
         return;
 
     size_t line = (size_t)it.get_line() + 1;
     StrVector keys;
-    if( !find_keys(keys, it, end, file, true) )
-        return;
+	if( find_keys(keys, it, end, file, true) ) {
+		MatchedSet mset;
+		if( env.stree().timedrdlock(500) ) {
+			::search_keys(keys, mset, LJCSEnv::self().stree().value(), file, line);
+			env.stree().unlock();
 
-    MatchedSet mset;
-	timespec timeout = { 0, 500 };
-	if( pthread_rwlock_timedrdlock(&LJCSEnv::self().stree_rwlock, &timeout)==0 ) {
-		::search_keys(keys, mset, LJCSEnv::self().stree, file, line);
-		pthread_rwlock_unlock(&LJCSEnv::self().stree_rwlock);
-	}
+			int view_x = 0;
+			int view_y = 0;
+			Gtk::TextView& view = page.view();
+			view.get_window(Gtk::TEXT_WINDOW_TEXT)->get_origin(view_x, view_y);
+		    
+			Gdk::Rectangle rect;
+			view.get_iter_location(end, rect);
 
-    int view_x = 0;
-    int view_y = 0;
-    Gtk::TextView& view = page.view();
-    view.get_window(Gtk::TEXT_WINDOW_TEXT)->get_origin(view_x, view_y);
-    
-    Gdk::Rectangle rect;
-    view.get_iter_location(end, rect);
+			int cursor_x = rect.get_x();
+			int cursor_y = rect.get_y();
+			view.buffer_to_window_coords(Gtk::TEXT_WINDOW_TEXT, cursor_x, cursor_y, cursor_x, cursor_y);
 
-    int cursor_x = rect.get_x();
-    int cursor_y = rect.get_y();
-    view.buffer_to_window_coords(Gtk::TEXT_WINDOW_TEXT, cursor_x, cursor_y, cursor_x, cursor_y);
+			int x = view_x + cursor_x;
+			int y = view_y + cursor_y + rect.get_height() + 2;
 
-	int x = view_x + cursor_x;
-	int y = view_y + cursor_y + rect.get_height() + 2;
+			if( tag=='s' ) {
+				tip_.show_list_tip(x, y, mset.elems());
 
-	if( tag=='s' ) {
-		tip_.show_list_tip(x, y, mset.elems());
+				if( tip_.decl_window().is_visible() ) {
+					if( y >= (tip_.list_window().get_height() + 16) ) {
+						y -= (tip_.list_window().get_height() + 16);
 
-		if( tip_.decl_window().is_visible() ) {
-			if( y >= (tip_.list_window().get_height() + 16) ) {
-				y -= (tip_.list_window().get_height() + 16);
+					} else {
+						y += ( tip_.decl_window().get_height() + 5 );
+					}
+					tip_.list_window().move(x, y);
+				}
 
 			} else {
-				y += ( tip_.decl_window().get_height() + 5 );
+				tip_.show_decl_tip(x, y, mset.elems());
 			}
-			tip_.list_window().move(x, y);
 		}
 
-	} else {
-		tip_.show_decl_tip(x, y, mset.elems());
 	}
+
+	file->unref();
 }
 
 void LJCSPluginImpl::locate_sub_hint(DocPage& page) {
@@ -142,19 +144,33 @@ void LJCSPluginImpl::auto_complete(DocPage& page) {
     if( selected == 0 )
         return;
 
+	char ch = '\0';
+
     Glib::RefPtr<Gtk::TextBuffer> buf = page.buffer();
-    Glib::RefPtr<Gtk::TextMark> mark = buf->get_insert();
-    Gtk::TextBuffer::iterator it = buf->get_iter_at_mark(mark);
-    int finished = 0;
-    while( it.backward_char() ) {
-        char ch = (char)(it.get_char());
-        if( ::isalnum(ch) || ch=='_' )
-            finished += 1;
-        else
-            break;
-    }
-    
-    buf->insert_at_cursor(selected->name.substr(finished));
+    Gtk::TextBuffer::iterator ps = buf->get_iter_at_mark(buf->get_insert());
+	Gtk::TextBuffer::iterator pe = ps;
+
+	// range start
+	while( ps.backward_char() ) {
+		ch = (char)(ps.get_char());
+		if( ::isalnum(ch) || ch=='_' )
+			continue;
+
+		ps.forward_char();
+		break;
+	}
+
+	// range end
+	do {
+		ch = (char)(pe.get_char());
+		if( ::isalnum(ch) || ch=='_' )
+			continue;
+		else
+			break;
+	} while( pe.forward_char() );
+
+	buf->erase(ps, pe);
+    buf->insert_at_cursor(selected->name);
     tip_.list_window().hide();
 }
 
@@ -459,18 +475,20 @@ void LJCSPluginImpl::do_button_release_event(GdkEventButton* event, DocPage* pag
 		if( !find_keys(keys, it, end, file, false) )
 			return;
 
+		LJCSEnv& env = LJCSEnv::self();
+
 		MatchedSet mset;
-		timespec timeout = { 0, 500 };
-		if( pthread_rwlock_timedrdlock(&LJCSEnv::self().stree_rwlock, &timeout)==0 ) {
-			::search_keys(keys, mset, LJCSEnv::self().stree, file, line);
-			pthread_rwlock_unlock(&LJCSEnv::self().stree_rwlock);
+		if( env.stree().timedrdlock(500) ) {
+			::search_keys(keys, mset, LJCSEnv::self().stree().value(), file, line);
+			env.stree().unlock();
+
+			cpp::Element* elem = find_best_matched_element(mset.elems());
+			if( elem != 0 ) {
+				DocManager& dm = editor_.main_window().doc_manager();
+				dm.open_file(elem->file.filename, int(elem->sline - 1));
+			}
 		}
 
-		cpp::Element* elem = find_best_matched_element(mset.elems());
-		if( elem != 0 ) {
-			DocManager& dm = editor_.main_window().doc_manager();
-			dm.open_file(elem->file.filename, int(elem->sline - 1));
-		}
 
 	} else {
 		// preview
@@ -493,17 +511,11 @@ bool LJCSPluginImpl::on_button_release_event(GdkEventButton* event, DocPage* pag
 
     tip_.hide_all_tip();
 
-    cpp::File* file = ParserEnviron::self().find_parsed(page->filepath());
-    if( file==0 )
-        return false;
-
-	// BUG : has thread problem
-	file->ref();
-
-	do_button_release_event(event, page, file);
-
-	file->unref();
-
+	cpp::File* file = LJCSEnv::self().find_parsed(page->filepath());
+	if( file!=0 ) {
+		do_button_release_event(event, page, file);
+		file->unref();
+	}
     return false;
 }
 
@@ -534,7 +546,7 @@ void LJCSPluginImpl::outline_update_page() {
         assert( widget != 0 );
 
         DocPage& page = dm.child_to_page(*widget);
-        cpp::File* file = ParserEnviron::self().find_parsed(page.filepath());
+        cpp::File* file = LJCSEnv::self().find_parsed(page.filepath());
 
 		Glib::RefPtr<Gtk::TextBuffer> buf = page.buffer();
 		Gtk::TextBuffer::iterator it = buf->get_iter_at_mark(buf->get_insert());

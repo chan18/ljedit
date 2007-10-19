@@ -170,16 +170,12 @@ public:
 public:
 	Macro(File& file, const std::string& name, size_t sline, size_t eline, char view)
 		: Element(file, ET_MACRO, name, sline, eline, view)
-		, args(0), value(0), rvalue(0) {}
+		, args(0) {}
 
 	~Macro() {
 		if( !empty_args() )
 			delete args;
-		delete value;
-		delete rvalue;
 		args = 0;
-		value = 0;
-		rvalue = 0;
 	}
 
 	bool empty_args() const { return args==ref_empty_args(); }
@@ -197,8 +193,7 @@ private:
 
 public:
 	TArgs*			args;
-	std::string*	value;
-	std::string*	rvalue;
+	std::string		value;
 };
 
 class Undef : public Element {

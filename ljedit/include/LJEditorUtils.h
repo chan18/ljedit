@@ -25,6 +25,10 @@ public:
 	bool load_file(Glib::ustring& out, const std::string& filename)
 		{ return do_load_file(out, filename); }
 
+	// filekey is unique filename in ljedit
+	// 
+	virtual void format_filekey(std::string& filename) = 0;
+
 private:
 	virtual bool do_load_file(Glib::ustring& out, const std::string& filename) = 0;
 };

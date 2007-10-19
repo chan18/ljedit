@@ -207,10 +207,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\dir_utils.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\DocManagerImpl.cpp"
 				>
 			</File>

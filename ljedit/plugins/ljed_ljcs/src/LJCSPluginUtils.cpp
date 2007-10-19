@@ -4,6 +4,7 @@
 #include "StdAfx.h"	// for vc precompile header
 
 #include "LJCSPluginUtils.h"
+#include "LJCSEnv.h"
 
 
 bool is_in_comment(Gtk::TextBuffer::iterator& it) {
@@ -32,12 +33,13 @@ bool find_keys( StrVector& keys
         return false;
     keys.push_back(key);
 
+	/*
     std::string rkey = it.get_text(end);
     ljcs_parse_macro_replace(rkey, file);
 	parse_key(rkey, rkey, find_startswith);
     if( !rkey.empty() && rkey!=key )
         keys.push_back(rkey);
-
+	*/
     return true;
 }
 
@@ -187,7 +189,7 @@ bool check_cpp_files(const std::string& filepath) {
 
 	} else {
 		// if no ext filename, check path in system header path
-		return ParserEnviron::self().in_include_path(filepath);
+		return LJCSEnv::self().in_include_path(filepath);
 	}
 
 	return false;

@@ -8,19 +8,12 @@
 #include <fstream>
 
 #include "LJEditorUtilsImpl.h"
-#include "dir_utils.h"
+
 
 DocPageImpl* DocPageImpl::create(const std::string& filepath
-        , const std::string& display_name)
+        , const Glib::ustring& display_name)
 {
-	Glib::ustring u_display_name;
-	try {
-		u_display_name = Glib::locale_to_utf8(display_name);
-	} catch(const Glib::Exception&) {
-		u_display_name = display_name;
-	}
-
-    Gtk::Label* label = Gtk::manage(new Gtk::Label(u_display_name));
+    Gtk::Label* label = Gtk::manage(new Gtk::Label(display_name));
 	Gtk::EventBox* label_event_box = Gtk::manage(new Gtk::EventBox());
 	label_event_box->add(*label);
 	label_event_box->show_all();

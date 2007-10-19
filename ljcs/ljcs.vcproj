@@ -79,7 +79,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy src\ds.h include\ljcs\"
+				CommandLine="copy src\ds.h include\ljcs\&#x0D;&#x0A;copy src\parser.h include\ljcs\&#x0D;&#x0A;copy src\skey.h include\ljcs\&#x0D;&#x0A;copy src\index.h include\ljcs\&#x0D;&#x0A;copy src\searcher.h include\ljcs\&#x0D;&#x0A;copy src\crt_debug.h include\ljcs\&#x0D;&#x0A;copy src\ljcs.h include\ljcs\&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -219,10 +219,6 @@
 		</File>
 		<File
 			RelativePath=".\src\crt_debug.h"
-			>
-		</File>
-		<File
-			RelativePath=".\src\dir_utils.h"
 			>
 		</File>
 		<File

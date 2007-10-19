@@ -487,6 +487,7 @@ void Searcher::do_locate(cpp::Scope& scope
 				if( path.cur().type!='L' ) {
 					size_t pos = path.pos();
 					cpp::STree fun_impl_stree;
+					fun_impl_stree.set_env(stree_.get_env());
 					fun_impl_stree.add(r.impl);
 					do_walk(fun_impl_stree.root(), path);
 					path.pos(pos);

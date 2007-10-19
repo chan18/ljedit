@@ -46,7 +46,7 @@ void OutlinePage::set_file(cpp::File* file, int line) {
         if( file_ != 0 )
             file_->unref();
 
-        file_ = (file == 0) ? 0 : file->ref();
+        file_ = file;
 
         view_.set_model(store_);
     }

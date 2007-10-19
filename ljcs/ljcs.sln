@@ -3,11 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ljcs", "ljcs.vcproj", "{08B98FFF-42D0-4B14-9B45-27A80BC8EE52}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ljcs_py", "ljcs_py.vcproj", "{899CDD7C-95DF-4DC3-B072-2476D5DBF927}"
-	ProjectSection(ProjectDependencies) = postProject
-		{08B98FFF-42D0-4B14-9B45-27A80BC8EE52} = {08B98FFF-42D0-4B14-9B45-27A80BC8EE52}
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -18,10 +13,6 @@ Global
 		{08B98FFF-42D0-4B14-9B45-27A80BC8EE52}.Debug|Win32.Build.0 = Debug|Win32
 		{08B98FFF-42D0-4B14-9B45-27A80BC8EE52}.Release|Win32.ActiveCfg = Release|Win32
 		{08B98FFF-42D0-4B14-9B45-27A80BC8EE52}.Release|Win32.Build.0 = Release|Win32
-		{899CDD7C-95DF-4DC3-B072-2476D5DBF927}.Debug|Win32.ActiveCfg = Debug|Win32
-		{899CDD7C-95DF-4DC3-B072-2476D5DBF927}.Debug|Win32.Build.0 = Debug|Win32
-		{899CDD7C-95DF-4DC3-B072-2476D5DBF927}.Release|Win32.ActiveCfg = Release|Win32
-		{899CDD7C-95DF-4DC3-B072-2476D5DBF927}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

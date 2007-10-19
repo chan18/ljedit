@@ -15,12 +15,15 @@ class MacroMgr;
 
 class Lexer {
 protected:
-	Lexer(MacroMgr& env, cpp::File& file, const void* tag)
+	Lexer(MacroMgr& env, cpp::File& file, std::istream* managed, const void* tag)
 		: env_(env)
 		, file_(file)
+		, managed_(managed)
 		, tag_(tag) {}
 
 public:
+	static Lexer* create(MacroMgr& env, cpp::File& file, std::istream& ins, std::ostream* out=0, const void* tag=0);
+
 	static Lexer* create(MacroMgr& env, cpp::File& file, std::ostream* out=0, const void* tag=0);
 
 	static Lexer* create(MacroMgr& env
@@ -31,9 +34,9 @@ public:
 		, std::ostream* out=0
 		, const void* tag=0);
 
-	virtual ~Lexer()  {}
+	virtual ~Lexer() { delete managed_; }
 
-	int next_token()  { do_next_token(); return token().type; }
+	int next_token() { do_next_token(); return token().type; }
 
 	bool eof() const					{ return token().type==0; }
 
@@ -48,11 +51,12 @@ private:
 	virtual void do_next_token() = 0;
 
 protected:
-	MacroMgr&	env_;
-	cpp::File&	file_;
-	const void*	tag_;
+	MacroMgr&		env_;
+	cpp::File&		file_;
+	const void*		tag_;
 
-	Token		token_;
+	Token			token_;
+	std::istream*	managed_;
 };
 
 #endif//LJCS_ML_H

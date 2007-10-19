@@ -5,6 +5,8 @@
 
 #include "ds.h"
 
+class IParserEnviron;
+
 namespace cpp {
 
 class SNode;
@@ -53,7 +55,6 @@ public:
 		return node;
 	}
 
-
 private:
 	ElementSet	elems_;
 	SMap*		sub_;
@@ -61,21 +62,29 @@ private:
 
 class STree {
 public:
+	STree() : env_(0) {}
+
+	void set_env(IParserEnviron* env) { env_ = env; }
+
+	IParserEnviron* get_env() { return env_; }
+
 	SNode& root() { return root_; }
 
 	void add(File& file);
-	void remove(File& file);
+	//void remove(File& file);
 
 	void add(Scope& scope);
 
 private:
 	SNode& get_index_scope_node(File& file, SNode& parent, const std::string& nskey);
 	void add(SNode& node, Element& elem);
-	void remove(SNode& node, File& file);
+	//void remove(SNode& node, File& file);
 
 private:
-	SNode	root_;
-	FileSet	files_;
+	IParserEnviron*	env_;
+
+	SNode			root_;
+	FileSet			files_;
 };
 
 }//namespace cpp

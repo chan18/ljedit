@@ -33,6 +33,8 @@ LJED_PLUGIN_DLL_EXPORT void plugin_destroy(IPlugin* plugin) {
 
 
 IPlugin* LJCSPlugin::create_plugin(LJEditor& editor) {
+	LJCSEnv::self().init(editor);
+
     LJCSPluginImpl* impl = new LJCSPluginImpl(editor);
     IPlugin* plugin = new LJCSPlugin(editor, impl);
     if( impl==0 || plugin==0 ) {

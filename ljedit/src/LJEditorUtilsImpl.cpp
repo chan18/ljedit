@@ -11,7 +11,117 @@
 
 #include <gtksourceview/gtksourcelanguage.h>
 
+
+#ifdef WIN32
+	#include <windows.h>
+
+	#include <direct.h>
+#endif
+
+const size_t LJCS_MAX_PATH_SIZE = 8192;
+
+//inline bool is_split_char(char ch) { return ch=='/' || ch=='\\'; }
+
+//inline size_t get_abspath_pos(const std::string& s) {
+//	assert( !s.empty() );
+
+//	if( s[0]=='/' )		// /usr/xx
+//		return 1;
+
+//	if( s.size() > 2 ) {
+//		if( s[0]>0 && s[1]==':' && ::isalpha(s[0]) && is_split_char(s[2]) )	// x:\xx
+//			return 3;
+
+//		if( s[0]=='\\' && s[1]=='\\' )	// \\host\e$\xx
+//			return 2;
+
+//		const static std::string FILE_URI = "file://";
+//		const static size_t FILE_URI_SIZE = FILE_URI.size();
+
+//		if( s.size() > FILE_URI_SIZE )
+//			if( s.compare(0, FILE_URI_SIZE, FILE_URI)==0 )
+//				return FILE_URI_SIZE;
+//	}
+
+//	return 0;
+//}
+
+inline void filepath_to_abspath(std::string& filepath) {
+	if( filepath.empty() )
+		return;
+
+#ifdef WIN32
+	// replace /xx/./yy with /xx/yy
+	char buf[LJCS_MAX_PATH_SIZE];
+	if( GetFullPathNameA(filepath.c_str(), LJCS_MAX_PATH_SIZE, buf, 0) )
+		filepath = buf;
+
+	std::transform(filepath.begin(), filepath.end(), filepath.begin(), tolower);
+
+	//// replace \ with /
+	//// 
+	//// if in windows, change case to lower
+	//// 
+	//{
+	//	char* it = &filepath[0];
+	//	char* end = it + filepath.size();
+	//	if( filepath.size() > 2 && filepath[0]=='\\' && filepath[1]=='\\')
+	//		it += 2;
+	//	for( ; it < end; ++it ) {
+	//		if( *it=='\\' )
+	//			*it = '/';
+	//		if( *it > 0 && ::isupper(*it) )
+	//			*it = ::tolower(*it);
+	//	}
+
+#else
+	if( !Glib::path_is_absolute(filepath) ) {
+		// add current path
+		if( get_abspath_pos(filepath)==0 ) {
+			std::string cpath = Glib::get_current_dir();
+			filepath = Glib::build_filename(cpath, filepath);
+		}
+	}
+
+	// replace /xx/./yy with /xx/yy
+	{
+		size_t pe = filepath.npos;
+		for(;;) {
+			pe = filepath.rfind("./", pe);
+			if( pe==filepath.npos || pe < ps )
+				break;
+
+			if( pe==ps ) {
+				filepath.erase(pe, 2);
+				break;
+			}
+
+			if( filepath[pe-1]=='/' )
+				filepath.erase(pe, 2);
+			else
+				--pe;
+
+		}
+	}
+
+	// replace /xx/../yy with /yy
+	{
+		for(;;) {
+			size_t pe = filepath.find("/../", ps);
+			if( pe == filepath.npos )
+				break;
+
+			size_t pm = filepath.rfind('/', pe-1);
+			if( pm == filepath.npos || pm < ps )
+				pm = ps - 1;
+			filepath.erase(pm + 1, (pe-pm+3));
+		}
+	}
+#endif
+}
+
 typedef std::list<std::string> TStrCoderList;
+
 
 TStrCoderList init_coders() {
 	TStrCoderList coders;
@@ -96,6 +206,10 @@ const Glib::ustring& LJEditorUtilsImpl::get_language_id_by_filename(const Glib::
 		return it->second;
 
 	return default_retval;
+}
+
+void LJEditorUtilsImpl::format_filekey(std::string& filename) {
+	filepath_to_abspath(filename);
 }
 
 bool LJEditorUtilsImpl::do_load_file(Glib::ustring& out, const std::string& filename) {

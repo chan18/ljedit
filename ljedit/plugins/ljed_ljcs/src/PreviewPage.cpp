@@ -274,6 +274,7 @@ void PreviewPage::search_thread() {
 
 		keys.push_back(sc.key);
 
+/*
 		ljcs_parse_macro_replace(sc.key_text, sc.file);
 		parse_key(sc.key_text, sc.key_text);
 		if( !sc.key_text.empty() && sc.key_text!=sc.key )
@@ -282,6 +283,12 @@ void PreviewPage::search_thread() {
 		pthread_rwlock_rdlock(&LJCSEnv::self().stree_rwlock);
 		::search_keys(keys, mset, LJCSEnv::self().stree, sc.file, sc.line);
 		pthread_rwlock_unlock(&LJCSEnv::self().stree_rwlock);
+
+*/
+		{
+			RdLocker<cpp::STree> locker(LJCSEnv::self().stree());
+			::search_keys(keys, mset, LJCSEnv::self().stree().value(), sc.file, sc.line);
+		}
 
 		pthread_mutex_lock(&search_result_mutex_);
 		cpp::unref_all_elems(elems_);

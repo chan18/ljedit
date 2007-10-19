@@ -52,9 +52,9 @@ class MLexer
 	, public Lexer
 {
 public:
-	MLexer(MacroMgr& env, cpp::File& file, const void* tag=0, std::istream* in=0, std::ostream* out=0, int line=1)
+	MLexer(MacroMgr& env, cpp::File& file, const void* tag=0, std::istream* in=0, std::istream* managed=0, std::ostream* out=0, int line=1)
 		: yyFlexLexer(in, out)
-		, Lexer(env, file, tag)
+		, Lexer(env, file, managed, tag)
 		, in_(in)
 		, line_(line)
 	{
@@ -66,11 +66,6 @@ public:
 	~MLexer() {
 		while( !mrs_.empty() )
 			finish_replace();
-
-		if( in_ != 0 && in_ != &std::cin ) {
-			delete in_;
-			in_ = 0;
-		}
 	}
 
 	int yylex();
@@ -121,16 +116,16 @@ private:
 
 private:	// for yylex, local var
 	// for macro define
-	std::string 				name;
-	bool						has_args;
-	bool						need_rvalue;
-	StrVector					args;
-	std::string					value;
-	std::string					rvalue;
+	std::string 	name;
+	bool			has_args;
+	bool			need_rvalue;
+	StrVector		args;
+	std::string		value;
+	std::string		rvalue;
 	
 	// for macro replace
-	RMacro*						rmacro;
-	int							layer;
+	RMacro*			rmacro;
+	int				layer;
 	
 	// for lineno
 	size_t emptyline;
@@ -475,7 +470,7 @@ number		{num1}|{num2}|{num3}|{num4}|{num5}
 								while( yytext < p )
 									unput(*(--p));
 								BEGIN(cc);
-							} else if( (*rmacro)->args!=0 ) {
+							} else if( rmacro->args!=0 ) {
 								BEGIN(smr);
 							} else {
 								start_replace(rmacro, args);
@@ -488,12 +483,12 @@ number		{num1}|{num2}|{num3}|{num4}|{num5}
 <smr>\n					++emptyline;
 <smr>\(					layer=1; value.clear(); args.clear();	BEGIN(mr);
 <smr>.					{
-							on_macro_error(line_, "smr(" + (*rmacro)->name + ") find '(' failed!");
+							on_macro_error(line_, "smr(" + name + ") find '(' failed!");
 							BEGIN(INITIAL);	token_.word = name; return TK_ID;
 						}
 
 <smr><<EOF>>			{
-							on_macro_error(line_, "smr(" + (*rmacro)->name + ") find '(' eof!");
+							on_macro_error(line_, "smr(" + name + ") find '(' eof!");
 							BEGIN(INITIAL);	token_.word = name; return TK_ID;
 						}
 
@@ -709,22 +704,21 @@ void MLexer::parse_macro_include(char* text, size_t len, bool sys_header) {
 
 void MLexer::start_replace(RMacro* rmacro, StrVector& args) {
 	assert( rmacro!=0 && !rmacro->in_use );
-	RMacro& r = *rmacro;
-	if( r->value==0 )
+	if( rmacro->value==0 )
 		return;
 
 	Node node = { rmacro, YY_CURRENT_BUFFER };
 	std::istream* in = 0;
 	size_t size = 0;
 	
-	if( r->rvalue==0 ) {
-		std::string& text = *(r->value);
+	if( rmacro->rvalue==0 ) {
+		std::string& text = *(rmacro->value);
 		//std::cout << "replace with : " << text << std::endl;
 		in = new std::istringstream(text);
 		
 	} else {
 		// replace
-		std::string& text = *(r->rvalue);
+		std::string& text = *(rmacro->rvalue);
 		std::stringstream* ss = new std::stringstream();
 		if( ss != 0 ) {
 			size_t ps = 0, pe = 0, sz = text.size(), count = 0;
@@ -762,7 +756,7 @@ void MLexer::start_replace(RMacro* rmacro, StrVector& args) {
 	} else {
 		yypush_buffer_state(buf);
 		//yy_switch_to_buffer(buf);
-		r.in_use = true;
+		rmacro->in_use = true;
 		mrs_.push(node);
 	}
 }
@@ -810,24 +804,19 @@ void MLexer::on_macro_define(size_t line
 		macro->decl += ')';
 	}
 
-	if( value!=0 ) {
-		macro->value = new std::string(*value);
-		if( macro->value==0 )
-			throw std::bad_alloc();
-		if( value->size() < 128 ) {
-			macro->decl += ' ';
-			macro->decl += *(macro->value);
-		}
-	}
+	if( value!=0 )
+		macro->value = *value;
 
-	if( rvalue!=0 ) {
-		macro->rvalue = new std::string(*rvalue);
-		if( macro->rvalue==0 )
-			throw std::bad_alloc();
+	if( rvalue!=0 )
+		macro->value = "...";
+
+	if( macro->value.size() < 128 ) {
+		macro->decl += ' ';
+		macro->decl += macro->value;
 	}
 
 	cpp::scope_insert(file_.scope, macro);
-	env_.macro_insert(macro);
+	env_.macro_insert(macro, value, rvalue);
 }
 
 void MLexer::on_macro_undef( size_t line, const std::string& name ) {
@@ -860,10 +849,14 @@ void MLexer::on_macro_include( size_t line, const std::string& file, bool sys_he
 //-----------------------------------------------------------------------------
 //
 
+Lexer* Lexer::create(MacroMgr& env, cpp::File& file, std::istream& ins, std::ostream* out, const void* tag) {
+	return new MLexer(env, file, tag, &ins, 0, out);
+}
+
 Lexer* Lexer::create(MacroMgr& env, cpp::File& file, std::ostream* out, const void* tag) {
 	std::istream* in = new std::ifstream(file.filename.c_str());
 	if( in != 0 ) {
-		MLexer* lexer = new MLexer(env, file, tag, in, out);
+		MLexer* lexer = new MLexer(env, file, tag, in, in, out);
 		if( lexer != 0 )
 			return lexer;
 		delete in;
@@ -882,7 +875,7 @@ Lexer* Lexer::create(MacroMgr& env
 	std::stringstream* ss = new std::stringstream();
 	if( ss != 0 ) {
 		ss->write(text, len);
-		MLexer* lexer = new MLexer(env, file, tag, ss, out, sline);
+		MLexer* lexer = new MLexer(env, file, tag, ss, ss, out, sline);
 		if( lexer != 0 )
 			return lexer;
 		delete ss;

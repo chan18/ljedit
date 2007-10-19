@@ -10,7 +10,7 @@ class DocPageImpl : public DocPage, public Gtk::ScrolledWindow
 {
 public:
     static DocPageImpl* create(const std::string& filepath
-        , const std::string& display_name);
+        , const Glib::ustring& display_name);
 
 public:
     virtual bool modified() const
