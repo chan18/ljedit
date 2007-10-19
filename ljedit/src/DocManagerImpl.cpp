@@ -7,8 +7,6 @@
 
 #include "LJEditorUtilsImpl.h"
 
-#include <windows.h>
-
 
 DocManagerImpl::DocManagerImpl() : locate_page_num_(-1) {
 	pos_pool_init();

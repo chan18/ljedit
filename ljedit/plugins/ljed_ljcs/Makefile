@@ -21,6 +21,7 @@ OBJS = src/LJCSEnv.o      \
     src/LJCSPlugin.o      \
     src/LJCSPluginImpl.o  \
     src/LJCSPluginUtils.o \
+    src/ParseThread.o     \
     src/OutlinePage.o     \
     src/PreviewPage.o     \
     src/TipWindow.o       \
