@@ -156,15 +156,23 @@ struct _macro_argpos { short sign; short idx; };
 
 /*
 %x comment		多行注释
-%x hcomment		处于行首的多行注?%x chr			字符
-%x str			字符?%x smc			确定己是宏语句，准备开始宏(mc)
-%x mc			宏语?%x mcd			宏define
+%x hcomment		处于行首的多行注
+%x chr			字符
+%x str			字符
+%x smc			确定己是宏语句，准备开始宏(mc)
+%x mc			宏语
+%x mcd			宏define
 %x mcdn			宏define，分析宏name
 %x mcda			宏define，分析宏args
 %x mcdv			宏define，分析宏value
 %x mcdvc		宏define，分析宏value中的字符
-%x mcdvs		宏define，分析宏value中的字符?%x smr			分析宏替换参数，查找开始符?%x mr			分析宏替换参数，分析参数及参数完成符），并调用替换函?%x mrc			分析宏替换参数，参数中的字符
-%x mrs			分析宏替换参数，参数中的字符?%x cc			c++关系字词法分?*/
+%x mcdvs		宏define，分析宏value中的字符
+%x smr			分析宏替换参数，查找开始符
+%x mr			分析宏替换参数，分析参数及参数完成符），并调用替换函
+%x mrc			分析宏替换参数，参数中的字符
+%x mrs			分析宏替换参数，参数中的字符
+%x cc			c++关系字词法分?
+*/
 
 /*
 // not generate mlexer out
