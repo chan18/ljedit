@@ -198,30 +198,14 @@ cpp::File* LJCSEnv::pe_check_parsed(const std::string& filekey, time_t& mtime) {
 }
 
 bool LJCSEnv::pe_get_content(const std::string& filekey, std::ostream& out) {
-	FILE* file = fopen(filekey.c_str(), "rb");
-	if( file != 0 ) {
-		char buf[1024];
-		size_t sz = 0;
-		for(;;) {
-			sz = fread(buf, 1, 1024, file);
-			if( sz <= 0 )
-				break;
-			out.write(buf, sz);
-		}
+	std::string buf;
+
+	try {
+		buf = Glib::file_get_contents(filekey);
+		out << buf;
 		return true;
 
-	} else {
-		// utf-8 filekey
-		// 
-		std::string buf;
-
-		try {
-			buf = Glib::file_get_contents(filekey);
-			out << buf;
-			return true;
-
-		} catch( Glib::FileError ) {
-		}
+	} catch( Glib::FileError ) {
 	}
 
 	return false;

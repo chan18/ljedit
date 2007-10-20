@@ -7,6 +7,10 @@
 
 #include "LJEditorUtilsImpl.h"
 
+#ifdef G_OS_WIN32
+	#include <glib/gstdio.h>
+	#include <windows.h>
+#endif
 
 DocManagerImpl::DocManagerImpl() : locate_page_num_(-1) {
 	pos_pool_init();
@@ -114,6 +118,23 @@ void DocManagerImpl::open_file(const std::string& filepath, int line, int line_o
 		return;
 
     std::string filename = Glib::path_get_basename(filepath);
+
+#ifdef G_OS_WIN32
+	wchar_t* wfname = (wchar_t*)::g_utf8_to_utf16(filekey.c_str(), -1, 0, 0, 0);
+	if( wfname != 0 ) {
+		WIN32_FIND_DATAW wfdd;
+		HANDLE hfd = FindFirstFileW(wfname, &wfdd);
+		if( hfd != INVALID_HANDLE_VALUE ) {
+			gchar* fname = ::g_utf16_to_utf8((gunichar2*)wfdd.cFileName, -1, 0, 0, 0);
+			if( fname != 0 ) {
+				filename = fname;
+				g_free(fname);
+			}
+			FindClose(hfd);
+		}
+		g_free(wfname);
+	}
+#endif
 
     open_page(filekey, filename, &ubuf, line, line_offset);
 }
