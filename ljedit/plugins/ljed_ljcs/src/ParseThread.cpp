@@ -58,7 +58,7 @@ void ParseThread::thread()
 	{
 		StrVector vec = env.get_pre_parse_files();
 
-		// ´ÓºóÏòÇ°¶Á, ÕâÑù, Êµ¼Ê·ÖÎöË³Ğò²ÅÕıÈ·
+		// ä»åå‘å‰è¯», è¿™æ ·, å®é™…åˆ†æé¡ºåºæ‰æ­£ç¡®
 		// 
 		StrVector::reverse_iterator it = vec.rbegin();
 		StrVector::reverse_iterator end = vec.rend();
@@ -78,11 +78,11 @@ void ParseThread::thread()
 		// pop first filename
 		{
 			Locker<TStrSet> locker(set_);
-            std::set<std::string>::iterator it = set_->begin();
+            TStrSet::iterator it = set_->begin();
 			if( it==set_->end() )
 				continue;
 
-	        filekey.swap(*it);
+	        filekey = *it;
 			set_->erase(it);
 		}
 

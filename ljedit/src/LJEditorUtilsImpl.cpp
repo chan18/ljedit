@@ -75,46 +75,31 @@ inline void filepath_to_abspath(std::string& filepath) {
 	//	}
 
 #else
-	if( !Glib::path_is_absolute(filepath) ) {
-		// add current path
-		if( get_abspath_pos(filepath)==0 ) {
-			std::string cpath = Glib::get_current_dir();
-			filepath = Glib::build_filename(cpath, filepath);
-		}
-	}
+	if( !Glib::path_is_absolute(filepath) )
+		Glib::build_filename(Glib::get_current_dir(), filepath);
 
 	// replace /xx/./yy with /xx/yy
 	{
-		size_t pe = filepath.npos;
 		for(;;) {
-			pe = filepath.rfind("./", pe);
-			if( pe==filepath.npos || pe < ps )
+			size_t pos = filepath.rfind("/./");
+			if( pos==filepath.npos )
 				break;
-
-			if( pe==ps ) {
-				filepath.erase(pe, 2);
-				break;
-			}
-
-			if( filepath[pe-1]=='/' )
-				filepath.erase(pe, 2);
-			else
-				--pe;
-
+			filepath.erase(pos, 2);
 		}
 	}
 
 	// replace /xx/../yy with /yy
 	{
 		for(;;) {
-			size_t pe = filepath.find("/../", ps);
-			if( pe == filepath.npos )
+			size_t pe = filepath.find("/../");
+			if( pe==filepath.npos || pe==0 )
 				break;
 
-			size_t pm = filepath.rfind('/', pe-1);
-			if( pm == filepath.npos || pm < ps )
-				pm = ps - 1;
-			filepath.erase(pm + 1, (pe-pm+3));
+			size_t ps = filepath.rfind('/', pe-1);
+			if( ps==filepath.npos )
+				break;
+
+			filepath.erase(ps, (pe+3-ps));
 		}
 	}
 #endif
