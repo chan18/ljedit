@@ -6,16 +6,7 @@
 #include "PluginManager.h"
 #include "LJEditorImpl.h"
 
-#ifdef WIN32
-    #include <windows.h>
-
-	#define dlopen(lib, nouse)   LoadLibraryA(lib)
-
-    #define RTLD_LAZY 0
-
-	#define dlsym(dll, name)  GetProcAddress(dll, name)
-	#define dlclose(dll)      FreeLibrary(dll)
-
+#ifdef G_OS_WIN32
     #define LJED_PLUGIN_EXT    ".dll"
     #define LJED_PLUGIN_EXT_SZ 4
 
@@ -42,6 +33,50 @@ void find_all_plugin_file(std::vector<std::string>& out, const std::string& path
 	}
 }
 
+DllPlugin::DllPlugin(const std::string& plugin_name)
+	: dll_(plugin_name)
+	, plugin_(0) {}
+
+DllPlugin::~DllPlugin() {
+	destroy();
+}
+
+bool DllPlugin::create(LJEditor& editor) {
+	if( !dll_ )
+		return false;
+
+	void* symbol = 0;
+	if( !dll_.get_symbol(PLUGIN_CREATE_FUN_NAME, symbol) || symbol==0 )
+		return false;
+
+	TPluginCreateFn createfn = (TPluginCreateFn)symbol;
+	plugin_ = (*createfn)(editor);
+
+	if( !plugin_->ljed_plugin_create(dll_.get_name()) )
+		return false;
+
+	return plugin_ != 0;
+}
+
+void DllPlugin::destroy() {
+	if( !dll_ )
+		return;
+
+	if( plugin_==0 )
+		return;
+
+	plugin_->ljed_plugin_destroy();
+
+	void* symbol = 0;
+	if( !dll_.get_symbol(PLUGIN_DESTROY_FUN_NAME, symbol) || symbol==0 )
+		return;
+
+	TPluginDestroyFn destroyfn = (TPluginDestroyFn)symbol;
+	(*destroyfn)(plugin_);
+
+	plugin_ = 0;
+}
+
 PluginManager::PluginManager() {}
 
 PluginManager::~PluginManager() {}
@@ -66,16 +101,21 @@ void PluginManager::load_plugins() {
 void PluginManager::unload_plugins() {
     TPlugins::iterator it = plugins_.begin();
     TPlugins::iterator end = plugins_.end();
-    for( ; it!=end; ++it )
-        plugin_destroy(it->second);
+	for( ; it!=end; ++it )
+		delete it->second;
     plugins_.clear();
 }
 
 bool PluginManager::add(const std::string& plugin_filename) {
-    DllPlugin dllplugin = { 0, 0 };
-    if( !plugin_create(dllplugin, plugin_filename) )
-        return false;
-    
+    DllPlugin* dllplugin = new DllPlugin(plugin_filename);
+	if( dllplugin==0 )
+		return false;
+
+	if( !dllplugin->create(LJEditorImpl::self()) ) {
+		delete dllplugin;
+		return false;
+	}
+
     plugins_[plugin_filename] = dllplugin;
     return true;
 }
@@ -83,53 +123,8 @@ bool PluginManager::add(const std::string& plugin_filename) {
 void PluginManager::remove(const std::string& plugin_filename) {
     TPlugins::iterator it = plugins_.find(plugin_filename);
     if( it != plugins_.end() ) {
-        plugin_destroy(it->second);
-        plugins_.erase(it);
-    }
-}
-
-bool PluginManager::plugin_create(DllPlugin& dllplugin, const std::string& plugin_filename) {
-    if( find(plugin_filename) != 0 )
-        return false;;
-
-    dllplugin.dll = 0;
-    dllplugin.plugin = 0;
-
-#ifdef WIN32
-	std::string dllname = Glib::locale_from_utf8(plugin_filename);
-	dllplugin.dll = dlopen( dllname.c_str(), RTLD_LAZY );
-#else
-	dllplugin.dll = dlopen( plugin_filename.c_str(), RTLD_LAZY );
-#endif
-
-    if( dllplugin.dll != 0 ) {
-		TPluginCreateFn createfn = (TPluginCreateFn)dlsym( dllplugin.dll, PLUGIN_CREATE_FUN_NAME );
-        TPluginDestroyFn destroyfn = (TPluginDestroyFn)dlsym( dllplugin.dll, PLUGIN_DESTROY_FUN_NAME );
-        if( createfn!=0 || destroyfn!=0 ) {
-            dllplugin.plugin = (*createfn)(LJEditorImpl::self());
-            if( dllplugin.plugin != 0 ) {
-                if( dllplugin.plugin->ljed_plugin_create(plugin_filename) )
-                    return true;
-            }
-        }
-    }
-
-    plugin_destroy(dllplugin);
-    return false;
-}
-
-void PluginManager::plugin_destroy(DllPlugin& dllplugin) {
-    if( dllplugin.dll != 0 ) {
-        if( dllplugin.plugin != 0 ) {
-			TPluginDestroyFn destroyfn = (TPluginDestroyFn)dlsym( dllplugin.dll, PLUGIN_DESTROY_FUN_NAME );
-            if( destroyfn!=0 ) {
-                dllplugin.plugin->ljed_plugin_destroy();
-                destroyfn(dllplugin.plugin);
-                dllplugin.plugin = 0;
-            }
-        }
-		dlclose(dllplugin.dll);
-        dllplugin.dll = 0;
+		delete it->second;
+		plugins_.erase(it);
     }
 }
 

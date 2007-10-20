@@ -6,6 +6,10 @@
 #include "LJEditorImpl.h"
 #include "PluginManager.h"
 
+#ifdef G_OS_WIN32
+	#include <windows.h>
+#endif
+
 int already_running();
 
 int main(int argc, char *argv[]) {
@@ -23,7 +27,7 @@ int main(int argc, char *argv[]) {
 
 		std::string path;
 		
-	#ifdef WIN32
+	#ifdef G_OS_WIN32
 		path.resize(4096);
 		path.resize( GetModuleFileNameA(0, &path[0], 4096) );
 		path.erase( path.rfind("\\") );

@@ -10,25 +10,28 @@
 #include <map>
 #include <set>
 
-#ifdef WIN32
-    #include <Windows.h>
+class DllPlugin {
+public:
+	DllPlugin(const std::string& plugin_name);
+	~DllPlugin();
 
-    struct DllPlugin {
-        HMODULE  dll;
-        IPlugin* plugin;
-    };
-#else
-    #include <dlfcn.h>
+	bool create(LJEditor& editor);
+	void destroy();
 
-    struct DllPlugin {
-        void*    dll;
-        IPlugin* plugin;
-    };
-#endif
+	IPlugin* plugin() { return plugin_; }
+
+private:
+	DllPlugin(const DllPlugin& o);
+	DllPlugin& operator = (const DllPlugin& o);
+
+private:
+	Glib::Module	dll_;
+	IPlugin*		plugin_;
+};
 
 class PluginManager {
 private:
-    typedef std::map<std::string, DllPlugin>    TPlugins;
+    typedef std::map<std::string, DllPlugin*>    TPlugins;
     typedef std::set<std::string>               TPluginPaths;
 
 private:
@@ -60,7 +63,7 @@ public:
 
     IPlugin* find(const std::string& plugin_filename) const {
         TPlugins::const_iterator it = plugins_.find(plugin_filename);
-        return it!=plugins_.end() ? it->second.plugin : 0;
+        return it!=plugins_.end() ? it->second->plugin() : 0;
     }
 
 private:
