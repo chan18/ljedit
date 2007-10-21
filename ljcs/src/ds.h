@@ -4,20 +4,25 @@
 #ifndef LJCS_DS_H
 #define LJCS_DS_H
 
+#ifdef WIN32
+	#include <windows.h>
+	inline long atomic_increment(volatile long* v) { return InterlockedIncrement(v); }
+	inline long atomic_decrement(volatile long* v) { return InterlockedDecrement(v); }
+
+#else
+	#include <linux/atomic.h>
+	inline long atomic_increment(volatile long* v) { return AtomicIncrement32(v); }
+	inline long atomic_decrement(volatile long* v) { return AtomicDecrement32(v); }
+
+#endif
+
+
 #include <string>
 #include <vector>
 #include <set>
 #include <map>
-#include <iostream>
-#include <functional>
-#include <algorithm>
 #include <stdexcept>
 #include <cassert>
-
-#include <set>
-#include <string>
-#include <vector>
-#include <map>
 
 typedef std::vector<std::string>	StrVector;
 
@@ -122,18 +127,19 @@ public:
 	~File() {}
 
 	File* ref()  {
-		++ref_count_;
+		atomic_increment(&ref_count_);
 		return this;
 	}
 
 	void unref() {
-		--ref_count_;
+		atomic_decrement(&ref_count_);
+		assert( ref_count_ >= 0 );
 		if( ref_count_==0 )
 			delete this;
 	}
 
 private:
-	size_t ref_count_;
+	volatile long	ref_count_;
 
 private:
 	// nocopyable

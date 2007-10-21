@@ -8,6 +8,9 @@
 #include "parser.h"
 #include "index.h"
 
+#include <iostream>
+
+
 class IMatched {
 public:
 	IMatched() {}

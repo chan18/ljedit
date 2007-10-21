@@ -6,10 +6,8 @@
 #include "ParseThread.h"
 
 #ifdef WIN32
-	#include <windows.h>
-
 	#ifndef sleep
-		#define sleep(sec)	::Sleep(sec*1000);
+		#define sleep(sec)	Sleep(sec*1000);
 	#endif
 #endif
 
