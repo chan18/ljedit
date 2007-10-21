@@ -5,81 +5,35 @@
 #define LJED_INC_LJCSENV_H
 
 #include "ljcs/ljcs.h"
-#include <pthread.h>
 #include <cassert>
 
 class LJEditor;
 
 
 template<class T>
-class RWLock {
+class RWLock : public Glib::RWLock {
 public:
-	RWLock()					{ pthread_rwlock_init(&lock_, 0); }
-	~RWLock()					{ pthread_rwlock_destroy(&lock_); }
+	T    copy()					{ Glib::RWLock::ReaderLock locker(*this); return value_; }
+	void set(const T& o)		{ Glib::RWLock::WriterLock locker(*this); value_ = o; }
 
-	bool tryrdlock() 			{ return pthread_rwlock_tryrdlock(&lock_)==0; }
-	bool trywrlock() 			{ return pthread_rwlock_trywrlock(&lock_)==0; }
-	void rdlock()    			{ pthread_rwlock_rdlock(&lock_); }
-	void wrlock()				{ pthread_rwlock_wrlock(&lock_); }
-	bool timedrdlock(long ms)	{ timespec ts = { ms/1000, ms%1000 }; return pthread_rwlock_timedrdlock(&lock_, &ts)==0; }
-	bool timedwrlock(long ms)	{ timespec ts = { ms/1000, ms%1000 }; return pthread_rwlock_timedwrlock(&lock_, &ts)==0; }
-	void unlock()				{ pthread_rwlock_unlock(&lock_); }
-
-	T    get()					{ rdlock(); T r=value_; unlock(); return r; }
-	void set(const T& o)		{ wrlock(); value_ = o; unlock(); }
-
-	T&   value()				{ return value_; }
+	T&   ref()					{ return value_; }
 	T*   operator->()           { return &value_; }
 
 private:
 	T							value_;
-	pthread_rwlock_t			lock_;
 };
 
 template<class T>
-struct RdLocker {
-	RdLocker(RWLock<T>& lock) : lock_(lock)	{ lock_.rdlock(); }
-	~RdLocker()								{ lock_.unlock(); }
-
-	RWLock<T>& lock_;
-};
-
-template<class T>
-struct WrLocker {
-	WrLocker(RWLock<T>& lock) : lock_(lock)	{ lock_.wrlock(); }
-	~WrLocker()								{ lock_.unlock(); }
-
-	RWLock<T>& lock_;
-};
-
-template<class T>
-class Mutex {
+class Mutex : public Glib::Mutex {
 public:
-	Mutex()						{ pthread_mutex_init(&mutex_, 0); }
-	~Mutex()					{ pthread_mutex_destroy(&mutex_); }
+	T    copy()					{ Glib::Mutex::Lock locker(*this); return value_; }
+	void set(const T& o)		{ Glib::Mutex::Lock locker(*this); value_ = o; }
 
-	bool trylock() 				{ return ::pthread_mutex_trylock(&mutex_)==0; }
-	void lock()    				{ pthread_mutex_lock(&mutex_); }
-	bool timedlock(size_t ms)	{ timespec ts = { ms/1000, ms%1000 }; return pthread_mutex_timedlock(&mutex_, &ts)==0; }
-	void unlock()				{ pthread_mutex_unlock(&mutex_); }
-
-	T    get()					{ lock(); T r=value_; unlock(); return r; }
-	void set(const T& o)		{ lock(); value_ = o; unlock(); }
-
-	T&   value()				{ return value_; }
+	T&   ref()					{ return value_; }
 	T*   operator->()           { return &value_; }
 
 private:
-	T							value_;
-	pthread_mutex_t				mutex_;
-};
-
-template<class T>
-struct Locker {
-	Locker(Mutex<T>& mutex) : mutex_(mutex)	{ mutex_.lock(); }
-	~Locker()								{ mutex_.unlock(); }
-
-	Mutex<T>& mutex_;
+	T			value_;
 };
 
 class LJCSEnv : public IParserEnviron {
@@ -98,8 +52,8 @@ private:
 	LJCSEnv& operator = (const LJCSEnv& o);	// no implement
 
 public:
-	StrVector				get_include_paths() { return include_paths_.get(); }
-	StrVector				get_pre_parse_files() { return pre_parse_files_.get(); }
+	StrVector				get_include_paths() { return include_paths_.copy(); }
+	StrVector				get_pre_parse_files() { return pre_parse_files_.copy(); }
 
 	void					set_include_paths(const StrVector& paths);
 	void					set_pre_parse_files(const StrVector& files);

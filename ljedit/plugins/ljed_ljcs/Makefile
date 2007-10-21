@@ -2,8 +2,8 @@
 # 
 
 CXX = g++
-#CXXFLAGS = -pthread -g -DSHOW_PARSE_DEBUG_INFOS -fpic
-CXXFLAGS = -pthread -o2 -DNDEBUG -fpic
+#CXXFLAGS = -g -DSHOW_PARSE_DEBUG_INFOS -fpic
+CXXFLAGS = -o2 -DNDEBUG -fpic
 
 GTKMMFLAGS = `pkg-config --cflags gtksourceviewmm-2.0` `pkg-config --cflags libglademm-2.4`
 GTKMMLIBS = `pkg-config --libs gtksourceviewmm-2.0` `pkg-config --libs libglademm-2.4`

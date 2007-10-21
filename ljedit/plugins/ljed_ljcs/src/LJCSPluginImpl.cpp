@@ -66,9 +66,9 @@ void LJCSPluginImpl::show_hint(DocPage& page
     StrVector keys;
 	if( find_keys(keys, it, end, file, true) ) {
 		MatchedSet mset;
-		if( env.stree().timedrdlock(500) ) {
-			::search_keys(keys, mset, LJCSEnv::self().stree().value(), file, line);
-			env.stree().unlock();
+		if( env.stree().reader_trylock() ) {
+			::search_keys(keys, mset, LJCSEnv::self().stree().ref(), file, line);
+			env.stree().reader_unlock();
 
 			int view_x = 0;
 			int view_y = 0;
@@ -478,9 +478,9 @@ void LJCSPluginImpl::do_button_release_event(GdkEventButton* event, DocPage* pag
 		LJCSEnv& env = LJCSEnv::self();
 
 		MatchedSet mset;
-		if( env.stree().timedrdlock(500) ) {
-			::search_keys(keys, mset, LJCSEnv::self().stree().value(), file, line);
-			env.stree().unlock();
+		if( env.stree().reader_trylock() ) {
+			::search_keys(keys, mset, LJCSEnv::self().stree().ref(), file, line);
+			env.stree().reader_unlock();
 
 			cpp::Element* elem = find_best_matched_element(mset.elems());
 			if( elem != 0 ) {

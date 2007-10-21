@@ -19,27 +19,21 @@ void ParseThread::run() {
 	if( parser_ == 0 )
 		return;
 
-    pthread_create(&pid_, NULL, &ParseThread::wrap_thread, this);
+	thread_ = Glib::Thread::create( sigc::mem_fun(this, &ParseThread::thread), true );
 }
 
 void ParseThread::stop() {
 	parser_->stopsign_set();
 
-    pthread_join(pid_, 0);
+	thread_->join();
 
 	delete parser_;
 	parser_ = 0;
 }
 
 void ParseThread::add(const std::string& filename) {
-	Locker<TStrSet> locker(set_);
+	Glib::Mutex::Lock locker(set_);
     set_->insert(filename);
-}
-
-void* ParseThread::wrap_thread(void* args) {
-	((ParseThread*)args)->thread();
-	pthread_exit(0);
-	return 0;
 }
 
 void ParseThread::thread()
@@ -58,8 +52,6 @@ void ParseThread::thread()
 	{
 		StrVector vec = env.get_pre_parse_files();
 
-		// 从后向前读, 这样, 实际分析顺序才正确
-		// 
 		StrVector::reverse_iterator it = vec.rbegin();
 		StrVector::reverse_iterator end = vec.rend();
 		for( ; it!=end; ++it ) {
@@ -77,7 +69,7 @@ void ParseThread::thread()
 
 		// pop first filename
 		{
-			Locker<TStrSet> locker(set_);
+			Glib::Mutex::Lock locker(set_);
             TStrSet::iterator it = set_->begin();
 			if( it==set_->end() )
 				continue;
@@ -91,7 +83,7 @@ void ParseThread::thread()
 
 		// parse and make index
 		{
-			WrLocker<cpp::STree> index_locker(env.stree());
+			Glib::RWLock::WriterLock index_locker(env.stree());
 
 			cpp::File* file = parser_->parse(filekey);
 			if( file != 0 )

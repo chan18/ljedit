@@ -31,7 +31,7 @@ LJEDOBJS = src/DocPageImpl.o         \
 all : bin/ljedit.exe bin/_ljedit.exe plugin
 
 bin/_ljedit.exe : $(LJEDOBJS)
-	$(CXX) -mwindows $(CXXFLAGS) -o $@ $(LJEDOBJS) -lpthreadGC2 $(LJEDLIBS) $(PYLIBS)
+	$(CXX) -mwindows $(CXXFLAGS) -o $@ $(LJEDOBJS) $(LJEDLIBS) $(PYLIBS)
 	strip $@
 
 src/LJEditorPythonPluginEngine.o : src/LJEditorPythonPluginEngine.cpp src/LJEditorPythonPluginEngineImpl.cpp

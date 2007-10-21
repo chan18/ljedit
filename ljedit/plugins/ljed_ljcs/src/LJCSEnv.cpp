@@ -73,7 +73,7 @@ void LJCSEnv::set_pre_parse_files(const StrVector& files) {
 }
 
 cpp::File* LJCSEnv::find_parsed(const std::string& filekey) {
-	RdLocker<cpp::FileMap> locker(parsed_files_);
+	Glib::RWLock::ReaderLock locker(parsed_files_);
 
 	cpp::FileMap::iterator it = parsed_files_->find(filekey);
 	return it!=parsed_files_->end() ? it->second->ref() : 0;
@@ -84,7 +84,7 @@ cpp::File* LJCSEnv::find_parsed_in_include_path(const std::string& filename) {
 
 	cpp::File* retval = 0;
 
-	RdLocker<StrVector>    locker(include_paths_);
+	Glib::RWLock::ReaderLock locker(include_paths_);
 
 	StrVector::iterator it = include_paths_->begin();
 	StrVector::iterator end = include_paths_->end();
@@ -101,7 +101,7 @@ bool LJCSEnv::in_include_path(const std::string& path) {
 	ljedit().utils().format_filekey(abspath);
 
 	{
-		RdLocker<StrVector> locker(include_paths_);
+		Glib::RWLock::ReaderLock locker(include_paths_);
 
 		StrVector::iterator it = include_paths_->begin();
 		StrVector::iterator end = include_paths_->end();
@@ -116,7 +116,7 @@ bool LJCSEnv::in_include_path(const std::string& path) {
 }
 
 void LJCSEnv::re_make_index() {
-	RdLocker<cpp::FileMap> locker(parsed_files_);
+	Glib::RWLock::ReaderLock locker(parsed_files_);
 
 	cpp::FileMap::iterator it = parsed_files_->begin();
 	cpp::FileMap::iterator end = parsed_files_->end();
@@ -127,7 +127,7 @@ void LJCSEnv::re_make_index() {
 
 void LJCSEnv::add_parsed(cpp::File* file) {
 	if( file != 0 ) {
-		WrLocker<cpp::FileMap> locker(parsed_files_);
+		Glib::RWLock::WriterLock locker(parsed_files_);
 
 		cpp::FileMap::iterator it = parsed_files_->find(file->filename);
 		if( it!=parsed_files_->end() ) {
@@ -146,7 +146,7 @@ void LJCSEnv::remove_parsed(cpp::File* file) {
 }
 
 void LJCSEnv::remove_parsed(const std::string& file) {
-	WrLocker<cpp::FileMap> locker(parsed_files_);
+	Glib::RWLock::WriterLock locker(parsed_files_);
 
 	cpp::FileMap::iterator it = parsed_files_->find(file);
 	if( it!=parsed_files_->end() ) {

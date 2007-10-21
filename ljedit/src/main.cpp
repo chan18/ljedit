@@ -22,6 +22,7 @@ int main(int argc, char *argv[]) {
 		// TODO : notify ljedit open file
 		
 	} else {
+		Glib::thread_init();
 		Gtk::Main kit(argc, argv);
 		gtksourceview::init();
 

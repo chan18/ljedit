@@ -6,10 +6,8 @@
 
 #include "LJEditor.h"
 
-#include "ljcs/ljcs.h"
+#include "LJCSEnv.h"
 
-#include <pthread.h>
-#include <semaphore.h>
 
 class PreviewPage {
 public:
@@ -40,12 +38,6 @@ private:
     LJEditor&					editor_;
 
 private:	// thread
-    static void* wrap_thread(void* args)		 {
-		((PreviewPage*)args)->search_thread();
-		pthread_exit(0);
-		return 0;
-	}
-
 	void search_thread();
 
 	struct SearchContent {
@@ -57,15 +49,12 @@ private:	// thread
 		SearchContent() : file(0) {}
 	};
 
-	SearchContent				search_content_;
+	Glib::Thread*				search_thread_;
+	Mutex<SearchContent>		search_content_;
+	Glib::Cond					search_run_sem_;
 
     bool						search_stopsign_;
     bool						search_resultsign_;
-
-    pthread_t					search_pid_;
-	sem_t						search_run_sem_;
-	pthread_mutex_t				search_key_mutex_;
-	pthread_mutex_t				search_result_mutex_;
 
 private:	// timeout
 	bool on_update_timeout();
@@ -79,7 +68,7 @@ private:
 
     gtksourceview::SourceView*	view_;
 
-    cpp::Elements				elems_;
+    RWLock<cpp::Elements>		elems_;
 	size_t						index_;
 	cpp::File*					last_preview_file_;
 };

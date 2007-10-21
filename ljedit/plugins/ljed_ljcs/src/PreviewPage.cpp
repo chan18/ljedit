@@ -15,6 +15,7 @@ PreviewPage::PreviewPage(LJEditor& editor)
     , view_(0)
 	, index_(0)
 	, last_preview_file_(0)
+	, search_thread_(0)
 {
 }
 
@@ -74,13 +75,9 @@ void PreviewPage::create() {
     vbox_.show_all();
 
 	// thread
-	sem_init(&search_run_sem_, 0, 0);
-	pthread_mutex_init(&search_key_mutex_, 0);
-	pthread_mutex_init(&search_result_mutex_, 0);
-
 	search_stopsign_ = false;
 	search_resultsign_ = false;
-	pthread_create(&search_pid_, NULL, &PreviewPage::wrap_thread, this);
+	search_thread_ = Glib::Thread::create( sigc::mem_fun(this, &PreviewPage::search_thread), true );
 
 	// update timeout
 	Glib::signal_timeout().connect( sigc::mem_fun(this, &PreviewPage::on_update_timeout), 200 );
@@ -88,22 +85,18 @@ void PreviewPage::create() {
 
 void PreviewPage::destroy() {
 	search_stopsign_ = true;
-	sem_post(&search_run_sem_);
-	pthread_join(search_pid_, 0);
+	search_run_sem_.signal();
+	if( search_thread_ != 0 )
+		search_thread_->join();
 
-	pthread_mutex_destroy(&search_key_mutex_);
-	pthread_mutex_destroy(&search_result_mutex_);
-
-    cpp::unref_all_elems(elems_);
-	elems_.clear();
+    cpp::unref_all_elems(elems_.ref());
+	elems_->clear();
 	delete view_;
     view_ = 0;
 
 }
 
 void PreviewPage::do_preview(size_t index) {
-	pthread_mutex_lock(&search_result_mutex_);
-
 	if( search_resultsign_==true ) {
 		search_resultsign_ = false;
 		do_preview_impl(index);
@@ -111,17 +104,19 @@ void PreviewPage::do_preview(size_t index) {
 	} else if( index != index_ ) {
 		do_preview_impl(index);
 	}
-
-	pthread_mutex_unlock(&search_result_mutex_);
 }
 
 void PreviewPage::do_preview_impl(size_t index) {
+	Glib::RWLock::ReaderLock locker(elems_);
+
+	cpp::Elements& elems = elems_.ref();
+
 	Glib::RefPtr<gtksourceview::SourceBuffer> buffer = view_->get_source_buffer();
     Glib::ustring text;
 
-    if( !elems_.empty() ) {
-		index_ = index % elems_.size();
-        cpp::Element* elem = elems_[index_];
+    if( !elems.empty() ) {
+		index_ = index % elems.size();
+        cpp::Element* elem = elems[index_];
 
 		char buf[1024];
 		buf[0] = '\0';
@@ -129,7 +124,7 @@ void PreviewPage::do_preview_impl(size_t index) {
 		sprintf(buf, "%s:%d", elem->file.filename.c_str(), elem->sline);
 		filename_label_->set_text(buf);
 
-		sprintf(buf, "%d/%d", index_ + 1, elems_.size());
+		sprintf(buf, "%d/%d", index_ + 1, elems.size());
 		number_button_->set_label(buf);
 
 		// set text
@@ -168,14 +163,19 @@ bool PreviewPage::on_number_btn_release_event(GdkEventButton* event) {
 	Gtk::Menu::MenuList& menulist = number_menu_.items();
 	menulist.clear();
 
-	if( elems_.empty() ) {
-		menulist.push_back( Gtk::Menu_Helpers::MenuElem("empty") );
+	{
+		Glib::RWLock::ReaderLock locker(elems_);
+		cpp::Elements& elems = elems_.ref();
 
-	} else {
-		for( size_t i=0; i<elems_.size(); ++i ) {
-			std::ostringstream oss;
-			oss << (char)((i==index_) ? '*' : ' ') << ' ' << elems_[i]->file.filename << ':' << elems_[i]->sline;
-			menulist.push_back( Gtk::Menu_Helpers::MenuElem(oss.str(), sigc::bind(sigc::mem_fun(this, &PreviewPage::on_number_menu_selected), i)) );
+		if( elems.empty() ) {
+			menulist.push_back( Gtk::Menu_Helpers::MenuElem("empty") );
+
+		} else {
+			for( size_t i=0; i<elems.size(); ++i ) {
+				std::ostringstream oss;
+				oss << (char)((i==index_) ? '*' : ' ') << ' ' << elems[i]->file.filename << ':' << elems[i]->sline;
+				menulist.push_back( Gtk::Menu_Helpers::MenuElem(oss.str(), sigc::bind(sigc::mem_fun(this, &PreviewPage::on_number_menu_selected), i)) );
+			}
 		}
 	}
 
@@ -188,20 +188,24 @@ void PreviewPage::on_number_menu_selected(size_t index) {
 }
 
 void PreviewPage::on_filename_btn_clicked() {
-    if( elems_.empty() )
+	Glib::RWLock::ReaderLock locker(elems_);
+	cpp::Elements& elems = elems_.ref();
+    if( elems.empty() )
         return;
 
-	cpp::Element* elem = elems_[index_];
+	cpp::Element* elem = elems[index_];
 	assert( elem != 0 );
 
 	editor_.main_window().doc_manager().open_file(elem->file.filename, (int)(elem->sline - 1));
 }
 
 bool PreviewPage::on_scroll_to_define_line() {
-    if( elems_.empty() )
+	Glib::RWLock::ReaderLock locker(elems_);
+	cpp::Elements& elems = elems_.ref();
+    if( elems.empty() )
         return false;
 
-	cpp::Element* elem = elems_[index_];
+	cpp::Element* elem = elems[index_];
 	assert( elem != 0 );
 
 	Glib::RefPtr<Gtk::TextBuffer> buffer = view_->get_buffer();
@@ -215,10 +219,12 @@ bool PreviewPage::on_scroll_to_define_line() {
 }
 
 bool PreviewPage::on_sourceview_button_release_event(GdkEventButton* event) {
-    if( elems_.empty() )
+	Glib::RWLock::ReaderLock locker(elems_);
+	cpp::Elements& elems = elems_.ref();
+    if( elems.empty() )
         return false;
 
-	cpp::Element* elem = elems_[index_];
+	cpp::Element* elem = elems[index_];
 	assert( elem != 0 );
 
     // test CTRL state
@@ -255,20 +261,26 @@ bool PreviewPage::on_sourceview_button_release_event(GdkEventButton* event) {
 }
 
 void PreviewPage::search_thread() {
-	SearchContent	sc;
 	StrVector		keys;
 	MatchedSet		mset;
+	SearchContent	sc;
+	sc.file = 0;
 
 	while( !search_stopsign_ ) {
-		sem_wait(&search_run_sem_);
+		{
+			Glib::Mutex::Lock locker(search_content_);
+			search_run_sem_.wait(search_content_);
 
-		if( search_stopsign_ )
-			break;
+			if( search_stopsign_ )
+				break;
 
-		pthread_mutex_lock(&search_key_mutex_);
-		sc = search_content_;
-		pthread_mutex_unlock(&search_key_mutex_);
-		
+			if( sc.file != 0 ) {
+				sc.file->unref();
+				sc.file = 0;
+			}
+			sc = search_content_.ref();
+		}
+
 		keys.clear();
 		mset.clear();
 
@@ -286,38 +298,36 @@ void PreviewPage::search_thread() {
 
 */
 		{
-			RdLocker<cpp::STree> locker(LJCSEnv::self().stree());
-			::search_keys(keys, mset, LJCSEnv::self().stree().value(), sc.file, sc.line);
+			Glib::RWLock::ReaderLock locker(LJCSEnv::self().stree());
+			::search_keys(keys, mset, LJCSEnv::self().stree().ref(), sc.file, sc.line);
 		}
 
-		pthread_mutex_lock(&search_result_mutex_);
-		cpp::unref_all_elems(elems_);
-		elems_.resize(mset.size());
-		std::copy(mset.begin(), mset.end(), elems_.begin());
-		cpp::ref_all_elems(elems_);
+		{
+			Glib::RWLock::WriterLock locker(elems_);
+			cpp::Elements& elems = elems_.ref();
+			cpp::unref_all_elems(elems);
+			elems.resize(mset.size());
+			std::copy(mset.begin(), mset.end(), elems.begin());
+			cpp::ref_all_elems(elems);
 
-		search_resultsign_ = true;
-		index_ = find_best_matched_index(elems_);
-		pthread_mutex_unlock(&search_result_mutex_);
+			search_resultsign_ = true;
+			index_ = find_best_matched_index(elems);
+		}
 	}
-
-	pthread_exit(0);
 }
 
 void PreviewPage::preview(const std::string& key, const std::string& key_text, cpp::File& file, size_t line) {
-	pthread_mutex_lock(&search_key_mutex_);
+	Glib::Mutex::Lock locker(search_content_);
 
-	if( search_content_.file != 0 )
-		search_content_.file->unref();
+	if( search_content_->file != 0 )
+		search_content_->file->unref();
 
-	search_content_.key = key;
-	search_content_.key_text = key_text;
-	search_content_.file = file.ref();
-	search_content_.line = line;
+	search_content_->key = key;
+	search_content_->key_text = key_text;
+	search_content_->file = file.ref();
+	search_content_->line = line;
 
-	sem_post(&search_run_sem_);
-
-	pthread_mutex_unlock(&search_key_mutex_);
+	search_run_sem_.signal();
 }
 
 bool PreviewPage::on_update_timeout() {

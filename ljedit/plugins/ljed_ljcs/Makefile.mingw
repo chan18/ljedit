@@ -32,7 +32,7 @@ BIN = ../../bin/plugins/ljed_ljcs.dll
 all : $(BIN)
 
 $(BIN) : $(OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o $@ $(OBJS) -lpthreadGC2 $(GTKMMLIBS) $(LJCSLIB)
+	$(CXX) $(CXXFLAGS) -shared -o $@ $(OBJS) $(GTKMMLIBS) $(LJCSLIB)
 	strip $@
 	cp ../../../ljcs/lib/libljcs.dll ../../bin/
 

@@ -21,7 +21,7 @@ BIN = ../../bin/plugins/ljed_indent.dll
 all : $(BIN)
 
 $(BIN) : $(OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o $@ $(OBJS) -lpthreadGC2 $(GTKMMLIBS)
+	$(CXX) $(CXXFLAGS) -shared -o $@ $(OBJS) $(GTKMMLIBS)
 	strip $@
 
 clean :
