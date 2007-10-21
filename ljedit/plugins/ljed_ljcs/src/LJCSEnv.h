@@ -5,6 +5,7 @@
 #define LJED_INC_LJCSENV_H
 
 #include "ljcs/ljcs.h"
+#include <gtkmm.h>
 #include <cassert>
 
 class LJEditor;

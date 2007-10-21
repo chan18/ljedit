@@ -6,13 +6,25 @@
 
 #ifdef WIN32
 	#include <windows.h>
-	inline long atomic_increment(volatile long* v) { return InterlockedIncrement(v); }
-	inline long atomic_decrement(volatile long* v) { return InterlockedDecrement(v); }
+	#define atomic_t			volatile long
+	#define atomic_read(v)		(*v)
+	#define atomic_set(v,i)		((*v) = (i))
+	#define atomic_inc(v)		InterlockedIncrement(v)
+	#define atomic_dec(v)		InterlockedDecrement(v)
 
 #else
-	#include <linux/atomic.h>
-	inline long atomic_increment(volatile long* v) { return AtomicIncrement32(v); }
-	inline long atomic_decrement(volatile long* v) { return AtomicDecrement32(v); }
+
+	// TODO : use linux atomic
+	// 
+	#define atomic_t			volatile long
+	#define atomic_read(v)		(*v)
+	#define atomic_set(v,i)		((*v) = (i))
+	#define atomic_inc(v)		(++(*v))
+	#define atomic_dec(v)		(--(*v))
+
+	//#include <asm/atomic.h>
+	//inline void atomic_increment(ljcs_atomic_t* v) { atomic_inc(v); }
+	//inline void atomic_decrement(ljcs_atomic_t* v) { atomic_dec(v); }
 
 #endif
 
@@ -122,24 +134,25 @@ public:	// for index
 
 class File {
 public:
-	File(const std::string& fname) : filename(fname), ref_count_(0) {}
+	File(const std::string& fname) : filename(fname)
+		{ atomic_set(&ref_count_, 0); }
 
 	~File() {}
 
 	File* ref()  {
-		atomic_increment(&ref_count_);
+		atomic_inc(&ref_count_);
 		return this;
 	}
 
 	void unref() {
-		atomic_decrement(&ref_count_);
-		assert( ref_count_ >= 0 );
-		if( ref_count_==0 )
+		atomic_dec(&ref_count_);
+		assert( atomic_read(&ref_count_) >= 0 );
+		if( atomic_read(&ref_count_)==0 )
 			delete this;
 	}
 
 private:
-	volatile long	ref_count_;
+	atomic_t		ref_count_;
 
 private:
 	// nocopyable

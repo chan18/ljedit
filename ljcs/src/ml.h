@@ -7,6 +7,7 @@
 #include "token.h"
 
 #include <string>
+#include <istream>
 #include <ostream>
 
 // implements in ml.l
