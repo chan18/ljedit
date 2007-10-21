@@ -39,9 +39,6 @@ void LJCSEnv::set_include_paths(const StrVector& paths) {
 			if( path.empty() )
 				continue;
 
-			if( path[path.size() - 1]!='/' )
-				path += '/';
-
 			if( std::find(vec.begin(), vec.end(), path)==vec.end() )
 				vec.push_back(path);
 		}

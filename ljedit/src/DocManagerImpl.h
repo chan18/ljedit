@@ -28,7 +28,7 @@ public:
 
     virtual void create_new_file();
 	virtual void show_open_dialog();
-    virtual void open_file(const std::string& filepath, int line=0, int line_offset=0);
+    virtual bool open_file(const std::string& filepath, int line=0, int line_offset=0);
     virtual bool locate_file(const std::string& filepath, int line=0, int line_offset=0);
     virtual void save_current_file();
 	virtual void save_current_file_as();

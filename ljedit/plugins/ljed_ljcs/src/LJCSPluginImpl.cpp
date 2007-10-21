@@ -12,6 +12,9 @@
 #include "DocManager.h"
 #include "LJEditor.h"
 
+GRegex* re_include = g_regex_new("^[ \t]*#[ \t]*include[ \t]*(.*)", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
+GRegex* re_include_tip = g_regex_new("([\"<])(.*)", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
+GRegex* re_include_info = g_regex_new("([\"<])([^\">]*)[\">].*", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
 
 LJCSPluginImpl::LJCSPluginImpl(LJEditor& editor)
     : editor_(editor)
@@ -279,6 +282,28 @@ void LJCSPluginImpl::destroy() {
     preview_.destroy();
 }
 
+void LJCSPluginImpl::open_include_file(const char* filename, bool system_header, cpp::File* owner) {
+	std::string filepath;
+	if( !system_header ) {
+		filepath = Glib::build_filename(Glib::path_get_dirname(owner->filename), filename);
+		if( editor_.main_window().doc_manager().open_file(filepath) )
+			return;
+	}
+
+	StrVector paths = LJCSEnv::self().get_include_paths();
+	StrVector::iterator it = paths.begin();
+	StrVector::iterator end = paths.end();
+	for( ; it!=end; ++it ) {
+		filepath = Glib::build_filename(*it, filename);
+		if( editor_.main_window().doc_manager().open_file(filepath) )
+			break;
+	}
+}
+
+void LJCSPluginImpl::show_include_hint(const char* filename, bool system_header, const Glib::ustring& owner_filepath) {
+	// TODO : include file tip
+}
+
 void LJCSPluginImpl::on_show_setup_dialog() {
 	show_setup_dialog(editor_.main_window(), plugin_path_);
 }
@@ -376,10 +401,38 @@ bool LJCSPluginImpl::on_key_release_event(GdkEventKey* event, DocPage* page) {
 
     Glib::RefPtr<Gtk::TextBuffer> buf = page->buffer();
     Gtk::TextIter it = buf->get_iter_at_mark(buf->get_insert());
-    Gtk::TextIter end = it;
 
     if( is_in_comment(it) )
         return false;
+ 
+	// include tip
+	{
+		Gtk::TextIter ps = it;
+		Gtk::TextIter pe = it;
+		ps.set_line_offset(0);
+		pe.forward_to_line_end();
+		Glib::ustring line = ps.get_text(pe);
+
+		GMatchInfo* inc_info = 0;
+		bool is_include_line = g_regex_match(re_include, line.c_str(), (GRegexMatchFlags)0, &inc_info);
+		if( is_include_line ) {
+			gchar* inc_info_text = g_match_info_fetch(inc_info, 1);
+			GMatchInfo* info = 0;
+			if( g_regex_match(re_include_tip, inc_info_text, (GRegexMatchFlags)0, &info) ) {
+				gchar* sign = g_match_info_fetch(info, 1);
+				gchar* filename = g_match_info_fetch(info, 2);
+				show_include_hint(filename, *sign=='<', page->filepath());
+				g_free(sign);
+				g_free(filename);
+			}
+			g_free(inc_info_text);
+			g_match_info_free(info);
+		}
+		g_match_info_free(inc_info);
+
+	}
+
+    Gtk::TextIter end = it;
 
     switch( event->keyval ) {
     case '.':
@@ -412,7 +465,7 @@ bool LJCSPluginImpl::on_key_release_event(GdkEventKey* event, DocPage* page) {
             if( it.backward_chars(2) && it.get_char()!='<' ) {
                 it.forward_chars(2);
                 show_hint(*page, it, end, 'f');
-            }
+			}
         }
         break;
     case '>':
@@ -444,13 +497,40 @@ bool LJCSPluginImpl::on_key_release_event(GdkEventKey* event, DocPage* page) {
 }
 
 void LJCSPluginImpl::do_button_release_event(GdkEventButton* event, DocPage* page, cpp::File* file) {
-    // include test
-
     // tag test
     Glib::RefPtr<Gtk::TextBuffer> buf = page->buffer();
     Gtk::TextBuffer::iterator it = buf->get_iter_at_mark(buf->get_insert());
     if( is_in_comment(it) )
         return;
+
+    // include test
+	if( event->state & Gdk::CONTROL_MASK ) {
+		Gtk::TextBuffer::iterator ps = it;
+		Gtk::TextBuffer::iterator pe = it;
+		ps.set_line_offset(0);
+		pe.forward_to_line_end();
+		Glib::ustring line = ps.get_text(pe);
+		GMatchInfo* inc_info = 0;
+
+		bool is_include_line = g_regex_match(re_include, line.c_str(), (GRegexMatchFlags)0, &inc_info);
+		if( is_include_line ) {
+			gchar* inc_info_text = g_match_info_fetch(inc_info, 1);
+			GMatchInfo* info = 0;
+			if( g_regex_match(re_include_info, inc_info_text, (GRegexMatchFlags)0, &info) ) {
+				gchar* sign = g_match_info_fetch(info, 1);
+				gchar* filename = g_match_info_fetch(info, 2);
+				open_include_file(filename, *sign=='<', file);
+				g_free(sign);
+				g_free(filename);
+			}
+			g_free(inc_info_text);
+			g_match_info_free(info);
+		}
+		g_match_info_free(inc_info);
+
+		if( is_include_line )
+			return;
+	}
 
     char ch = (char)it.get_char();
     if( isalnum(ch)==0 && ch!='_' )

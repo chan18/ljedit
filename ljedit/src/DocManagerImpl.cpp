@@ -106,16 +106,16 @@ void DocManagerImpl::show_open_dialog() {
 	}
 }
 
-void DocManagerImpl::open_file(const std::string& filepath, int line, int line_offset) {
+bool DocManagerImpl::open_file(const std::string& filepath, int line, int line_offset) {
 	std::string filekey = filepath;
 	LJEditorUtilsImpl::self().format_filekey(filekey);
 
 	if( do_locate_file(filekey, line, line_offset) )
-		return;
+		return true;
 
 	Glib::ustring ubuf;
 	if( !LJEditorUtilsImpl::self().load_file(ubuf, filekey) )
-		return;
+		return false;
 
     std::string filename = Glib::path_get_basename(filepath);
 
@@ -136,7 +136,7 @@ void DocManagerImpl::open_file(const std::string& filepath, int line, int line_o
 	}
 #endif
 
-    open_page(filekey, filename, &ubuf, line, line_offset);
+    return open_page(filekey, filename, &ubuf, line, line_offset);
 }
 
 bool DocManagerImpl::do_locate_file(const std::string& filepath, int line, int line_offset) {
