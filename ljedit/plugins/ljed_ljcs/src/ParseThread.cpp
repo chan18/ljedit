@@ -55,7 +55,7 @@ void ParseThread::thread()
 		for( ; it!=end; ++it ) {
 			cpp::File* file = parser_->parse(*it);
 			if( file != 0 )
-				file->unref();
+				env.file_decref(file);
 		}
 	}
 
@@ -85,7 +85,7 @@ void ParseThread::thread()
 
 			cpp::File* file = parser_->parse(filekey);
 			if( file != 0 )
-				file->unref();
+				env.file_decref(file);
 
 			env.re_make_index();
 		}

@@ -89,7 +89,7 @@ void PreviewPage::destroy() {
 	if( search_thread_ != 0 )
 		search_thread_->join();
 
-    cpp::unref_all_elems(elems_.ref());
+	LJCSEnv::self().file_decref_all_elems(elems_.ref());
 	elems_->clear();
 	delete view_;
     view_ = 0;
@@ -261,8 +261,10 @@ bool PreviewPage::on_sourceview_button_release_event(GdkEventButton* event) {
 }
 
 void PreviewPage::search_thread() {
+	LJCSEnv& env = LJCSEnv::self();
+	MatchedSet		mset(env);
+
 	StrVector		keys;
-	MatchedSet		mset;
 	SearchContent	sc;
 	sc.file = 0;
 
@@ -275,7 +277,7 @@ void PreviewPage::search_thread() {
 				break;
 
 			if( sc.file != 0 ) {
-				sc.file->unref();
+				env.file_decref(sc.file);
 				sc.file = 0;
 			}
 			sc = search_content_.ref();
@@ -305,10 +307,10 @@ void PreviewPage::search_thread() {
 		{
 			Glib::RWLock::WriterLock locker(elems_);
 			cpp::Elements& elems = elems_.ref();
-			cpp::unref_all_elems(elems);
+			env.file_decref_all_elems(elems);
 			elems.resize(mset.size());
 			std::copy(mset.begin(), mset.end(), elems.begin());
-			cpp::ref_all_elems(elems);
+			env.file_incref_all_elems(elems);
 
 			search_resultsign_ = true;
 			index_ = find_best_matched_index(elems);
@@ -320,12 +322,14 @@ void PreviewPage::preview(const std::string& key, const std::string& key_text, c
 	Glib::Mutex::Lock locker(search_content_);
 
 	if( search_content_->file != 0 )
-		search_content_->file->unref();
+		LJCSEnv::self().file_decref(search_content_->file);
 
 	search_content_->key = key;
 	search_content_->key_text = key_text;
-	search_content_->file = file.ref();
+	search_content_->file = &file;
 	search_content_->line = line;
+
+	LJCSEnv::self().file_incref(search_content_->file);
 
 	search_run_sem_.signal();
 }

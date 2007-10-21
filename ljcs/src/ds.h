@@ -4,31 +4,6 @@
 #ifndef LJCS_DS_H
 #define LJCS_DS_H
 
-#ifdef WIN32
-	#include <windows.h>
-	#define atomic_t			volatile long
-	#define atomic_read(v)		(*v)
-	#define atomic_set(v,i)		((*v) = (i))
-	#define atomic_inc(v)		InterlockedIncrement(v)
-	#define atomic_dec(v)		InterlockedDecrement(v)
-
-#else
-
-	// TODO : use linux atomic
-	// 
-	#define atomic_t			volatile long
-	#define atomic_read(v)		(*v)
-	#define atomic_set(v,i)		((*v) = (i))
-	#define atomic_inc(v)		(++(*v))
-	#define atomic_dec(v)		(--(*v))
-
-	//#include <asm/atomic.h>
-	//inline void atomic_increment(ljcs_atomic_t* v) { atomic_inc(v); }
-	//inline void atomic_decrement(ljcs_atomic_t* v) { atomic_dec(v); }
-
-#endif
-
-
 #include <string>
 #include <vector>
 #include <set>
@@ -134,25 +109,8 @@ public:	// for index
 
 class File {
 public:
-	File(const std::string& fname) : filename(fname)
-		{ atomic_set(&ref_count_, 0); }
-
+	File(const std::string& fname) : filename(fname), ref_count(0) {}
 	~File() {}
-
-	File* ref()  {
-		atomic_inc(&ref_count_);
-		return this;
-	}
-
-	void unref() {
-		atomic_dec(&ref_count_);
-		assert( atomic_read(&ref_count_) >= 0 );
-		if( atomic_read(&ref_count_)==0 )
-			delete this;
-	}
-
-private:
-	atomic_t		ref_count_;
 
 private:
 	// nocopyable
@@ -164,23 +122,10 @@ public:
 	time_t			datetime;
 
 	Scope			scope;
+
+public:
+	volatile int	ref_count;
 };
-
-template<class T>
-inline void ref_all_elems(T& v) {
-	typename T::iterator it = v.begin();
-	typename T::iterator end = v.end();
-	for( ; it!=end; ++it )
-		(*it)->file.ref();
-}
-
-template<class T>
-inline void unref_all_elems(T& v) {
-	typename T::iterator it = v.begin();
-	typename T::iterator end = v.end();
-	for( ; it!=end; ++it )
-		(*it)->file.unref();
-}
 
 class Macro : public Element {
 public:

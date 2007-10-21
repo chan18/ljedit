@@ -12,7 +12,7 @@ OutlinePage::OutlinePage() : file_(0), line_(0) {
 
 OutlinePage::~OutlinePage() {
     if( file_ != 0 ) {
-        file_->unref();
+    	LJCSEnv::self().file_decref(file_);
         file_ = 0;
         line_ = 0;
     }
@@ -44,8 +44,7 @@ void OutlinePage::set_file(cpp::File* file, int line) {
         }
 
         if( file_ != 0 )
-            file_->unref();
-
+    		LJCSEnv::self().file_decref(file_);
         file_ = file;
 
         view_.set_model(store_);

@@ -65,7 +65,7 @@ void LJCSPluginImpl::show_hint(DocPage& page
     size_t line = (size_t)it.get_line() + 1;
     StrVector keys;
 	if( find_keys(keys, it, end, file, true) ) {
-		MatchedSet mset;
+		MatchedSet mset(env);
 		if( env.stree().reader_trylock() ) {
 			::search_keys(keys, mset, LJCSEnv::self().stree().ref(), file, line);
 			env.stree().reader_unlock();
@@ -105,7 +105,7 @@ void LJCSPluginImpl::show_hint(DocPage& page
 
 	}
 
-	file->unref();
+	env.file_decref(file);
 }
 
 void LJCSPluginImpl::locate_sub_hint(DocPage& page) {
@@ -477,7 +477,7 @@ void LJCSPluginImpl::do_button_release_event(GdkEventButton* event, DocPage* pag
 
 		LJCSEnv& env = LJCSEnv::self();
 
-		MatchedSet mset;
+		MatchedSet mset(env);
 		if( env.stree().reader_trylock() ) {
 			::search_keys(keys, mset, LJCSEnv::self().stree().ref(), file, line);
 			env.stree().reader_unlock();
@@ -514,7 +514,7 @@ bool LJCSPluginImpl::on_button_release_event(GdkEventButton* event, DocPage* pag
 	cpp::File* file = LJCSEnv::self().find_parsed(page->filepath());
 	if( file!=0 ) {
 		do_button_release_event(event, page, file);
-		file->unref();
+		LJCSEnv::self().file_decref(file);
 	}
     return false;
 }

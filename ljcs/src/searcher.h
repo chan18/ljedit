@@ -13,10 +13,12 @@
 
 class IMatched {
 public:
-	IMatched() {}
+	IMatched(IParserEnviron& env) : env_(env) {}
 	virtual ~IMatched() {}
 public:
 	virtual void on_matched(cpp::Element& elem) = 0;
+protected:
+	IParserEnviron& env_;
 };
 
 class MatchedPrint : public IMatched {
@@ -28,7 +30,7 @@ public:
 
 class MatchedSet : public IMatched {
 public:
-	MatchedSet() {}
+	MatchedSet(IParserEnviron& env) : IMatched(env) {}
 	~MatchedSet() { clear(); }
 
 	cpp::ElementSet elems_;
@@ -36,7 +38,7 @@ public:
 	virtual void on_matched(cpp::Element& elem) {
 		cpp::ElementSet::iterator it = elems_.find(&elem);
 		if( it==elems_.end() ) {
-			elem.file.ref();
+			env_.pe_file_incref(&(elem.file));
 			elems_.insert(&elem);
 		}
 	}
@@ -50,7 +52,7 @@ public:
 	cpp::ElementSet::iterator end()   { return elems_.end(); }
 
 	void clear() {
-		cpp::unref_all_elems(elems_);
+		env_.file_decref_all_elems(elems_);
 		elems_.clear();
 	}
 };

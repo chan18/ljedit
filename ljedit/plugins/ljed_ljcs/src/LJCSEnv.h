@@ -64,6 +64,9 @@ public:
 
 	RWLock<cpp::STree>&		stree() { return index_; }
 
+	void					file_incref(cpp::File* file);
+	void					file_decref(cpp::File* file);
+
 public:
 	bool					in_include_path(const std::string& path);
 
@@ -82,6 +85,9 @@ private:	// IParserEnviron
 	virtual cpp::File*		pe_find_parsed(const std::string& filekey);
 	virtual cpp::File*		pe_check_parsed(const std::string& filekey, time_t& mtime);
 	virtual bool			pe_get_content(const std::string& filekey, std::ostream& out);
+
+	virtual void			pe_file_incref(cpp::File* file) { file_incref(file); }
+	virtual void			pe_file_decref(cpp::File* file) { file_decref(file); }
 
 	virtual void			pe_on_parsed(cpp::File* file);
 

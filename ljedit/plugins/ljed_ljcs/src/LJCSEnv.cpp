@@ -5,10 +5,10 @@
 
 #include "LJCSEnv.h"
 
-#include <string>
 #include <sstream>
 #include <fstream>
 #include <sys/stat.h>
+
 #include "LJEditor.h"
 
 
@@ -76,7 +76,11 @@ cpp::File* LJCSEnv::find_parsed(const std::string& filekey) {
 	Glib::RWLock::ReaderLock locker(parsed_files_);
 
 	cpp::FileMap::iterator it = parsed_files_->find(filekey);
-	return it!=parsed_files_->end() ? it->second->ref() : 0;
+	if( it!=parsed_files_->end() ) {
+		file_incref(it->second);
+		return it->second;
+	}
+	return 0;
 }
 
 cpp::File* LJCSEnv::find_parsed_in_include_path(const std::string& filename) {
@@ -128,14 +132,15 @@ void LJCSEnv::re_make_index() {
 void LJCSEnv::add_parsed(cpp::File* file) {
 	if( file != 0 ) {
 		Glib::RWLock::WriterLock locker(parsed_files_);
-
+		file_incref(file);
+		
 		cpp::FileMap::iterator it = parsed_files_->find(file->filename);
 		if( it!=parsed_files_->end() ) {
-			it->second->unref();
-			it->second = file->ref();
+			file_decref(it->second);
+			it->second = file;
 
 		} else {
-			parsed_files_->insert( std::make_pair(file->filename, file->ref()) );
+			parsed_files_->insert( std::make_pair(file->filename, file) );
 		}
 	}
 }
@@ -145,12 +150,26 @@ void LJCSEnv::remove_parsed(cpp::File* file) {
 		remove_parsed(file->filename);
 }
 
+void LJCSEnv::file_incref(cpp::File* file) {
+	assert( file != 0 );
+	g_atomic_int_add(&file->ref_count, 1);
+}
+
+void LJCSEnv::file_decref(cpp::File* file) {
+	assert( file != 0 );
+	g_atomic_int_add(&file->ref_count, -1);
+
+	assert( file->ref_count >= 0 );
+	if( file->ref_count==0 )
+		delete file;
+}
+
 void LJCSEnv::remove_parsed(const std::string& file) {
 	Glib::RWLock::WriterLock locker(parsed_files_);
 
 	cpp::FileMap::iterator it = parsed_files_->find(file);
 	if( it!=parsed_files_->end() ) {
-		it->second->unref();
+		file_decref(it->second);
 		parsed_files_->erase(it);
 	}
 }
@@ -189,7 +208,7 @@ cpp::File* LJCSEnv::pe_check_parsed(const std::string& filekey, time_t& mtime) {
 		//      failed  : filestat.st_mtime==0, also compare them
 		// 
 		if( file->datetime != mtime ) {
-			file->unref();
+			file_decref(file);
 			file = 0;
 		}
 	}

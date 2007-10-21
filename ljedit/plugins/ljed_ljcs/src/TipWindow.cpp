@@ -83,7 +83,7 @@ void TipWindow::clear_list_store() {
 	Gtk::TreeIter end = list_store_->children().end();
 	for( ; it!=end; ++it ) {
 		cpp::Element* elem = it->get_value(columns_.elem);
-		elem->file.ref();
+		LJCSEnv::self().file_decref(&(elem->file));
 	}
 	list_store_->clear();
 }
@@ -94,7 +94,7 @@ void TipWindow::fill_list_store(ElementMap& emap) {
 	for( size_t i=0; it!=end && i < 250; ++it ) {
 		++i;
 		cpp::Element* elem = it->second;
-		elem->file.ref();
+		LJCSEnv::self().file_incref(&(elem->file));
 
 		Gtk::TreeRow row = *(list_store_->append());
 		row[columns_.icon] = LJCSIcons::self().get_icon_from_elem(*elem);

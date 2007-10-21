@@ -127,7 +127,7 @@ cpp::File* Parser::do_parse(const std::string& filekey, std::ostream* os) {
 
 		} else {
 			// start parse
-			retval->ref();
+			env_.pe_file_incref(retval);
 			cxx_parser::parse(*lexer, stopsign_);
 			env_.pe_on_parsed(retval);
 			delete lexer;
@@ -136,7 +136,6 @@ cpp::File* Parser::do_parse(const std::string& filekey, std::ostream* os) {
 		parsing_files_.erase(filekey);
 	}
 
-	// BUG !!!
 	return retval;
 }
 

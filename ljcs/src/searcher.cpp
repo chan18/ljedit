@@ -40,7 +40,7 @@ size_t __search_call_time__ = 0;
 
 namespace {
 
-// type的含义为:
+// type鐨勫惈涔変负:
 //    n : namespace
 //    ? : namespace or type(class or enum or typedef)
 //    t : type
@@ -424,7 +424,7 @@ void Searcher::start(const std::string& path, cpp::File* file, size_t line) {
 
 	std::string key;
 
-	// 先不进行优化操作
+	// 鍏堜笉杩涜浼樺寲鎿嶄綔
 	while( !paths_.empty() ) {
 		SPath* spath = paths_.front();
 		paths_.erase(paths_.begin());
@@ -462,7 +462,7 @@ void Searcher::locate(cpp::File* file, size_t line, const std::string& path) {
 		delete spath;
 }
 
-// 上下文相关搜? 定位key所在的? 并搜索定位时所经过的路?// 
+// 涓婁笅鏂囩浉鍏虫悳? 瀹氫綅key鎵�鍦ㄧ殑? 骞舵悳绱㈠畾浣嶆椂鎵�缁忚繃鐨勮矾?// 
 void Searcher::do_locate(cpp::Scope& scope
 	, size_t line
 	, SPath& path
@@ -749,22 +749,12 @@ void search_keys( const StrVector& keys
 	, cpp::File* file
 	, size_t line )
 {
-	MatchedSet mset;
-
 	// search
 	{
 		StrVector::const_iterator it = keys.begin();
 		StrVector::const_iterator end = keys.end();
 		for( ; it!=end; ++it )
-			search(*it, mset, stree, file, line);
-	}
-
-	// return
-	{
-		cpp::ElementSet::iterator it = mset.begin(); 
-		cpp::ElementSet::iterator end = mset.end(); 
-		for( ; it!=end; ++it )
-			cb.on_matched(**it);
+			search(*it, cb, stree, file, line);
 	}
 }
 

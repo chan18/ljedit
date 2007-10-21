@@ -20,6 +20,27 @@ public:
 	//virtual std::istream*	pe_istream_create(const std::string& filekey) = 0;
 	//virtual void			pe_istream_destroy(std::istream* ins) = 0;
 
+public:
+	virtual void			pe_file_incref(cpp::File* file) = 0;
+	virtual void			pe_file_decref(cpp::File* file) = 0;
+
+	template<class T>
+	inline void file_incref_all_elems(T& v) {
+		typename T::iterator it = v.begin();
+		typename T::iterator end = v.end();
+		for( ; it!=end; ++it )
+			pe_file_incref(&((*it)->file));
+	}
+
+	template<class T>
+	inline void file_decref_all_elems(T& v) {
+		typename T::iterator it = v.begin();
+		typename T::iterator end = v.end();
+		for( ; it!=end; ++it )
+			pe_file_decref(&((*it)->file));
+	}
+
+public:
 	virtual void			pe_on_parsed(cpp::File* file) = 0;
 };
 
