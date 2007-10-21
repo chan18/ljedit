@@ -5,12 +5,6 @@
 
 #include "ParseThread.h"
 
-#ifdef WIN32
-	#ifndef sleep
-		#define sleep(sec)	Sleep(sec*1000);
-	#endif
-#endif
-
 
 void ParseThread::run() {
 	parser_ = LJCSParser::create(LJCSEnv::self());
@@ -61,7 +55,7 @@ void ParseThread::thread()
 
     while( !parser_->stopsign_is_set() ) {
         if( set_->empty() ) {
-            sleep(1);
+			g_usleep(100);
             continue;
         }
 
