@@ -55,7 +55,7 @@ void ParseThread::thread()
 
     while( !parser_->stopsign_is_set() ) {
         if( set_->empty() ) {
-			g_usleep(100);
+			g_usleep(1000);
             continue;
         }
 
