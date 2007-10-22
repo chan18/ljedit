@@ -72,7 +72,7 @@ private:
 	void do_button_release_event(GdkEventButton* event, DocPage* page, cpp::File* file);
 
 	void open_include_file(const char* filename, bool system_header, cpp::File* owner);
-	void show_include_hint(const char* filename, bool system_header, const Glib::ustring& owner_filepath);
+	void show_include_hint(const std::string& filename, bool system_header, DocPage& page);
 
 private:	// outline
     void outline_update_page();

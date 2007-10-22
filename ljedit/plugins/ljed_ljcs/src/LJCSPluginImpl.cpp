@@ -143,38 +143,76 @@ void LJCSPluginImpl::locate_sub_hint(DocPage& page) {
 }
 
 void LJCSPluginImpl::auto_complete(DocPage& page) {
-    cpp::Element* selected = tip_.get_selected();
-    if( selected == 0 )
-        return;
+	if( tip_.list_window().is_visible() ) {
+		cpp::Element* selected = tip_.get_list_selected();
+		if( selected == 0 )
+			return;
 
-	char ch = '\0';
+		Glib::RefPtr<Gtk::TextBuffer> buf = page.buffer();
+		Gtk::TextBuffer::iterator ps = buf->get_iter_at_mark(buf->get_insert());
+		Gtk::TextBuffer::iterator pe = ps;
 
-    Glib::RefPtr<Gtk::TextBuffer> buf = page.buffer();
-    Gtk::TextBuffer::iterator ps = buf->get_iter_at_mark(buf->get_insert());
-	Gtk::TextBuffer::iterator pe = ps;
+		char ch = '\0';
 
-	// range start
-	while( ps.backward_char() ) {
-		ch = (char)(ps.get_char());
-		if( ::isalnum(ch) || ch=='_' )
-			continue;
+		// range start
+		while( ps.backward_char() ) {
+			ch = (char)(ps.get_char());
+			if( ::isalnum(ch) || ch=='_' )
+				continue;
 
-		ps.forward_char();
-		break;
+			ps.forward_char();
+			break;
+		}
+
+		// range end
+		do {
+			ch = (char)(pe.get_char());
+			if( ::isalnum(ch) || ch=='_' )
+				continue;
+			else
+				break;
+		} while( pe.forward_char() );
+
+		buf->erase(ps, pe);
+		buf->insert_at_cursor(selected->name);
+		tip_.list_window().hide();
+
+	} else if( tip_.include_window().is_visible() ) {
+		Glib::ustring selected = tip_.get_include_selected();
+		if( selected.empty() )
+			return;
+
+		Glib::RefPtr<Gtk::TextBuffer> buf = page.buffer();
+		Gtk::TextBuffer::iterator ps = buf->get_iter_at_mark(buf->get_insert());
+		Gtk::TextBuffer::iterator pe = ps;
+
+		char ch = '\0';
+
+		// range start
+		while( ps.backward_char() ) {
+			ch = (char)(ps.get_char());
+			if( ch!='/' && ch!='\\' && ch!='<' && ch!='"' )
+				continue;
+
+			ps.forward_char();
+			break;
+		}
+
+		// range end
+		do {
+			ch = (char)(pe.get_char());
+			if( ::isalnum(ch) || ch=='_' )
+				continue;
+			else
+				break;
+		} while( pe.forward_char() );
+
+		buf->erase(ps, pe);
+		buf->insert_at_cursor(selected);
+
+		tip_.include_window().hide();
 	}
 
-	// range end
-	do {
-		ch = (char)(pe.get_char());
-		if( ::isalnum(ch) || ch=='_' )
-			continue;
-		else
-			break;
-	} while( pe.forward_char() );
-
-	buf->erase(ps, pe);
-    buf->insert_at_cursor(selected->name);
-    tip_.list_window().hide();
 }
 
 void LJCSPluginImpl::set_show_hint_timer(DocPage& page) {
@@ -300,8 +338,87 @@ void LJCSPluginImpl::open_include_file(const char* filename, bool system_header,
 	}
 }
 
-void LJCSPluginImpl::show_include_hint(const char* filename, bool system_header, const Glib::ustring& owner_filepath) {
-	// TODO : include file tip
+void LJCSPluginImpl::show_include_hint(const std::string& filename, bool system_header, DocPage& page) {
+	std::string key;
+	std::set<std::string> files;
+	std::string path;
+
+	if( !filename.empty() ) {
+		char last = filename[filename.size() -1];
+		if( last=='/' || last=='\\' ) {
+			;
+		} else {
+			size_t pos = filename.find_last_of("/\\");
+			if( pos!=filename.npos )
+				key = filename.substr(pos+1);
+			else
+				key = filename;
+		}
+	}
+
+	if( system_header ) {
+		StrVector paths = LJCSEnv::self().get_include_paths();
+		StrVector::iterator it = paths.begin();
+		StrVector::iterator end = paths.end();
+		for( ; it!=end; ++it ) {
+			try {
+				if( filename.empty() ) {
+					path = *it;
+				} else {
+					path = Glib::build_filename(*it, filename);
+					path = Glib::path_get_dirname(path);
+				}
+
+				Glib::Dir dir(path);
+				for( Glib::DirIterator it = dir.begin(); it!=dir.end(); ++it) {
+					path = *it;
+					if( key.empty() || path.find(key)==0 )
+						files.insert(path);
+				}
+			} catch( const Glib::Exception& ) {
+			}
+		}
+
+	} else {
+		try {
+			path = Glib::path_get_dirname(page.filepath());
+			if( !filename.empty() ) {
+				path = Glib::build_filename(path, filename);
+				path = Glib::path_get_dirname(path);
+			}
+
+			Glib::Dir dir(path);
+			for( Glib::DirIterator it = dir.begin(); it!=dir.end(); ++it) {
+				path = *it;
+				if( key.empty() || path.find(key)==0 )
+					files.insert(path);
+			}
+
+		} catch( const Glib::Exception& ) {
+		}
+	}
+
+	if( !files.empty() ) {
+		int view_x = 0;
+		int view_y = 0;
+		Gtk::TextView& view = page.view();
+		view.get_window(Gtk::TEXT_WINDOW_TEXT)->get_origin(view_x, view_y);
+	    
+		Gdk::Rectangle rect;
+		view.get_iter_location(page.buffer()->get_iter_at_mark(page.buffer()->get_insert()), rect);
+
+		int cursor_x = rect.get_x();
+		int cursor_y = rect.get_y();
+		view.buffer_to_window_coords(Gtk::TEXT_WINDOW_TEXT, cursor_x, cursor_y, cursor_x, cursor_y);
+
+		int x = view_x + cursor_x;
+		int y = view_y + cursor_y + rect.get_height() + 2;
+
+		tip_.show_include_tip(x, y, files);
+
+	} else {
+		tip_.include_window().hide();
+	}
 }
 
 void LJCSPluginImpl::on_show_setup_dialog() {
@@ -340,7 +457,7 @@ bool LJCSPluginImpl::on_key_press_event(GdkEventKey* event, DocPage* page) {
 
 	switch( event->keyval ) {
 	case GDK_Tab:
-		if( tip_.list_window().is_visible() ) {
+		if( tip_.list_window().is_visible() || tip_.include_window().is_visible() ) {
 			auto_complete(*page);
 			return true;
 		}
@@ -351,7 +468,7 @@ bool LJCSPluginImpl::on_key_press_event(GdkEventKey* event, DocPage* page) {
 		break;
 
 	case GDK_Up:
-		if( tip_.list_window().is_visible() ) {
+		if( tip_.list_window().is_visible() || tip_.include_window().is_visible() ) {
 			tip_.select_prev();
 			return true;
 		}
@@ -361,7 +478,7 @@ bool LJCSPluginImpl::on_key_press_event(GdkEventKey* event, DocPage* page) {
 		break;
 
 	case GDK_Down:
-		if( tip_.list_window().is_visible() ) {
+		if( tip_.list_window().is_visible() || tip_.include_window().is_visible() ) {
 			tip_.select_next();
 			return true;
 		}
@@ -414,6 +531,7 @@ bool LJCSPluginImpl::on_key_release_event(GdkEventKey* event, DocPage* page) {
 		Glib::ustring line = ps.get_text(pe);
 
 		GMatchInfo* inc_info = 0;
+		bool is_start = false;
 		bool is_include_line = g_regex_match(re_include, line.c_str(), (GRegexMatchFlags)0, &inc_info);
 		if( is_include_line ) {
 			gchar* inc_info_text = g_match_info_fetch(inc_info, 1);
@@ -421,7 +539,9 @@ bool LJCSPluginImpl::on_key_release_event(GdkEventKey* event, DocPage* page) {
 			if( g_regex_match(re_include_tip, inc_info_text, (GRegexMatchFlags)0, &info) ) {
 				gchar* sign = g_match_info_fetch(info, 1);
 				gchar* filename = g_match_info_fetch(info, 2);
-				show_include_hint(filename, *sign=='<', page->filepath());
+				if( filename[0]=='\0' )
+					is_start = true;
+				show_include_hint(filename, *sign=='<', *page);
 				g_free(sign);
 				g_free(filename);
 			}
@@ -430,6 +550,18 @@ bool LJCSPluginImpl::on_key_release_event(GdkEventKey* event, DocPage* page) {
 		}
 		g_match_info_free(inc_info);
 
+		if( is_include_line ) {
+			switch( event->keyval ) {
+			case '"':
+				if( is_start )
+					break;
+			case '>':
+				tip_.include_window().hide();
+				break;
+			}
+
+			return false;
+		}
 	}
 
     Gtk::TextIter end = it;

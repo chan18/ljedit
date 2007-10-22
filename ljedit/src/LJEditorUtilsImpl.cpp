@@ -20,32 +20,6 @@
 
 const size_t LJCS_MAX_PATH_SIZE = 8192;
 
-//inline bool is_split_char(char ch) { return ch=='/' || ch=='\\'; }
-
-//inline size_t get_abspath_pos(const std::string& s) {
-//	assert( !s.empty() );
-
-//	if( s[0]=='/' )		// /usr/xx
-//		return 1;
-
-//	if( s.size() > 2 ) {
-//		if( s[0]>0 && s[1]==':' && ::isalpha(s[0]) && is_split_char(s[2]) )	// x:\xx
-//			return 3;
-
-//		if( s[0]=='\\' && s[1]=='\\' )	// \\host\e$\xx
-//			return 2;
-
-//		const static std::string FILE_URI = "file://";
-//		const static size_t FILE_URI_SIZE = FILE_URI.size();
-
-//		if( s.size() > FILE_URI_SIZE )
-//			if( s.compare(0, FILE_URI_SIZE, FILE_URI)==0 )
-//				return FILE_URI_SIZE;
-//	}
-
-//	return 0;
-//}
-
 inline void filepath_to_abspath(std::string& filepath) {
 	if( filepath.empty() )
 		return;
@@ -57,22 +31,6 @@ inline void filepath_to_abspath(std::string& filepath) {
 		filepath = buf;
 
 	std::transform(filepath.begin(), filepath.end(), filepath.begin(), tolower);
-
-	//// replace \ with /
-	//// 
-	//// if in windows, change case to lower
-	//// 
-	//{
-	//	char* it = &filepath[0];
-	//	char* end = it + filepath.size();
-	//	if( filepath.size() > 2 && filepath[0]=='\\' && filepath[1]=='\\')
-	//		it += 2;
-	//	for( ; it < end; ++it ) {
-	//		if( *it=='\\' )
-	//			*it = '/';
-	//		if( *it > 0 && ::isupper(*it) )
-	//			*it = ::tolower(*it);
-	//	}
 
 #else
 	if( !Glib::path_is_absolute(filepath) )
@@ -180,7 +138,7 @@ const Glib::ustring& LJEditorUtilsImpl::get_language_id_by_filename(const Glib::
 
 	Glib::ustring name = filename;
 	{
-		size_t pos = name.find_last_of("/.");
+		size_t pos = name.find_last_of("\\/.");
 		if( pos != name.npos ) {
 			name.erase(0, pos+1);
 		}
@@ -198,9 +156,6 @@ void LJEditorUtilsImpl::format_filekey(std::string& filename) {
 }
 
 bool LJEditorUtilsImpl::do_load_file(Glib::ustring& out, const std::string& filename) {
-	//if( !Glib::file_test(filename, Glib::FILE_TEST_EXISTS) )
-	//	return false;
-
 	Glib::ustring buf;
 	Glib::ustring ubuf;
 
