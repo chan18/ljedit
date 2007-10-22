@@ -308,7 +308,7 @@ number		{num1}|{num2}|{num3}|{num4}|{num5}
 
 <INITIAL,smc>{macro}	BEGIN(mc);
 
-<mc>define[ \r]+{id}\(.*\).*	{
+<mc>define[ \t]+{id}\(.*\).*	{
 							char* end = yytext + yyleng;
 							p = yytext + 7;			// skip define_
 							skip_ws(p);
@@ -367,7 +367,7 @@ number		{num1}|{num2}|{num3}|{num4}|{num5}
 							}
 						}
 
-<mc>define[ \r]+{id}.*	{
+<mc>define[ \t]+{id}.*	{
 							char* end = yytext + yyleng;
 							p = yytext + 7;						// skip define_
 							skip_ws(p);
@@ -411,7 +411,7 @@ number		{num1}|{num2}|{num3}|{num4}|{num5}
 <mcdv>[lL]?\'			ASSIGN_VALUES	BEGIN(mcdvc);
 <mcdv>[lL]?\"			ASSIGN_VALUES	BEGIN(mcdvs);
 <mcdv>{number}			ASSIGN_VALUES
-<mcdv>[ \t]*#+[ \t]*		value.append(yytext, yyleng);
+<mcdv>[ \t]*#+[ \t]*	value.append(yytext, yyleng);
 
 <mcdv>{id}				{
 							size_t argc = args.size();
@@ -448,6 +448,8 @@ number		{num1}|{num2}|{num3}|{num4}|{num5}
 							}
 							value.append(yytext, yyleng);
 						}
+
+<mcdv>\r				/* eat it */
 
 <mcdv>.					ASSIGN_VALUES
 
