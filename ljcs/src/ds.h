@@ -20,6 +20,7 @@ const char PUBLIC_VIEW    = 'p';
 const char PROTECTED_VIEW = 'o';
 const char PRIVATE_VIEW   = 'r';
 
+const char ET_KEYWORD     = 'K';
 const char ET_UNDEF       = 'U';
 const char ET_MACRO       = 'D';
 const char ET_INCLUDE     = 'I';
@@ -125,6 +126,12 @@ public:
 
 public:
 	volatile int	ref_count;
+};
+
+class KeywordElement : public Element {
+public:
+	KeywordElement(File& file, const std::string& name)
+		: Element(file, ET_KEYWORD, name, 0, 0, cpp::NORMAL_VIEW) {}
 };
 
 class Macro : public Element {

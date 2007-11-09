@@ -16,6 +16,7 @@ public:
 
 	Glib::RefPtr<Gdk::Pixbuf> get_icon_from_elem(const cpp::Element& elem);
 
+	Glib::RefPtr<Gdk::Pixbuf>	icon_keyword;
 	Glib::RefPtr<Gdk::Pixbuf>	icon_var;
 	Glib::RefPtr<Gdk::Pixbuf>	icon_fun;
 	Glib::RefPtr<Gdk::Pixbuf>	icon_macro;

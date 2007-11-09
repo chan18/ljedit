@@ -89,6 +89,9 @@ void LJCSPluginImpl::show_hint(DocPage& page
 			int y = view_y + cursor_y + rect.get_height() + 2;
 
 			if( tag=='s' ) {
+				std::string key = it.get_text(end);
+				env.find_keyword(key, mset);
+
 				tip_.show_list_tip(x, y, mset.elems());
 
 				if( tip_.decl_window().is_visible() ) {

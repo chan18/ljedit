@@ -21,6 +21,7 @@ Glib::RefPtr<Gdk::Pixbuf> load_icon(const std::string& path, const std::string& 
 }
 
 void LJCSIcons::create(const std::string& plugin_path) {
+	icon_keyword   = load_icon(plugin_path, "keyword.png");
 	icon_var       = load_icon(plugin_path, "var.png");
 	icon_fun       = load_icon(plugin_path, "fun.png");
 	icon_macro     = load_icon(plugin_path, "macro.png");
@@ -33,6 +34,7 @@ void LJCSIcons::create(const std::string& plugin_path) {
 
 Glib::RefPtr<Gdk::Pixbuf> LJCSIcons::get_icon_from_elem(const cpp::Element& elem) {
 	switch( elem.type ) {
+	case cpp::ET_KEYWORD:	return LJCSIcons::self().icon_keyword;
 	case cpp::ET_VAR:		return LJCSIcons::self().icon_var;
 	case cpp::ET_FUN:		return LJCSIcons::self().icon_fun;
 	case cpp::ET_MACRO:		return LJCSIcons::self().icon_macro;

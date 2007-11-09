@@ -12,15 +12,92 @@
 #include "LJEditor.h"
 
 
+const char* cpp_keywords[] = { "asm"
+	, "auto"
+	, "bool"
+	, "break"
+	, "case"
+	, "catch"
+	, "char"
+	, "class"
+	, "const"
+	, "const_cast"
+	, "continue"
+	, "default"
+	, "delete"
+	, "do"
+	, "double"
+	, "dynamic_cast"
+	, "else"
+	, "enum"
+	, "explicit"
+	, "export"
+	, "extern"
+	, "false"
+	, "float"
+	, "for"
+	, "friend"
+	, "goto"
+	, "if"
+	, "inline"
+	, "int"
+	, "long"
+	, "mutable"
+	, "namespace"
+	, "new"
+	, "operator"
+	, "private"
+	, "protected"
+	, "public"
+	, "register"
+	, "reinterpret_cast"
+	, "return"
+	, "short"
+	, "signed"
+	, "sizeof"
+	, "static"
+	, "static_cast"
+	, "struct"
+	, "switch"
+	, "template"
+	, "this"
+	, "throw"
+	, "true"
+	, "try"
+	, "typedef"
+	, "typeid"
+	, "typename"
+	, "union"
+	, "unsigned"
+	, "using"
+	, "virtual"
+	, "void"
+	, "volatile"
+	, "wchar_t"
+	, "while"
+	, 0
+};
+
 LJCSEnv& LJCSEnv::self() {
 	static LJCSEnv me_;
 	return me_;
 }
 
-LJCSEnv::LJCSEnv() : ljedit_(0) {
+LJCSEnv::LJCSEnv() : ljedit_(0), keywords_("") {
+	keywords_.ref_count = 1;
 }
 
 LJCSEnv::~LJCSEnv() {
+}
+
+void LJCSEnv::init(LJEditor& ljedit) {
+	ljedit_ = &ljedit;
+
+	for( const char** key=cpp_keywords; *key!=0; ++key ) {
+		cpp::KeywordElement* elem = new cpp::KeywordElement(keywords_, *key);
+		if( elem!=0 )
+			keywords_.scope.elems.push_back(elem);
+	}
 }
 
 void LJCSEnv::set_include_paths(const StrVector& paths) {
@@ -123,6 +200,19 @@ void LJCSEnv::re_make_index() {
 	cpp::FileMap::iterator end = parsed_files_->end();
 	for( ; it!=end; ++it ) {
 		index_->add( *it->second );
+	}
+}
+
+void LJCSEnv::find_keyword(const std::string& key, IMatched& cb) {
+	// search start with
+	cpp::Elements::iterator it = keywords_.scope.elems.begin();
+	cpp::Elements::iterator end = keywords_.scope.elems.end();
+	for( ; it != end; ++it ) {
+		if( (*it)->name.size() < key.size() )
+			continue;
+
+		if( (*it)->name.compare(0, key.size(), key)==0 )
+			cb.on_matched(**it);
 	}
 }
 

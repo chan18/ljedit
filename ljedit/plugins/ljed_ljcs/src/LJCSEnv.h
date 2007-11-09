@@ -41,7 +41,7 @@ class LJCSEnv : public IParserEnviron {
 public:
 	static LJCSEnv& self();
 	
-	void init(LJEditor& ljedit) { ljedit_ = &ljedit; }
+	void init(LJEditor& ljedit);
 
 	LJEditor& ljedit()		{ assert(ljedit_!=0); return *ljedit_; }
 
@@ -72,6 +72,8 @@ public:
 
 	void					re_make_index();
 
+	void					find_keyword(const std::string& key, IMatched& cb);
+
 private:
 	void					add_parsed(cpp::File* file);			// add and ref
 	void					remove_parsed(cpp::File* file);			// remove and unref
@@ -101,6 +103,7 @@ private:
 	RWLock<cpp::FileMap>	parsed_files_;
 
 	RWLock<cpp::STree>		index_;
+	cpp::File				keywords_;
 };
 
 #endif//LJED_INC_LJCSENV_H
