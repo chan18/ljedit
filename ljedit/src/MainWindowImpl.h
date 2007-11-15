@@ -36,6 +36,8 @@ private:
     void create_ui_manager(const std::string& config_file);
 
 private:
+	bool on_delete_event(GdkEventAny* event);
+
     void on_file_quit();
 
 	void on_edit_find();
@@ -51,6 +53,7 @@ private:
 
     void on_help_about();
 
+private:
 	void bottom_panel_active_page(int page_id);
 
 private:

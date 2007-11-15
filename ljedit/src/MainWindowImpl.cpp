@@ -146,10 +146,17 @@ void MainWindowImpl::create_ui_manager(const std::string& config_file) {
     ui_manager_->add_ui_from_file(config_file);
     ui_manager_->insert_action_group(action_group_);
     add_accel_group( ui_manager_->get_accel_group() );
+
+	// main window
+	signal_delete_event().connect(sigc::mem_fun(this, &MainWindowImpl::on_delete_event), false);
 }
 
 void MainWindowImpl::destroy() {
 	doc_manager_.pages().clear();
+}
+
+bool MainWindowImpl::on_delete_event(GdkEventAny* event) {
+	return !doc_manager_.close_all_files();
 }
 
 void MainWindowImpl::on_file_quit() {

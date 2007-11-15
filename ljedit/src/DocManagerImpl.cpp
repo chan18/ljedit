@@ -307,7 +307,11 @@ bool DocManagerImpl::close_all_files() {
 		DocPageImpl& page = *((DocPageImpl*)widget);
 		if( page.modified() ) {
 			if( need_prompt ) {
-				Gtk::MessageDialog dlg(parent_, "file modified, save it?", false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_NONE);
+				Glib::ustring msg = "file modified, save it?\n\n";
+				msg += page.filepath();
+				msg += "\n";
+
+				Gtk::MessageDialog dlg(parent_, msg, false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_NONE);
 				dlg.add_button("yes to all", Gtk::RESPONSE_APPLY);
 				dlg.add_button("no to all", Gtk::RESPONSE_CANCEL);
 				dlg.add_button(Gtk::Stock::YES, Gtk::RESPONSE_YES);
