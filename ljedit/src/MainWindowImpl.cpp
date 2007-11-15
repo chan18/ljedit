@@ -12,6 +12,7 @@
 MainWindowImpl::MainWindowImpl()
 	: cmd_cb_goto_(cmd_line_, doc_manager_)
 	, cmd_cb_find_(cmd_line_, doc_manager_)
+	, doc_manager_(*this)
 {
 }
 
@@ -148,11 +149,12 @@ void MainWindowImpl::create_ui_manager(const std::string& config_file) {
 }
 
 void MainWindowImpl::destroy() {
-	doc_manager_.close_all_files();
+	doc_manager_.pages().clear();
 }
 
 void MainWindowImpl::on_file_quit() {
-	hide();
+	if( doc_manager_.close_all_files() )
+		hide();
 }
 
 void MainWindowImpl::on_edit_find() {

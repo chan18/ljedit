@@ -35,7 +35,7 @@ public:
 	virtual void save_current_file_as() = 0;
     virtual void close_current_file() = 0;
     virtual void save_all_files() = 0;
-    virtual void close_all_files() = 0;
+    virtual bool close_all_files() = 0;
 };
 
 #endif//LJED_INC_DOCMANAGER_H

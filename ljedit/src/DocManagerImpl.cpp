@@ -12,7 +12,7 @@
 	#include <windows.h>
 #endif
 
-DocManagerImpl::DocManagerImpl() : locate_page_num_(-1) {
+DocManagerImpl::DocManagerImpl(Gtk::Window& parent) : parent_(parent), locate_page_num_(-1) {
 	pos_pool_init();
 
 	sig_page_close_ = signal_page_removed().connect( sigc::mem_fun(this, &DocManagerImpl::on_page_removed) );
@@ -88,7 +88,7 @@ void DocManagerImpl::create_new_file() {
 }
 
 void DocManagerImpl::show_open_dialog() {
-    Gtk::FileChooserDialog dlg("open...");
+    Gtk::FileChooserDialog dlg(parent_, "open...");
     dlg.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
     dlg.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
     dlg.set_select_multiple();
@@ -213,7 +213,7 @@ bool DocManagerImpl::open_page(const std::string filepath
 bool DocManagerImpl::save_page(DocPageImpl& page, bool is_save_as) {
     Glib::ustring& filepath = page.filepath();
 	if( is_save_as ) {
-        Gtk::FileChooserDialog dlg("save as ...", Gtk::FILE_CHOOSER_ACTION_SAVE);
+        Gtk::FileChooserDialog dlg(parent_, "save as ...", Gtk::FILE_CHOOSER_ACTION_SAVE);
         dlg.add_button(Gtk::Stock::SAVE_AS, Gtk::RESPONSE_OK);
         dlg.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
         if( dlg.run()!=Gtk::RESPONSE_OK )
@@ -236,6 +236,20 @@ bool DocManagerImpl::save_page(DocPageImpl& page, bool is_save_as) {
 }
 
 bool DocManagerImpl::close_page(DocPageImpl& page) {
+	if( page.modified() ) {
+		Gtk::MessageDialog dlg(parent_, "file modified, save it?", false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO); 
+		switch( dlg.run() ) {
+		case Gtk::RESPONSE_YES:
+			if( !save_page(page, page.filepath().empty()) )
+				return false;
+			break;
+		case Gtk::RESPONSE_NO:
+			break;
+		default:
+			return false;
+		}
+	}
+
     pages().erase( pages().find(page) );
     return true;
 }
@@ -282,8 +296,54 @@ void DocManagerImpl::save_all_files() {
     }
 }
 
-void DocManagerImpl::close_all_files() {
-    pages().clear();
+bool DocManagerImpl::close_all_files() {
+	bool need_prompt = true;
+	bool save_file_sign = false;
+
+	while( !pages().empty() ) {
+		Gtk::Widget* widget = pages().front().get_child();
+        assert( widget != 0 );
+
+		DocPageImpl& page = *((DocPageImpl*)widget);
+		if( page.modified() ) {
+			if( need_prompt ) {
+				Gtk::MessageDialog dlg(parent_, "file modified, save it?", false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_NONE);
+				dlg.add_button("yes to all", Gtk::RESPONSE_APPLY);
+				dlg.add_button("no to all", Gtk::RESPONSE_CANCEL);
+				dlg.add_button(Gtk::Stock::YES, Gtk::RESPONSE_YES);
+				dlg.add_button(Gtk::Stock::NO, Gtk::RESPONSE_NO);
+
+				switch( dlg.run() ) {
+				case Gtk::RESPONSE_APPLY:
+					need_prompt = false;
+					save_file_sign = true;
+					break;
+				case Gtk::RESPONSE_CANCEL:
+					need_prompt = false;
+					save_file_sign = false;
+					break;
+				case Gtk::RESPONSE_YES:
+					save_file_sign = true;
+					break;
+				case Gtk::RESPONSE_NO:
+					save_file_sign = false;
+					break;
+				default:
+					return false;
+				}
+
+			}
+
+			if( save_file_sign ) {
+				if( !save_page(page, page.filepath().empty()) )
+					return false;
+			}
+		}
+
+		pages().pop_front();
+	}
+
+	return true;
 }
 
 void DocManagerImpl::on_doc_modified_changed(DocPageImpl* page) {

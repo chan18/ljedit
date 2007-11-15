@@ -19,7 +19,7 @@ struct PosNode {
 
 class DocManagerImpl : public DocManager {
 public:
-    DocManagerImpl();
+	DocManagerImpl(Gtk::Window& parent);
     ~DocManagerImpl();
 
 public:
@@ -34,7 +34,7 @@ public:
 	virtual void save_current_file_as();
     virtual void close_current_file();
     virtual void save_all_files();
-    virtual void close_all_files();
+    virtual bool close_all_files();
 
 	DocPageImpl* get_current_doc_page()
 		{ return pages().empty() ? 0 : (DocPageImpl*)(get_current()->get_child()); }
@@ -65,6 +65,9 @@ private:
     void on_doc_modified_changed(DocPageImpl* page);
 	bool on_page_label_button_press(GdkEventButton* event, DocPageImpl* page);
 	void on_page_removed(Gtk::Widget* widget, guint page_num);
+
+private:
+	Gtk::Window&	parent_;
 
 private:	// for locate_page_line
     int		locate_page_num_;
