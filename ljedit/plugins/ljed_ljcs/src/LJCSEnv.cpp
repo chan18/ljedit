@@ -12,6 +12,8 @@
 #include "LJEditor.h"
 
 
+// c++ keywords & macro keywords
+// 
 const char* cpp_keywords[] = { "asm"
 	, "auto"
 	, "bool"
@@ -24,11 +26,13 @@ const char* cpp_keywords[] = { "asm"
 	, "const_cast"
 	, "continue"
 	, "default"
+	, "define"			// macro
 	, "delete"
 	, "do"
 	, "double"
 	, "dynamic_cast"
 	, "else"
+	, "endif"			// macro
 	, "enum"
 	, "explicit"
 	, "export"
@@ -39,6 +43,9 @@ const char* cpp_keywords[] = { "asm"
 	, "friend"
 	, "goto"
 	, "if"
+	, "ifdef"			// macro
+	, "ifndef"			// macro
+	, "include"			// macro
 	, "inline"
 	, "int"
 	, "long"
