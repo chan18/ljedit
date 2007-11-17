@@ -238,7 +238,7 @@ void MainWindowImpl::on_tools_font() {
 }
 
 void MainWindowImpl::on_tools_options() {
-	Gtk::MessageDialog("not implement", true, Gtk::MESSAGE_INFO).run();
+	Gtk::MessageDialog(*this, "not implement", true, Gtk::MESSAGE_INFO).run();
 }
 
 void MainWindowImpl::on_help_about() {
@@ -246,7 +246,7 @@ void MainWindowImpl::on_help_about() {
 		"\n"
 		"homepage - <span  foreground='blue'><u>http://ljedit.googlecode.com</u></span>";
 
-	Gtk::MessageDialog(info, true, Gtk::MESSAGE_INFO).run();
+	Gtk::MessageDialog(*this, info, true, Gtk::MESSAGE_INFO).run();
 }
 
 void MainWindowImpl::bottom_panel_active_page(int page_id) {

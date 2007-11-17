@@ -51,7 +51,7 @@ protected:
 
 private:
 	void on_about() {
-        Gtk::MessageDialog dlg("welcome to use LJHello plugin!", false, Gtk::MESSAGE_INFO);
+        Gtk::MessageDialog dlg(editor().main_window(), "welcome to use LJHello plugin!", false, Gtk::MESSAGE_INFO);
         dlg.set_title("LJHello");
         dlg.run();
 	}

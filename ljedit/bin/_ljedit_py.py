@@ -24,7 +24,7 @@ ljedit.main_window.doc_manager.get_text_view      = lambda page_num : __ljedit.l
 ljedit.main_window.doc_manager.open_file          = lambda filepath, line=-1, offset=0 : __ljedit.ljedit_doc_manager_open_file(__ljedit.__c_ljedit, filepath, line, offset)
 
 def show_msgbox(message):
-	dlg = gtk.MessageDialog(parent=None, buttons=gtk.BUTTONS_YES_NO, message_format=str(message))
+	dlg = gtk.MessageDialog(parent=ljedit.main_window, buttons=gtk.BUTTONS_YES_NO, message_format=str(message))
 	dlg.run()
 	dlg.destroy()
 
