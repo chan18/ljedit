@@ -32,6 +32,7 @@ private:
 private:
     Gtk::VBox						vbox_;
     Gtk::TreeView					view_;
+	Gtk::TreeViewColumn				view_col_;
     Gtk::ScrolledWindow				sw_;
 
     Glib::RefPtr<Gtk::TreeStore>	store_;

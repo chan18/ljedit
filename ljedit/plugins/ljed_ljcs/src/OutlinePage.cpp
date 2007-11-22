@@ -62,17 +62,23 @@ void OutlinePage::set_file(cpp::File* file, int line) {
 void OutlinePage::add_columns() {
     // icon
     {
-		view_.append_column("icon", columns_.icon);
+		//view_.append_column("icon", columns_.icon);
+		view_col_.pack_start(columns_.icon);
     }
 
     // decl
     {
-        int cols_count = view_.append_column("decl",  columns_.decl);
-        Gtk::TreeViewColumn* col = view_.get_column(cols_count-1);
-        assert( col != 0 );
-        Gtk::CellRenderer* render = col->get_first_cell_renderer();
-        col->set_clickable();
+        //int cols_count = view_.append_column("decl",  columns_.decl);
+		//Gtk::TreeViewColumn* col = view_.get_column(cols_count-1);
+        //assert( col != 0 );
+        //Gtk::CellRenderer* render = col->get_first_cell_renderer();
+        //col->set_clickable();
+		
+		view_col_.pack_start(columns_.decl);
     }
+
+	view_col_.set_clickable();
+	view_.append_column(view_col_);
 }
 
 void OutlinePage::view_add_elem(const cpp::Element* elem, const Gtk::TreeNodeChildren& parent) {
