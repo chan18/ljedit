@@ -146,6 +146,7 @@ class FileExplorer(gtk.VBox):
         
         self.treeview = self.make_file_view()
         self.treeview.set_headers_visible(False)
+        self.treeview.set_enable_tree_lines(True)
         self.refresh()
         self.on_folder_changed(self.fchooser)
         

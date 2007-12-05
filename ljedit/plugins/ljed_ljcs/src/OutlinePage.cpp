@@ -79,6 +79,7 @@ void OutlinePage::add_columns() {
 
 	view_col_.set_clickable();
 	view_.append_column(view_col_);
+	view_.set_enable_tree_lines();
 }
 
 void OutlinePage::view_add_elem(const cpp::Element* elem, const Gtk::TreeNodeChildren& parent) {

@@ -80,15 +80,15 @@ class FindWindow:
 		self.result_view.connect('row-activated', self.on_ResultView_row_activated)
 		
 		# UI
-		action_group = gtk.ActionGroup('FindAction')
-		action = gtk.Action('FindReplace', 'Find_Replace', 'find/replace text', gtk.STOCK_QUIT)
-		action.connect('activate', self.on_FindPanel_activate)
-		action_group.add_action_with_accel(action, '<CONTROL>F')
+		#action_group = gtk.ActionGroup('FindAction')
+		#action = gtk.Action('FindReplace', 'Find_Replace', 'find/replace text', gtk.STOCK_QUIT)
+		#action.connect('activate', self.on_FindPanel_activate)
+		#action_group.add_action_with_accel(action, '<CONTROL>F')
 		
-		ui_manager = ljedit.main_window.ui_manager
-		ui_manager.insert_action_group(action_group, 0)
-		self.menu_id = ui_manager.add_ui_from_string(UI_INFO)
-		ui_manager.ensure_update()
+		#ui_manager = ljedit.main_window.ui_manager
+		#ui_manager.insert_action_group(action_group, 0)
+		#self.menu_id = ui_manager.add_ui_from_string(UI_INFO)
+		#ui_manager.ensure_update()
 		
 		# on active
 		self.switch_id = ljedit.main_window.bottom_panel.connect('switch_page', self.on_switch_page)
@@ -96,7 +96,7 @@ class FindWindow:
 		
 	def free(self):
 		ljedit.main_window.bottom_panel.disconnect(self.switch_id)
-		ljedit.main_window.ui_manager.remove_ui(self.menu_id)
+		#ljedit.main_window.ui_manager.remove_ui(self.menu_id)
 		
 	def set_results(self, results):
 		self.result_view.set_model(None)
