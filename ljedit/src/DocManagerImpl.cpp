@@ -89,8 +89,11 @@ void DocManagerImpl::create_new_file() {
 
 void DocManagerImpl::show_open_dialog() {
     Gtk::FileChooserDialog dlg(parent_, "open...");
+    Gtk::Button* default_button = 
     dlg.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
     dlg.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+    dlg.set_default(*default_button);
+
     dlg.set_select_multiple();
     if( dlg.run()!=Gtk::RESPONSE_OK )
         return;
@@ -214,8 +217,10 @@ bool DocManagerImpl::save_page(DocPageImpl& page, bool is_save_as) {
     Glib::ustring& filepath = page.filepath();
 	if( is_save_as ) {
         Gtk::FileChooserDialog dlg(parent_, "save as ...", Gtk::FILE_CHOOSER_ACTION_SAVE);
+        Gtk::Button* default_button = 
         dlg.add_button(Gtk::Stock::SAVE_AS, Gtk::RESPONSE_OK);
         dlg.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+        dlg.set_default(*default_button);
         if( dlg.run()!=Gtk::RESPONSE_OK )
             return true;
         filepath = dlg.get_filename();

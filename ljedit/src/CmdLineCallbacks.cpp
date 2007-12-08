@@ -31,12 +31,14 @@ bool BaseCmdCallback::base_on_key_press(GdkEventKey* event) {
 		buf->place_cursor(last_pos_);
 		current_page_->view().scroll_to_iter(last_pos_, 0.3);
 		cmd_line_.deactive();
+		current_page_->view().grab_focus();
 		return true;
 
 	case GDK_Return:
 		doc_mgr_.pos_add(*current_page_, last_pos_.get_line(), last_pos_.get_line_offset());
 		doc_mgr_.pos_add(*current_page_, it.get_line(), it.get_line_offset());
 		cmd_line_.deactive();
+		current_page_->view().grab_focus();
 		return true;
 	}
 
