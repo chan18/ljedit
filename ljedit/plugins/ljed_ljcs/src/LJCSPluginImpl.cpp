@@ -91,6 +91,8 @@ void LJCSPluginImpl::show_hint(DocPage& page
 			if( tag=='s' ) {
 				std::string key = it.get_text(end);
 				env.find_keyword(key, mset);
+				if( mset.size()==1 && key==(*mset.begin())->name )
+					mset.clear();
 
 				tip_.show_list_tip(x, y, mset.elems());
 

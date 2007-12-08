@@ -26,9 +26,12 @@ inline void filepath_to_abspath(std::string& filepath) {
 
 #ifdef WIN32
 	// replace /xx/./yy with /xx/yy
+	std::string local_filename = Glib::locale_from_utf8(filepath);
 	char buf[LJCS_MAX_PATH_SIZE];
-	if( GetFullPathNameA(filepath.c_str(), LJCS_MAX_PATH_SIZE, buf, 0) )
-		filepath = buf;
+	if( GetFullPathNameA(local_filename.c_str(), LJCS_MAX_PATH_SIZE, buf, 0) ) {
+		local_filename = buf;
+		filepath = Glib::locale_to_utf8(local_filename);
+	}
 
 	std::transform(filepath.begin(), filepath.end(), filepath.begin(), tolower);
 
