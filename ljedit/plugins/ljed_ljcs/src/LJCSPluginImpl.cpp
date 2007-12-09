@@ -719,7 +719,10 @@ void LJCSPluginImpl::do_button_release_event(GdkEventButton* event, DocPage* pag
 
 		preview_.preview(key, key_text, *file, line);
 
-		editor_.main_window().bottom_panel().set_current_page(preview_page_);
+		// not auto jump to preview_page_
+		// 
+
+		//editor_.main_window().bottom_panel().set_current_page(preview_page_);
 	}
 }
 

@@ -48,6 +48,9 @@ private:
     ~DocPageImpl() {}
 
 private:
+	bool mouse_double_click(GdkEventButton* event);
+
+private:
     Glib::ustring				filepath_;
     Gtk::Label&					label_;
 	Gtk::EventBox&				label_event_box_;

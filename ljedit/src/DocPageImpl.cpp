@@ -40,7 +40,42 @@ DocPageImpl* DocPageImpl::create(const std::string& filepath
     page->add(*view);
     page->set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
     page->show_all();
+	
+	view->signal_button_press_event().connect( sigc::mem_fun(page, &DocPageImpl::mouse_double_click), false );
 
     return page;
+}
+
+bool DocPageImpl::mouse_double_click(GdkEventButton* event) {
+	if( event->button==1 && event->type==GDK_2BUTTON_PRESS ) {
+		gtksourceview::SourceIter ps = buffer()->get_iter_at_mark(buffer()->get_insert());
+		gtksourceview::SourceIter pe = ps;
+		
+		char ch = (char)ps.get_char();
+		if( isalnum(ch)==0 && ch!='_' )
+			return false;
+
+		// find word start position
+		while( ps.backward_char() ) {
+			ch = ps.get_char();
+			if( ch > 0 && (::isalnum(ch) || ch=='_') )
+				continue;
+			ps.forward_char();
+			break;
+		}
+
+		// find key end position
+		while( pe.forward_char() ) {
+			ch = pe.get_char();
+			if( ch > 0 && (::isalnum(ch) || ch=='_') )
+				continue;
+			break;
+		}
+
+		buffer()->select_range(ps, pe);
+		return true;
+	}
+
+	return false;
 }
 
