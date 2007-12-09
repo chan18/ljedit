@@ -72,7 +72,7 @@ bool DocPageImpl::mouse_double_click(GdkEventButton* event) {
 			break;
 		}
 
-		buffer()->select_range(ps, pe);
+		buffer()->select_range(pe, ps);
 		return true;
 	}
 
