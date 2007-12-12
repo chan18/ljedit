@@ -42,7 +42,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories=""
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;ENABLE_PYTHON_PLUGIN_ENGINE"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -127,7 +127,7 @@
 				Name="VCCLCompilerTool"
 				WholeProgramOptimization="false"
 				AdditionalIncludeDirectories=""
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;ENABLE_PYTHON_PLUGIN_ENGINE"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
@@ -207,6 +207,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\ConfigManagerImpl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\ConfigManagerImpl.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\DocManagerImpl.cpp"
 				>
 			</File>
@@ -279,6 +287,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\ConfigManager.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\DocManager.h"
 				>
 			</File>
@@ -310,6 +322,10 @@
 		<Filter
 			Name="bin"
 			>
+			<File
+				RelativePath=".\bin\_ljedit_config_manager.py"
+				>
+			</File>
 			<File
 				RelativePath=".\bin\_ljedit_py.py"
 				>

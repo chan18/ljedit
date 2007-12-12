@@ -18,6 +18,7 @@ LJEditorImpl::~LJEditorImpl() {
 
 bool LJEditorImpl::create(const std::string& path) {
     try {
+		ConfigManagerImpl::self().create();
 		LJEditorUtilsImpl::self().create(path);
         main_window_.create(path);
 
@@ -35,20 +36,22 @@ bool LJEditorImpl::create(const std::string& path) {
     return true;
 }
 
-void LJEditorImpl::add_open_file(const char* filename) {
-	if( filename==0 )
-		return;
-
-	// add open file to idle event queue
-	Glib::signal_idle().connect( sigc::bind_return(sigc::bind(sigc::mem_fun(main_window_.doc_manager(), &DocManager::open_file), filename, 0, 0), false) );
-}
-
 void LJEditorImpl::destroy() {
 	main_window_.destroy();
 
 	::ljed_stop_python_plugin_engine();
 
     PluginManager::self().unload_plugins();
+
+	ConfigManagerImpl::self().destroy();
+}
+
+void LJEditorImpl::add_open_file(const char* filename) {
+	if( filename==0 )
+		return;
+
+	// add open file to idle event queue
+	Glib::signal_idle().connect( sigc::bind_return(sigc::bind(sigc::mem_fun(main_window_.doc_manager(), &DocManager::open_file), filename, 0, 0), false) );
 }
 
 void LJEditorImpl::run() {

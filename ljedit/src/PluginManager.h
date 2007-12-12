@@ -1,8 +1,8 @@
 // PluginManager.h
 // 
 
-#ifndef LJED_INC_PLUGIN_H
-#define LJED_INC_PLUGIN_H
+#ifndef LJED_INC_PLUGINMANAGER_H
+#define LJED_INC_PLUGINMANAGER_H
 
 #include "IPlugin.h"
 
@@ -75,5 +75,5 @@ private:
     TPluginPaths    paths_;
 };
 
-#endif//LJED_INC_IPLUGIN_H
+#endif//LJED_INC_PLUGINMANAGER_H
 

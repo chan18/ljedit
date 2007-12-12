@@ -8,6 +8,7 @@
 
 #include "LJEditorUtilsImpl.h"
 #include "MainWindowImpl.h"
+#include "ConfigManagerImpl.h"
 
 class LJEditorImpl : public LJEditor {
 public:
@@ -17,9 +18,11 @@ public:
     }
 
 public:
-    virtual MainWindow& main_window() { return main_window_; }
+    virtual MainWindow& main_window()        { return main_window_; }
 
-	virtual LJEditorUtils& utils()    { return LJEditorUtilsImpl::self(); }
+	virtual ConfigManager&	config_manager() { return ConfigManagerImpl::self(); }
+
+	virtual LJEditorUtils& utils()           { return LJEditorUtilsImpl::self(); }
 
 public:
     bool create(const std::string& path);
