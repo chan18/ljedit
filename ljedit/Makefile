@@ -12,17 +12,17 @@ LJEDLIBS += `pkg-config --libs gtksourceviewmm-2.0` `pkg-config --libs gthread-2
 
 # python plugin engine
 # 
-PYFLAGS = -DENABLE_PYTHON_PLUGIN_ENGINE \
-            -I/usr/include/python2.5 \
-            -I/usr/include/pygtk-2.0
+PYFLAGS = -I/usr/include/python2.5 \
+          -I/usr/include/pygtk-2.0
 PYLIBS = -lpython2.5
 
-LJEDOBJS = src/DocPageImpl.o         \
+LJEDOBJS = src/DocPageImpl.o             \
 	src/DocManagerImpl.o             \
 	src/CmdLineImpl.o                \
 	src/CmdLineCallbacks.o           \
 	src/LJEditorImpl.o               \
 	src/LJEditorUtilsImpl.o          \
+	src/ConfigManagerImpl.o          \
 	src/MainWindowImpl.o             \
 	src/PluginManager.o              \
 	src/LJEditorPythonPluginEngine.o \
