@@ -54,6 +54,9 @@ void LJCSPluginImpl::show_hint(DocPage& page
     , Gtk::TextBuffer::iterator& end
     , char tag)
 {
+	if( tag=='f' )
+		tip_.list_window().hide();
+
 	kill_show_hint_timer();
 
     LJEditorDocIter ps(it);

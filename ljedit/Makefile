@@ -7,7 +7,7 @@ CXXFLAGS = -o2 -DNDEBUG -Iinclude
 
 # gtkmm & sourceviewmm
 # 
-CXXFLAGS += `pkg-config --cflags gtksourceviewmm-2.0`
+CXXFLAGS += `pkg-config --cflags gtksourceview-2.0` `pkg-config --cflags gtksourceviewmm-2.0`
 LJEDLIBS += `pkg-config --libs gtksourceviewmm-2.0` `pkg-config --libs gthread-2.0`
 
 # python plugin engine
