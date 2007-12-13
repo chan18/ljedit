@@ -34,7 +34,10 @@ bin/_ljedit.exe : $(LJEDOBJS)
 	$(CXX) -mwindows $(CXXFLAGS) -o $@ $(LJEDOBJS) $(LJEDLIBS) $(PYLIBS)
 	strip $@
 
-src/LJEditorPythonPluginEngine.o : src/LJEditorPythonPluginEngine.cpp src/LJEditorPythonPluginEngineImpl.cpp
+src/LJEditorPythonPluginEngine.o : src/LJEditorPythonPluginEngine.cpp
+	$(CXX) $(CXXFLAGS) $(PYFLAGS) -c -o $@ $<
+
+src/ConfigManagerImpl.o : src/ConfigManagerImpl.cpp
 	$(CXX) $(CXXFLAGS) $(PYFLAGS) -c -o $@ $<
 
 plugin :

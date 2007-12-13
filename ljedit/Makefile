@@ -2,12 +2,12 @@
 # 
 
 CXX = g++
-#CXXFLAGS = -g -Iinclude
-CXXFLAGS = -o2 -DNDEBUG -Iinclude
+CXXFLAGS = -g -Iinclude
+#CXXFLAGS = -o2 -DNDEBUG -Iinclude
 
 # gtkmm & sourceviewmm
 # 
-CXXFLAGS += `pkg-config --cflags gtksourceview-2.0` `pkg-config --cflags gtksourceviewmm-2.0`
+CXXFLAGS += `pkg-config --cflags gtksourceviewmm-2.0`
 LJEDLIBS += `pkg-config --libs gtksourceviewmm-2.0` `pkg-config --libs gthread-2.0`
 
 # python plugin engine
@@ -35,7 +35,10 @@ all : $(BIN) plugin
 $(BIN) : $(LJEDOBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $(LJEDOBJS) -ldl $(LJEDLIBS) $(PYLIBS)
 
-src/LJEditorPythonPluginEngine.o : src/LJEditorPythonPluginEngine.cpp src/LJEditorPythonPluginEngineImpl.cpp
+src/LJEditorPythonPluginEngine.o : src/LJEditorPythonPluginEngine.cpp
+	$(CXX) $(CXXFLAGS) $(PYFLAGS) -c -o $@ $<
+
+src/ConfigManagerImpl.o : src/ConfigManagerImpl.cpp
 	$(CXX) $(CXXFLAGS) $(PYFLAGS) -c -o $@ $<
 
 plugin :

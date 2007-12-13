@@ -79,14 +79,27 @@ bool ConfigManagerImpl::get_option_value(const std::string& id, std::string& val
 	assert( impl != 0 );
 
 	PyObject* py_result = PyObject_CallFunction(impl->get_option_value_method
-		, "s#s#s#"
+		, "s#"
 		, id.c_str(), id.size() );
 
-	if( py_result==0 ) {
+	if( py_result!=0 ) {
+		if( PyString_Check(py_result) ) {
+			char* pv = 0;
+			Py_ssize_t sz = 0;
+			PyString_AsStringAndSize(py_result, &pv, &sz);
+			value.assign(pv, sz);
+			Py_DECREF(py_result);
+			return true;
+			
+		} else {
+			Py_DECREF(py_result);
+		}
+		
+	} else {
 		PyErr_Print();
 		PyErr_Clear();
 	}
-	Py_XDECREF(py_result);
-	return py_result!=0;
+	
+	return false;
 }
 
