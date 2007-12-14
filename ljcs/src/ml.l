@@ -11,6 +11,10 @@
  * 
  */
 
+// add CRT Debug
+// 
+#include "crt_debug.h"
+
 #include "ml.h"
 #include "ds_utils.h"
 #include "rmacro.h"
@@ -104,7 +108,7 @@ public:	// for macro language callback
 	void on_macro_include( size_t line, const std::string& file, bool sys_header );
 
 	void on_macro_error( size_t line, const std::string& e ) {
-#ifndef NDEBUG
+#ifdef SHOW_PARSE_DEBUG_INFOS
 		std::cerr << ">>>>MLEX ERROR(" << file_.filename << ":" << line << ") : " << e << std::endl;
 #endif
 	}

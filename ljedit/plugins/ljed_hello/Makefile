@@ -1,31 +1,31 @@
 # makefile ljcs
 # 
+# usage :
+#     build debug version   : make
+#     build release version : make BUILD=release
+# 
 
-CXX = g++
-#CXXFLAGS = -g -fpic
-CXXFLAGS = -o2 -DNDEBUG -fpic
+CXXFLAGS = -g
+OBJPATH = debug
 
-GTKMMFLAGS = `pkg-config --cflags gtksourceviewmm-2.0`
-CXXFLAGS += $(GTKMMFLAGS)
+ifeq ($(BUILD), release)
+	CXXFLAGS = -O2 -DNDEBUG
+	OBJPATH = release
+endif
 
-LJEDINC = -I../../include
-CXXFLAGS += $(LJEDINC)
+CXXFLAGS += -I../../include
 
+# gtkmm & sourceviewmm
+# 
+CXXFLAGS += `pkg-config --cflags gtksourceviewmm-2.0`
 GTKMMLIBS = `pkg-config --libs gtksourceviewmm-2.0`
 
-OBJS = src/ljed_hello.o
-
-BIN = ljed_hello.so
+BIN = ../../bin/plugins/ljed_hello.so
 
 all : $(BIN)
 
-$(BIN) : $(OBJS)
-	$(CXX) $(CXXFLAGS) $(GTKMMLIBS) -shared -o $@ $(OBJS)
-	cp $@ ../../bin/plugins/
+$(BIN) : src/ljed_hello.cpp
+	$(CXX) $(CXXFLAGS) $(GTKMMLIBS) -shared -o $@ $^
 
 clean :
-	rm -f ../../bin/plugins/$(BIN)
 	rm -f $(BIN)
-	rm -f src/*.o
-
-

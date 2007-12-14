@@ -1,9 +1,17 @@
 # makefile ljcs
 # 
+# usage :
+#     build debug version   : make
+#     build release version : make BUILD=release
+# 
 
-CXX = g++
-CXXFLAGS = -g -Iinclude
-#CXXFLAGS = -o2 -DNDEBUG -Iinclude
+CXXFLAGS = -g
+OBJPATH = debug
+
+ifeq ($(BUILD), release)
+	CXXFLAGS = -O2 -DNDEBUG
+	OBJPATH = release
+endif
 
 # gtkmm & sourceviewmm
 # 
@@ -16,39 +24,42 @@ PYFLAGS = -I/usr/include/python2.5 \
           -I/usr/include/pygtk-2.0
 PYLIBS = -lpython2.5
 
-LJEDOBJS = src/DocPageImpl.o             \
-	src/DocManagerImpl.o             \
-	src/CmdLineImpl.o                \
-	src/CmdLineCallbacks.o           \
-	src/LJEditorImpl.o               \
-	src/LJEditorUtilsImpl.o          \
-	src/ConfigManagerImpl.o          \
-	src/MainWindowImpl.o             \
-	src/PluginManager.o              \
-	src/LJEditorPythonPluginEngine.o \
-	src/main.o
+# project
+# 
+CXXFLAGS += -Iinclude
+
+SRCPATH = src
+
+SRCS = $(wildcard $(SRCPATH)/*.cpp)
+
+OBJS = $(SRCS:$(SRCPATH)/%.cpp=$(OBJPATH)/%.o)
 
 BIN = bin/_ljedit
 
 all : $(BIN) plugin
 
-$(BIN) : $(LJEDOBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $(LJEDOBJS) -ldl $(LJEDLIBS) $(PYLIBS)
+$(BIN) : $(OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ -ldl $(LJEDLIBS) $(PYLIBS)
 
-src/LJEditorPythonPluginEngine.o : src/LJEditorPythonPluginEngine.cpp
+$(OBJPATH)/%.o : $(SRCPATH)/%.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJPATH)/ConfigManagerImpl.o : $(SRCPATH)/ConfigManagerImpl.cpp
 	$(CXX) $(CXXFLAGS) $(PYFLAGS) -c -o $@ $<
 
-src/ConfigManagerImpl.o : src/ConfigManagerImpl.cpp
+$(OBJPATH)/LJEditorPythonPluginEngine.o : $(SRCPATH)/LJEditorPythonPluginEngine.cpp
 	$(CXX) $(CXXFLAGS) $(PYFLAGS) -c -o $@ $<
 
 plugin :
-	cd plugins/ljed_ljcs;make
-	cd plugins/ljed_hello;make
-	cd plugins/ljed_indent;make
+	cd plugins/ljed_ljcs;make BUILD=$(BUILD)
+	cd plugins/ljed_hello;make BUILD=$(BUILD)
+	cd plugins/ljed_indent;make BUILD=$(BUILD)
 
 clean :
 	rm -f $(BIN)
-	rm -f src/*.o
+	rm -rf debug
+	rm -rf release
 	make clean_plugin
 
 clean_plugin :
