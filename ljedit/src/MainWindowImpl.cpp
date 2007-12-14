@@ -136,8 +136,8 @@ void MainWindowImpl::create_ui_manager(const std::string& config_file) {
 	}
 
 	// tools menu
-	action_group_->add( Gtk::Action::create("Font",    "_Font",       "Font"),    sigc::mem_fun(this, &MainWindowImpl::on_tools_font) );
-	action_group_->add( Gtk::Action::create("Options", "_Options...", "Options"), sigc::mem_fun(this, &MainWindowImpl::on_tools_options) );
+	//action_group_->add( Gtk::Action::create("Font",    "_Font",       "Font"),    sigc::mem_fun(this, &MainWindowImpl::on_tools_font) );
+	//action_group_->add( Gtk::Action::create("Options", "_Options...", "Options"), sigc::mem_fun(this, &MainWindowImpl::on_tools_options) );
 
 	// help menu
     action_group_->add( Gtk::Action::create("About", Gtk::Stock::ABOUT, "About", "About"), sigc::mem_fun(this, &MainWindowImpl::on_help_about) );
@@ -225,6 +225,7 @@ void MainWindowImpl::on_view_bottom() {
 		bottom_panel_.show();
 }
 
+/*
 void MainWindowImpl::on_tools_font() {
 	Gtk::FontSelectionDialog dlg("seletct font...");
 
@@ -240,6 +241,7 @@ void MainWindowImpl::on_tools_font() {
 void MainWindowImpl::on_tools_options() {
 	Gtk::MessageDialog(*this, "not implement", true, Gtk::MESSAGE_INFO).run();
 }
+*/
 
 void MainWindowImpl::on_help_about() {
 	const char* info = "welcome to use ljedit!\n"

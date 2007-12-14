@@ -2,7 +2,7 @@
 # 
 
 
-import ljedit, __ljedit
+import ljedit, __ljedit, _ljedit_config_manager
 
 import gtk, os, sys
 
@@ -22,6 +22,8 @@ ljedit.main_window.doc_manager.get_file_path      = lambda page_num : __ljedit.l
 ljedit.main_window.doc_manager.get_text_view      = lambda page_num : __ljedit.ljedit_doc_manager_get_text_view(__ljedit.__c_ljedit, page_num)
 
 ljedit.main_window.doc_manager.open_file          = lambda filepath, line=-1, offset=0 : __ljedit.ljedit_doc_manager_open_file(__ljedit.__c_ljedit, filepath, line, offset)
+
+ljedit.config_manager = _ljedit_config_manager
 
 def show_msgbox(message):
 	dlg = gtk.MessageDialog(parent=ljedit.main_window, buttons=gtk.BUTTONS_YES_NO, message_format=str(message))

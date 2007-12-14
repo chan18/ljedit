@@ -50,8 +50,6 @@
       </menu>
     </menu>
     <menu action='ToolsMenu'>
-      <menuitem action='Font'/>
-      <menuitem action='Options'/>
     </menu>
     <menu action='PluginsMenu'>
     </menu>

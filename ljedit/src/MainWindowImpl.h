@@ -48,8 +48,8 @@ private:
 	void on_view_right();
 	void on_view_bottom();
 
-	void on_tools_options();
-	void on_tools_font();
+	//void on_tools_options();
+	//void on_tools_font();
 
     void on_help_about();
 
