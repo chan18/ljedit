@@ -16,6 +16,8 @@ public:
     void create();
     void destroy();
 
+	gtksourceview::SourceView& view() { return *view_; }
+
 public:
     PreviewPage(LJEditor& editor);
     virtual ~PreviewPage();

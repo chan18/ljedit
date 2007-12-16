@@ -4,6 +4,7 @@
 #include "StdAfx.h"	// for vc precompile header
 
 #include "LJEditorUtilsImpl.h"
+#include "ConfigManagerImpl.h"
 
 #include <sys/stat.h>
 #include <fstream>
@@ -77,11 +78,6 @@ TStrCoderList init_coders() {
 }
 
 LJEditorUtilsImpl::LJEditorUtilsImpl() {
-#ifdef WIN32
-	//font_ = "simsun 9";
-#else
-	font_ = "SimSun 10"; // "Courier 10 Pitch 10";
-#endif
 }
 
 LJEditorUtilsImpl::~LJEditorUtilsImpl() {
@@ -120,14 +116,7 @@ void LJEditorUtilsImpl::create(const std::string& path) {
 }
 
 gtksourceview::SourceView* LJEditorUtilsImpl::create_gtk_source_view() {
-    gtksourceview::SourceView* view = new gtksourceview::SourceView();
-    if( view != 0 ) {
-		view->modify_font(Pango::FontDescription(font_));
-		view->set_wrap_mode(Gtk::WRAP_NONE);
-        view->set_tab_width(4);
-    }
-
-	return view;
+	return new gtksourceview::SourceView();
 }
 
 void LJEditorUtilsImpl::destroy_gtk_source_view(gtksourceview::SourceView* view) {
@@ -169,7 +158,7 @@ bool LJEditorUtilsImpl::do_load_file(Glib::ustring& out, const std::string& file
 		return false;
 	}
 
-	if( ::g_utf8_validate(buf.c_str(), buf.size(), 0) ) {
+	if( ::g_utf8_validate(buf.c_str(), (gssize)buf.size(), 0) ) {
 		ubuf = buf;
 
 	} else {

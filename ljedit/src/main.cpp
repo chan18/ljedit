@@ -5,6 +5,7 @@
 
 #include "LJEditorImpl.h"
 #include "PluginManager.h"
+#include "ConfigManagerImpl.h"
 
 #ifdef G_OS_WIN32
 	#include <windows.h>
@@ -42,12 +43,16 @@ int main(int argc, char *argv[]) {
 
 		PluginManager::self().add_plugins_path(path + "/plugins");
 
+		ConfigManagerImpl::self().create();
+
 		LJEditorImpl& app = LJEditorImpl::self();
 		if( app.create(path) ) {
 			app.add_open_file(open_filename);
 			app.run();
 			app.destroy();
 		}
+
+		ConfigManagerImpl::self().destroy();
 	}
 
     return 0;

@@ -77,7 +77,7 @@ class FindWindow:
 		self.result_view.append_column(gtk.TreeViewColumn('file', render, text=0))
 		self.result_view.append_column(gtk.TreeViewColumn('line', render, text=1))
 		self.result_view.append_column(gtk.TreeViewColumn('text', render, text=2))
-		self.result_view.connect('row-activated', self.on_ResultView_row_activated)
+		#self.result_view.connect('row-activated', self.on_ResultView_row_activated)
 		
 		# UI
 		action_group = gtk.ActionGroup('FindAction')

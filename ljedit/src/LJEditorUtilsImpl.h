@@ -23,9 +23,6 @@ public:
 
 	virtual void format_filekey(std::string& filename);
 
-	const Glib::ustring& font() const	{ return font_; }
-	Glib::ustring& font()				{ return font_; }
-
 private:
     LJEditorUtilsImpl();
     ~LJEditorUtilsImpl();
@@ -37,8 +34,6 @@ private:
 	virtual bool do_load_file(Glib::ustring& out, const std::string& filename);
 
 private:
-	Glib::ustring font_;
-	
 	std::map<Glib::ustring, Glib::ustring>	language_map_;
 };
 

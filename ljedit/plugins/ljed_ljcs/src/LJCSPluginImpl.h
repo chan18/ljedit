@@ -29,12 +29,17 @@ inline void disconnect_all_connections(TConnectionList& cons) {
     cons.clear();
 }
 
-class LJCSPluginImpl {
+class LJCSPluginImpl : public sigc::trackable {
 public:
     LJCSPluginImpl(LJEditor& editor);
 
     void create(const char* plugin_filename);
     void destroy();
+
+private:	// for options
+	void on_option_changed(const std::string& id, const std::string& value, const std::string& old);
+
+	void option_set_include_path(const std::string& option_text);
 
 private:	// auto complete
     void active_page(DocPage& page);
@@ -55,8 +60,6 @@ private:
 	bool on_show_hint_timeout(DocPage* page, int tag);
 
 private:
-	void on_show_setup_dialog();
-
     void on_doc_page_added(Gtk::Widget* widget, guint page_num);
     void on_doc_page_removed(Gtk::Widget* widget, guint page_num);
 
@@ -81,9 +84,6 @@ private:	// outline
     void outline_on_elem_actived(const cpp::Element& elem);
 
 private:
-    Glib::RefPtr<Gtk::ActionGroup>	action_group_;
-	Gtk::UIManager::ui_merge_id		menu_id_;
-
     TipWindow	tip_;
     OutlinePage	outline_;
     PreviewPage	preview_;

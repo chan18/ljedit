@@ -6,20 +6,31 @@
 #include "DocManagerImpl.h"
 
 #include "LJEditorUtilsImpl.h"
+#include "ConfigManagerImpl.h"
 
 #ifdef G_OS_WIN32
 	#include <glib/gstdio.h>
 	#include <windows.h>
 #endif
 
-DocManagerImpl::DocManagerImpl(Gtk::Window& parent) : parent_(parent), locate_page_num_(-1) {
+DocManagerImpl::DocManagerImpl(Gtk::Window& parent)
+	: parent_(parent)
+	, locate_page_num_(-1)
+	, option_use_mouse_double_click_(true)
+	, option_tab_width_(4)
+{
 	pos_pool_init();
 
-	sig_page_close_ = signal_page_removed().connect( sigc::mem_fun(this, &DocManagerImpl::on_page_removed) );
+	signal_page_removed().connect( sigc::mem_fun(this, &DocManagerImpl::on_page_removed) );
+
+	ConfigManagerImpl::self().signal_option_changed().connect(sigc::mem_fun(this, &DocManagerImpl::on_option_changed));
+
+	ConfigManagerImpl::self().get_option_value_bool("editor.double_click_select", option_use_mouse_double_click_);
+	ConfigManagerImpl::self().get_option_value("editor.font", option_font_name_);
+	ConfigManagerImpl::self().get_option_value_int("editor.tab_width", option_tab_width_);
 }
 
 DocManagerImpl::~DocManagerImpl() {
-	sig_page_close_.disconnect();
     close_all_files();
 }
 
@@ -184,9 +195,12 @@ bool DocManagerImpl::open_page(const std::string filepath
         , int line
 		, int line_offset)
 {
-    DocPageImpl* page = DocPageImpl::create(filepath, displaty_name);
+    DocPageImpl* page = DocPageImpl::create(filepath, displaty_name, option_use_mouse_double_click_);
     if( page==0 )
     	return false;
+
+	page->view().modify_font(Pango::FontDescription(option_font_name_));
+	page->view().set_tab_width(option_tab_width_);
 
 	if( line < 0 )
 		line = 0;
@@ -398,6 +412,57 @@ void DocManagerImpl::on_page_removed(Gtk::Widget* widget, guint page_num) {
 	}
 }
 
+void DocManagerImpl::on_option_changed(const std::string& id, const std::string& value, const std::string& old) {
+	if( id=="editor.font" ) {
+		Pango::FontDescription font_desc(value);
+
+		PageList::iterator it = pages().begin();
+		PageList::iterator end = pages().end();
+		for( ; it!=end; ++it ) {
+			Gtk::Widget* widget = it->get_child();
+			assert( widget != 0 );
+
+			DocPageImpl& page = *((DocPageImpl*)widget);
+			page.view().modify_font(font_desc);
+		}
+
+	} else if( id=="editor.tab_width" ) {
+		int w = atoi(value.c_str());
+		if( w <= 0 )
+			return;
+
+		PageList::iterator it = pages().begin();
+		PageList::iterator end = pages().end();
+		for( ; it!=end; ++it ) {
+			Gtk::Widget* widget = it->get_child();
+			assert( widget != 0 );
+
+			DocPageImpl& page = *((DocPageImpl*)widget);
+			page.view().set_tab_width(w);
+		}
+
+	} else if( id=="editor.style_scheme" ) {
+		/*
+		gtksourceview::SourceS
+		SourceLanguageManager::get_default()
+		::gtk_source_buffer_get_style_scheme(
+		PageList::iterator it = pages().begin();
+		PageList::iterator end = pages().end();
+		for( ; it!=end; ++it ) {
+			Gtk::Widget* widget = it->get_child();
+			assert( widget != 0 );
+
+			DocPageImpl& page = *((DocPageImpl*)widget);
+			::gtk_source_buffer_set_style_scheme(page.buffer()->gobj(), 
+			page.view()((w);
+		}
+		*/
+
+	} else if( id=="editor.double_click_select" ) {
+		option_use_mouse_double_click_ = (value=="true");
+	}
+}
+
 void DocManagerImpl::pos_pool_init() {
 	size_t count = sizeof(_pos_pool_) / sizeof(PosNode);
 	assert( count > 2 );
@@ -480,19 +545,5 @@ void DocManagerImpl::pos_back() {
 
 	pos_cur_ = pos_cur_->prev;
 	locate_page_line(page_num(*pos_cur_->page), pos_cur_->line, pos_cur_->lpos, false);
-}
-
-void DocManagerImpl::modify_all_views_font(const Glib::ustring& font) {
-	Pango::FontDescription font_desc(font);
-
-    PageList::iterator it = pages().begin();
-    PageList::iterator end = pages().end();
-    for( ; it!=end; ++it ) {
-        Gtk::Widget* widget = it->get_child();
-        assert( widget != 0 );
-
-		DocPageImpl& page = *((DocPageImpl*)widget);
-		page.view().modify_font(font_desc);
-    }
 }
 

@@ -7,20 +7,68 @@
 #include "LJCSPluginUtils.h"
 #include "LJCSEnv.h"
 #include "LJCSIcons.h"
-#include "SetupDialog.h"
 
 #include "DocManager.h"
 #include "LJEditor.h"
 
+#include <sstream>
+
 GRegex* re_include = g_regex_new("^[ \t]*#[ \t]*include[ \t]*(.*)", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
 GRegex* re_include_tip = g_regex_new("([\"<])(.*)", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
 GRegex* re_include_info = g_regex_new("([\"<])([^\">]*)[\">].*", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
+
+std::string option_ljcs_include_path_id = "ljcs.include_path";
+
+std::string ljcs_default_include_path =
+	#ifdef WIN32
+		"c:/mingw32/include/\n"
+		"c:/mingw32/include/c++/3.4.2/\n"
+		"d:/mingw32/include/\n"
+		"d:/mingw32/include/c++/3.4.2/\n"
+	#else
+		"/usr/include/\n"
+		"/usr/include/c++/4.1/\n"
+	#endif
+	;
 
 LJCSPluginImpl::LJCSPluginImpl(LJEditor& editor)
     : editor_(editor)
 	, tip_(editor)
     , preview_(editor)
 	, preview_page_(-1) {}
+
+
+void LJCSPluginImpl::option_set_include_path(const std::string& option_text) {
+	StrVector paths;
+			
+	std::istringstream iss(option_text);
+	std::string line;
+	while( std::getline(iss, line) ) {
+		if( line.empty() )
+			continue;
+		paths.push_back(line);
+	}
+
+	LJCSEnv::self().set_include_paths(paths);
+}
+
+void LJCSPluginImpl::on_option_changed(const std::string& id, const std::string& value, const std::string& old) {
+	if( id=="editor.font" ) {
+		Pango::FontDescription font_desc(value);
+		preview_.view().modify_font(font_desc);
+		tip_.set_decl_view_font(font_desc);
+
+	} else if( id=="editor.tab_width" ) {
+		int w = atoi(value.c_str());
+		if( w <= 0 )
+			return;
+		preview_.view().set_tab_width(w);
+
+	} else if( id==option_ljcs_include_path_id ) {
+		option_set_include_path(value);
+
+	}
+}
 
 void LJCSPluginImpl::active_page(DocPage& page) {
 	Gtk::TextView& view = page.view();
@@ -258,22 +306,6 @@ void LJCSPluginImpl::create(const char* plugin_filename) {
     DocManager& dm = editor_.main_window().doc_manager();
     TConnectionList& cons = connections_map_[0];
 
-	// menu
-	action_group_ = Gtk::ActionGroup::create("LJCSActions");
-    action_group_->add( Gtk::Action::create("LJCSSetup", Gtk::Stock::ABOUT,   "_ljcs",  "LJCS plugin setup"),	sigc::mem_fun(this, &LJCSPluginImpl::on_show_setup_dialog) );
-
-	Glib::ustring ui_info = 
-        "<ui>"
-        "    <menubar name='MenuBar'>"
-        "        <menu action='PluginsMenu'>"
-        "            <menuitem action='LJCSSetup'/>"
-        "        </menu>"
-        "    </menubar>"
-        "</ui>";
-
-	main_window.ui_manager()->insert_action_group(action_group_);
-	menu_id_ = main_window.ui_manager()->add_ui_from_string(ui_info);
-
 	// icons
 	LJCSIcons::self().create(plugin_path_);
 
@@ -293,20 +325,38 @@ void LJCSPluginImpl::create(const char* plugin_filename) {
     preview_.create();
     preview_page_ = main_window.bottom_panel().append_page(preview_.get_widget(), "preview");
 
-	// init parser environ
-	load_setup(plugin_path_);
+	// options
+	editor_.config_manager().regist_option(option_ljcs_include_path_id
+		, "text"
+		, ljcs_default_include_path
+		, "system headers paths for c++ parser");
+
+	editor_.config_manager().signal_option_changed().connect( sigc::mem_fun(this, &LJCSPluginImpl::on_option_changed) );
+
+	{
+		std::string value;
+		if( editor_.config_manager().get_option_value(option_ljcs_include_path_id, value) )
+			option_set_include_path(value);
+
+		if( editor_.config_manager().get_option_value("editor.font", value) ) {
+			Pango::FontDescription font_desc(value);
+			preview_.view().modify_font(font_desc);
+			tip_.set_decl_view_font(font_desc);
+		}
+
+		int tab_width = 0;
+		if( editor_.config_manager().get_option_value_int("editor.tab_width", tab_width) && tab_width > 0 )
+			preview_.view().set_tab_width(tab_width);
+
+	}
 
 	// start parse thread
-	parse_thread_.run(); 
+	parse_thread_.run();
 }
 
 void LJCSPluginImpl::destroy() {
     MainWindow& main_window = editor_.main_window();
     DocManager& dm = main_window.doc_manager();
-
-	// remove menu
-	main_window.ui_manager()->remove_action_group(action_group_);
-	main_window.ui_manager()->remove_ui(menu_id_);
 
 	// stop parse thread
 	parse_thread_.stop();
@@ -427,10 +477,6 @@ void LJCSPluginImpl::show_include_hint(const std::string& filename, bool system_
 	} else {
 		tip_.include_window().hide();
 	}
-}
-
-void LJCSPluginImpl::on_show_setup_dialog() {
-	show_setup_dialog(editor_.main_window(), plugin_path_);
 }
 
 void LJCSPluginImpl::on_doc_page_added(Gtk::Widget* widget, guint page_num) {

@@ -225,24 +225,6 @@ void MainWindowImpl::on_view_bottom() {
 		bottom_panel_.show();
 }
 
-/*
-void MainWindowImpl::on_tools_font() {
-	Gtk::FontSelectionDialog dlg("seletct font...");
-
-	if( !LJEditorUtilsImpl::self().font().empty() )
-		dlg.set_font_name(LJEditorUtilsImpl::self().font());
-
-	if( dlg.run()==Gtk::RESPONSE_OK ) {
-		LJEditorUtilsImpl::self().font() = dlg.get_font_name();
-		doc_manager_.modify_all_views_font(dlg.get_font_name());
-	}
-}
-
-void MainWindowImpl::on_tools_options() {
-	Gtk::MessageDialog(*this, "not implement", true, Gtk::MESSAGE_INFO).run();
-}
-*/
-
 void MainWindowImpl::on_help_about() {
 	const char* info = "welcome to use ljedit!\n"
 		"\n"

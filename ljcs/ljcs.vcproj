@@ -250,6 +250,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\src\mlexer.cpp"
+			>
+		</File>
+		<File
 			RelativePath="src\parser.cpp"
 			>
 		</File>
@@ -279,10 +283,6 @@
 		</File>
 		<File
 			RelativePath="src\token.h"
-			>
-		</File>
-		<File
-			RelativePath=".\src\use_mlexer.cpp"
 			>
 		</File>
 	</Files>

@@ -18,7 +18,6 @@ LJEditorImpl::~LJEditorImpl() {
 
 bool LJEditorImpl::create(const std::string& path) {
     try {
-		ConfigManagerImpl::self().create();
 		LJEditorUtilsImpl::self().create(path);
         main_window_.create(path);
 
@@ -42,8 +41,6 @@ void LJEditorImpl::destroy() {
 	::ljed_stop_python_plugin_engine();
 
     PluginManager::self().unload_plugins();
-
-	ConfigManagerImpl::self().destroy();
 }
 
 void LJEditorImpl::add_open_file(const char* filename) {

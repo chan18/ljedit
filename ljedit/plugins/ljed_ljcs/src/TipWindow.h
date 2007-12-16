@@ -28,6 +28,9 @@ public:
     void select_next();
     void select_prev();
 
+	void set_decl_view_font(Pango::FontDescription& font)
+		{ decl_view_->modify_font(font); }
+
 private:
     void create();
     void destroy();

@@ -10,7 +10,8 @@ class DocPageImpl : public DocPage, public Gtk::ScrolledWindow
 {
 public:
     static DocPageImpl* create(const std::string& filepath
-        , const Glib::ustring& display_name);
+        , const Glib::ustring& display_name
+		, bool& option_use_mouse_double_click);
 
 public:
     virtual bool modified() const
@@ -40,10 +41,12 @@ public:
 private:
 	DocPageImpl( Gtk::Label& label
 		, Gtk::EventBox& label_event_box
-		, gtksourceview::SourceView& view)
+		, gtksourceview::SourceView& view
+		, bool& option_use_mouse_double_click)
 			: label_(label)
 			, label_event_box_(label_event_box)
-			, view_(view) {}
+			, view_(view)
+			, option_use_mouse_double_click_(option_use_mouse_double_click) {}
 
     ~DocPageImpl() {}
 
@@ -55,6 +58,7 @@ private:
     Gtk::Label&					label_;
 	Gtk::EventBox&				label_event_box_;
     gtksourceview::SourceView&	view_;
+	bool&						option_use_mouse_double_click_;
 };
 
 #endif//LJED_INC_DOCPAGEIMPL_H

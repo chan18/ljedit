@@ -44,8 +44,6 @@ public:
 	void pos_forward();
 	void pos_back();
 
-	void modify_all_views_font(const Glib::ustring& font);
-
 protected:
     bool save_page(DocPageImpl& page, bool is_save_as);
     bool open_page(const std::string filepath
@@ -69,6 +67,13 @@ private:
 private:
 	Gtk::Window&	parent_;
 
+private:	// for options
+	void on_option_changed(const std::string& id, const std::string& value, const std::string& old);
+
+	bool		option_use_mouse_double_click_;
+	std::string	option_font_name_;
+	int			option_tab_width_;
+
 private:	// for locate_page_line
     int		locate_page_num_;
     int		locate_line_num_;
@@ -77,8 +82,6 @@ private:	// for locate_page_line
 
 private:	// for pos forward & back
 	void pos_pool_init();
-
-	sigc::connection		sig_page_close_;
 
 	PosNode*				pos_cur_;
 	PosNode*				pos_first_;

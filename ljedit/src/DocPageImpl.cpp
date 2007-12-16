@@ -9,9 +9,9 @@
 
 #include "LJEditorUtilsImpl.h"
 
-
 DocPageImpl* DocPageImpl::create(const std::string& filepath
-        , const Glib::ustring& display_name)
+        , const Glib::ustring& display_name
+		, bool& option_use_mouse_double_click)
 {
     Gtk::Label* label = Gtk::manage(new Gtk::Label(display_name));
 	Gtk::EventBox* label_event_box = Gtk::manage(new Gtk::EventBox());
@@ -23,6 +23,7 @@ DocPageImpl* DocPageImpl::create(const std::string& filepath
     if( view == 0 )
 		return 0;
 	view->set_show_line_numbers();
+	view->set_wrap_mode(Gtk::WRAP_NONE);
 
 	Glib::RefPtr<gtksourceview::SourceLanguage> lang = LJEditorUtilsImpl::self().get_language_by_filename(display_name);
 	Glib::RefPtr<gtksourceview::SourceBuffer> buffer = view->get_source_buffer();
@@ -31,23 +32,23 @@ DocPageImpl* DocPageImpl::create(const std::string& filepath
 	buffer->set_max_undo_levels(1024);
 
 	view->set_highlight_current_line(true);
-    view->set_wrap_mode(Gtk::WRAP_NONE);
-    view->set_tab_width(4);
 	view->set_auto_indent(true);
 
-    DocPageImpl* page = Gtk::manage(new DocPageImpl(*label, *label_event_box, *view));
+    DocPageImpl* page = Gtk::manage(new DocPageImpl(*label, *label_event_box, *view, option_use_mouse_double_click));
     page->filepath_ = filepath;
     page->add(*view);
     page->set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
     page->show_all();
-	
+
+	// mouse double click select
 	view->signal_button_press_event().connect( sigc::mem_fun(page, &DocPageImpl::mouse_double_click), false );
 
     return page;
 }
 
+
 bool DocPageImpl::mouse_double_click(GdkEventButton* event) {
-	if( event->button==1 && event->type==GDK_2BUTTON_PRESS ) {
+	if( option_use_mouse_double_click_ && event->button==1 && event->type==GDK_2BUTTON_PRESS ) {
 		gtksourceview::SourceIter ps = buffer()->get_iter_at_mark(buffer()->get_insert());
 		gtksourceview::SourceIter pe = ps;
 		
