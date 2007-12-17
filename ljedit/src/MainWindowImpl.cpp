@@ -65,6 +65,8 @@ void MainWindowImpl::create(const std::string& path) {
 				doc_manager_.set_scrollable();
 				right_hpaned->pack1(doc_manager_, true, false);
 
+				doc_manager_.create(path);
+
 				// right
 				right_panel_.set_size_request(200, -1);
 				right_panel_.set_tab_pos(Gtk::POS_BOTTOM);

@@ -26,6 +26,8 @@ public:
 	virtual DocPage& child_to_page(Gtk::Widget& child)
 		{ return ((DocPageImpl&)child); }
 
+	void create(const std::string& path);
+
     virtual void create_new_file();
 	virtual void show_open_dialog();
     virtual bool open_file(const std::string& filepath, int line=0, int line_offset=0);
@@ -73,6 +75,9 @@ private:	// for options
 	bool		option_use_mouse_double_click_;
 	std::string	option_font_name_;
 	int			option_tab_width_;
+
+private:
+	GtkSourceStyleScheme* default_scheme_;
 
 private:	// for locate_page_line
     int		locate_page_num_;

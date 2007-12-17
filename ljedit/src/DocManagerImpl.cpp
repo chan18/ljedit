@@ -8,6 +8,9 @@
 #include "LJEditorUtilsImpl.h"
 #include "ConfigManagerImpl.h"
 
+#include <gtksourceview/gtksourcebuffer.h>
+#include <gtksourceview/gtksourcestyleschememanager.h>
+
 #ifdef G_OS_WIN32
 	#include <glib/gstdio.h>
 	#include <windows.h>
@@ -18,7 +21,15 @@ DocManagerImpl::DocManagerImpl(Gtk::Window& parent)
 	, locate_page_num_(-1)
 	, option_use_mouse_double_click_(true)
 	, option_tab_width_(4)
+	, default_scheme_(0)
 {
+}
+
+DocManagerImpl::~DocManagerImpl() {
+    close_all_files();
+}
+
+void DocManagerImpl::create(const std::string& path) {
 	pos_pool_init();
 
 	signal_page_removed().connect( sigc::mem_fun(this, &DocManagerImpl::on_page_removed) );
@@ -28,10 +39,16 @@ DocManagerImpl::DocManagerImpl(Gtk::Window& parent)
 	ConfigManagerImpl::self().get_option_value_bool("editor.double_click_select", option_use_mouse_double_click_);
 	ConfigManagerImpl::self().get_option_value("editor.font", option_font_name_);
 	ConfigManagerImpl::self().get_option_value_int("editor.tab_width", option_tab_width_);
-}
 
-DocManagerImpl::~DocManagerImpl() {
-    close_all_files();
+	GtkSourceStyleSchemeManager* ssm = ::gtk_source_style_scheme_manager_get_default();
+	if( ssm != NULL ) {
+		std::string style_path = path + "/styles";
+		gtk_source_style_scheme_manager_append_search_path(ssm, style_path.c_str());
+		//gtk_source_style_scheme_manager_force_rescan(ssm);
+		GtkSourceStyleScheme* scheme = gtk_source_style_scheme_manager_get_scheme(ssm, "ljedit");
+		if( scheme!=0 )
+			default_scheme_ = scheme;
+	}
 }
 
 void DocManagerImpl::locate_page_line(int page_num, int line, int line_offset, bool record_pos) {
@@ -201,6 +218,8 @@ bool DocManagerImpl::open_page(const std::string filepath
 
 	page->view().modify_font(Pango::FontDescription(option_font_name_));
 	page->view().set_tab_width(option_tab_width_);
+
+	::gtk_source_buffer_set_style_scheme(page->buffer()->gobj(), default_scheme_);
 
 	if( line < 0 )
 		line = 0;
