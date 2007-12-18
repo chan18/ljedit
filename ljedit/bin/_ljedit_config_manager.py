@@ -6,7 +6,8 @@ import os, sys, pickle
 # options manager implements
 # 
 class Option:
-	pass
+	def __repr__(self):
+		return self.value
 
 # option = { id, data_type, value, default_value, info }
 # options { id : option }
@@ -57,11 +58,6 @@ def save_options():
 
 	f.close()
 
-def regist_ljedit_options():
-	regist_option('editor.double_click_select', 'bool', 'true', 'modify default double click events,\nselect word with "_"')
-	regist_option('editor.font', 'font', '' , 'set editor font')
-	regist_option('editor.tab_width', 'int', '4', 'set editor tab space')
-
 # ljedit ConfigManagerImpl
 # 
 # ljedit.ConfigManagerImpl add methods:
@@ -79,11 +75,7 @@ def create():
 			path = home
 		else:
 			path = os.path.dirname(__file__)
-	
-	# regist default ljedit options
-	# 
-	regist_ljedit_options()
-	
+
 	# read options file
 	# 
 	global options_filename
@@ -94,8 +86,8 @@ def create():
 def regist_option(id, data_type, default_value, tip):
 	option = options.get(id)
 	if option:
-		option.data_type = data_type
 		option.default_value = default_value
+		option.data_type = data_type
 		option.tip = tip
 	else:
 		option = Option()
@@ -105,6 +97,13 @@ def regist_option(id, data_type, default_value, tip):
 		option.default_value = default_value
 		option.value = default_value
 		option.tip = tip
+
+	if ':' in data_type:
+		pos = data_type.find(':')
+		option.data_type = data_type[:pos]
+		option.data_type_info = data_type[pos+1:]
+	else:
+		option.data_type_info = None
 
 def get_option_value(id):
 	option = options.get(id)

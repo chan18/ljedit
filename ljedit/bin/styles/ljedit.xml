@@ -1,10 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-	import gtksourceview2 as gsv
-	sm = gsv.style_scheme_manager_get_default()
-	sm.set_search_path(sm.get_search_path() + ['d:/louis/lj/ljedit/bin/styles'])
-	ljedit.main_window.doc_manager.get_text_view(3).get_buffer().set_style_scheme(sm.get_scheme('ljedit'))
--->
 <style-scheme id="ljedit" _name="LJedit" version="1.0">
   <author>lj</author>
   <_description>ljedit color scheme</_description>

@@ -19,7 +19,7 @@ class OptionsManager:
 	def create(self):
 		# UI
 		action_group = gtk.ActionGroup('OptionAction')
-		action = gtk.Action('Options', '_Options', 'setup options', gtk.STOCK_STOP)
+		action = gtk.Action('Options', '_Options', 'setup options', gtk.STOCK_PREFERENCES)
 		action.connect('activate', self.on_Menu_Option_activate)
 		action_group.add_action(action)
 
@@ -33,13 +33,9 @@ class OptionsManager:
 
 	def on_Menu_Option_activate(self, action):
 		dlg = self.create_option_dialog()
-		if dlg.run()==gtk.RESPONSE_OK:
-			ljedit.config_manager.save_options()
-			
-			for id, (old, new)  in dlg.changed_options.items():
-				ljedit.config_manager.option_changed_callback(id, new, old)
-				
+		dlg.run()
 		dlg.destroy()
+		ljedit.config_manager.save_options()
 
 	def create_option_dialog(self):
 		model = gtk.ListStore(object)
@@ -75,12 +71,10 @@ class OptionsManager:
 		sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
 		sw.show_all()
 		
-		dlg = gtk.Dialog(parent=ljedit.main_window, buttons=('ok', gtk.RESPONSE_OK, 'cancel', gtk.RESPONSE_CANCEL))
+		dlg = gtk.Dialog(parent=ljedit.main_window, buttons=('close', gtk.RESPONSE_CLOSE,))
 		dlg.vbox.add(sw)
 		dlg.resize(800, 600)
 		view.connect('row-activated', lambda *args : self.on_Option_row_actived(dlg, *args))
-		
-		dlg.changed_options = {}
 		
 		return dlg
 
@@ -116,7 +110,7 @@ class OptionsManager:
 			en = gtk.Entry()
 			dlg.vbox.add(en)
 			en.set_text(option.value)
-			dlg.ljedit_get_option = lambda : en.get_text()
+			dlg.ljedit_get_option = en.get_text
 			
 		return dlg
 
@@ -124,33 +118,44 @@ class OptionsManager:
 		option, = treeview.get_model()[path]
 		# print option
 		
-		old = option.value
-		
 		if option.data_type=='bool':
-			option.value = 'true' if option.value=='false' else 'false'
+			self.do_option_changed(treeview, option, 'true' if option.value=='false' else 'false')
+			
+		elif option.data_type=='enum':
+			if option.data_type_info==None:
+				return
+			
+			menu = gtk.Menu()
+			menu.show_all()
+			
+			for v in option.data_type_info.split():
+				s = '* ' if v==option.value else '  '
+				e = '\t<default>' if v==option.default_value else ''
+				mi = gtk.MenuItem(s+v+e)
+				mi.connect('activate', lambda w, n : self.do_option_changed(treeview, option, n), v)
+				menu.append(mi)
+				
+			menu.show_all()
+			menu.popup(None, None, None, 1, 0)
 			
 		else:
 			dlg = self.make_modify_option_dialog(option_dialog, option)
 			dlg.show_all()
 			res = dlg.run()
 			if res==gtk.RESPONSE_OK:
-				option.value = dlg.ljedit_get_option()
+				self.do_option_changed(treeview, option, dlg.ljedit_get_option())
 			elif res==gtk.RESPONSE_REJECT:
-				option.value = option.default_value
+				self.do_option_changed(treeview, option, option.default_value)
 			dlg.destroy()
 
+	def do_option_changed(self, treeview, option, new_value):
+		old = option.value
+		option.value = new_value
+		
 		treeview.columns_autosize()
 		
 		if option.value != old:
-			changed_options = option_dialog.changed_options
-			cop = changed_options.get(option.id)
-			if cop:
-				if cop[0]==option.value:
-					changed_options.pop(option.id)
-				elif cop[1]!=option.value:
-					changed_options[option.id] = cop[0], option.value
-			else:
-				changed_options[option.id] = old, option.value
+			ljedit.config_manager.option_changed_callback(option.id, option.value, old)
 
 # options plugin
 # 

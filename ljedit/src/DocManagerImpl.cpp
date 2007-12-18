@@ -11,6 +11,8 @@
 #include <gtksourceview/gtksourcebuffer.h>
 #include <gtksourceview/gtksourcestyleschememanager.h>
 
+#include <sstream>
+
 #ifdef G_OS_WIN32
 	#include <glib/gstdio.h>
 	#include <windows.h>
@@ -34,20 +36,38 @@ void DocManagerImpl::create(const std::string& path) {
 
 	signal_page_removed().connect( sigc::mem_fun(this, &DocManagerImpl::on_page_removed) );
 
-	ConfigManagerImpl::self().signal_option_changed().connect(sigc::mem_fun(this, &DocManagerImpl::on_option_changed));
+	ConfigManagerImpl& cm = ConfigManagerImpl::self();
 
-	ConfigManagerImpl::self().get_option_value_bool("editor.double_click_select", option_use_mouse_double_click_);
-	ConfigManagerImpl::self().get_option_value("editor.font", option_font_name_);
-	ConfigManagerImpl::self().get_option_value_int("editor.tab_width", option_tab_width_);
+	// regist_ljedit_options()
+	cm.regist_option("editor.double_click_select", "bool", "true", "modify default double click events,\nselect word with \"_\"");
+	cm.regist_option("editor.font", "font", "" , "set editor font");
+	cm.regist_option("editor.tab_width", "int", "4", "set editor tab space");
 
 	GtkSourceStyleSchemeManager* ssm = ::gtk_source_style_scheme_manager_get_default();
 	if( ssm != NULL ) {
 		std::string style_path = path + "/styles";
 		gtk_source_style_scheme_manager_append_search_path(ssm, style_path.c_str());
-		//gtk_source_style_scheme_manager_force_rescan(ssm);
-		GtkSourceStyleScheme* scheme = gtk_source_style_scheme_manager_get_scheme(ssm, "ljedit");
-		if( scheme!=0 )
-			default_scheme_ = scheme;
+		
+		std::ostringstream oss;
+		oss << "enum:";
+		const gchar* const * ids = gtk_source_style_scheme_manager_get_scheme_ids(ssm);
+		for( ; *ids!=0; ++ids )
+			oss << *ids << " ";
+		std::string type = oss.str();
+		
+		cm.regist_option("editor.style_scheme", type, "ljedit", "set editor style scheme");
+	}
+	cm.signal_option_changed().connect(sigc::mem_fun(this, &DocManagerImpl::on_option_changed));
+
+	cm.get_option_value_bool("editor.double_click_select", option_use_mouse_double_click_);
+	cm.get_option_value("editor.font", option_font_name_);
+	cm.get_option_value_int("editor.tab_width", option_tab_width_);
+	
+	{
+		std::string option_value;
+		cm.get_option_value("editor.style_scheme", option_value);
+		if( ssm != NULL )
+			default_scheme_ = gtk_source_style_scheme_manager_get_scheme(ssm, option_value.c_str());
 	}
 }
 
@@ -461,10 +481,9 @@ void DocManagerImpl::on_option_changed(const std::string& id, const std::string&
 		}
 
 	} else if( id=="editor.style_scheme" ) {
-		/*
-		gtksourceview::SourceS
-		SourceLanguageManager::get_default()
-		::gtk_source_buffer_get_style_scheme(
+		GtkSourceStyleSchemeManager* ssm = ::gtk_source_style_scheme_manager_get_default();
+		default_scheme_ = gtk_source_style_scheme_manager_get_scheme(ssm, value.c_str());
+
 		PageList::iterator it = pages().begin();
 		PageList::iterator end = pages().end();
 		for( ; it!=end; ++it ) {
@@ -472,10 +491,8 @@ void DocManagerImpl::on_option_changed(const std::string& id, const std::string&
 			assert( widget != 0 );
 
 			DocPageImpl& page = *((DocPageImpl*)widget);
-			::gtk_source_buffer_set_style_scheme(page.buffer()->gobj(), 
-			page.view()((w);
+			::gtk_source_buffer_set_style_scheme(page.buffer()->gobj(), default_scheme_);
 		}
-		*/
 
 	} else if( id=="editor.double_click_select" ) {
 		option_use_mouse_double_click_ = (value=="true");
