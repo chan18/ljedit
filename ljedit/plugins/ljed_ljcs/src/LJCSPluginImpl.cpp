@@ -821,6 +821,9 @@ void LJCSPluginImpl::outline_update_page() {
 		Gtk::TextBuffer::iterator it = buf->get_iter_at_mark(buf->get_insert());
 		outline_.set_file(file, it.get_line());
 
+		if( file != 0 )
+			LJCSEnv::self().file_decref(file);
+
 	} else {
 		outline_.set_file(0, 0);
 	}

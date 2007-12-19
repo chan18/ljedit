@@ -36,11 +36,11 @@ bool LJEditorImpl::create(const std::string& path) {
 }
 
 void LJEditorImpl::destroy() {
-	main_window_.destroy();
-
 	::ljed_stop_python_plugin_engine();
 
     PluginManager::self().unload_plugins();
+
+	main_window_.destroy();
 }
 
 void LJEditorImpl::add_open_file(const char* filename) {

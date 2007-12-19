@@ -57,12 +57,8 @@ public:
 	void set_include_paths(const StrVector& paths)
 		{ include_paths_ = paths; }
 
-	cpp::File* parse(const std::string& filekey, std::ostream* os=0) {
-		cpp::File* result = ljcs_do_parse(filekey, os);
-		if( result!=0 )
-			env_.pe_on_parsed(result);
-		return result;
-	}
+	cpp::File* parse(const std::string& filekey, std::ostream* os=0)
+		{ return ljcs_do_parse(filekey, os); }
 
 	void stopsign_set(bool stop=true) { stopsign_ = stop; }
 	bool stopsign_is_set() const      { return stopsign_; }

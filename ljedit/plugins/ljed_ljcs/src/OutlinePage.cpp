@@ -36,6 +36,7 @@ void OutlinePage::set_file(cpp::File* file, int line) {
 
         // add children
         if( file!=0 ) {
+			LJCSEnv::self().file_incref(file);
             const Gtk::TreeNodeChildren& node = store_->children();
             cpp::Elements::iterator it = file->scope.elems.begin();
             cpp::Elements::iterator end = file->scope.elems.end();
