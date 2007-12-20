@@ -92,6 +92,7 @@ LJCSEnv& LJCSEnv::self() {
 
 LJCSEnv::LJCSEnv() : ljedit_(0), keywords_("") {
 	keywords_.ref_count = 1;
+	index_->set_env(this);
 }
 
 LJCSEnv::~LJCSEnv() {

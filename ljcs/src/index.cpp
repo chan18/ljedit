@@ -12,6 +12,7 @@ void STree::add(File& file) {
 		return;
 
 	files_.insert(&file);
+	env_->pe_file_incref(&file);
 	add(file.scope);
 }
 
@@ -63,8 +64,10 @@ void STree::add(SNode& parent, Element& elem) {
 	case ET_INCLUDE:
 		if( env_ != 0 ) {
 			File* file = env_->pe_find_parsed(((Include&)elem).include_file);
-			if( file != 0 )
+			if( file != 0 ) {
 				add( *file );
+				env_->pe_file_decref(file);
+			}
 		}
 		break;
 	case ET_VAR: {
