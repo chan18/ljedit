@@ -37,7 +37,7 @@ typedef std::map<std::string, RMacro*> TRMacros;
 
 class MacroMgr {
 public:
-	~MacroMgr() { clear(); }
+	virtual ~MacroMgr() { clear(); }
 
 	void macro_insert( cpp::Macro* macro
 		, const std::string* value

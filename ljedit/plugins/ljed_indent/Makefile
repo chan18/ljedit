@@ -5,11 +5,11 @@
 #     build release version : make BUILD=release
 # 
 
-CXXFLAGS = -g
+CXXFLAGS = -g -Wall
 OBJPATH = debug
 
 ifeq ($(BUILD), release)
-	CXXFLAGS = -O2 -DNDEBUG
+	CXXFLAGS = -O2 -Wall
 	OBJPATH = release
 endif
 

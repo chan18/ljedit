@@ -131,7 +131,7 @@ int main(int argc, char *argv[]) {
 
 		// write our process id
 		sprintf(buf, "%d\n", getpid());
-		if( write(fd, buf, strlen(buf)) != strlen(buf) ) {
+		if( (size_t)write(fd, buf, strlen(buf)) != strlen(buf) ) {
 			perror("error[write]");
 			close(fd);      
 			exit(1);

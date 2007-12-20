@@ -35,7 +35,8 @@ LJCSPluginImpl::LJCSPluginImpl(LJEditor& editor)
     : editor_(editor)
 	, tip_(editor)
     , preview_(editor)
-	, preview_page_(-1) {}
+	, preview_page_(-1)
+	, show_hint_tag_(0) {}
 
 
 void LJCSPluginImpl::option_set_include_path(const std::string& option_text) {
@@ -356,7 +357,6 @@ void LJCSPluginImpl::create(const char* plugin_filename) {
 
 void LJCSPluginImpl::destroy() {
     MainWindow& main_window = editor_.main_window();
-    DocManager& dm = main_window.doc_manager();
 
 	// stop parse thread
 	parse_thread_.stop();

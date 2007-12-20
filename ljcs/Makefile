@@ -5,11 +5,11 @@
 #     build release version : make BUILD=release
 # 
 
-CXXFLAGS = -g #-DSHOW_PARSE_DEBUG_INFOS
+CXXFLAGS = -g -Wall
 OBJPATH = debug
 
 ifeq ($(BUILD), release)
-	CXXFLAGS = -O2
+	CXXFLAGS = -O2 -Wall
 	OBJPATH = release
 endif
 

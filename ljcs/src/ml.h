@@ -19,8 +19,8 @@ protected:
 	Lexer(MacroMgr& env, cpp::File& file, std::istream* managed, const void* tag)
 		: env_(env)
 		, file_(file)
-		, managed_(managed)
-		, tag_(tag) {}
+		, tag_(tag)
+		, managed_(managed) {}
 
 public:
 	static Lexer* create(MacroMgr& env, cpp::File& file, std::istream& ins, std::ostream* out=0, const void* tag=0);

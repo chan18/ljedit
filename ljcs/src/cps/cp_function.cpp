@@ -4,7 +4,7 @@
 #include "utils.h"
 
 void parse_function_prefix(BlockLexer& lexer) {
-	// ∫Ø ˝«∞◊∫
+	// ÂáΩÊï∞ÂâçÁºÄ
 	for(;;) {
 		switch( lexer.token().type ) {
 		case KW_EXTERN :
@@ -222,7 +222,6 @@ void do_parse_function(BlockLexer& lexer, Scope& scope) {
 }
 
 void parse_function(BlockLexer& lexer, Scope& scope) {
-	int* p = new int(3);
 	try {
 		do_parse_function(lexer, scope);
 	} catch(ParseError& e) {

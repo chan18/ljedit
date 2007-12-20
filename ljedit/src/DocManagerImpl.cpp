@@ -20,10 +20,13 @@
 
 DocManagerImpl::DocManagerImpl(Gtk::Window& parent)
 	: parent_(parent)
-	, locate_page_num_(-1)
 	, option_use_mouse_double_click_(true)
 	, option_tab_width_(4)
 	, default_scheme_(0)
+	, locate_page_num_(-1)
+	, locate_line_num_(0)
+	, locate_line_offset_(0)
+	, locate_record_pos_(false)
 {
 }
 

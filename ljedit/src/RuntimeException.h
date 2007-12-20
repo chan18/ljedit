@@ -13,7 +13,7 @@ public:
     virtual ~RuntimeException() throw() {}
 
     RuntimeException(const RuntimeException& o) : msg_(o.msg_) {}
-    RuntimeException& operator=(const RuntimeException& o) { msg_ = o.msg_; }
+    RuntimeException& operator=(const RuntimeException& o) { msg_ = o.msg_; return *this; }
 
     virtual Glib::ustring what() const { return msg_; }
 

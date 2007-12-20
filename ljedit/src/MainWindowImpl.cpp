@@ -10,9 +10,9 @@
 
 
 MainWindowImpl::MainWindowImpl()
-	: cmd_cb_goto_(cmd_line_, doc_manager_)
+	: doc_manager_(*this)
+	, cmd_cb_goto_(cmd_line_, doc_manager_)
 	, cmd_cb_find_(cmd_line_, doc_manager_)
-	, doc_manager_(*this)
 {
 }
 

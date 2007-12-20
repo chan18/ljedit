@@ -10,6 +10,9 @@
 typedef sigc::signal<void, const std::string&, const std::string&, const std::string&> OptionValueChangeSignal;
 
 class ConfigManager {
+protected:
+	virtual ~ConfigManager() {}
+
 public:
 	virtual void regist_option( const std::string& id	// aa.bb.cc
 		, const std::string& type						// typeid:typeinfo

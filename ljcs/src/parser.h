@@ -7,6 +7,9 @@
 #include "ds.h"
 
 class IParserEnviron {
+protected:
+	virtual ~IParserEnviron() {}
+
 public:
 	virtual bool			pe_is_abspath(std::string& filepath) = 0;
 	virtual void			pe_format_filekey(std::string& filename) = 0;

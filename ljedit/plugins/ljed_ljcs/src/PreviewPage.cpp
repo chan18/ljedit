@@ -11,11 +11,11 @@
 #include "LJCSEnv.h"
 
 PreviewPage::PreviewPage(LJEditor& editor)
-    : editor_(editor)
-    , view_(0)
+	: editor_(editor)
+	, search_thread_(0)
+	, view_(0)
 	, index_(0)
 	, last_preview_file_(0)
-	, search_thread_(0)
 {
 }
 

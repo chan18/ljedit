@@ -84,6 +84,14 @@ private:	// outline
     void outline_on_elem_actived(const cpp::Element& elem);
 
 private:
+    LJEditor&				editor_;
+	std::string				plugin_path_;
+
+    ParseThread				parse_thread_;
+
+    TConnectionListMap		connections_map_;
+
+private:
     TipWindow	tip_;
     OutlinePage	outline_;
     PreviewPage	preview_;
@@ -92,14 +100,6 @@ private:
 private:
 	sigc::connection		show_hint_timer_;
 	int						show_hint_tag_;
-
-private:
-    LJEditor&				editor_;
-	std::string				plugin_path_;
-
-    ParseThread				parse_thread_;
-
-    TConnectionListMap		connections_map_;
 };
 
 #endif//LJED_INC_LJCSPLUGINIMPL_H

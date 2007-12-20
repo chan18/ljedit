@@ -7,6 +7,9 @@
 #include "gtkenv.h"
 
 class LJEditorUtils {
+protected:
+	virtual ~LJEditorUtils() {}
+
 public:
 	virtual gtksourceview::SourceView* create_gtk_source_view() = 0;
 

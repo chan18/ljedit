@@ -7,9 +7,13 @@
 #include "gtkenv.h"
 
 class CmdLine {
+protected:
+	virtual ~CmdLine() {}
+
 public:
 	class ICallback {
 	public:
+		virtual ~ICallback() {}
 		virtual bool on_active(void* tag) = 0;
 		virtual void on_key_changed() = 0;
 		virtual bool on_key_press(GdkEventKey* event) = 0;

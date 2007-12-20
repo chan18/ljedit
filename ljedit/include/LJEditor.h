@@ -9,6 +9,9 @@
 #include "LJEditorUtils.h"
 
 class LJEditor {
+protected:
+	virtual ~LJEditor() {}
+
 public:
     virtual MainWindow&     main_window() = 0;
 

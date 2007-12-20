@@ -9,7 +9,7 @@
 class DocPage {
 protected:
     DocPage() {}
-    ~DocPage() {}
+    virtual ~DocPage() {}
 
 private: // nocopyable
     DocPage(const DocPage& o);
