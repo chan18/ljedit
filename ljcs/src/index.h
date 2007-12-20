@@ -17,10 +17,7 @@ public:
 	SNode() : sub_(0) {}
 
 	~SNode() {
-		if( sub_!=0 ) {
-			delete sub_;
-			sub_ = 0;
-		}
+		clear();
 	}
 
 	ElementSet&	elems()  { return elems_; }
@@ -28,6 +25,15 @@ public:
 	bool has_sub() const { return sub_!=0; }
 
 	bool empty() const   { return elems_.empty() && !has_sub(); }
+
+	void clear() {
+		if( sub_!=0 ) {
+			delete sub_;
+			sub_ = 0;
+		}
+
+		elems_.clear();
+	}
 
 	SMap& sub() {
 		if( sub_==0 ) {
@@ -69,6 +75,8 @@ public:
 	IParserEnviron* get_env() { return env_; }
 
 	SNode& root() { return root_; }
+
+	void clear();
 
 	void add(File& file);
 	//void remove(File& file);

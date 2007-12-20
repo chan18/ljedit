@@ -7,6 +7,17 @@
 
 namespace cpp {
 
+void STree::clear() {
+	root_.clear();
+
+	FileSet::iterator it = files_.begin();
+	FileSet::iterator end = files_.end();
+	for( ; it!=end; ++it )
+		env_->pe_file_decref(*it);
+
+	files_.clear();
+}
+
 void STree::add(File& file) {
 	if( files_.find(&file)!=files_.end() )
 		return;

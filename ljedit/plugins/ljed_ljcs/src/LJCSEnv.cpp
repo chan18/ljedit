@@ -204,6 +204,8 @@ bool LJCSEnv::in_include_path(const std::string& path) {
 void LJCSEnv::re_make_index() {
 	Glib::RWLock::ReaderLock locker(parsed_files_);
 
+	index_->clear();
+
 	cpp::FileMap::iterator it = parsed_files_->begin();
 	cpp::FileMap::iterator end = parsed_files_->end();
 	for( ; it!=end; ++it ) {
