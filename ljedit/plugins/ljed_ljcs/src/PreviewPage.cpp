@@ -266,7 +266,6 @@ void PreviewPage::search_thread() {
 
 	StrVector		keys;
 	SearchContent	sc;
-	sc.file = 0;
 
 	while( !search_stopsign_ ) {
 		{
@@ -281,6 +280,7 @@ void PreviewPage::search_thread() {
 				sc.file = 0;
 			}
 			sc = search_content_.ref();
+			search_content_->file = 0;
 		}
 
 		keys.clear();
