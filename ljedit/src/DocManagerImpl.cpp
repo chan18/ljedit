@@ -168,7 +168,8 @@ bool DocManagerImpl::open_file(const std::string& filepath, int line, int line_o
 		return true;
 
 	Glib::ustring ubuf;
-	if( !LJEditorUtilsImpl::self().load_file(ubuf, filekey) )
+	Glib::ustring coder;
+	if( !LJEditorUtilsImpl::self().load_file(ubuf, coder, filekey) )
 		return false;
 
     std::string filename = Glib::path_get_basename(filepath);
@@ -190,7 +191,7 @@ bool DocManagerImpl::open_file(const std::string& filepath, int line, int line_o
 	}
 #endif
 
-    return open_page(filekey, filename, &ubuf, line, line_offset);
+    return open_page(filekey, filename, &ubuf, &coder, line, line_offset);
 }
 
 bool DocManagerImpl::do_locate_file(const std::string& filepath, int line, int line_offset) {
@@ -232,6 +233,7 @@ bool DocManagerImpl::on_page_label_button_press(GdkEventButton* event, DocPageIm
 bool DocManagerImpl::open_page(const std::string filepath
         , const Glib::ustring& displaty_name
         , const Glib::ustring* text
+        , const Glib::ustring* coder
         , int line
 		, int line_offset)
 {
@@ -259,7 +261,10 @@ bool DocManagerImpl::open_page(const std::string filepath
 		buffer->set_modified(false);
 		buffer->signal_modified_changed().connect( sigc::bind(sigc::mem_fun(this, &DocManagerImpl::on_doc_modified_changed), page) );
 	}
-	
+
+	if( coder != 0 )
+		page->coder() = *coder;
+
 	page->label_event_box().signal_button_release_event().connect( sigc::bind(sigc::mem_fun(this, &DocManagerImpl::on_page_label_button_press), page) );
 
     int n = append_page(*page, page->label_event_box());
@@ -285,11 +290,15 @@ bool DocManagerImpl::save_page(DocPageImpl& page, bool is_save_as) {
 		page.label().set_text(u_display_name);
     }
 
+	// save file
     try {
         Glib::RefPtr<Glib::IOChannel> ofs = Glib::IOChannel::create_from_file(filepath, "w");
-        ofs->write(page.buffer()->get_text());
-        page.buffer()->set_modified(false);
-        return true;
+		if( ofs->set_encoding(page.coder())==Glib::IO_STATUS_NORMAL ) {
+			ofs->write(page.buffer()->get_text());
+			page.buffer()->set_modified(false);
+			return true;
+		}
+
     } catch(Glib::FileError error) {
     }
 
@@ -456,6 +465,8 @@ void DocManagerImpl::on_page_removed(Gtk::Widget* widget, guint page_num) {
 
 void DocManagerImpl::on_option_changed(const std::string& id, const std::string& value, const std::string& old) {
 	if( id=="editor.font" ) {
+		option_font_name_ = value;
+
 		Pango::FontDescription font_desc(value);
 
 		PageList::iterator it = pages().begin();

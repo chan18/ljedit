@@ -51,6 +51,7 @@ protected:
     bool open_page(const std::string filepath
         , const Glib::ustring& displaty_name
         , const Glib::ustring* text = 0
+        , const Glib::ustring* coder = 0
         , int line=0
 		, int line_offset=0);
     bool close_page(DocPageImpl& page);

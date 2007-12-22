@@ -20,10 +20,15 @@ public:
     virtual const Glib::ustring& filepath() const
         { return filepath_; }
 
+	virtual const Glib::ustring& coder() const
+		{ return coder_; }
+
     virtual gtksourceview::SourceView& view()
         { return source_view(); }
 
+public:
     Glib::ustring& filepath()			{ return filepath_; }
+	Glib::ustring& coder()				{ return coder_; }
 
     Gtk::Label& label()					{ return label_; }
 	Gtk::EventBox& label_event_box()	{ return label_event_box_; }
@@ -55,6 +60,7 @@ private:
 
 private:
     Glib::ustring				filepath_;
+	Glib::ustring				coder_;
     Gtk::Label&					label_;
 	Gtk::EventBox&				label_event_box_;
     gtksourceview::SourceView&	view_;

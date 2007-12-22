@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <fstream>
 #include <sstream>
+#include <set>
 
 #include <gtksourceview/gtksourcelanguage.h>
 
@@ -20,6 +21,8 @@
 #endif
 
 const size_t LJCS_MAX_PATH_SIZE = 8192;
+
+const std::string default_option_loader_charset_order = "GBK UTF-16";
 
 inline void filepath_to_abspath(std::string& filepath) {
 	if( filepath.empty() )
@@ -67,16 +70,6 @@ inline void filepath_to_abspath(std::string& filepath) {
 #endif
 }
 
-typedef std::list<std::string> TStrCoderList;
-
-
-TStrCoderList init_coders() {
-	TStrCoderList coders;
-	coders.push_back("utf-8");
-	coders.push_back("gb18030");
-	return coders;
-}
-
 LJEditorUtilsImpl::LJEditorUtilsImpl() {
 }
 
@@ -113,6 +106,21 @@ void LJEditorUtilsImpl::create(const std::string& path) {
 			//printf("%s:%s\n", glob.c_str(), lang->get_id().c_str());
 		}
 	}
+
+	// regist loader charset
+	ConfigManagerImpl& cm = ConfigManagerImpl::self();
+	cm.signal_option_changed().connect( sigc::mem_fun(this, &LJEditorUtilsImpl::on_option_changed) );
+
+	option_set_loader_charset_order(default_option_loader_charset_order);
+
+	cm.regist_option( "editor.loader.charset_order"
+		, "text"
+		, default_option_loader_charset_order
+		, "file loader charset order.\nnotice : UTF-8 and locale_charset are used by default!" );
+
+	std::string option_text;
+	if( cm.get_option_value("editor.loader.charset_order", option_text) )
+		option_set_loader_charset_order(option_text);
 }
 
 gtksourceview::SourceView* LJEditorUtilsImpl::create_gtk_source_view() {
@@ -147,9 +155,10 @@ void LJEditorUtilsImpl::format_filekey(std::string& filename) {
 	filepath_to_abspath(filename);
 }
 
-bool LJEditorUtilsImpl::do_load_file(Glib::ustring& out, const std::string& filename) {
+bool LJEditorUtilsImpl::do_load_file(Glib::ustring& contents_out, Glib::ustring& charset_out, const std::string& filename) {
 	Glib::ustring buf;
-	Glib::ustring ubuf;
+
+	std::set<std::string>	used_charsets;
 
 	try {
 		buf = Glib::file_get_contents(filename);
@@ -158,32 +167,59 @@ bool LJEditorUtilsImpl::do_load_file(Glib::ustring& out, const std::string& file
 		return false;
 	}
 
-	if( ::g_utf8_validate(buf.c_str(), (gssize)buf.size(), 0) ) {
-		ubuf = buf;
-
-	} else {
-		try {
-			ubuf = Glib::locale_to_utf8(buf);
-
-		} catch(const Glib::ConvertError&) {
-			static TStrCoderList coders = init_coders();
-
-			TStrCoderList::const_iterator it = coders.begin();
-			TStrCoderList::const_iterator end = coders.end();
-			for( ; it!=end; ++it ) {
-				try {
-					ubuf = Glib::convert(buf, "utf-8", *it);
-					break;
-				} catch(const Glib::ConvertError&) {
-				}
-			}
-
-			if( it==end )
-				return false;
-		}
+	if( buf.validate() ) {
+		contents_out.swap(buf);
+		charset_out = "UTF-8";
+		return true;
 	}
 
-	out.swap(ubuf);
-	return true;
+	used_charsets.insert("UTF-8");
+
+	std::string locale_charset;
+	if( !Glib::get_charset(locale_charset) )	// get locale charset, and not UTF-8
+	{
+		try {
+			contents_out = Glib::locale_to_utf8(buf);
+			charset_out = locale_charset;
+			return true;
+
+		} catch(const Glib::ConvertError&) {
+		}
+
+		used_charsets.insert(locale_charset);
+	}
+
+	std::vector<std::string>::const_iterator it = option_loader_charset_order_.begin();
+	std::vector<std::string>::const_iterator end = option_loader_charset_order_.end();
+	for( ; it!=end; ++it ) {
+		if( used_charsets.find(*it)!=used_charsets.end() )
+			continue;
+
+		try {
+			contents_out = Glib::convert(buf, "UTF-8", *it);
+			charset_out = *it;
+			return true;
+
+		} catch(const Glib::ConvertError&) {
+		}
+
+		used_charsets.insert(*it);
+	}
+
+	return false;
+}
+
+void LJEditorUtilsImpl::option_set_loader_charset_order(const std::string& option_text) {
+	option_loader_charset_order_.clear();
+
+	std::istringstream iss(option_text);
+	std::string charset;
+	while( iss >> std::ws >> charset )
+		option_loader_charset_order_.push_back(charset);
+}
+
+void LJEditorUtilsImpl::on_option_changed(const std::string& id, const std::string& value, const std::string& old) {
+	if( id=="editor.loader.charset_order" )
+		option_set_loader_charset_order(value);
 }
 

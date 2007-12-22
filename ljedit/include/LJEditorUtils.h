@@ -25,15 +25,15 @@ public:
 	}
 
 	// file loader
-	bool load_file(Glib::ustring& out, const std::string& filename)
-		{ return do_load_file(out, filename); }
+	bool load_file(Glib::ustring& contents_out, Glib::ustring& charset_out, const std::string& filename)
+		{ return do_load_file(contents_out, charset_out, filename); }
 
 	// filekey is unique filename in ljedit
 	// 
 	virtual void format_filekey(std::string& filename) = 0;
 
 private:
-	virtual bool do_load_file(Glib::ustring& out, const std::string& filename) = 0;
+	virtual bool do_load_file(Glib::ustring& contents_out, Glib::ustring& charset_out, const std::string& filename) = 0;
 };
 
 #endif//LJED_INC_LJEDITORUTILS_H

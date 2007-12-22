@@ -41,7 +41,7 @@ LJCSPluginImpl::LJCSPluginImpl(LJEditor& editor)
 
 void LJCSPluginImpl::option_set_include_path(const std::string& option_text) {
 	StrVector paths;
-			
+
 	std::istringstream iss(option_text);
 	std::string line;
 	while( std::getline(iss, line) ) {

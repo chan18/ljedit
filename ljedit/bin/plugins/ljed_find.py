@@ -91,11 +91,11 @@ class FindWindow:
 		ui_manager.ensure_update()
 		
 		# on active
-		self.switch_id = ljedit.main_window.bottom_panel.connect('switch_page', self.on_switch_page)
+		self.__ljedit_active_id = self.panel.connect('focus_in_event', lambda *args : self.find_text_entry.grab_focus())
 		self.find_text_entry.get_child().connect('key_press_event', self.on_FindText_key_press)
 		
 	def free(self):
-		ljedit.main_window.bottom_panel.disconnect(self.switch_id)
+		self.panel.disconnect(self.__ljedit_active_id)
 		ljedit.main_window.ui_manager.remove_ui(self.menu_id)
 		
 	def set_results(self, results):
@@ -151,10 +151,6 @@ class FindWindow:
 					pass
 			
 		self.set_results(results)
-		
-	def on_switch_page(self, notebook, page, page_num):
-		if page_num==self.page_num:
-			gobject.idle_add(self.find_text_entry.grab_focus)
 		
 	def on_FindPanel_activate(self, action):
 		ljedit.main_window.bottom_panel.set_current_page(find_window.page_num)

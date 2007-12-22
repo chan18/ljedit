@@ -6,6 +6,9 @@
 
 #include "LJEditorUtils.h"
 
+#include <vector>
+#include <map>
+
 class LJEditorUtilsImpl : public LJEditorUtils {
 public:
     static LJEditorUtilsImpl& self() {
@@ -30,11 +33,17 @@ private:
     LJEditorUtilsImpl(const LJEditorUtilsImpl&);
     LJEditorUtilsImpl& operator = (const LJEditorUtilsImpl&);
 
+	void on_option_changed(const std::string& id, const std::string& value, const std::string& old);
+
+	void option_set_loader_charset_order(const std::string& option_text);
+
 private:
-	virtual bool do_load_file(Glib::ustring& out, const std::string& filename);
+	virtual bool do_load_file(Glib::ustring& contents_out, Glib::ustring& charset_out, const std::string& filename);
 
 private:
 	std::map<Glib::ustring, Glib::ustring>	language_map_;
+
+	std::vector<std::string>				option_loader_charset_order_;
 };
 
 #endif//LJED_INC_LJEDITORUTILSIMPL_H

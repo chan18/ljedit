@@ -133,7 +133,8 @@ void PreviewPage::do_preview_impl(size_t index) {
 			last_preview_file_ = &(elem->file);
 
 			Glib::ustring text;
-			if( editor_.utils().load_file(text, elem->file.filename) ) {
+			Glib::ustring coder;
+			if( editor_.utils().load_file(text, coder, elem->file.filename) ) {
 				buffer->set_text(text);
 			}
         }

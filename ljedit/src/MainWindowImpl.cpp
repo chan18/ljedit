@@ -237,5 +237,24 @@ void MainWindowImpl::on_help_about() {
 
 void MainWindowImpl::bottom_panel_active_page(int page_id) {
 	bottom_panel_.set_current_page(page_id);
+
+	Gtk::Widget* w = bottom_panel_.get_nth_page(page_id);
+	if( w != NULL )
+	{
+		// send focus_in_event, so bottom-panel plugins can use this event
+		// 
+
+		GdkEvent* fevent = ::gdk_event_new(GDK_FOCUS_CHANGE);
+		if( fevent==0 )
+			return;
+
+		fevent->focus_change.type = GDK_FOCUS_CHANGE;
+		fevent->focus_change.window = (GdkWindow*)g_object_ref(w->get_window()->gobj());
+		fevent->focus_change.in = 1;
+
+		w->event(fevent);
+
+		gdk_event_free(fevent);
+	}
 }
 

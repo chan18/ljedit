@@ -21,6 +21,8 @@ public:
     Glib::RefPtr<gtksourceview::SourceBuffer> buffer()
         { return view().get_source_buffer(); }
 
+	virtual const Glib::ustring& coder() const = 0;
+
     virtual gtksourceview::SourceView& view() = 0;
 };
 
