@@ -164,7 +164,7 @@ void MainWindowImpl::create_ui_manager(/*const std::string& config_file*/) {
 	//
 	Glib::ustring languages_ui_string;
 
-	action_group_->add( ToolMenuButtonAction::create("SourceLanguages", Gtk::Stock::INDEX, "Language", "select source language"), sigc::bind(sigc::mem_fun(this, &MainWindowImpl::bottom_panel_active_page), 12) );
+	action_group_->add( ToolMenuButtonAction::create("SourceLanguages", Gtk::Stock::INDEX, "Language", "select source language"), sigc::bind(sigc::mem_fun(this, &MainWindowImpl::on_tool_languages), "cpp") );
 	{
 		Glib::RefPtr<gtksourceview::SourceLanguageManager> mgr = gtksourceview::SourceLanguageManager::get_default();
 
@@ -401,10 +401,6 @@ void MainWindowImpl::on_help_about() {
 }
 
 void MainWindowImpl::bottom_panel_active_page(int page_id) {
-	if( page_id > 9 ) {
-		page_id += 1;
-	}
-
 	bottom_panel_.set_current_page(page_id);
 
 	Gtk::Widget* w = bottom_panel_.get_nth_page(page_id);
