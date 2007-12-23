@@ -33,7 +33,7 @@ public:
     virtual Gtk::Statusbar&					status_bar()	{ return status_bar_;   }
 
 private:
-    void create_ui_manager(const std::string& config_file);
+    void create_ui_manager(/*const std::string& config_file*/);
 
 private:
 	bool on_delete_event(GdkEventAny* event);
@@ -47,6 +47,8 @@ private:
 	void on_view_left();
 	void on_view_right();
 	void on_view_bottom();
+
+	void on_tool_languages(Glib::ustring id);
 
     void on_help_about();
 

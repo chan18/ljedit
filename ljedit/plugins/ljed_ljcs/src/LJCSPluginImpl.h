@@ -68,6 +68,7 @@ private:
     bool on_button_release_event(GdkEventButton* event, DocPage* page);
     bool on_motion_notify_event(GdkEventMotion* event, DocPage* page);
     bool on_focus_out_event(GdkEventFocus* event, DocPage* page);
+	bool on_scroll_event(GdkEventScroll* event, DocPage* page);
 
 	void on_modified_changed(DocPage* page);
 

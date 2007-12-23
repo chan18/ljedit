@@ -81,6 +81,7 @@ void LJCSPluginImpl::active_page(DocPage& page) {
     cons.push_back( view.signal_button_release_event().connect(	sigc::bind( sigc::mem_fun(this, &LJCSPluginImpl::on_button_release_event),	&page ), false ) );
     cons.push_back( view.signal_motion_notify_event().connect(	sigc::bind( sigc::mem_fun(this, &LJCSPluginImpl::on_motion_notify_event),	&page )		   ) );
     cons.push_back( view.signal_focus_out_event().connect(		sigc::bind( sigc::mem_fun(this, &LJCSPluginImpl::on_focus_out_event),		&page )		   ) );
+    cons.push_back( view.signal_scroll_event().connect(			sigc::bind( sigc::mem_fun(this, &LJCSPluginImpl::on_scroll_event),			&page )		   ) );
 
     cons.push_back( view.get_buffer()->signal_modified_changed().connect( sigc::bind( sigc::mem_fun(this, &LJCSPluginImpl::on_modified_changed), &page ) ) );
 
@@ -795,6 +796,11 @@ bool LJCSPluginImpl::on_motion_notify_event(GdkEventMotion* event, DocPage* page
 bool LJCSPluginImpl::on_focus_out_event(GdkEventFocus* event, DocPage* page) {
     tip_.hide_all_tip();
     return true;
+}
+
+bool LJCSPluginImpl::on_scroll_event(GdkEventScroll* event, DocPage* page) {
+    tip_.hide_all_tip();
+    return false;
 }
 
 void LJCSPluginImpl::on_modified_changed(DocPage* page) {

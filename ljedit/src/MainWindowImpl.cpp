@@ -8,6 +8,27 @@
 #include "RuntimeException.h"
 #include "LJEditorUtilsImpl.h"
 
+#include <sstream>
+
+
+class ToolMenuButtonAction : public Gtk::Action {
+protected:
+	ToolMenuButtonAction() {}
+
+	explicit ToolMenuButtonAction(const Glib::ustring& name, const Gtk::StockID& stock_id, const Glib::ustring& label = Glib::ustring(), const Glib::ustring& tooltip = Glib::ustring())
+		: Gtk::Action(name, stock_id, label, tooltip) {}
+
+public:
+	static Glib::RefPtr<Action> create(const Glib::ustring& name, const Gtk::StockID& stock_id, const Glib::ustring& label =  Glib::ustring(), const Glib::ustring& tooltip =  Glib::ustring()) {
+		ToolMenuButtonAction* action = new ToolMenuButtonAction(name, stock_id, label, tooltip);
+		return Glib::RefPtr<Action>(action);
+	}
+
+protected: 
+	virtual Gtk::Widget* create_tool_item_vfunc()
+		{ return new Gtk::MenuToolButton(); }
+};
+
 
 MainWindowImpl::MainWindowImpl()
 	: doc_manager_(*this)
@@ -24,7 +45,7 @@ void MainWindowImpl::create(const std::string& path) {
     add(*vbox);
 
     // create main-ui
-    create_ui_manager(path + "/conf/menu.xml");
+    create_ui_manager(/*path + "/conf/menu.xml"*/);
 
     // menubar
     Gtk::Widget* menubar = ui_manager_->get_widget("/MenuBar");
@@ -88,7 +109,7 @@ void MainWindowImpl::create(const std::string& path) {
 	show_all_children();
 }
 
-void MainWindowImpl::create_ui_manager(const std::string& config_file) {
+void MainWindowImpl::create_ui_manager(/*const std::string& config_file*/) {
     action_group_ = Gtk::ActionGroup::create("LJEditActions");
 
 	// main menu
@@ -122,7 +143,7 @@ void MainWindowImpl::create_ui_manager(const std::string& config_file) {
 	action_group_->add( Gtk::ToggleAction::create("BottomPanel", Gtk::Stock::INFO, "BottomPanel", "Show/Hide bottom panel",  true),	                            sigc::mem_fun(this, &MainWindowImpl::on_view_bottom) );
 
 	//action_group_->add( Gtk::Action::create("NextDocPage", "_Next Document"), Gtk::AccelKey("<control>Tab"), sigc::bind(sigc::mem_fun(this, &MainWindowImpl::bottom_panel_active_page), 2) );
-	action_group_->add( Gtk::Action::create("BottomPages", "Bottom Pages") );
+	action_group_->add( Gtk::Action::create("BottomPages", Gtk::Stock::INDEX, "Bottom Pages") );
 	{
 		// view menu / bottom pages
 		action_group_->add( Gtk::Action::create("BottomPage1", "bottom page _1"), Gtk::AccelKey("<control>1"), sigc::bind(sigc::mem_fun(this, &MainWindowImpl::bottom_panel_active_page), 0) );
@@ -138,14 +159,150 @@ void MainWindowImpl::create_ui_manager(const std::string& config_file) {
 	}
 
 	// tools menu
-	//action_group_->add( Gtk::Action::create("Font",    "_Font",       "Font"),    sigc::mem_fun(this, &MainWindowImpl::on_tools_font) );
-	//action_group_->add( Gtk::Action::create("Options", "_Options...", "Options"), sigc::mem_fun(this, &MainWindowImpl::on_tools_options) );
+
+	// tools menu - language select menu
+	//
+	Glib::ustring languages_ui_string;
+
+	action_group_->add( ToolMenuButtonAction::create("SourceLanguages", Gtk::Stock::INDEX, "Language", "select source language"), sigc::bind(sigc::mem_fun(this, &MainWindowImpl::bottom_panel_active_page), 12) );
+	{
+		Glib::RefPtr<gtksourceview::SourceLanguageManager> mgr = gtksourceview::SourceLanguageManager::get_default();
+
+		Gtk::RadioAction::Group languages_group;
+
+		std::ostringstream oss;
+		Glib::StringArrayHandle ids = mgr->get_language_ids();
+		Glib::StringArrayHandle::iterator it = ids.begin();
+		Glib::StringArrayHandle::iterator end = ids.end();
+		for( ; it!=end; ++it ) {
+			oss << "<menuitem action='" << (std::string)*it << "'/>"; // << std::flush;
+			
+			action_group_->add( Gtk::RadioAction::create(languages_group, *it, *it), sigc::bind(sigc::mem_fun(this, &MainWindowImpl::on_tool_languages), *it) );
+		}
+
+		languages_ui_string = oss.str();
+	}
 
 	// help menu
     action_group_->add( Gtk::Action::create("About", Gtk::Stock::ABOUT, "About", "About"), sigc::mem_fun(this, &MainWindowImpl::on_help_about) );
 
+	// ---------------------------------------------------
+	// create UI
+
+	Glib::ustring ui_string;
+	{
+		std::ostringstream oss;
+		oss <<
+			"<ui>"
+				"<menubar name='MenuBar'>"
+					"<menu action='FileMenu'>"
+						"<menuitem action='New'/>"
+						"<menuitem action='Open'/>"
+						"<menuitem action='Save'/>"
+						"<menuitem action='SaveAs'/>"
+						"<menuitem action='Close'/>"
+						"<separator/>"
+						"<menuitem action='Quit'/>"
+					"</menu>"
+
+					"<menu action='EditMenu'>"
+						/*
+						"<menuitem action='Undo'/>"
+						"<menuitem action='Redo'/>"
+						"<separator/>"
+						"<menuitem action='Cut'/>"
+						"<menuitem action='Copy'/>"
+						"<separator/>"
+						*/
+						"<menuitem action='CmdLineFind'/>"
+						"<menuitem action='CmdLineGoto'/>"
+						"<separator/>"
+						"<menuitem action='GoBack'/>"
+						"<menuitem action='GoForward'/>"
+						"<separator/>"
+					"</menu>"
+
+					"<menu action='ViewMenu'>"
+						"<menuitem action='FullScreen'/>"
+						"<separator/>"
+						"<menuitem action='LeftPanel'/>"
+						"<menuitem action='RightPanel'/>"
+						"<menuitem action='BottomPanel'/>"
+						/*
+						"<separator/>"
+						"<menuitem action='NextDocPage'/>"
+						*/
+						"<separator/>"
+						"<menu action='BottomPages'>"
+							"<menuitem action='BottomPage1'/>"
+							"<menuitem action='BottomPage2'/>"
+							"<menuitem action='BottomPage3'/>"
+							"<menuitem action='BottomPage4'/>"
+							"<menuitem action='BottomPage5'/>"
+							"<menuitem action='BottomPage6'/>"
+							"<menuitem action='BottomPage7'/>"
+							"<menuitem action='BottomPage8'/>"
+							"<menuitem action='BottomPage9'/>"
+							"<menuitem action='BottomPage0'/>"
+						"</menu>"
+					"</menu>"
+
+					"<menu action='ToolsMenu'>"
+						"<menu action='SourceLanguages'>"
+
+			<<				languages_ui_string
+							/*
+							"<menuitem action='c'/>"
+							"<menuitem action='c++'/>"
+							"<menuitem action='python'/>"
+							*/
+			<<
+						"</menu>"
+					"</menu>"
+
+					"<menu action='PluginsMenu'>"
+					"</menu>"
+
+					"<menu action='HelpMenu'>"
+						"<menuitem action='About'/>"
+					"</menu>"
+
+				"</menubar>"
+
+				"<toolbar name='ToolBar'>"
+					"<toolitem action='Open'/>"
+					"<toolitem action='Quit'/>"
+					"<separator/>"
+					"<toolitem action='GoBack'/>"
+					"<toolitem action='GoForward'/>"
+					"<separator/>"
+					"<toolitem action='SourceLanguages'>"
+						"<menu action='SourceLanguages'>"
+
+			<<				languages_ui_string
+							/*
+							"<menuitem action='c'/>"
+							"<menuitem action='c++'/>"
+							"<menuitem action='python'/>"
+							*/
+
+			<< 
+						"</menu>"
+					"</toolitem>"
+					/*
+					"<separator/>"
+					"<toolitem action='LeftPanel'/>"
+					"<toolitem action='RightPanel'/>"
+					"<toolitem action='BottomPanel'/>"
+					*/
+				"</toolbar>"
+			"</ui>";
+
+			ui_string = oss.str();
+	}
+
 	ui_manager_ = Gtk::UIManager::create();
-    ui_manager_->add_ui_from_file(config_file);
+	ui_manager_->add_ui_from_string(ui_string);
     ui_manager_->insert_action_group(action_group_);
     add_accel_group( ui_manager_->get_accel_group() );
 
@@ -227,6 +384,14 @@ void MainWindowImpl::on_view_bottom() {
 		bottom_panel_.show();
 }
 
+void MainWindowImpl::on_tool_languages(Glib::ustring id) {
+	DocPageImpl* page = doc_manager_.get_current_doc_page();
+	if( page != 0 ) {
+		Glib::RefPtr<gtksourceview::SourceLanguageManager> mgr = gtksourceview::SourceLanguageManager::get_default();
+		page->source_buffer()->set_language(mgr->get_language(id));
+	}
+}
+
 void MainWindowImpl::on_help_about() {
 	const char* info = "welcome to use ljedit!\n"
 		"\n"
@@ -236,11 +401,14 @@ void MainWindowImpl::on_help_about() {
 }
 
 void MainWindowImpl::bottom_panel_active_page(int page_id) {
+	if( page_id > 9 ) {
+		page_id += 1;
+	}
+
 	bottom_panel_.set_current_page(page_id);
 
 	Gtk::Widget* w = bottom_panel_.get_nth_page(page_id);
-	if( w != NULL )
-	{
+	if( w != NULL ) {
 		// send focus_in_event, so bottom-panel plugins can use this event
 		// 
 
