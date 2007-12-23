@@ -184,6 +184,7 @@ try:
 
 		bottom = ljedit.main_window.bottom_panel
 		terminal.page_id = bottom.append_page(terminal, gtk.Label('Terminal'))
+		terminal.__ljedit_active_id = terminal.connect('focus_in_event', lambda *args : terminal._vte.grab_focus())
 
 	def deactive():
 		bottom = ljedit.main_window.bottom_panel

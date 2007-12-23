@@ -20,14 +20,14 @@ rm -rf .build/usr/.svn
 rm -rf .build/usr/share/.svn
 rm -rf .build/usr/share/applications/.svn
 rm -rf .build/usr/share/ljedit/.svn
-rm -rf .build/usr/share/ljedit/conf/.svn
+rm -rf .build/usr/share/ljedit/styles/.svn
 rm -rf .build/usr/share/ljedit/plugins/.svn
 
 rm -rf .build/usr/share/ljedit/*.pyc
 rm -rf .build/usr/share/plugins/*.pyc
 
 cd .build
-dpkg -b . ../ljedit-1.0.0.deb
+dpkg -b . ../ljedit-1.0-`date +%F`.deb
 
 cd ..
 rm -rf .build
