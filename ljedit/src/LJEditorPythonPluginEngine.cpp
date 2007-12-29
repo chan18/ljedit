@@ -311,6 +311,7 @@ public:
 			PyErr_Clear();
 		}
 		Py_XDECREF(py_result);
+		Py_XDECREF(py_impl_);
 	}
 
 private:
