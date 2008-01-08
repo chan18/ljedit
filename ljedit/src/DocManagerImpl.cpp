@@ -146,6 +146,18 @@ void DocManagerImpl::show_open_dialog() {
     dlg.set_default(*default_button);
 
     dlg.set_select_multiple();
+    
+	DocPageImpl* current_page = get_current_doc_page();
+	if( current_page )
+	{
+	    Glib::ustring folder = current_page->filepath();
+	    if( !folder.empty() )
+	    {
+	    	folder = Glib::path_get_dirname(folder);
+			dlg.set_current_folder(folder);
+		}
+    }
+
     if( dlg.run()!=Gtk::RESPONSE_OK )
         return;
 
@@ -282,6 +294,13 @@ bool DocManagerImpl::save_page(DocPageImpl& page, bool is_save_as) {
         dlg.add_button(Gtk::Stock::SAVE_AS, Gtk::RESPONSE_OK);
         dlg.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
         dlg.set_default(*default_button);
+
+		if( !filepath.empty() )
+		{
+	    	Glib::ustring folder = Glib::path_get_dirname(filepath);
+			dlg.set_current_folder(folder);
+		}
+
         if( dlg.run()!=Gtk::RESPONSE_OK )
             return true;
         filepath = dlg.get_filename();
