@@ -5,25 +5,18 @@
 
 #include "LJEditorPythonPluginEngine.h"
 
-// 
+#ifdef WIN32
+	#ifdef _DEBUG
+		#undef _DEBUG
+		#include <Python.h>
+		#define _DEBUG
+	#else
+		#include <Python.h>
+	#endif
+#else
+	#include <Python.h>
+#endif
 
-// !!! compile on win32 DEBUG need : modify pyconfig.h
-// 
-// !!! use python25_d.lib/dll can not use pygobject
-// 
-// 1. find 
-//        #pragma comment(lib,"python25_d.lib")
-//    replace with
-//        #pragma comment(lib,"python25.lib")
-// 
-// 2. find
-//        #ifdef _DEBUG
-//        #	define Py_DEBUG
-//        #endif
-//    remove it
-// 
-
-#include <Python.h>
 #include <pygobject.h>
 #include <pygtk/pygtk.h>
 

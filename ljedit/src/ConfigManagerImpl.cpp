@@ -6,7 +6,17 @@
 #include "ConfigManagerImpl.h"
 #include "RuntimeException.h"
 
-#include <Python.h>
+#ifdef WIN32
+	#ifdef _DEBUG
+		#undef _DEBUG
+		#include <Python.h>
+		#define _DEBUG
+	#else
+		#include <Python.h>
+	#endif
+#else
+	#include <Python.h>
+#endif
 
 struct PythonImpl {
 	PyObject* module;

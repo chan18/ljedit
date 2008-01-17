@@ -2,8 +2,14 @@
 // 
 
 #include <Windows.h>
-#include <Python.h>
 
+#ifdef _DEBUG
+	#undef _DEBUG
+	#include <Python.h>
+	#define _DEBUG
+#else
+	#include <Python.h>
+#endif
 
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd ) {
 	::Py_Initialize();

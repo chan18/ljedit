@@ -25,10 +25,12 @@ class GdbPanel(gtk.HBox, gdbmi.Driver):
 
 		vbox = gtk.VBox()
 		append_button(vbox, 'setup',    lambda *args : self.on_setup())
-		append_button(vbox, 'start',    lambda *args : self.on_start())
+		append_button(vbox, 'prepare',  lambda *args : self.prepare())
+		append_button(vbox, 'start',    lambda *args : self.start())
 		append_button(vbox, 'next',     lambda *args : self.call('-exec-next'))
 		append_button(vbox, 'step',     lambda *args : self.call('-exec-step'))
 		append_button(vbox, 'continue', lambda *args : self.call('-exec-continue'))
+		append_button(vbox, 'run',      lambda *args : self.run())
 		append_button(vbox, 'stop',     lambda *args : self.stop())
 
 		self.cmd_entry = gtk.Entry()
@@ -112,14 +114,6 @@ class GdbPanel(gtk.HBox, gdbmi.Driver):
 			if len(text) > 0:
 				self.working_directory = text
 		dlg.destroy()
-
-	def on_start(self):
-		self.buf.set_text('')
-		try:
-			self.start()
-			self.output_text('DEBUG : fetch child pid succeed! pid = %s\n\n' % self.child_pid)
-		except Exception, e:
-			self.output_text('ERROR : %s\n' % e)
 
 	def on_dispatch_timer(self):
 		try:

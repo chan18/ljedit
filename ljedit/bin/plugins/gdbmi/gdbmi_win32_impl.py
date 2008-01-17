@@ -52,7 +52,8 @@ class AsyncPopen(subprocess.Popen):
 
 from gdbmi_protocol import parse_output, dump_output
 
-re_pid = re.compile('Using the running image of child thread (\d+)\.')
+re_pid = re.compile('''Using the running image of child thread (\d+)\.''')
+re_debugevents_pid = re.compile('''gdb: kernel event for pid=(\d+) tid=\d+ code=CREATE_PROCESS_DEBUG_EVENT''')
 
 DEFAULT_TIMEOUT = 5.0
 
@@ -90,11 +91,17 @@ class BaseDriver:
 
 	def __recv(self):
 		buf = self.pipe.async_recv_stdout()
-		
+
 		if len(buf) > 0:
 			self.__recv_buf += buf
-			#print self.__recv_buf
 			
+			# use "set debugevents on" then start/run find child_pid
+			# 
+			if self.child_pid==None:
+				r = re_debugevents_pid.search(self.__recv_buf)
+				if r:
+					self.child_pid = int(r.group(1))
+
 			while True:
 				pos = self.__recv_buf.find('(gdb) \r\n')
 				if pos < 0:
@@ -148,7 +155,8 @@ class BaseDriver:
 				return output
 
 	def __fetch_child_pid(self):
-		# get child pid
+		# use "info program" find child pid
+		# 
 		out_of_band_records, result_record = self.__call('info program')
 		for s in out_of_band_records:
 			if s[1]!='~':			# console output
@@ -157,7 +165,7 @@ class BaseDriver:
 			if r:
 				return int(r.group(1))
 
-	def start(self):
+	def prepare(self):
 		if self.pipe:
 			self.stop()
 
@@ -187,16 +195,23 @@ class BaseDriver:
 
 		self.__recv_output()					# ignore first (gdb) prompt
 		self.__call('-gdb-set new-console on')	# ignore return value
+		self.__call('-gdb-set debugevents on')	# ignore return value, use debug events
 		#self.set_breakpoints()					# set breakpoints
+
+	def start(self):
 		self.__call('start')					# break at main, ignore return value
-		pid = self.__fetch_child_pid()			# fetch child pid
-		if pid==None:
-			raise Exception('Not find child pid!')
-		self.child_pid = pid
+		if self.child_pid==None:
+			pid = self.__fetch_child_pid()			# fetch child pid
+			if pid==None:
+				raise Exception('Not find child pid!')
+			self.child_pid = pid
+		else:
+			#print 'debug events way find child pid :', self.child_pid
+			pass
 
 	def run(self):
-		self.start()
-		self.__call('-exec-continue')
+		r = self.__call('-exec-run')				# break at main, ignore return value
+		print 'run...', self.status, r
 
 	def stop(self):
 		if self.child_pid==None:
