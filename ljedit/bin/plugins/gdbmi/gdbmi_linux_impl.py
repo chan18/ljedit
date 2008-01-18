@@ -1,56 +1,14 @@
-﻿# gdbmi_win32_impl.py
+﻿# gdbmi_linux_impl.py
 # 
 import os, sys, subprocess, time, re
-import ctypes, msvcrt
+
+import select
 
 ASYNC_READ_BUFFER_SIZE = 4096
 
-PIPE = subprocess.PIPE
-
-class AsyncPopen(subprocess.Popen):
-	def __init__(self, *args, **kargs):
-		subprocess.Popen.__init__(self, *args, **kargs)
-		
-		# for __async_recv
-		self.__async_s = ctypes.create_string_buffer(ASYNC_READ_BUFFER_SIZE)
-		self.__async_n = ctypes.c_uint32(0)	# keep zero
-		self.__async_r = ctypes.c_uint32(0)
-		self.__async_a = ctypes.c_uint32(0)
-		self.__async_m = ctypes.c_uint32(0)
-		self.__async_peek = ctypes.windll.kernel32.PeekNamedPipe
-		self.__async_read = ctypes.windll.kernel32.ReadFile
-		
-	def async_recv_stdout(self):
-		return self.__async_recv(self.stdout)
-		
-	def async_recv_stderr(self):
-		return self.__async_recv(self.stderr)
-		
-	def __async_recv(self, pipe):
-		ret = ''
-		handle = msvcrt.get_osfhandle(pipe.fileno())
-		hr = self.__async_peek( handle
-			, self.__async_s
-			, self.__async_n
-			, ctypes.byref(self.__async_r)
-			, ctypes.byref(self.__async_a)
-			, ctypes.byref(self.__async_m) )
-		if hr and self.__async_a.value > 0:
-			if self.__async_a.value > ASYNC_READ_BUFFER_SIZE:
-				self.__async_a.value = ASYNC_READ_BUFFER_SIZE
-			#print self.__async_a.value
-			
-			if self.__async_read(handle, self.__async_s, self.__async_a, ctypes.byref(self.__async_m), 0):
-				ret = self.__async_s.value[:self.__async_a.value]
-				#assert self.__async_m.value==self.__async_a.value
-				#print self.__async_m
-				#print self.__async_s
-		return ret
-
 from gdbmi_protocol import parse_output, dump_output
 
-re_pid = re.compile('''Using the running image of child thread (\d+)\.''')
-re_debugevents_pid = re.compile('''gdb: kernel event for pid=(\d+) tid=\d+ code=CREATE_PROCESS_DEBUG_EVENT''')
+re_pid = re.compile('''Using the running image of child process (\d+)\.''')
 
 DEFAULT_TIMEOUT = 5.0
 
@@ -61,19 +19,16 @@ class BaseDriver:
 		self.working_directory = working_directory
 		self.timeout = timeout
 		self.pipe = None
+		self.console = None
 
 	def __kill_child(self):
 		ts = time.time()
-		#CTRL_C_EVENT = 0
-		#ctypes.windll.kernel32.GenerateConsoleCtrlEvent(CTRL_C_EVENT, self.child_pid)
-		#handle = int(self.pipe._handle)
-		#windll.kernel32.DebugBreakProcess(handle)
 
-		PROCESS_TERMINATE = 1
-		handle = ctypes.windll.kernel32.OpenProcess(PROCESS_TERMINATE, False, self.child_pid)
-		ctypes.windll.kernel32.TerminateProcess(handle, -1)
-		ctypes.windll.kernel32.CloseHandle(handle)
-		
+		try:
+			os.kill(self.child_pid, 9)
+		except Exception:
+			pass
+
 		while self.status=='running' and (time.time() - ts) < self.timeout:
 			time.sleep(0.1)
 			self.__recv()
@@ -87,20 +42,19 @@ class BaseDriver:
 		self.pipe.stdin.write(cmd+'\n')
 
 	def __recv(self):
-		buf = self.pipe.async_recv_stdout()
+		buf = ''
+		fdr = [self.pipe.stdout.fileno()]
+		(r, w, e) = select.select(fdr, [], [], 0.0)
+		for fd in r:
+			print 'recv...'
+			buf = os.read(fd, ASYNC_READ_BUFFER_SIZE)
+			print 'buf...', repr(buf)
 
 		if len(buf) > 0:
 			self.__recv_buf += buf
-			
-			# use "set debugevents on" then start/run find child_pid
-			# 
-			if self.child_pid==None:
-				r = re_debugevents_pid.search(self.__recv_buf)
-				if r:
-					self.child_pid = int(r.group(1))
 
 			while True:
-				pos = self.__recv_buf.find('(gdb) \r\n')
+				pos = self.__recv_buf.find('(gdb) \n')
 				if pos < 0:
 					break
 				pos += 8
@@ -162,6 +116,47 @@ class BaseDriver:
 			if r:
 				return int(r.group(1))
 
+	def __create_debug_console(self):
+		if self.console:
+			try:
+				os.kill(self.console[0])
+			except Exception:
+				pass
+			self.console = None
+
+		pid = subprocess.Popen(['xterm', '-font', '-*-*-*-*-*-*-16-*-*-*-*-*-*-*', '-T', 'ljedit debug terminal', '-e', 'sleep 80000']).pid
+		#print pid
+		tty = None
+
+		ts = time.time()
+		while (time.time() - ts) < self.timeout:
+			time.sleep(0.5)
+			res = subprocess.Popen(['ps', 'x', '-o', 'tty,pid,command'], stdout=subprocess.PIPE).communicate()[0]
+			#print res
+	
+			for r in res.split('\n'):
+				try:
+					if 'xterm' in r:
+						continue
+				
+					if 'sleep 80000' in r:
+						#print r
+						s = r.strip().split()
+						tty = s[0]
+						break
+				except Exception:
+					pass
+
+		if tty==None:
+			try:
+				os.kill(pid, 9)
+			except Exception:
+				pass
+			raise Exception('create debug console failed!')
+
+		self.console = pid, '/dev/' + tty
+		self.__call('-inferior-tty-set %s' % self.console[1])
+
 	def prepare(self):
 		if self.pipe:
 			self.stop()
@@ -180,38 +175,39 @@ class BaseDriver:
 		if not os.path.exists(self.target):
 			raise Exception('Not find debug target file!')
 
-		#CREATE_NEW_CONSOLE = 0x00000010
-		#CREATE_NEW_PROCESS_GROUP = 0x00000200
-		#NORMAL_PRIORITY_CLASS = 0x00000020
-		#flags = CREATE_NEW_CONSOLE|CREATE_NEW_PROCESS_GROUP|NORMAL_PRIORITY_CLASS
-		self.pipe = AsyncPopen( ['gdb', '--quiet', '--interpreter', 'mi', self.target]
-			, stdin=PIPE
-			, stdout=PIPE
-			, shell=True )
-			#, creationflags=flags )
+		self.pipe = subprocess.Popen( ['gdb', '--quiet', '--interpreter', 'mi', self.target]
+			, stdin=subprocess.PIPE
+			, stdout=subprocess.PIPE )
+		self.child_pid = self.pipe.pid
+		print 'gdb pid', self.child_pid
 
 		self.__recv_output()					# ignore first (gdb) prompt
-		self.__call('-gdb-set new-console on')	# ignore return value
-		self.__call('-gdb-set debugevents on')	# ignore return value, use debug events
 		#self.set_breakpoints()					# set breakpoints
 
 	def start(self):
+		self.__create_debug_console()
 		self.__call('start')					# break at main, ignore return value
-		if self.child_pid==None:
-			pid = self.__fetch_child_pid()			# fetch child pid
-			if pid==None:
-				raise Exception('Not find child pid!')
+		pid = self.__fetch_child_pid()		# fetch child pid
+		if pid!=None:
 			self.child_pid = pid
 		else:
 			#print 'debug events way find child pid :', self.child_pid
 			pass
 
 	def run(self):
-		self.__call('-exec-run')
+		self.start()
+		self.__call('-exec-continue')
 		#r = self.__call('-exec-run')
 		#print 'run...', self.status, r
 
 	def stop(self):
+		if self.console:
+			try:
+				os.kill(self.console[0], 9)
+			except Exception:
+				pass
+			self.console = None
+			
 		if self.child_pid==None:
 			return
 
@@ -242,3 +238,4 @@ class BaseDriver:
 
 	def handle_recv(self, output, packet):
 		pass
+

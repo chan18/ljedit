@@ -117,8 +117,10 @@ class Terminal(gtk.HBox):
         self._vte.set_scroll_on_keystroke(gconf_get_bool(self.GCONF_PROFILE_DIR + "/scroll_on_keystroke",
                                                          self.defaults['scroll_on_keystroke']))
 
-        self._vte.set_scroll_on_output(gconf_get_bool(self.GCONF_PROFILE_DIR + "/scroll_on_output",
-                                                      self.defaults['scroll_on_output']))
+        #self._vte.set_scroll_on_output(gconf_get_bool(self.GCONF_PROFILE_DIR + "/scroll_on_output",
+        #                                              self.defaults['scroll_on_output']))
+
+        self._vte.set_scroll_on_output(True)
 
         self._vte.set_emulation(self.defaults['emulation'])
         self._vte.set_visible_bell(self.defaults['visible_bell'])
