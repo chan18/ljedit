@@ -47,6 +47,12 @@ class AsyncPopen(subprocess.Popen):
 				#print self.__async_s
 		return ret
 
+def terminal_process(pid):
+	PROCESS_TERMINATE = 1
+	handle = ctypes.windll.kernel32.OpenProcess(PROCESS_TERMINATE, False, pid)
+	ctypes.windll.kernel32.TerminateProcess(handle, -1)
+	ctypes.windll.kernel32.CloseHandle(handle)
+
 from gdbmi_protocol import parse_output, dump_output
 
 re_pid = re.compile('''Using the running image of child thread (\d+)\.''')
@@ -61,20 +67,13 @@ class BaseDriver:
 		self.working_directory = working_directory
 		self.timeout = timeout
 		self.pipe = None
+		self.child_pid = None
+		self.child_running = False
 
 	def __kill_child(self):
 		ts = time.time()
-		#CTRL_C_EVENT = 0
-		#ctypes.windll.kernel32.GenerateConsoleCtrlEvent(CTRL_C_EVENT, self.child_pid)
-		#handle = int(self.pipe._handle)
-		#windll.kernel32.DebugBreakProcess(handle)
-
-		PROCESS_TERMINATE = 1
-		handle = ctypes.windll.kernel32.OpenProcess(PROCESS_TERMINATE, False, self.child_pid)
-		ctypes.windll.kernel32.TerminateProcess(handle, -1)
-		ctypes.windll.kernel32.CloseHandle(handle)
-		
-		while self.status=='running' and (time.time() - ts) < self.timeout:
+		terminal_process(self.child_pid)
+		while self.child_running and (time.time() - ts) < self.timeout:
 			time.sleep(0.1)
 			self.__recv()
 
@@ -84,6 +83,7 @@ class BaseDriver:
 			self.handle_send(cmd)
 		except Exception, e:
 			print 'handle_send error :', e
+
 		self.pipe.stdin.write(cmd+'\n')
 
 	def __recv(self):
@@ -115,17 +115,20 @@ class BaseDriver:
 			output, packet = self.__recv_queue.pop(0)
 			if output[1]:
 				if output[1][1]=='running':
-					self.status = 'running'
+					self.child_running = True
 			for r in  output[0]:
 				if r[1]=='*' and r[2]=='stopped':
-					self.status = 'stopped'
+					self.child_running = False
+					try:
+						if r[3]['reason']=='exited':
+							self.child_pid = None
+					except Exception:
+						pass
 			try:
 				self.handle_recv(output, packet)
 			except Exception, e:
-				#print 'handle_recv error :', e
-				#raise
-				pass
-				
+				print 'handle_recv error :', e
+
 			return output
 
 	def __recv_output(self):
@@ -167,7 +170,7 @@ class BaseDriver:
 			self.stop()
 
 		self.pipe = None
-		self.status = 'stopped'
+		self.child_running = False
 		self.child_pid = None
 		self.__call_index = 0
 		self.__send_queue = []
@@ -180,19 +183,21 @@ class BaseDriver:
 		if not os.path.exists(self.target):
 			raise Exception('Not find debug target file!')
 
-		#CREATE_NEW_CONSOLE = 0x00000010
-		#CREATE_NEW_PROCESS_GROUP = 0x00000200
-		#NORMAL_PRIORITY_CLASS = 0x00000020
-		#flags = CREATE_NEW_CONSOLE|CREATE_NEW_PROCESS_GROUP|NORMAL_PRIORITY_CLASS
 		self.pipe = AsyncPopen( ['gdb', '--quiet', '--interpreter', 'mi', self.target]
 			, stdin=PIPE
 			, stdout=PIPE
 			, shell=True )
-			#, creationflags=flags )
 
 		self.__recv_output()					# ignore first (gdb) prompt
 		self.__call('-gdb-set new-console on')	# ignore return value
 		self.__call('-gdb-set debugevents on')	# ignore return value, use debug events
+
+		if self.args:
+			self.__call('-exec-arguments %s' % self.args)
+
+		if self.working_directory:
+			self.__call('-environment-cd %s' % self.working_directory)
+
 		#self.set_breakpoints()					# set breakpoints
 
 	def start(self):
@@ -207,29 +212,41 @@ class BaseDriver:
 			pass
 
 	def run(self):
+		if self.child_pid:
+			if self.child_running:
+				self.__kill_child()
+
+		self.child_pid = None
+		self.child_running = False
+
 		self.__call('-exec-run')
-		#r = self.__call('-exec-run')
-		#print 'run...', self.status, r
 
 	def stop(self):
-		if self.child_pid==None:
-			return
+		if self.child_pid:
+			if self.child_running:
+				self.__kill_child()
 
-		if self.status=='running':
-			self.__kill_child()
-
-		self.__send('-gdb-exit')
 		self.child_pid = None
-		self.status = 'stopped'
+		self.child_running = False
 
-		#self.pipe.wait()
-		ts = time.time()
-		while self.pipe.poll()==None and (time.time() - ts) < self.timeout:
-			time.sleep(0.1)
-		self.pipe = None
+		if self.pipe:
+			self.__send('-gdb-exit')
+
+			#self.pipe.wait()
+			ts = time.time()
+			while (time.time() - ts) < self.timeout:
+				if self.pipe.poll()==None:
+					time.sleep(0.1)
+				else:
+					self.pipe = None
+					break
+
+		if self.pipe:
+			terminal_process(self.pipe.pid)
+			self.pipe = None
 
 	def call(self, cmd):
-		if self.status=='stopped':
+		if not self.child_running:
 			return self.__call(cmd)
 
 	def dispatch(self):

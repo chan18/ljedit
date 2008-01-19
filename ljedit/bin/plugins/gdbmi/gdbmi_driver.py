@@ -269,7 +269,7 @@ class Driver(BaseDriver):
 		'''the name and type for arrays, structures and unions. In this last case, a frontend can '''\
 		'''immediately display the value of simple data types and create variable objects for other '''\
 		'''data types when the user wishes to explore their values in more detail.'''
-		return self.call('-stack-list-arguments %s' % print_values)
+		return self.call('-stack-list-locals %s' % print_values)
 
 	def stack_select_frame(self, framenum):
 		'''Change the selected frame. Select a diiferent frame framenum on the stack.'''

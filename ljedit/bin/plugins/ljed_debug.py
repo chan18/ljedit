@@ -64,15 +64,32 @@ class GdbPanel(gtk.HBox, gdbmi.Driver):
 	def handle_recv(self, output, packet):
 		self.output_text(str(packet), self.packet_tag)
 		self.output_text(gdbmi.output_to_string(output) + '\n\n', self.output_tag)
-		
-		if self.status=='stopped':
-			for ob in output[0]:
-				if ob[1]=='*' and ob[2]=='stopped':
+
+		obs, res = output
+		for ob in obs:
+			if ob[1]=='*':
+				if ob[2]=='stopped':
 					rs = ob[3]
 					if rs['reason'] in ('end-stepping-range', ''):
 						filename = rs['frame']['fullname']
 						line = int(rs['frame']['line'])
 						self.handle_debug_stopped(filename, line)
+					
+				elif ob[2]=='exited':
+					pass
+
+		if res:
+			token, result_class, results = res
+			if result_class=='done':
+				pass
+			elif result_class=='running':
+				pass
+			elif result_class=='connected':
+				pass
+			elif result_class=='error':
+				pass
+			elif result_class=='exit':
+				pass
 
 	def scroll_to_end(self):
 		iter = self.buf.get_end_iter()
