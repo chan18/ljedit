@@ -16,6 +16,7 @@ public:
 
 	virtual Gtk::Label& label() { return label_; }
 	virtual Gtk::Entry& entry() { return entry_; }
+	virtual Gtk::Label& desc()  { return desc_; }
 
 	virtual void do_active(ICallback* cb, int x, int y, void* tag);
 	virtual void do_deactive();
@@ -28,6 +29,7 @@ private:
 private:
 	Gtk::Label		label_;
 	Gtk::Entry		entry_;
+	Gtk::Label		desc_;
 
 	ICallback*		cb_;
 };

@@ -21,15 +21,16 @@ Glib::RefPtr<Gdk::Pixbuf> load_icon(const std::string& path, const std::string& 
 }
 
 void LJCSIcons::create(const std::string& plugin_path) {
-	icon_keyword   = load_icon(plugin_path, "keyword.png");
-	icon_var       = load_icon(plugin_path, "var.png");
-	icon_fun       = load_icon(plugin_path, "fun.png");
-	icon_macro     = load_icon(plugin_path, "macro.png");
-	icon_class     = load_icon(plugin_path, "class.png");
-	icon_typedef   = load_icon(plugin_path, "typedef.png");
-	icon_namespace = load_icon(plugin_path, "namespace.png");
-	icon_enum      = load_icon(plugin_path, "enum.png");
-	icon_enumitem  = load_icon(plugin_path, "enumitem.png");
+	std::string res_path = Glib::build_filename(plugin_path, "ljed_ljcs_res");
+	icon_keyword   = load_icon(res_path, "keyword.png");
+	icon_var       = load_icon(res_path, "var.png");
+	icon_fun       = load_icon(res_path, "fun.png");
+	icon_macro     = load_icon(res_path, "macro.png");
+	icon_class     = load_icon(res_path, "class.png");
+	icon_typedef   = load_icon(res_path, "typedef.png");
+	icon_namespace = load_icon(res_path, "namespace.png");
+	icon_enum      = load_icon(res_path, "enum.png");
+	icon_enumitem  = load_icon(res_path, "enumitem.png");
 }
 
 Glib::RefPtr<Gdk::Pixbuf> LJCSIcons::get_icon_from_elem(const cpp::Element& elem) {

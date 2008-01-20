@@ -34,6 +34,7 @@ MainWindowImpl::MainWindowImpl()
 	: doc_manager_(*this)
 	, cmd_cb_goto_(cmd_line_, doc_manager_)
 	, cmd_cb_find_(cmd_line_, doc_manager_)
+	, cmd_cb_replace_(cmd_line_, doc_manager_)
 {
 }
 
@@ -130,10 +131,11 @@ void MainWindowImpl::create_ui_manager(/*const std::string& config_file*/) {
     action_group_->add( Gtk::Action::create("Quit",        Gtk::Stock::QUIT,       "_Quit",       "Quit"),                                                      sigc::mem_fun(this, &MainWindowImpl::on_file_quit) );
 
 	// edit menu
-	action_group_->add( Gtk::Action::create("CmdLineFind", Gtk::Stock::FIND,       "_Find",       "Active command line control"), Gtk::AccelKey("<control>K"),  sigc::mem_fun(this, &MainWindowImpl::on_edit_find) );
-	action_group_->add( Gtk::Action::create("CmdLineGoto", Gtk::Stock::JUMP_TO,    "_Goto",       "Active mini command control"), Gtk::AccelKey("<control>I"),  sigc::mem_fun(this, &MainWindowImpl::on_edit_goto) );
-	action_group_->add( Gtk::Action::create("GoBack",      Gtk::Stock::GO_BACK,    "Go_Back",     "Go back position"),		                                    sigc::mem_fun(doc_manager_, &DocManagerImpl::pos_back) );
-	action_group_->add( Gtk::Action::create("GoForward",   Gtk::Stock::GO_FORWARD, "Go_Forward",  "Go forward position"),	                                    sigc::mem_fun(doc_manager_, &DocManagerImpl::pos_forward) );
+	action_group_->add( Gtk::Action::create("CmdLineGoto",     Gtk::Stock::JUMP_TO,    "_Goto",       "Active Goto Command Line"), Gtk::AccelKey("<control>I"),     sigc::bind(sigc::mem_fun(this, &MainWindowImpl::on_show_cmd_line), &cmd_cb_goto_) );
+	action_group_->add( Gtk::Action::create("CmdLineFind",     Gtk::Stock::FIND,       "_Find",       "Active Find Command Line"), Gtk::AccelKey("<control>K"),     sigc::bind(sigc::mem_fun(this, &MainWindowImpl::on_show_cmd_line), &cmd_cb_find_) );
+	action_group_->add( Gtk::Action::create("CmdLineReplace",  Gtk::Stock::FIND,       "_Replace",    "Active Replace Command Line"), Gtk::AccelKey("<control>H"),  sigc::bind(sigc::mem_fun(this, &MainWindowImpl::on_show_cmd_line), &cmd_cb_replace_) );
+	action_group_->add( Gtk::Action::create("GoBack",          Gtk::Stock::GO_BACK,    "Go_Back",     "Go back position"),		                                    sigc::mem_fun(doc_manager_, &DocManagerImpl::pos_back) );
+	action_group_->add( Gtk::Action::create("GoForward",       Gtk::Stock::GO_FORWARD, "Go_Forward",  "Go forward position"),	                                    sigc::mem_fun(doc_manager_, &DocManagerImpl::pos_forward) );
 
 	// view menu
 	action_group_->add( Gtk::ToggleAction::create("FullScreen",   Gtk::Stock::INFO, "FullScreen",   "Set/Unset fullscreen",  false), Gtk::AccelKey("F11"),      sigc::mem_fun(this, &MainWindowImpl::on_view_fullscreen) );
@@ -214,8 +216,9 @@ void MainWindowImpl::create_ui_manager(/*const std::string& config_file*/) {
 						"<menuitem action='Copy'/>"
 						"<separator/>"
 						*/
-						"<menuitem action='CmdLineFind'/>"
 						"<menuitem action='CmdLineGoto'/>"
+						"<menuitem action='CmdLineFind'/>"
+						"<menuitem action='CmdLineReplace'/>"
 						"<separator/>"
 						"<menuitem action='GoBack'/>"
 						"<menuitem action='GoForward'/>"
@@ -323,7 +326,7 @@ void MainWindowImpl::on_file_quit() {
 		hide();
 }
 
-void MainWindowImpl::on_edit_find() {
+void MainWindowImpl::on_show_cmd_line(CmdLine::ICallback* cb) {
 	DocPage* page = doc_manager_.get_current_document();
 	if( page==0 )
 		return;
@@ -335,22 +338,7 @@ void MainWindowImpl::on_edit_find() {
 	x -= 16;
 	y -= 16;
 
-	cmd_line_.active(&cmd_cb_find_, x, y, view);
-}
-
-void MainWindowImpl::on_edit_goto() {
-	DocPage* page = doc_manager_.get_current_document();
-	if( page==0 )
-		return;
-
-    int x = 0, y = 0;
-	gtksourceview::SourceView* view = &page->view();
-	view->get_window(Gtk::TEXT_WINDOW_TEXT)->get_origin(x, y);
-
-	x -= 16;
-	y -= 16;
-
-	cmd_line_.active(&cmd_cb_goto_, x, y, view);
+	cmd_line_.active(cb, x, y, view);
 }
 
 void MainWindowImpl::on_view_fullscreen() {

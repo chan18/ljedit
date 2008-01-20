@@ -183,6 +183,23 @@ class GdbPanel(gtk.HBox, gdbmi.Driver):
 	def handle_debug_stopped(self, filename, line):
 		self.output_text(str((filename, line)) + '\n')
 
+NOTICE = """NOTICE :
+    This plugin not finished! Just test now!
+    1. used gdb/MI, for windows and linux.
+    2. use python implements it.
+        gdbmi package at ljedit/plugins/gdbmi, it's free also
+    3. usage :
+        [setup]     -> setup debug taget, startup args and working directory
+        [prepare]   -> prepare gdb/MI environment
+                       on Windows need gdb.exe in %PATH%
+                       on Linux also need gdb
+        [start/run]	-> 'start' will call gdb 'start' command and break at main
+                    -> 'run' will call gdb'-exec-run' command
+        [stop]      -> stop debug and close gdb
+		cmdline		-> MI commands
+
+"""
+
 try:
 	class LJED_GdbPanel(GdbPanel):
 		def __init__(self, *args, **kwargs):
@@ -192,6 +209,7 @@ try:
 			ljedit.main_window.doc_manager.open_file(filename, line-1)
 
 	gdb_panel = LJED_GdbPanel()
+	gdb_panel.output_text(NOTICE)
 
 	def active():
 		gdb_panel.show_all()
@@ -210,6 +228,7 @@ except:
 
 if __name__=='__main__':
 	p = GdbPanel()
+	p.output_text(NOTICE)
 	w = gtk.Window()
 	w.connect('destroy', gtk.main_quit)
 	w.add(p)

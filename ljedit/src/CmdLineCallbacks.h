@@ -25,7 +25,7 @@ protected:
 	CmdLine&		cmd_line_;
 	DocManagerImpl& doc_mgr_;
 	DocPageImpl*	current_page_;
-	Gtk::TextIter	last_pos_;
+	int				last_pos_;
 	void*			tag_;
 };
 
@@ -43,6 +43,19 @@ class CmdFindCallback : public BaseCmdCallback {
 public:
 	CmdFindCallback(CmdLine& cmd_line, DocManagerImpl& doc_mgr)
 		: BaseCmdCallback(cmd_line, doc_mgr) {}
+
+	virtual bool on_active(void* tag);
+	virtual void on_key_changed();
+	virtual bool on_key_press(GdkEventKey* event);
+
+protected:
+	Glib::ustring	last_find_text_;
+};
+
+class CmdReplaceCallback : public CmdFindCallback {
+public:
+	CmdReplaceCallback(CmdLine& cmd_line, DocManagerImpl& doc_mgr)
+		: CmdFindCallback(cmd_line, doc_mgr) {}
 
 	virtual bool on_active(void* tag);
 	virtual void on_key_changed();

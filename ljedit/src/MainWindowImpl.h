@@ -40,8 +40,7 @@ private:
 
     void on_file_quit();
 
-	void on_edit_find();
-	void on_edit_goto();
+	void on_show_cmd_line(CmdLine::ICallback* cb);
 
 	void on_view_fullscreen();
 	void on_view_left();
@@ -72,6 +71,7 @@ private:
 private:
 	CmdGotoCallback					cmd_cb_goto_;
 	CmdFindCallback					cmd_cb_find_;
+	CmdReplaceCallback				cmd_cb_replace_;
 };
 
 #endif//LJED_INC_MAINWINDOWIMPL_H

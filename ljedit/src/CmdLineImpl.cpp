@@ -17,6 +17,8 @@ CmdLineImpl::~CmdLineImpl() {
 
 void CmdLineImpl::create(Gtk::Window& main_window) {
 	label_.set_text("cmd:");
+	desc_.set_use_markup();
+	//desc_.set_text("no desc");
 
 	entry_.signal_changed().connect( sigc::mem_fun(this, &CmdLineImpl::on_key_changed) );
 	entry_.signal_key_press_event().connect( sigc::mem_fun(this, &CmdLineImpl::on_key_press), false );
@@ -24,15 +26,19 @@ void CmdLineImpl::create(Gtk::Window& main_window) {
 	signal_button_press_event().connect( sigc::bind_return(sigc::hide(sigc::mem_fun(this, &CmdLineImpl::deactive)), false), false );
 	main_window.signal_focus_out_event().connect( sigc::bind_return(sigc::hide(sigc::mem_fun(this, &CmdLineImpl::deactive)), false), false );
 
-	Gtk::HBox* hbox = Gtk::manage(new Gtk::HBox());
-	hbox->pack_start(label_, false, false);
-	hbox->pack_start(entry_);
-	hbox->set_border_width(3);
+	Gtk::Table* table = Gtk::manage(new Gtk::Table(2, 2));
+	table->attach(label_, 0, 1, 0, 1, Gtk::FILL, Gtk::FILL);
+	table->attach(entry_, 1, 2, 0, 1);
+	table->attach(desc_, 1, 2, 1, 2);
+	table->set_border_width(3);
+	table->set_row_spacing(1, 2);
 
 	Gtk::Frame* frame = Gtk::manage(new Gtk::Frame());
 	frame->set_shadow_type(Gtk::SHADOW_ETCHED_IN);
-	frame->add(*hbox);
+	frame->add(*table);
 	frame->show_all();
+
+	desc_.hide();
 
 	add(*frame);
     resize(200, 24);

@@ -28,6 +28,7 @@ public:
 
 	virtual Gtk::Label& label() = 0;
 	virtual Gtk::Entry& entry() = 0;
+	virtual Gtk::Label& desc() = 0;
 
 private:
 	virtual void do_active(ICallback* cb, int x, int y, void* tag) = 0;

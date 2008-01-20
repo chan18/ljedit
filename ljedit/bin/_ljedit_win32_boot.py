@@ -22,7 +22,11 @@ def run():
 	os.environ['GTK_BASEPATH'] = gtkpath
 	os.environ['GTKMM_BASEPATH'] = gtkpath
 	os.environ['PYTHONPATH'] = pypath
-	os.environ['PATH'] = gtkbin
+
+	try:
+		os.environ['PATH'] = gtkbin + ';' + os.environ['PATH']
+	except KeyError:
+		os.environ['PATH'] = gtkbin
 
 	pipe_run('gdk-pixbuf-query-loaders.exe', os.path.join(gtkpath, 'etc\\gtk-2.0\\gdk-pixbuf.loaders'))
 	pipe_run('gtk-query-immodules-2.0.exe',  os.path.join(gtkpath, 'etc\\gtk-2.0\\gtk.immodules'))
