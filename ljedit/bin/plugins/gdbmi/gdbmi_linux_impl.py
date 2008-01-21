@@ -20,6 +20,7 @@ class BaseDriver:
 		self.timeout = timeout
 		self.pipe = None
 		self.console = None
+		self.child_running = False
 
 	def __kill_child(self):
 		ts = time.time()
@@ -29,7 +30,7 @@ class BaseDriver:
 		except Exception:
 			pass
 
-		while self.status=='running' and (time.time() - ts) < self.timeout:
+		while self.child_running and (time.time() - ts) < self.timeout:
 			time.sleep(0.1)
 			self.__recv()
 
@@ -46,9 +47,9 @@ class BaseDriver:
 		fdr = [self.pipe.stdout.fileno()]
 		(r, w, e) = select.select(fdr, [], [], 0.0)
 		for fd in r:
-			print 'recv...'
+			#print 'recv...'
 			buf = os.read(fd, ASYNC_READ_BUFFER_SIZE)
-			print 'buf...', repr(buf)
+			#print 'buf...', repr(buf)
 
 		if len(buf) > 0:
 			self.__recv_buf += buf
@@ -69,16 +70,14 @@ class BaseDriver:
 			output, packet = self.__recv_queue.pop(0)
 			if output[1]:
 				if output[1][1]=='running':
-					self.status = 'running'
+					self.child_running = True
 			for r in  output[0]:
 				if r[1]=='*' and r[2]=='stopped':
-					self.status = 'stopped'
+					self.child_running = False
 			try:
 				self.handle_recv(output, packet)
 			except Exception, e:
-				#print 'handle_recv error :', e
-				#raise
-				pass
+				print 'handle_recv error :', e
 				
 			return output
 
@@ -124,12 +123,13 @@ class BaseDriver:
 				pass
 			self.console = None
 
-		pid = subprocess.Popen(['xterm', '-font', '-*-*-*-*-*-*-16-*-*-*-*-*-*-*', '-T', 'ljedit debug terminal', '-e', 'sleep 80000']).pid
+		sleep_command_line = 'sleep %s' % (80000 + os.getpid())
+		pid = subprocess.Popen(['xterm', '-font', '-*-*-*-*-*-*-16-*-*-*-*-*-*-*', '-T', 'ljedit debug terminal', '-e', sleep_command_line]).pid
 		#print pid
 		tty = None
 
 		ts = time.time()
-		while (time.time() - ts) < self.timeout:
+		while tty==None and (time.time() - ts) < self.timeout:
 			time.sleep(0.5)
 			res = subprocess.Popen(['ps', 'x', '-o', 'tty,pid,command'], stdout=subprocess.PIPE).communicate()[0]
 			#print res
@@ -139,7 +139,7 @@ class BaseDriver:
 					if 'xterm' in r:
 						continue
 				
-					if 'sleep 80000' in r:
+					if sleep_command_line in r:
 						#print r
 						s = r.strip().split()
 						tty = s[0]
@@ -162,7 +162,7 @@ class BaseDriver:
 			self.stop()
 
 		self.pipe = None
-		self.status = 'stopped'
+		self.child_running = False
 		self.child_pid = None
 		self.__call_index = 0
 		self.__send_queue = []
@@ -208,24 +208,28 @@ class BaseDriver:
 				pass
 			self.console = None
 			
-		if self.child_pid==None:
-			return
+		if self.child_pid:
+			if self.child_running:
+				self.__kill_child()
 
-		if self.status=='running':
-			self.__kill_child()
-
-		self.__send('-gdb-exit')
 		self.child_pid = None
-		self.status = 'stopped'
+		self.child_running = False
 
-		#self.pipe.wait()
-		ts = time.time()
-		while self.pipe.poll()==None and (time.time() - ts) < self.timeout:
-			time.sleep(0.1)
-		self.pipe = None
+		if self.pipe:
+			self.__send('-gdb-exit')
+
+			#self.pipe.wait()
+			ts = time.time()
+			while (time.time() - ts) < self.timeout:
+				if self.pipe.poll()==None:
+					time.sleep(0.1)
+				else:
+					self.pipe = None
+					break
+			self.pipe = None
 
 	def call(self, cmd):
-		if self.status=='stopped':
+		if not self.child_running:
 			return self.__call(cmd)
 
 	def dispatch(self):

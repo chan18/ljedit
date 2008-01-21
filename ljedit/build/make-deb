@@ -22,9 +22,13 @@ rm -rf .build/usr/share/applications/.svn
 rm -rf .build/usr/share/ljedit/.svn
 rm -rf .build/usr/share/ljedit/styles/.svn
 rm -rf .build/usr/share/ljedit/plugins/.svn
+rm -rf .build/usr/share/ljedit/plugins/gdbmi/.svn
+rm -rf .build/usr/share/ljedit/plugins/ljedit_ljcs_res/.svn
 
+rm -rf .build/usr/share/ljedit/_ljedit_win32_boot.py
 rm -rf .build/usr/share/ljedit/*.pyc
-rm -rf .build/usr/share/plugins/*.pyc
+rm -rf .build/usr/share/ljedit/plugins/*.pyc
+rm -rf .build/usr/share/ljedit/plugins/gdbmi/*.pyc
 
 cd .build
 dpkg -b . ../ljedit-1.0-`date +%F`.deb

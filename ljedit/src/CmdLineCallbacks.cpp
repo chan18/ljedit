@@ -299,7 +299,11 @@ bool CmdReplaceCallback::on_key_press(GdkEventKey* event) {
 			buf->get_selection_bounds(start, end);
 			Glib::ustring sel = buf->get_text(start, end);
 			if( sel!=last_find_text_ )
+			{
+				cmd_line_.deactive();
+				current_page_->view().grab_focus();
 				return true;
+			}
 
 			buf->begin_user_action();
 			{
