@@ -178,10 +178,15 @@ class BaseDriver:
 		self.pipe = subprocess.Popen( ['gdb', '--quiet', '--interpreter', 'mi', self.target]
 			, stdin=subprocess.PIPE
 			, stdout=subprocess.PIPE )
-		self.child_pid = self.pipe.pid
-		print 'gdb pid', self.child_pid
 
 		self.__recv_output()					# ignore first (gdb) prompt
+
+		if self.args:
+			self.__call('-exec-arguments %s' % self.args)
+
+		if self.working_directory:
+			self.__call('-environment-cd %s' % self.working_directory)
+
 		#self.set_breakpoints()					# set breakpoints
 
 	def start(self):
@@ -191,7 +196,6 @@ class BaseDriver:
 		if pid!=None:
 			self.child_pid = pid
 		else:
-			#print 'debug events way find child pid :', self.child_pid
 			pass
 
 	def run(self):
@@ -208,8 +212,8 @@ class BaseDriver:
 				pass
 			self.console = None
 			
-		if self.child_pid:
-			if self.child_running:
+		if self.child_running:
+			if self.child_pid:
 				self.__kill_child()
 
 		self.child_pid = None

@@ -168,12 +168,13 @@ bool CmdFindCallback::on_active(void* tag) {
 		Glib::RefPtr<gtksourceview::SourceBuffer> buf = current_page_->buffer();
 
 		Gtk::TextIter ps, pe;
-		if( buf->get_selection_bounds(ps, pe) ) {
+		if( buf->get_selection_bounds(ps, pe) && ps!=pe )
 			last_find_text_ = buf->get_text(ps, pe);
-			cmd_line_.entry().set_text( last_find_text_ );
-		}
+		else
+			last_find_text_.clear();
 
 		cmd_line_.label().set_text("find:");
+		cmd_line_.entry().set_text( last_find_text_ );
 		cmd_line_.entry().select_region(0, (int)last_find_text_.size());
 
 		return true;
@@ -270,7 +271,13 @@ bool CmdReplaceCallback::on_key_press(GdkEventKey* event) {
 		Glib::ustring text = cmd_line_.entry().get_text();
 		size_t find_pos = text.find('/');
 		if( find_pos == text.npos )
+		{
+			find_pos = text.size();
+			text += "/<replace>/[all]";
+			cmd_line_.entry().set_text(text);
+			cmd_line_.entry().select_region((int)find_pos, (int)text.size());
 			return true;
+		}
 		find_text.assign(text, 0, find_pos);
 		++find_pos;
 
