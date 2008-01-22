@@ -27,11 +27,12 @@ class GdbPanel(gtk.HBox, gdbmi.Driver):
 		append_button(vbox, 'setup',    lambda *args : self.on_setup())
 		append_button(vbox, 'prepare',  lambda *args : self.prepare())
 		append_button(vbox, 'start',    lambda *args : self.start())
+		append_button(vbox, 'run',      lambda *args : self.run())
+		append_button(vbox, 'stop',     lambda *args : self.stop())
 		append_button(vbox, 'next',     lambda *args : self.call('-exec-next'))
 		append_button(vbox, 'step',     lambda *args : self.call('-exec-step'))
 		append_button(vbox, 'continue', lambda *args : self.call('-exec-continue'))
-		append_button(vbox, 'run',      lambda *args : self.run())
-		append_button(vbox, 'stop',     lambda *args : self.stop())
+		append_button(vbox, 'stack__list__locals',  lambda *args : self.on_stack_list_locals())
 
 		self.cmd_entry = gtk.Entry()
 		self.cmd_entry.connect('key_press_event', self.on_cmd_entry_key_press)
@@ -55,7 +56,7 @@ class GdbPanel(gtk.HBox, gdbmi.Driver):
 
 	def output_text(self, text, tag=None):
 		iter = self.buf.get_end_iter()
-		self.buf.insert_with_tags(iter, text, tag if tag else self.info_tag)
+		self.buf.insert_with_tags(iter, str(text), tag if tag else self.info_tag)
 		gobject.idle_add(self.scroll_to_end)
 
 	def handle_send(self, command):
@@ -131,6 +132,13 @@ class GdbPanel(gtk.HBox, gdbmi.Driver):
 			if len(text) > 0:
 				self.working_directory = text
 		dlg.destroy()
+
+	def on_stack_list_locals(self):
+		obs, res = self.stack_list_locals(1)
+		locals = res[2]['locals']
+		self.output_text('locals:\n')
+		for var in locals:
+			self.output_text('\t%s = %s\n' % (var['name'], var['value']))
 
 	def on_dispatch_timer(self):
 		try:
@@ -227,9 +235,15 @@ except:
 	pass
 
 if __name__=='__main__':
+	import sys
 	p = GdbPanel()
 	p.output_text(NOTICE)
+	if sys.platform=='win32':
+		p.target = 'd:/projects/a.exe'
+	else:
+		p.target = '/home/lj/a'
 	w = gtk.Window()
+	w.resize(800, 400)
 	w.connect('destroy', gtk.main_quit)
 	w.add(p)
 	w.show_all()

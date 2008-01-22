@@ -98,6 +98,7 @@ class BaseDriver:
 				r = re_debugevents_pid.search(self.__recv_buf)
 				if r:
 					self.child_pid = int(r.group(1))
+					self.__send('set debugevents off')
 
 			while True:
 				pos = self.__recv_buf.find('(gdb) \r\n')
@@ -190,7 +191,6 @@ class BaseDriver:
 
 		self.__recv_output()					# ignore first (gdb) prompt
 		self.__call('-gdb-set new-console on')	# ignore return value
-		self.__call('-gdb-set debugevents on')	# ignore return value, use debug events
 
 		if self.args:
 			self.__call('-exec-arguments %s' % self.args)
@@ -201,6 +201,7 @@ class BaseDriver:
 		#self.set_breakpoints()					# set breakpoints
 
 	def start(self):
+		self.__call('-gdb-set debugevents on')	# ignore return value, use debug events
 		self.__call('start')					# break at main, ignore return value
 		if self.child_pid==None:
 			pid = self.__fetch_child_pid()			# fetch child pid
@@ -218,7 +219,7 @@ class BaseDriver:
 
 		self.child_pid = None
 		self.child_running = False
-
+		self.__call('-gdb-set debugevents on')	# ignore return value, use debug events
 		self.__call('-exec-run')
 
 	def stop(self):
