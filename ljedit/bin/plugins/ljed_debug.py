@@ -16,41 +16,89 @@ def append_button(vbox, title, clickcb):
 	btn.connect('clicked', clickcb)
 	vbox.pack_start(btn)
 
-class GdbPanel(gtk.HBox, gdbmi.Driver):
+class GdbPanel(gtk.VBox, gdbmi.Driver):
 	def __init__(self):
-		gtk.HBox.__init__(self)
-
+		gtk.VBox.__init__(self)
 		gdbmi.Driver.__init__(self)
 		self.last_cmd = ()
 
-		vbox = gtk.VBox()
-		append_button(vbox, 'setup',    lambda *args : self.on_setup())
-		append_button(vbox, 'prepare',  lambda *args : self.prepare())
-		append_button(vbox, 'start',    lambda *args : self.start())
-		append_button(vbox, 'run',      lambda *args : self.run())
-		append_button(vbox, 'stop',     lambda *args : self.stop())
-		append_button(vbox, 'next',     lambda *args : self.call('-exec-next'))
-		append_button(vbox, 'step',     lambda *args : self.call('-exec-step'))
-		append_button(vbox, 'continue', lambda *args : self.call('-exec-continue'))
-		append_button(vbox, 'stack__list__locals',  lambda *args : self.on_stack_list_locals())
+		self.ui = """<ui>
+			<toolbar name='Toolbar'>
+				<toolitem action='setup'/>
+				<separator/>
+				<toolitem action='prepare'/>
+				<separator/>
+				<toolitem action='start'/>
+				<toolitem action='run'/>
+				<toolitem action='stop'/>
+				<separator/>
+				<toolitem action='next'/>
+				<toolitem action='step'/>
+				<toolitem action='continue'/>
+				<!--
+				<separator/>
+				<toolitem action='Toggle'/>
+				-->
+				<separator/>
+				<placeholder name='DebugPages'>
+					<toolitem action='output'/>
+					<toolitem action='locals'/>
+				</placeholder>
+			</toolbar>
+		</ui>"""
 
-		self.cmd_entry = gtk.Entry()
-		self.cmd_entry.connect('key_press_event', self.on_cmd_entry_key_press)
-		vbox.pack_start(self.cmd_entry)
+		self.uimgr = gtk.UIManager()
+		actiongroup = gtk.ActionGroup('LJDEBUG_ACTIONGROUP')
+		actiongroup.add_actions(
+			[ ('setup',     None,   'setup',     None,   'setup tip',     lambda *args : self.on_setup())
+			, ('prepare',   None,   'prepare',   None,   'prepare tip',   lambda *args : self.prepare())
+			, ('start',     None,   'start',     None,   'start tip',     lambda *args : self.start())
+			, ('run',       None,   'run',       None,   'run tip',       lambda *args : self.run())
+			, ('stop',      None,   'stop',      None,   'stop tip',      lambda *args : self.stop())
+			, ('next',      None,   'next',      None,   'next tip',      lambda *args : self.call('-exec-next'))
+			, ('step',      None,   'step',      None,   'step tip',      lambda *args : self.call('-exec-step'))
+			, ('continue',  None,   'continue',  None,   'continue tip',  lambda *args : self.call('-exec-continue'))
+			] )
 
-		self.pack_start(vbox, False)
+		#actiongroup.add_toggle_actions([('Toggle', None, 'toggle', '<Control>t', 'Toggle tip', lambda *args : None)])
+		actiongroup.add_radio_actions(
+			[ ('output',    None,   'output',    '<control>e', 'output tip', 0)
+        	, ('locals',    None,   'locals',    '<control>r', 'locals tip', 1)
+        	], 0, self.on_change_page )
 
+		self.uimgr.insert_action_group(actiongroup, 0)
+		merge_id = self.uimgr.add_ui_from_string(self.ui)
+
+		toolbar = self.uimgr.get_widget('/Toolbar')
+		self.pack_start(toolbar, False)
+
+		# pages
 		self.buf = gtk.TextBuffer()
 		self.command_tag = self.buf.create_tag(foreground='red')
 		self.packet_tag = self.buf.create_tag(foreground='gray')
 		self.output_tag = self.buf.create_tag(foreground='blue')
 		self.info_tag = self.buf.create_tag(foreground='green')
 
-		self.view = gtk.TextView(self.buf)
-		sw = gtk.ScrolledWindow()
-		sw.add(self.view)
-		sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-		self.pack_start(sw)
+		self.output_view = gtk.TextView(self.buf)
+		output_page = gtk.ScrolledWindow()
+		output_page.add(self.output_view)
+		output_page.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+
+		self.locals_view = gtk.TreeView()
+		locals_page = gtk.ScrolledWindow()
+		locals_page.add(self.locals_view)
+		locals_page.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+		
+		self.nb = gtk.Notebook()
+		self.nb.set_show_tabs(False)
+		self.nb.append_page(output_page, None)
+		self.nb.append_page(locals_page, None)
+
+		self.pack_start(self.nb)
+
+		self.cmd_entry = gtk.Entry()
+		self.cmd_entry.connect('key_press_event', self.on_cmd_entry_key_press)
+		self.pack_end(self.cmd_entry, False)
 
 		gobject.timeout_add(100, self.on_dispatch_timer)
 
@@ -74,6 +122,7 @@ class GdbPanel(gtk.HBox, gdbmi.Driver):
 					if rs['reason'] in ('end-stepping-range', ''):
 						filename = rs['frame']['fullname']
 						line = int(rs['frame']['line'])
+						self.update_stack_list_locals()
 						self.handle_debug_stopped(filename, line)
 					
 				elif ob[2]=='exited':
@@ -94,8 +143,15 @@ class GdbPanel(gtk.HBox, gdbmi.Driver):
 
 	def scroll_to_end(self):
 		iter = self.buf.get_end_iter()
-		self.view.scroll_to_iter(iter, 0.0)
+		self.output_view.scroll_to_iter(iter, 0.0)
 		return False
+
+	def on_change_page(self, action, current):
+		text = current.get_name()
+		if text=='output':
+			self.nb.set_current_page(0)
+		else:
+			self.nb.set_current_page(1)
 
 	def on_setup(self):
 		dlg = gtk.Dialog('setup', parent=ljedit.main_window, buttons=(gtk.STOCK_OK, gtk.RESPONSE_OK, gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL))
@@ -133,12 +189,13 @@ class GdbPanel(gtk.HBox, gdbmi.Driver):
 				self.working_directory = text
 		dlg.destroy()
 
-	def on_stack_list_locals(self):
+	def update_stack_list_locals(self):
 		obs, res = self.stack_list_locals(1)
 		locals = res[2]['locals']
 		self.output_text('locals:\n')
 		for var in locals:
 			self.output_text('\t%s = %s\n' % (var['name'], var['value']))
+			# update self.locals_view
 
 	def on_dispatch_timer(self):
 		try:
@@ -246,6 +303,7 @@ if __name__=='__main__':
 	w.resize(800, 400)
 	w.connect('destroy', gtk.main_quit)
 	w.add(p)
+	w.add_accel_group( p.uimgr.get_accel_group() )
 	w.show_all()
 
 	gtk.main()
