@@ -738,7 +738,7 @@ void search( const std::string& key
 
 #ifdef WIN32
 	char buf[512];
-	sprintf(buf, "search : %d\n", __search_call_time__);
+	sprintf_s(buf, "search : %d\n", __search_call_time__);
 	::OutputDebugStringA(buf);
 #endif
 }

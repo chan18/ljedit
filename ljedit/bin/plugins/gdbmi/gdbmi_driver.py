@@ -1,12 +1,8 @@
-﻿# gdbmi_win32_impl.py
+﻿# gdbmi_driver.py
 # 
 
 import sys, time
-
-if sys.platform=='win32':
-	from gdbmi_win32_impl import BaseDriver
-else:
-	from gdbmi_linux_impl import BaseDriver
+from gdbmi_base_driver import BaseDriver
 
 class Driver(BaseDriver):
 	def __init__(self, *args, **kwargs):

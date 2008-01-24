@@ -53,7 +53,11 @@ bool CmdGotoCallback::on_active(void* tag) {
 		Glib::RefPtr<gtksourceview::SourceBuffer> buf = current_page_->buffer();
 
 		char text[64] = { '\0' };
+#ifdef WIN32
+		sprintf_s(text, "%d", buf->get_iter_at_mark(buf->get_insert()).get_line() + 1);
+#else
 		sprintf(text, "%d", buf->get_iter_at_mark(buf->get_insert()).get_line() + 1);
+#endif
 		cmd_line_.entry().set_text(text);
 
 		//cmd_line_.desc().set_markup("<span background='red'>abccc</span><u>abccd</u>");

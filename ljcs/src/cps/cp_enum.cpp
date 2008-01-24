@@ -31,9 +31,10 @@ void do_parse_enum(BlockLexer& lexer, Scope& scope) {
 		name = lexer.token().word;
 		lexer.next();
 	} else {
-		std::stringstream ss;
-		ss << "@anonymous_" << lexer.block().filename() << ':' << lexer.block().start_line() << '_';
-		name = ss.str();
+		//std::stringstream ss;
+		//ss << "@anonymous_" << lexer.block().filename() << ':' << lexer.block().start_line() << '_';
+		//name = ss.str();
+		name = "@anonymous";
 	}
 
 	Enum* p = create_element<Enum>(lexer, name);

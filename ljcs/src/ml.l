@@ -694,6 +694,24 @@ number		{num1}|{num2}|{num3}|{num4}|{num5}
 
 %%
 
+#undef comment
+#undef hcomment
+#undef str
+#undef chr
+#undef smc
+#undef mc
+#undef mcd
+#undef mcdn
+#undef mcda
+#undef mcdv
+#undef mcdvc
+#undef mcdvs
+#undef smr
+#undef mr
+#undef mrc
+#undef mrs
+#undef cc
+
 void MLexer::parse_macro_include(char* text, size_t len, bool sys_header) {
 	char ss = sys_header ? '<' : '\"';
 	char es = sys_header ? '>' : '\"';
@@ -795,12 +813,11 @@ void MLexer::on_macro_define(size_t line
 {
 	cpp::Macro* macro = cpp::Element::create<cpp::Macro>(file_, name, line, line);
 
-	macro->decl.resize( 8 + name.size() );
-	macro->decl = "#define ";
-	macro->decl += name;
+	std::ostringstream oss;
+	oss << "#define " << name;
 	
 	if( has_args ) {
-		macro->decl += '(';
+		oss << '(';
 		if( args!=0 ) {
 			macro->args = new StrVector(*args);
 			if( macro->args==0 )
@@ -808,27 +825,31 @@ void MLexer::on_macro_define(size_t line
 				
 			StrVector::const_iterator it = args->begin();
 			StrVector::const_iterator end = args->end();
-			for( ; it!=end; ++it ) {
-				macro->decl += *it;
+			if( it!=end ) {
+				oss << *it;
+				for( ++it; it!=end; ++it )
+					oss << ", " << *it;
 			}
-			
+
 		} else {
 			macro->set_empty_args();
 		}
-		macro->decl += ')';
+		oss << ')';
 	}
 
-	if( value!=0 )
-		macro->value = *value;
-
-	if( rvalue!=0 )
+	if( rvalue!=0 ) {
 		macro->value = "...";
+		oss << ' ' << macro->value;
 
-	if( macro->value.size() < 128 ) {
-		macro->decl += ' ';
-		macro->decl += macro->value;
+	} else if( value!=0 ) {
+		macro->value = *value;
+		if( macro->value.size() < 128 )
+			oss << ' ' << macro->value;
+		else
+			oss << ' ' << "...";
 	}
 
+	macro->decl = oss.str();
 	cpp::scope_insert(file_.scope, macro);
 	env_.macro_insert(macro, value, rvalue);
 }

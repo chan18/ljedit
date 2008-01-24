@@ -242,6 +242,7 @@ public:
 		: NCScope(file, name, sline, eline, view) { type = ET_CLASS; }
 
 public:
+	char		clstype;	// [s]truct [c]lass [u]nion
 	std::string	nskey;
 	StrVector	inhers;
 };

@@ -100,6 +100,12 @@ void STree::add(SNode& parent, Element& elem) {
 				Elements::iterator end = r.scope.elems.end();
 				for( ; it != end; ++it )
 					add(snode, **it);
+
+			} else if( r.clstype=='u' ) {
+				Elements::iterator it = r.scope.elems.begin();
+				Elements::iterator end = r.scope.elems.end();
+				for( ; it != end; ++it )
+					add(parent, **it);
 			}
 		}
 		break;

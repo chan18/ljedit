@@ -2,6 +2,9 @@
 Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ljed_ljcs", "plugins\ljed_ljcs\ljed_ljcs.vcproj", "{1A842C6D-9192-4EB0-9AAA-42C27F7304BF}"
+	ProjectSection(ProjectDependencies) = postProject
+		{08B98FFF-42D0-4B14-9B45-27A80BC8EE52} = {08B98FFF-42D0-4B14-9B45-27A80BC8EE52}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ljedit", "ljeditor.vcproj", "{BAC6AC92-CC4C-420F-B558-3BFB52EEFA5F}"
 EndProject
@@ -14,6 +17,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "win32_boot", "win32_boot\win32_boot.vcproj", "{EFCA6A67-B23E-4199-A6B3-26EC9C34A209}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "others", "others", "{00724859-FFEA-4DB3-BA7B-98E4B44211A6}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ljcs", "..\ljcs\ljcs.vcproj", "{08B98FFF-42D0-4B14-9B45-27A80BC8EE52}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,6 +46,10 @@ Global
 		{EFCA6A67-B23E-4199-A6B3-26EC9C34A209}.Debug|Win32.Build.0 = Debug|Win32
 		{EFCA6A67-B23E-4199-A6B3-26EC9C34A209}.Release|Win32.ActiveCfg = Release|Win32
 		{EFCA6A67-B23E-4199-A6B3-26EC9C34A209}.Release|Win32.Build.0 = Release|Win32
+		{08B98FFF-42D0-4B14-9B45-27A80BC8EE52}.Debug|Win32.ActiveCfg = Debug|Win32
+		{08B98FFF-42D0-4B14-9B45-27A80BC8EE52}.Debug|Win32.Build.0 = Debug|Win32
+		{08B98FFF-42D0-4B14-9B45-27A80BC8EE52}.Release|Win32.ActiveCfg = Release|Win32
+		{08B98FFF-42D0-4B14-9B45-27A80BC8EE52}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -50,5 +59,6 @@ Global
 		{1A842C6D-9192-4EB0-9AAA-42C27F7304BF} = {EF920D65-30F8-4AC0-B727-E3659493BF0B}
 		{F4A227EE-622E-4858-B0B8-59F682F4A9A1} = {EF920D65-30F8-4AC0-B727-E3659493BF0B}
 		{EFCA6A67-B23E-4199-A6B3-26EC9C34A209} = {00724859-FFEA-4DB3-BA7B-98E4B44211A6}
+		{08B98FFF-42D0-4B14-9B45-27A80BC8EE52} = {00724859-FFEA-4DB3-BA7B-98E4B44211A6}
 	EndGlobalSection
 EndGlobal

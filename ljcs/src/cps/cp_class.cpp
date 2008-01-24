@@ -27,9 +27,10 @@ void parse_class(BlockLexer& lexer, Scope& scope) {
 		parse_id(lexer, name);
 
 	} else {
-		std::stringstream ss;
-		ss << "@anonymous_" << lexer.block().filename() << ':' << lexer.block().start_line() << '_';
-		name = ss.str();
+		//std::stringstream ss;
+		//ss << "@anonymous_" << lexer.block().filename() << ':' << lexer.block().start_line() << '_';
+		//name = ss.str();
+		name = "@anonymous";
 	}
 
 	Class* p;
@@ -42,6 +43,7 @@ void parse_class(BlockLexer& lexer, Scope& scope) {
 		p->nskey = name;
 	}
 
+	p->clstype = clstype==KW_STRUCT ? 's' : (clstype==KW_CLASS ? 'c' : (clstype==KW_UNION ? 'u' : '?'));
 	meger_tokens(lexer, lexer.begin(), lexer.pos(), p->decl);
 	scope_insert(scope, p);
 
