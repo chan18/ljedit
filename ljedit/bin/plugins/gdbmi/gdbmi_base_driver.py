@@ -99,26 +99,19 @@ class BaseDriver:
 		self.child_pid = None
 		self.child_running = False
 
-	def __kill_child(self):
-		ts = time.time()
-		terminal_process(self.child_pid)
-		while self.child_running and (time.time() - ts) < self.timeout:
-			time.sleep(0.1)
-			self.dispatch()
-
 	def __send(self, cmd):
 		self.__call_index += 1
 		index = str(self.__call_index)
 		cmd = index + cmd
-
-		#print 'send :', cmd
 		try:
 			self.handle_send(cmd)
 		except Exception, e:
 			print 'handle_send error :', e
-
 		self.pipe.stdin.write(cmd+'\n')
 		return index
+
+	def handle_send(self, cmd):
+		pass
 
 	def __recv(self):
 		buf = self.pipe.async_recv_stdout()
@@ -128,7 +121,7 @@ class BaseDriver:
 			
 			# use "set debugevents on" then start/run find child_pid
 			# 
-			if self.child_pid==None:
+			if self.child_pid==None and sys.platform=='win32':
 				r = re_debugevents_pid.search(self.__recv_buf)
 				if r:
 					self.child_pid = int(r.group(1))
@@ -234,7 +227,7 @@ class BaseDriver:
 		self.pipe = AsyncPopen( ['gdb', '--quiet', '--interpreter', 'mi', self.target]
 			, stdin=PIPE
 			, stdout=PIPE
-			, shell=True )
+			, shell=(sys.platform=='win32') )
 
 		if sys.platform=='win32':
 			self.__call('-gdb-set new-console on')
@@ -267,12 +260,6 @@ class BaseDriver:
 
 	def run(self):
 		if sys.platform=='win32':
-			if self.child_pid:
-				if self.child_running:
-					self.__kill_child()
-
-			self.child_pid = None
-			self.child_running = False
 			self.__call('-gdb-set debugevents on')	# use debug events
 			self.__call('-exec-run')
 		else:
@@ -282,16 +269,28 @@ class BaseDriver:
 			#print 'run...', self.status, r
 
 	def stop(self):
-		if self.console:
-			try:
-				os.kill(self.console[0], 9)
-			except Exception:
-				pass
-			self.console = None
+		if sys.platform=='win32':
+			if self.child_running and self.child_pid:
+				ts = time.time()
+				terminal_process(self.child_pid)
+				while self.child_running and (time.time() - ts) < self.timeout:
+					time.sleep(0.1)
+					self.dispatch()
 
-		if self.child_pid:
+		else:
+			if self.console:
+				try:
+					os.kill(self.console[0], 9)
+				except Exception:
+					pass
+				self.console = None
+
 			if self.child_running:
-				self.__kill_child()
+				try:
+					os.kill(self.pipe.pid, 9)
+				except Exception:
+					pass
+				self.pipe = None
 
 		self.child_pid = None
 		self.child_running = False
@@ -308,10 +307,10 @@ class BaseDriver:
 					self.pipe = None
 					break
 
-		if self.pipe:
-			if sys.platform=='win32':
-				terminal_process(self.pipe.pid)
-			self.pipe = None
+			if self.pipe:
+				if sys.platform=='win32':
+					terminal_process(self.pipe.pid)
+				self.pipe = None
 
 	def send(self, cmd):
 		if not self.child_running:
@@ -321,7 +320,7 @@ class BaseDriver:
 		if not self.child_running:
 			return self.__call(cmd)
 
-	def dispatch(self):
+	def dispatch(self, recv_handle=None):	# recv_handle(output, packet)
 		if self.pipe:
 			self.__recv()
 			if len(self.__recv_queue)==0:
@@ -344,14 +343,10 @@ class BaseDriver:
 							except Exception:
 								pass
 
-				try:
-					self.handle_recv(output, packet)
-				except Exception, e:
-					print 'handle_recv error :', e
+				if recv_handle:
+					try:
+						self.handle_recv(output, packet)
+					except Exception, e:
+						print 'handle_recv error :', e
 
-
-	def handle_send(self, command):
-		pass
-
-	def handle_recv(self, output, packet):
-		pass
+			return queue

@@ -199,7 +199,7 @@ class GdbPanel(gtk.VBox, gdbmi.Driver):
 
 	def on_dispatch_timer(self):
 		try:
-			self.dispatch()
+			self.dispatch(self.handle_recv)
 		except Exception, e:
 			print 'Error : ', e
 		return True

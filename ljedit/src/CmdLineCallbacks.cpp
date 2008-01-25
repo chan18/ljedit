@@ -174,12 +174,11 @@ bool CmdFindCallback::on_active(void* tag) {
 		Gtk::TextIter ps, pe;
 		if( buf->get_selection_bounds(ps, pe) && ps!=pe )
 			last_find_text_ = buf->get_text(ps, pe);
-		else
-			last_find_text_.clear();
 
 		cmd_line_.label().set_text("find:");
 		cmd_line_.entry().set_text( last_find_text_ );
 		cmd_line_.entry().select_region(0, (int)last_find_text_.size());
+		//printf("find : %s : %d\n", last_find_text_.c_str(), last_find_text_.size());
 
 		return true;
 	}
@@ -239,6 +238,7 @@ bool CmdReplaceCallback::on_active(void* tag) {
 		cmd_line_.label().set_text("replace:");
 		cmd_line_.entry().set_text( text );
 		cmd_line_.entry().select_region((int)sel_pos, (int)text.size());
+		//printf("replace : %s : (%d, %d)\n", text.c_str(), sel_pos, text.size());
 
 		return true;
 	}
