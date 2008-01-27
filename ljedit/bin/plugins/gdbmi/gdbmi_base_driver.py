@@ -227,7 +227,7 @@ class BaseDriver:
 		self.pipe = AsyncPopen( ['gdb', '--quiet', '--interpreter', 'mi', self.target]
 			, stdin=PIPE
 			, stdout=PIPE
-			, shell=(sys.platform=='win32') )
+			, shell=False )
 
 		if sys.platform=='win32':
 			self.__call('-gdb-set new-console on')
