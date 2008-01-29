@@ -1,5 +1,7 @@
 // main.c
 
+#include <libintl.h>
+
 #include "Puss.h"
 
 #define PACKAGE		"puss"

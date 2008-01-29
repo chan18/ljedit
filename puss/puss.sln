@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "puss", "puss-0.1.vcproj", "{B4C6ACCC-CA92-520F-4B58-EFA5F3BEB52E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "puss", "puss.vcproj", "{B4C6ACCC-CA92-520F-4B58-EFA5F3BEB52E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

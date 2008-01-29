@@ -20,7 +20,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets=".\puss-0.1_d.vsprops"
+			InheritedPropertySheets=".\puss_d.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -104,7 +104,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets=".\puss-0.1.vsprops"
+			InheritedPropertySheets=".\puss.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -192,11 +192,59 @@
 			Name="src"
 			>
 			<File
-				RelativePath=".\src\main.c"
+				RelativePath=".\src\main.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\MainWindow.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\MainWindow.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\MainWindow.c"
+				RelativePath=".\src\Puss.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Puss.h"
 				>
 			</File>
 		</Filter>
@@ -204,7 +252,7 @@
 			Name="include"
 			>
 			<File
-				RelativePath=".\include\MainWindow.h"
+				RelativePath=".\include\Plugin.h"
 				>
 			</File>
 		</Filter>

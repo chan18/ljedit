@@ -2,6 +2,15 @@
 
 #include "MainWindow.h"
 
+// file menu
+void cb_puss_file_menu_new( GtkAction* action, MainWindow* main_window );
+void cb_puss_file_menu_open( GtkAction* action, MainWindow* main_window );
+void cb_puss_file_menu_save( GtkAction* action, MainWindow* main_window );
+void cb_puss_file_menu_save_as( GtkAction* action, MainWindow* main_window );
+void cb_puss_file_menu_close( GtkAction* action, MainWindow* main_window );
+void cb_puss_file_menu_quit( GtkAction* action, MainWindow* main_window );
+
+
 MainWindow::MainWindow()
 	: window(0)
 	, ui_manager(0)
@@ -25,6 +34,8 @@ void MainWindow::create(const std::string& path) {
 
     // create ui manager
     create_ui_manager();
+	GtkAccelGroup* accel_group = gtk_ui_manager_get_accel_group(ui_manager);
+	gtk_window_add_accel_group(window, accel_group);
 
     // menubar
     GtkWidget* menubar = gtk_ui_manager_get_widget(ui_manager, "/MenuBar");
@@ -91,7 +102,86 @@ void MainWindow::destroy() {
 }
 
 void MainWindow::create_ui_manager() {
+	GtkActionGroup* action_group = gtk_action_group_new("LJEditActions");
+
+	static GtkActionEntry entries[] = {
+		// main menu
+		  { "FileMenu",    0, "_File" }
+		, { "EditMenu",    0, "_Edit" }
+		, { "ViewMenu",    0, "_View" }
+		, { "ToolsMenu",   0, "_Tools" }
+		, { "PluginsMenu", 0, "_Plugins" }
+		, { "HelpMenu",    0, "_Help" }
+
+		// file menu
+		, { "New",    GTK_STOCK_NEW,     "_New",         "<control>N",        "create new file",    G_CALLBACK(&cb_puss_file_menu_new) }
+		, { "Open",   GTK_STOCK_OPEN,    "_Open",        "<control>O",        "open file",          G_CALLBACK(&cb_puss_file_menu_open) }
+		, { "Save",   GTK_STOCK_SAVE,    "_Save",        "<control>S",        "save file",          G_CALLBACK(&cb_puss_file_menu_save) }
+		, { "SaveAs", GTK_STOCK_SAVE_AS, "Save _As ...", "<control><shift>S", "save file as...",    G_CALLBACK(&cb_puss_file_menu_save_as) }
+		, { "Close",  GTK_STOCK_CLOSE,   "_Close",       "<control>W",        "close current file", G_CALLBACK(&cb_puss_file_menu_close) }
+		, { "Quit",   GTK_STOCK_QUIT,    "_Quit",        "<control>Q",        "quit",               G_CALLBACK(&cb_puss_file_menu_quit) }
+
+		// 
+	};
+	static guint n_entries = G_N_ELEMENTS(entries);
+
+	gtk_action_group_add_actions(action_group, entries, n_entries, this);
+
+	// ---------------------------------------------------
+	// create UI
+
+	const gchar ui_info[] = 
+		"<ui>"
+			"<menubar name='MenuBar'>"
+				"<menu action='FileMenu'>"
+					"<menuitem action='New'/>"
+					"<menuitem action='Open'/>"
+					"<menuitem action='Save'/>"
+					"<menuitem action='SaveAs'/>"
+					"<menuitem action='Close'/>"
+					"<separator/>"
+					"<menuitem action='Quit'/>"
+				"</menu>"
+			"</menubar>"
+
+			"<toolbar name='ToolBar'>"
+				"<toolitem action='Open'/>"
+				"<toolitem action='Quit'/>"
+			"</toolbar>"
+		"</ui>";
+
 	ui_manager = gtk_ui_manager_new();
-	
+
+	GError* error = 0;
+	if( !gtk_ui_manager_add_ui_from_string(ui_manager, ui_info, -1, &error) ) {
+		g_message("create menu failed : %s", error->message);
+		g_error_free(error);
+	}
+	gtk_ui_manager_insert_action_group(ui_manager, action_group, 0);
 }
 
+// file menu
+
+void cb_puss_file_menu_new( GtkAction* action, MainWindow* main_window ) {
+	g_message("new");
+}
+
+void cb_puss_file_menu_open( GtkAction* action, MainWindow* main_window ) {
+	g_message("open");
+}
+
+void cb_puss_file_menu_save( GtkAction* action, MainWindow* main_window ) {
+	g_message("save");
+}
+
+void cb_puss_file_menu_save_as( GtkAction* action, MainWindow* main_window ) {
+	g_message("save as");
+}
+
+void cb_puss_file_menu_close( GtkAction* action, MainWindow* main_window ) {
+	g_message("close");
+}
+
+void cb_puss_file_menu_quit( GtkAction* action, MainWindow* main_window ) {
+	g_message("quit");
+}

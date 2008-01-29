@@ -32,7 +32,6 @@ public:
 
 private:
     void create_ui_manager();
-	
 };
 
 #endif//LJED_INC_MAINWINDOW_H
