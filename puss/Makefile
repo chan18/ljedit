@@ -43,7 +43,7 @@ SRCS = $(wildcard $(SRCPATH)/*.cpp)
 
 OBJS = $(SRCS:$(SRCPATH)/%.cpp=$(OBJPATH)/%.o)
 
-TARGET = bin/_puss
+TARGET = bin/puss
 
 all : $(TARGET) plugin
 

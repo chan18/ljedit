@@ -30,6 +30,8 @@ public:
     void create(const std::string& path);
     void destroy();
 
+	void active_and_focus_on_bottom_page(gint page_num);
+
 private:
     void create_ui_manager();
 };
