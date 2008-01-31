@@ -15,8 +15,9 @@ int main(int argc, char* argv[]) {
 	gtk_init(&argc, &argv);
 
 	Puss puss;
-	puss.create();
+	puss_create(&puss);
+	puss_run(&puss);
 
-	puss.run();
+	return 0;
 }
 

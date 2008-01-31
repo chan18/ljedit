@@ -4,18 +4,14 @@
 #ifndef PUSS_INC_PUSS_H
 #define PUSS_INC_PUSS_H
 
-#include "MainWindow.h"
+#include "UI.h"
 
-class Puss {
-public:
-	MainWindow& main_window() { return main_window_; }
-
-	void create();
-	void run();
-
-private:
-	MainWindow main_window_;
+struct Puss {
+	UI ui;
 };
+
+void puss_create(Puss* app);
+void puss_run(Puss* app);
 
 #endif//PUSS_INC_PUSS_H
 

@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(ProjectDir)bin\_$(ProjectName).exe"
+				OutputFile="$(ProjectDir)bin\$(ProjectName).exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories=""
 				IgnoreDefaultLibraryNames=""
@@ -146,7 +146,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(ProjectDir)bin\_$(ProjectName).exe"
+				OutputFile="$(ProjectDir)bin\$(ProjectName).exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="false"
@@ -192,6 +192,22 @@
 			Name="src"
 			>
 			<File
+				RelativePath=".\src\AboutDialog.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\AboutDialog.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\DocManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\DocManager.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\main.cpp"
 				>
 				<FileConfiguration
@@ -214,7 +230,23 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\src\MainWindow.cpp"
+				RelativePath=".\src\Menu.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Menu.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Puss.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Puss.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\UI.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -236,15 +268,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\src\MainWindow.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\Puss.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\Puss.h"
+				RelativePath=".\src\UI.h"
 				>
 			</File>
 		</Filter>

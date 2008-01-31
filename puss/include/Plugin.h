@@ -9,7 +9,7 @@
 class PussPluginEnviron
 {
 public:	// Puss Main UI
-	GtkWindow*			main_window;
+	GtkWindow*			ui;
 
 	GtkUIManager*		ui_manager;
 
