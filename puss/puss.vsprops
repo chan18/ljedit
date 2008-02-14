@@ -6,11 +6,11 @@
 	>
 	<Tool
 		Name="VCCLCompilerTool"
-		AdditionalIncludeDirectories="&quot;$(GTK_BASEPATH)\INCLUDE&quot;;&quot;$(GTK_BASEPATH)\INCLUDE\GTK-2.0&quot;;&quot;$(GTK_BASEPATH)\INCLUDE\GLIB-2.0&quot;;&quot;$(GTK_BASEPATH)\INCLUDE\PANGO-1.0&quot;;&quot;$(GTK_BASEPATH)\INCLUDE\CAIRO&quot;;&quot;$(GTK_BASEPATH)\INCLUDE\ATK-1.0&quot;;&quot;$(GTK_BASEPATH)\INCLUDE\GTKGLEXT-1.0&quot;;&quot;$(GTK_BASEPATH)\LIB\GTK-2.0\INCLUDE&quot;;&quot;$(GTK_BASEPATH)\LIB\GLIB-2.0\INCLUDE&quot;;&quot;$(GTK_BASEPATH)\LIB\GTKGLEXT-1.0\INCLUDE&quot;;&quot;$(GTK_BASEPATH)\INCLUDE\LIBGLADE-2.0&quot;;&quot;$(GTK_BASEPATH)\INCLUDE\LIBXML2&quot;;&quot;$(SolutionDir)include&quot;"
+		AdditionalIncludeDirectories="&quot;$(GTK_BASEPATH)\INCLUDE&quot;;&quot;$(GTK_BASEPATH)\INCLUDE\GTK-2.0&quot;;&quot;$(GTK_BASEPATH)\INCLUDE\GLIB-2.0&quot;;&quot;$(GTK_BASEPATH)\INCLUDE\PANGO-1.0&quot;;&quot;$(GTK_BASEPATH)\INCLUDE\CAIRO&quot;;&quot;$(GTK_BASEPATH)\INCLUDE\ATK-1.0&quot;;&quot;$(GTK_BASEPATH)\INCLUDE\GTKGLEXT-1.0&quot;;&quot;$(GTK_BASEPATH)\LIB\GTK-2.0\INCLUDE&quot;;&quot;$(GTK_BASEPATH)\LIB\GLIB-2.0\INCLUDE&quot;;&quot;$(GTK_BASEPATH)\LIB\GTKGLEXT-1.0\INCLUDE&quot;;&quot;$(GTK_BASEPATH)\INCLUDE\LIBGLADE-2.0&quot;;&quot;$(GTK_BASEPATH)\INCLUDE\LIBXML2&quot;;&quot;$(GTK_BASEPATH)\INCLUDE\GTKSOURCEVIEW-2.0&quot;;&quot;$(SolutionDir)include&quot;"
 	/>
 	<Tool
 		Name="VCLinkerTool"
-		AdditionalDependencies="glade-2.0.lib gtk-win32-2.0.lib xml2.lib gdk-win32-2.0.lib atk-1.0.lib gdk_pixbuf-2.0.lib pangowin32-1.0.lib pangocairo-1.0.lib pango-1.0.lib cairo.lib gobject-2.0.lib gmodule-2.0.lib glib-2.0.lib intl.lib iconv.lib"
+		AdditionalDependencies="glade-2.0.lib gtk-win32-2.0.lib xml2.lib gdk-win32-2.0.lib atk-1.0.lib gdk_pixbuf-2.0.lib pangowin32-1.0.lib pangocairo-1.0.lib pango-1.0.lib cairo.lib gobject-2.0.lib gmodule-2.0.lib glib-2.0.lib intl.lib iconv.lib gtksourceview-2.0-0.lib"
 		AdditionalLibraryDirectories="&quot;$(GTK_BASEPATH)\lib&quot;"
 	/>
 </VisualStudioPropertySheet>

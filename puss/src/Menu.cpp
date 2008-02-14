@@ -38,6 +38,7 @@ void cb_view_menu_bottom_page_n( GtkAction* action, GtkRadioAction* current, Pus
 void cb_help_menu_about( GtkAction* action, Puss* app );
 
 void puss_create_ui_manager(Puss* app) {
+	GError* error = 0;
 	GtkActionGroup* action_group = gtk_action_group_new("LJEditActions");
 
 	{
@@ -109,90 +110,90 @@ void puss_create_ui_manager(Puss* app) {
 
 	// ---------------------------------------------------
 	// create UI
-
-	const gchar ui_info[] = 
-		"<ui>"
-			"<menubar name='MenuBar'>"
-				"<menu action='FileMenu'>"
-					"<menuitem action='New'/>"
-					"<menuitem action='Open'/>"
-					"<menuitem action='Save'/>"
-					"<menuitem action='SaveAs'/>"
-					"<menuitem action='Close'/>"
-					"<separator/>"
-					"<menuitem action='Quit'/>"
-				"</menu>"
-
-				"<menu action='EditMenu'>"
-					"<!--"
-					"<menuitem action='Undo'/>"
-					"<menuitem action='Redo'/>"
-					"<separator/>"
-					"<menuitem action='Cut'/>"
-					"<menuitem action='Copy'/>"
-					"<separator/>"
-					"-->"
-					"<menuitem action='CmdLineGoto'/>"
-					"<menuitem action='CmdLineFind'/>"
-					"<menuitem action='CmdLineReplace'/>"
-					"<separator/>"
-					"<menuitem action='GoBack'/>"
-					"<menuitem action='GoForward'/>"
-					"<separator/>"
-				"</menu>"
-
-				"<menu action='ViewMenu'>"
-					"<menuitem action='FullScreen'/>"
-					"<separator/>"
-					"<menuitem action='ActiveDocPage'/>"
-					"<separator/>"
-					"<menuitem action='LeftPanel'/>"
-					"<menuitem action='RightPanel'/>"
-					"<menuitem action='BottomPanel'/>"
-					"<!--"
-					"<separator/>"
-					"<menuitem action='NextDocPage'/>"
-					"-->"
-					"<separator/>"
-					"<menu action='BottomPages'>"
-						"<menuitem action='BottomPage1'/>"
-						"<menuitem action='BottomPage2'/>"
-						"<menuitem action='BottomPage3'/>"
-						"<menuitem action='BottomPage4'/>"
-						"<menuitem action='BottomPage5'/>"
-						"<menuitem action='BottomPage6'/>"
-						"<menuitem action='BottomPage7'/>"
-						"<menuitem action='BottomPage8'/>"
-						"<menuitem action='BottomPage9'/>"
+	{
+		const gchar ui_info[] = 
+			"<ui>"
+				"<menubar name='MenuBar'>"
+					"<menu action='FileMenu'>"
+						"<menuitem action='New'/>"
+						"<menuitem action='Open'/>"
+						"<menuitem action='Save'/>"
+						"<menuitem action='SaveAs'/>"
+						"<menuitem action='Close'/>"
+						"<separator/>"
+						"<menuitem action='Quit'/>"
 					"</menu>"
-				"</menu>"
 
-				"<menu action='ToolsMenu'>"
-				"</menu>"
+					"<menu action='EditMenu'>"
+						"<!--"
+						"<menuitem action='Undo'/>"
+						"<menuitem action='Redo'/>"
+						"<separator/>"
+						"<menuitem action='Cut'/>"
+						"<menuitem action='Copy'/>"
+						"<separator/>"
+						"-->"
+						"<menuitem action='CmdLineGoto'/>"
+						"<menuitem action='CmdLineFind'/>"
+						"<menuitem action='CmdLineReplace'/>"
+						"<separator/>"
+						"<menuitem action='GoBack'/>"
+						"<menuitem action='GoForward'/>"
+						"<separator/>"
+					"</menu>"
 
-				"<menu action='PluginsMenu'>"
-				"</menu>"
+					"<menu action='ViewMenu'>"
+						"<menuitem action='FullScreen'/>"
+						"<separator/>"
+						"<menuitem action='ActiveDocPage'/>"
+						"<separator/>"
+						"<menuitem action='LeftPanel'/>"
+						"<menuitem action='RightPanel'/>"
+						"<menuitem action='BottomPanel'/>"
+						"<!--"
+						"<separator/>"
+						"<menuitem action='NextDocPage'/>"
+						"-->"
+						"<separator/>"
+						"<menu action='BottomPages'>"
+							"<menuitem action='BottomPage1'/>"
+							"<menuitem action='BottomPage2'/>"
+							"<menuitem action='BottomPage3'/>"
+							"<menuitem action='BottomPage4'/>"
+							"<menuitem action='BottomPage5'/>"
+							"<menuitem action='BottomPage6'/>"
+							"<menuitem action='BottomPage7'/>"
+							"<menuitem action='BottomPage8'/>"
+							"<menuitem action='BottomPage9'/>"
+						"</menu>"
+					"</menu>"
 
-				"<menu action='HelpMenu'>"
-					"<menuitem action='About'/>"
-				"</menu>"
+					"<menu action='ToolsMenu'>"
+					"</menu>"
 
-			"</menubar>"
+					"<menu action='PluginsMenu'>"
+					"</menu>"
 
-			"<toolbar name='ToolBar'>"
-				"<toolitem action='Open'/>"
-				"<toolitem action='Quit'/>"
-			"</toolbar>"
-		"</ui>";
+					"<menu action='HelpMenu'>"
+						"<menuitem action='About'/>"
+					"</menu>"
 
-	app->ui.ui_manager = gtk_ui_manager_new();
+				"</menubar>"
 
-	GError* error = 0;
-	if( !gtk_ui_manager_add_ui_from_string(app->ui.ui_manager, ui_info, -1, &error) ) {
-		g_message("create menu failed : %s", error->message);
-		g_error_free(error);
+				"<toolbar name='ToolBar'>"
+					"<toolitem action='Open'/>"
+					"<toolitem action='Quit'/>"
+				"</toolbar>"
+			"</ui>";
+
+		app->ui.ui_manager = gtk_ui_manager_new();
+
+		if( !gtk_ui_manager_add_ui_from_string(app->ui.ui_manager, ui_info, -1, &error) ) {
+			g_message("create menu failed : %s", error->message);
+			g_error_free(error);
+		}
+		gtk_ui_manager_insert_action_group(app->ui.ui_manager, action_group, 0);
 	}
-	gtk_ui_manager_insert_action_group(app->ui.ui_manager, action_group, 0);
 }
 
 // file menu
@@ -202,19 +203,19 @@ void cb_file_menu_new( GtkAction* action, Puss* app ) {
 }
 
 void cb_file_menu_open( GtkAction* action, Puss* app ) {
-	g_message("open");
+	puss_doc_open(app, "d:/tee.cpp", 1, 3);
 }
 
 void cb_file_menu_save( GtkAction* action, Puss* app ) {
-	g_message("save");
+	puss_doc_save_current(app, FALSE);
 }
 
 void cb_file_menu_save_as( GtkAction* action, Puss* app ) {
-	g_message("save as");
+	puss_doc_save_current(app, TRUE);
 }
 
 void cb_file_menu_close( GtkAction* action, Puss* app ) {
-	g_message("close");
+	puss_doc_close_current(app);
 }
 
 void cb_file_menu_quit( GtkAction* action, Puss* app ) {

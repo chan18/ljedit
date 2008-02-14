@@ -5,7 +5,7 @@
 #include <glib/gi18n.h>
 
 #include "Puss.h"
-#include "MenuCommands.h"
+#include "Menu.h"
 
 void puss_create_ui(Puss* app) {
 	UI* ui = &app->ui;
