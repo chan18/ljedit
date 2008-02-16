@@ -21,9 +21,9 @@ endif
 
 # gtk & gtksourceview & gthread
 # 
-GTKINCS = `pkg-config --cflags gtksourceview-2.0`
+CXXFLAGS += `pkg-config --cflags gtksourceview-2.0`
 
-GTKLIBS = `pkg-config --libs gtksourceview-2.0` \
+LIBS += `pkg-config --libs gtksourceview-2.0` \
 		`pkg-config --libs gmodule-2.0` \
 		`pkg-config --libs gthread-2.0`
 
@@ -40,7 +40,7 @@ TARGET = bin/puss
 all : $(TARGET)
 
 $(TARGET) : $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^ -ldl $(LIBS) $(GTKLIBS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ -ldl $(LIBS)
 
 clean :
 	rm -f $(TARGET)

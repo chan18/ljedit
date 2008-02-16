@@ -203,7 +203,7 @@ void cb_file_menu_new( GtkAction* action, Puss* app ) {
 }
 
 void cb_file_menu_open( GtkAction* action, Puss* app ) {
-	puss_doc_open(app, 0, 0, 0);
+	puss_doc_open(app, "/opt/ljedit/puss/puss.vcproj", 250, 0);
 }
 
 void cb_file_menu_save( GtkAction* action, Puss* app ) {
