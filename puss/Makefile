@@ -31,11 +31,9 @@ GTKLIBS = `pkg-config --libs gtksourceview-2.0` \
 # 
 CXXFLAGS += -Iinclude
 
-SRCPATH = src
+SRCS = $(wildcard src/*.cpp)
 
-SRCS = $(wildcard $(SRCPATH)/*.cpp)
-
-OBJS = $(SRCS:$(SRCPATH)/%.cpp=$(OBJPATH)/%.o)
+OBJS = $(SRCS:%.cpp=$(OBJPATH)/%.o)
 
 TARGET = bin/puss
 
@@ -49,14 +47,16 @@ clean :
 	rm -rf debug
 	rm -rf release
 
-$(OBJPATH)/%.o : $(SRCPATH)/%.cpp
+$(OBJPATH)/%.o : %.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(GTKINCS) -o $@ -c $<
 
-$(OBJPATH)/%.d : $(SRCPATH)/%.cpp
+$(OBJPATH)/%.d : %.cpp
 	@mkdir -p $(dir $@)
+	@$(CXX) $(CXXFLAGS) -o $@.tmp -MM $<	# use tmp file can ignore error!
 	@echo -n $@ $(dir $@) > $@
-	@echo -n `$(CXX) $(CXXFLAGS) -MM $< >> $@`
+	@cat $@.tmp >> $@
+	@rm $@.tmp
 
--include $(SRCS:$(SRCPATH)/%.cpp=$(OBJPATH)/%.d)
+-include $(SRCS:%.cpp=$(OBJPATH)/%.d)
 
