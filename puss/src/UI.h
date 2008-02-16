@@ -19,7 +19,7 @@ struct UI {
 
 	GtkStatusbar*		status_bar;
 
-	//PussCmdLine		cmd_line;
+	GtkWindow*			cmd_line_window;
 };
 
 struct Puss;

@@ -200,6 +200,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\CmdLine.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\CmdLine.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\DocManager.cpp"
 				>
 			</File>

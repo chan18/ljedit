@@ -6,6 +6,7 @@
 
 #include "Puss.h"
 #include "Menu.h"
+#include "CmdLine.h"
 
 void puss_create_ui(Puss* app) {
 	UI* ui = &app->ui;
@@ -72,7 +73,7 @@ void puss_create_ui(Puss* app) {
     gtk_box_pack_end(GTK_BOX(vbox), GTK_WIDGET(ui->status_bar), FALSE, FALSE, 0);
 
 	// cmd line
-	//cmd_line_.create(*this);
+	puss_cmd_line_create(app);
 
 	// show vbox & resize window
 	gtk_widget_show_all(GTK_WIDGET(vbox));
