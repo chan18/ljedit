@@ -203,7 +203,7 @@ void cb_file_menu_new( GtkAction* action, Puss* app ) {
 }
 
 void cb_file_menu_open( GtkAction* action, Puss* app ) {
-	puss_doc_open(app, "d:/tee.cpp", 1, 3);
+	puss_doc_open(app, 0, 0, 0);
 }
 
 void cb_file_menu_save( GtkAction* action, Puss* app ) {

@@ -21,17 +21,11 @@ endif
 
 # gtk & gtksourceview & gthread
 # 
-CXXFLAGS += `pkg-config --cflags gtksourceview-2.0`
+GTKINCS = `pkg-config --cflags gtksourceview-2.0`
 
-LIBS += `pkg-config --libs gtksourceview-2.0` \
+GTKLIBS = `pkg-config --libs gtksourceview-2.0` \
 		`pkg-config --libs gmodule-2.0` \
 		`pkg-config --libs gthread-2.0`
-
-# python plugin engine
-# 
-PYFLAGS = -I/usr/include/python2.5 \
-          -I/usr/include/pygtk-2.0
-PYLIBS = -lpython2.5
 
 # project
 # 
@@ -45,30 +39,24 @@ OBJS = $(SRCS:$(SRCPATH)/%.cpp=$(OBJPATH)/%.o)
 
 TARGET = bin/puss
 
-all : $(TARGET) plugin
+all : $(TARGET)
 
 $(TARGET) : $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^ -ldl $(LIBS) $(PYLIBS)
-
-$(OBJPATH)/%.o : $(SRCPATH)/%.cpp
-	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -o $@ -c $<
-
-#$(OBJPATH)/ConfigManagerImpl.o : $(SRCPATH)/ConfigManager.cpp
-#	$(CXX) $(CXXFLAGS) $(PYFLAGS) -c -o $@ $<
-
-#$(OBJPATH)/PythonPluginEngine.o : $(SRCPATH)/PythonPluginEngine.cpp
-#	$(CXX) $(CCXXFLAGS) $(PYFLAGS) -c -o $@ $<
-
-plugin :
-	#cd plugins/hello;make BUILD=$(BUILD)
+	$(CXX) $(CXXFLAGS) -o $@ $^ -ldl $(LIBS) $(GTKLIBS)
 
 clean :
 	rm -f $(TARGET)
 	rm -rf debug
 	rm -rf release
-	#make clean_plugin
 
-clean_plugin :
-	cd plugins/hello;make clean
+$(OBJPATH)/%.o : $(SRCPATH)/%.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) $(GTKINCS) -o $@ -c $<
+
+$(OBJPATH)/%.d : $(SRCPATH)/%.cpp
+	@mkdir -p $(dir $@)
+	@echo -n $@ $(dir $@) > $@
+	@echo -n `$(CXX) $(CXXFLAGS) -MM $< >> $@`
+
+-include $(SRCS:$(SRCPATH)/%.cpp=$(OBJPATH)/%.d)
 

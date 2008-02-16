@@ -21,6 +21,9 @@ typedef struct {
 } DocPos;
 
 gboolean doc_scroll_to_pos( DocPos* pos ) {
+	if( pos->page != gtk_notebook_get_current_page(pos->app->ui.doc_panel) )
+		gtk_notebook_set_current_page(pos->app->ui.doc_panel, pos->page);
+
 	GtkTextView* view = GTK_TEXT_VIEW(puss_doc_get_view_from_page_num(pos->app, pos->page));
 	GtkTextBuffer* buf = gtk_text_view_get_buffer(view);
 	GtkTextIter iter;
@@ -101,21 +104,24 @@ gboolean doc_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST_
 	return FALSE;
 }
 
+void doc_reset_page_label(GtkTextBuffer *buffer) {
+	
+}
+
 gint doc_open_page( Puss* app, GtkSourceBuffer* buf ) {
+	GString* title;
 	GtkSourceView* view;
 	GtkLabel* label;
 	GtkWidget* tab;
 	GtkWidget* page;
 
-	if( buf ) {
-		view = GTK_SOURCE_VIEW(gtk_source_view_new_with_buffer(buf));
-		g_object_unref(G_OBJECT(buf));
+	view = GTK_SOURCE_VIEW(gtk_source_view_new_with_buffer(buf));
+	g_object_unref(G_OBJECT(buf));
 
-	} else {
-		view = GTK_SOURCE_VIEW(gtk_source_view_new());
-	}
+	title = puss_doc_get_url( GTK_TEXT_BUFFER(buf) );
+	label = GTK_LABEL(gtk_label_new(title ? title->str : _("Untitled")));
 
-	label = GTK_LABEL(gtk_label_new(_("Untitled document")));
+	//g_signal_connect(GTK_TEXT_BUFFER(buf), "modify-changed", &doc_reset_page_label);
 
 	tab = GTK_WIDGET(label);
 	gtk_widget_show_all(tab);
@@ -125,6 +131,34 @@ gint doc_open_page( Puss* app, GtkSourceBuffer* buf ) {
 	g_object_set_data(G_OBJECT(page), "puss-doc-view", view);
 
 	return gtk_notebook_append_page(app->ui.doc_panel, page, tab);
+}
+
+gint doc_open_file( Puss* app, const gchar* url ) {
+	gint page_num = puss_doc_find_page_from_url(app, url);
+	if( page_num < 0 ) {
+		gchar* text = 0;
+		gsize len = 0;
+		const gchar* charset = 0;
+		GError* err = 0;
+
+		if( doc_load_file(url, &text, &len, &charset, &err) ) {
+			GtkSourceBuffer* buf = gtk_source_buffer_new(0);
+			gtk_text_buffer_set_text(GTK_TEXT_BUFFER(buf), text, len);
+			g_free(text);
+
+			puss_doc_set_url(GTK_TEXT_BUFFER(buf), url);
+			puss_doc_set_charset(GTK_TEXT_BUFFER(buf), charset);
+
+			page_num = doc_open_page(app, buf);
+
+		} else {
+			g_assert( err );
+			g_printerr("ERROR : %s", err->message);
+			g_error_free(err);
+		}
+	}
+
+	return page_num;
 }
 
 gboolean doc_save_file( GtkTextBuffer* buf, GError** err ) {
@@ -143,9 +177,14 @@ gboolean doc_save_file( GtkTextBuffer* buf, GError** err ) {
 		return FALSE;
 
 	gtk_text_buffer_get_iter_at_offset(buf, &iter, 0);
-	while( status!=G_IO_STATUS_ERROR && !gtk_text_iter_is_end(&iter) ) {
-		ch = gtk_text_iter_get_char(&iter);
-		status = g_io_channel_write_unichar(channel, ch, err);
+	if( !gtk_text_iter_is_end(&iter) ) {
+		while( status!=G_IO_STATUS_ERROR ) {
+			ch = gtk_text_iter_get_char(&iter);
+			status = g_io_channel_write_unichar(channel, ch, err);
+
+			if( !gtk_text_iter_forward_char(&iter) )
+				break;
+		}
 	}
 
 	g_io_channel_close(channel);
@@ -154,6 +193,11 @@ gboolean doc_save_file( GtkTextBuffer* buf, GError** err ) {
 
 	gtk_text_buffer_set_modified(buf, FALSE);
 	return TRUE;
+}
+
+GtkTextBuffer* doc_get_current_buffer( Puss* app ) {
+	gint page_num = gtk_notebook_get_current_page(app->ui.doc_panel);
+	return page_num < 0 ? 0 : puss_doc_get_buffer_from_page_num(app, page_num);
 }
 
 gboolean doc_save_page( Puss* app, gint page_num, gboolean is_save_as ) {
@@ -197,7 +241,7 @@ gboolean doc_save_page( Puss* app, gint page_num, gboolean is_save_as ) {
 
 		} else {
 			//gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dlg), folder);
-			gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dlg), _("Untitled document"));
+			gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dlg), _("Untitled"));
 		}
 
 		res = gtk_dialog_run(GTK_DIALOG(dlg));
@@ -256,12 +300,7 @@ GtkTextBuffer* puss_doc_get_buffer_from_page( GtkWidget* page ) {
 
 GtkLabel* puss_doc_get_label_from_page_num( Puss* app, int page_num ) {
 	GtkWidget* page = gtk_notebook_get_nth_page(app->ui.doc_panel, page_num);
-	if( page ) {
-		GtkLabel* label = GTK_LABEL(gtk_notebook_get_tab_label(app->ui.doc_panel, page));
-		return label;
-	}
-	
-	return 0;
+	return page ? GTK_LABEL(gtk_notebook_get_tab_label(app->ui.doc_panel, page)) : 0;
 }
 
 GtkTextView* puss_doc_get_view_from_page_num( Puss* app, gint page_num ) {
@@ -302,40 +341,52 @@ gint puss_doc_find_page_from_url( Puss* app, const gchar* url ) {
 }
 
 void puss_doc_new( Puss* app ) {
-	doc_open_page(app, 0);
+	GtkSourceBuffer* buf = gtk_source_buffer_new(0);
+	puss_doc_set_charset(GTK_TEXT_BUFFER(buf), "UTF-8");
+
+	doc_open_page(app, buf);
 }
 
 gboolean puss_doc_open( Puss* app, const gchar* url, gint line, gint line_offset ) {
-	gint page_num = puss_doc_find_page_from_url(app, url);
-	if( page_num < 0 ) {
-		gchar* text = 0;
-		gsize len = 0;
-		const gchar* charset = 0;
-		GError* err = 0;
-		GtkSourceBuffer* buf;
+	gint page_num = -1;
 
-		if( !doc_load_file(url, &text, &len, &charset, &err) ) {
-			g_assert( err );
-			g_printerr("ERROR : %s", err->message);
-			g_error_free(err);
+	if( url ) {
+		page_num = doc_open_file(app, url);
+		if( page_num > 0 )
+			doc_locate_page_line(app, page_num, line, line_offset);
 
-			return FALSE;
+	} else {
+		gint res;
+		GtkWidget* dlg = gtk_file_chooser_dialog_new( "Open File"
+			, app->ui.main_window
+			, GTK_FILE_CHOOSER_ACTION_OPEN
+			, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL
+			, GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT
+			, NULL );
+
+		gtk_dialog_set_default_response(GTK_DIALOG(dlg), GTK_RESPONSE_ACCEPT);
+		gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(dlg), TRUE);
+
+		GtkTextBuffer* buffer = doc_get_current_buffer(app);
+		if( buffer ) {
+			const GString* gstr = puss_doc_get_url(buffer);
+			if( gstr ) {
+				gchar* folder = g_path_get_dirname(gstr->str);
+				gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dlg), folder);
+				g_free(folder);
+			}
 		}
 
-		buf = gtk_source_buffer_new(0);
-		gtk_text_buffer_set_text(GTK_TEXT_BUFFER(buf), text, len);
-		g_free(text);
+		res = gtk_dialog_run(GTK_DIALOG(dlg));
+		if( res == GTK_RESPONSE_ACCEPT ) {
+			gchar* filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dlg));
+			page_num = doc_open_file(app, filename);
+			g_free(filename);
+		}
 
-		puss_doc_set_url(GTK_TEXT_BUFFER(buf), url);
-		puss_doc_set_charset(GTK_TEXT_BUFFER(buf), charset);
-
-		page_num = doc_open_page(app, buf);
+		gtk_widget_destroy(dlg);
 	}
 
-	if( page_num < 0 )
-		return FALSE;
-
-	doc_locate_page_line(app, page_num, line, line_offset);
 	return TRUE;
 }
 
@@ -376,6 +427,8 @@ gboolean puss_doc_close_current( Puss* app ) {
 			, GTK_BUTTONS_YES_NO
 			, _("file modified, save it?") );
 
+		gtk_dialog_set_default_response(GTK_DIALOG(dlg), GTK_RESPONSE_YES);
+
 		res = gtk_dialog_run(GTK_DIALOG(dlg));
 		gtk_widget_destroy(dlg);
 
@@ -395,11 +448,71 @@ gboolean puss_doc_close_current( Puss* app ) {
 	return TRUE;
 }
 
-
 void puss_doc_save_all( Puss* app ) {
+	gint num = gtk_notebook_get_n_pages(app->ui.doc_panel);
+	for( gint i=0; i<num; ++i )
+		doc_save_page(app, i, FALSE);
 }
 
+gboolean puss_doc_close_all( Puss* app ) {
+	gboolean need_prompt = TRUE;
+	gboolean save_file_sign = FALSE;
 
-void puss_doc_close_all( Puss* app ) {
+	while( gtk_notebook_get_n_pages(app->ui.doc_panel) ) {
+		GtkTextBuffer* buf = puss_doc_get_buffer_from_page_num(app, 0);
+		if( !buf )
+			continue;
+
+		if( gtk_text_buffer_get_modified(buf) ) {
+			if( need_prompt ) {
+				GString* url = puss_doc_get_url(buf);
+
+				GtkWidget* dlg = gtk_message_dialog_new( app->ui.main_window
+					, GTK_DIALOG_MODAL
+					, GTK_MESSAGE_QUESTION
+					, GTK_BUTTONS_NONE
+					, "file modified, save it?\n\n%s\n"
+					, url ? url->str : _("Untitled") );
+
+				gtk_dialog_add_buttons( GTK_DIALOG(dlg)
+					, _("yes to all"), GTK_RESPONSE_ACCEPT
+					, _("no to all"), GTK_RESPONSE_CANCEL
+					, GTK_STOCK_YES, GTK_RESPONSE_YES
+					, GTK_STOCK_NO, GTK_RESPONSE_NO
+					, NULL );
+
+				gtk_dialog_set_default_response(GTK_DIALOG(dlg), GTK_RESPONSE_ACCEPT);
+
+				switch( gtk_dialog_run(GTK_DIALOG(dlg)) ) {
+				case GTK_RESPONSE_APPLY:
+					need_prompt = FALSE;
+					save_file_sign = TRUE;
+					break;
+				case GTK_RESPONSE_CANCEL:
+					need_prompt = FALSE;
+					save_file_sign = FALSE;
+					break;
+				case GTK_RESPONSE_YES:
+					save_file_sign = TRUE;
+					break;
+				case GTK_RESPONSE_NO:
+					save_file_sign = FALSE;
+					break;
+				default:
+					return FALSE;
+				}
+
+			}
+
+			if( save_file_sign ) {
+				if( !doc_save_page(app, 0, FALSE) )
+					return FALSE;
+			}
+		}
+
+		gtk_notebook_remove_page(app->ui.doc_panel, 0);
+	}
+
+	return TRUE;
 }
 
