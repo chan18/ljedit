@@ -1,13 +1,13 @@
-// UI.h
+// MainWindow.h
 //
 
-#ifndef PUSS_INC_UI_H
-#define PUSS_INC_UI_H
+#ifndef PUSS_INC_MAIN_WINDOW_H
+#define PUSS_INC_MAIN_WINDOW_H
 
 #include <gtk/gtk.h>
 
-struct UI {
-	GtkWindow*			main_window;
+struct MainWindow {
+	GtkWindow*			window;
 
 	GtkUIManager*		ui_manager;
 
@@ -24,7 +24,7 @@ struct UI {
 
 struct Puss;
 
-void puss_create_ui(Puss* app);
+void puss_main_window_create(Puss* app);
 
 void puss_active_panel_page(GtkNotebook* panel, gint page_num);
 

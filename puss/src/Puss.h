@@ -4,10 +4,12 @@
 #ifndef PUSS_INC_PUSS_H
 #define PUSS_INC_PUSS_H
 
-#include "UI.h"
+#include "MainWindow.h"
+#include "MiniLine.h"
 
 struct Puss {
-	UI ui;
+	MainWindow	main_window;
+	MiniLine	mini_line;
 };
 
 void puss_create(Puss* app);

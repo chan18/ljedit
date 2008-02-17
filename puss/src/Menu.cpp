@@ -186,13 +186,13 @@ void puss_create_ui_manager(Puss* app) {
 				"</toolbar>"
 			"</ui>";
 
-		app->ui.ui_manager = gtk_ui_manager_new();
+		app->main_window.ui_manager = gtk_ui_manager_new();
 
-		if( !gtk_ui_manager_add_ui_from_string(app->ui.ui_manager, ui_info, -1, &error) ) {
+		if( !gtk_ui_manager_add_ui_from_string(app->main_window.ui_manager, ui_info, -1, &error) ) {
 			g_message("create menu failed : %s", error->message);
 			g_error_free(error);
 		}
-		gtk_ui_manager_insert_action_group(app->ui.ui_manager, action_group, 0);
+		gtk_ui_manager_insert_action_group(app->main_window.ui_manager, action_group, 0);
 	}
 }
 
@@ -219,7 +219,7 @@ void cb_file_menu_close( GtkAction* action, Puss* app ) {
 }
 
 void cb_file_menu_quit( GtkAction* action, Puss* app ) {
-	gtk_widget_destroy(GTK_WIDGET(app->ui.main_window));
+	gtk_widget_destroy(GTK_WIDGET(app->main_window.window));
 }
 
 void cb_edit_menu_goto( GtkAction* action, Puss* app ) {
@@ -253,34 +253,34 @@ void cb_view_menu_active_doc_page( GtkAction* action, Puss* app ) {
 void cb_view_menu_left_panel( GtkAction* action, Puss* app ) {
 	gboolean active = gtk_toggle_action_get_active(GTK_TOGGLE_ACTION(action));
 	if( active )
-		gtk_widget_show(GTK_WIDGET(app->ui.left_panel));
+		gtk_widget_show(GTK_WIDGET(app->main_window.left_panel));
 	else
-		gtk_widget_hide(GTK_WIDGET(app->ui.left_panel));
+		gtk_widget_hide(GTK_WIDGET(app->main_window.left_panel));
 }
 
 void cb_view_menu_right_panel( GtkAction* action, Puss* app ) {
 	gboolean active = gtk_toggle_action_get_active(GTK_TOGGLE_ACTION(action));
 	if( active )
-		gtk_widget_show(GTK_WIDGET(app->ui.right_panel));
+		gtk_widget_show(GTK_WIDGET(app->main_window.right_panel));
 	else
-		gtk_widget_hide(GTK_WIDGET(app->ui.right_panel));
+		gtk_widget_hide(GTK_WIDGET(app->main_window.right_panel));
 }
 
 void cb_view_menu_bottom_panel( GtkAction* action, Puss* app ) {
 	gboolean active = gtk_toggle_action_get_active(GTK_TOGGLE_ACTION(action));
 	if( active )
-		gtk_widget_show(GTK_WIDGET(app->ui.bottom_panel));
+		gtk_widget_show(GTK_WIDGET(app->main_window.bottom_panel));
 	else
-		gtk_widget_hide(GTK_WIDGET(app->ui.bottom_panel));
+		gtk_widget_hide(GTK_WIDGET(app->main_window.bottom_panel));
 }
 
 void cb_view_menu_bottom_page_n( GtkAction* action, GtkRadioAction* current, Puss* app ) {
 	gint page_num = gtk_radio_action_get_current_value(current);
 	//g_message("bottom page : %d", page_num);
-	puss_active_panel_page(app->ui.bottom_panel, page_num);
+	puss_active_panel_page(app->main_window.bottom_panel, page_num);
 }
 
 void cb_help_menu_about( GtkAction* action, Puss* app ) {
-	puss_show_about_dialog(app->ui.main_window);
+	puss_show_about_dialog(app->main_window.window);
 }
 
