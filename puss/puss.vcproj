@@ -200,14 +200,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\CmdLine.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\CmdLine.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\DocManager.cpp"
 				>
 			</File>
@@ -238,11 +230,27 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\src\MainWindow.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\MainWindow.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Menu.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\src\Menu.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\MiniLine.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\MiniLine.h"
 				>
 			</File>
 			<File
@@ -254,29 +262,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\UI.cpp"
+				RelativePath=".\src\Utils.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						ObjectFile="$(IntDir)\$(InputName)1.obj"
-						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						ObjectFile="$(IntDir)\$(InputName)1.obj"
-						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\src\UI.h"
+				RelativePath=".\src\Utils.h"
 				>
 			</File>
 		</Filter>
