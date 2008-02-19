@@ -3,29 +3,32 @@
 #include "MainWindow.h"
 
 #include <glib/gi18n.h>
+#include <memory.h>
 
 #include "Puss.h"
 #include "Menu.h"
 #include "Utils.h"
 
 void puss_main_window_create(Puss* app) {
-	MainWindow& ui = app->main_window;
-	ui.window = GTK_WINDOW(gtk_window_new(GTK_WINDOW_TOPLEVEL));
+	app->main_window = (MainWindow*)g_malloc(sizeof(MainWindow));
+	memset(app->main_window, 0, sizeof(MainWindow));
+
+	app->main_window->window = GTK_WINDOW(gtk_window_new(GTK_WINDOW_TOPLEVEL));
 
     GtkVBox* vbox = GTK_VBOX(gtk_vbox_new(FALSE, 0));
-	gtk_container_add(GTK_CONTAINER(ui.window), GTK_WIDGET(vbox));
+	gtk_container_add(GTK_CONTAINER(app->main_window->window), GTK_WIDGET(vbox));
 
     // create ui manager
     puss_create_ui_manager(app);
-	GtkAccelGroup* accel_group = gtk_ui_manager_get_accel_group(ui.ui_manager);
-	gtk_window_add_accel_group(ui.window, accel_group);
+	GtkAccelGroup* accel_group = gtk_ui_manager_get_accel_group(app->main_window->ui_manager);
+	gtk_window_add_accel_group(app->main_window->window, accel_group);
 
     // menubar
-    GtkWidget* menubar = gtk_ui_manager_get_widget(ui.ui_manager, "/MenuBar");
+    GtkWidget* menubar = gtk_ui_manager_get_widget(app->main_window->ui_manager, "/MenuBar");
     gtk_box_pack_start(GTK_BOX(vbox), menubar, FALSE, FALSE, 0);
 
     // toolbar
-    GtkWidget* toolbar = gtk_ui_manager_get_widget(ui.ui_manager, "/ToolBar");
+    GtkWidget* toolbar = gtk_ui_manager_get_widget(app->main_window->ui_manager, "/ToolBar");
     gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_BOTH_HORIZ);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, FALSE, FALSE, 0);
 
@@ -35,9 +38,9 @@ void puss_main_window_create(Puss* app) {
     gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(hpaned),  TRUE, TRUE, 0);
 	{
 		// left
-		ui.left_panel = GTK_NOTEBOOK(gtk_notebook_new());
-		gtk_notebook_set_tab_pos(ui.left_panel, GTK_POS_BOTTOM);
-		gtk_paned_pack1(GTK_PANED(hpaned), GTK_WIDGET(ui.left_panel), FALSE, FALSE);
+		app->main_window->left_panel = GTK_NOTEBOOK(gtk_notebook_new());
+		gtk_notebook_set_tab_pos(app->main_window->left_panel, GTK_POS_BOTTOM);
+		gtk_paned_pack1(GTK_PANED(hpaned), GTK_WIDGET(app->main_window->left_panel), FALSE, FALSE);
 
 		// right vpaned - for bottom panel
 		GtkVPaned* right_vpaned = GTK_VPANED(gtk_vpaned_new());
@@ -49,32 +52,39 @@ void puss_main_window_create(Puss* app) {
 			gtk_paned_pack1(GTK_PANED(right_vpaned), GTK_WIDGET(right_hpaned), TRUE, FALSE);
 			{
 				// doc panel
-				ui.doc_panel = GTK_NOTEBOOK(gtk_notebook_new());
-				gtk_paned_pack1(GTK_PANED(right_hpaned), GTK_WIDGET(ui.doc_panel), TRUE, FALSE);
+				app->main_window->doc_panel = GTK_NOTEBOOK(gtk_notebook_new());
+				gtk_paned_pack1(GTK_PANED(right_hpaned), GTK_WIDGET(app->main_window->doc_panel), TRUE, FALSE);
 
 				// right panel
-				ui.right_panel = GTK_NOTEBOOK(gtk_notebook_new());
-				gtk_widget_set_size_request(GTK_WIDGET(ui.right_panel), 200, -1);
-				gtk_notebook_set_tab_pos(ui.right_panel, GTK_POS_BOTTOM);
-				gtk_paned_pack2(GTK_PANED(right_hpaned), GTK_WIDGET(ui.right_panel), FALSE, FALSE);
+				app->main_window->right_panel = GTK_NOTEBOOK(gtk_notebook_new());
+				gtk_widget_set_size_request(GTK_WIDGET(app->main_window->right_panel), 200, -1);
+				gtk_notebook_set_tab_pos(app->main_window->right_panel, GTK_POS_BOTTOM);
+				gtk_paned_pack2(GTK_PANED(right_hpaned), GTK_WIDGET(app->main_window->right_panel), FALSE, FALSE);
 			}
 
 			// bottom
-			ui.bottom_panel = GTK_NOTEBOOK(gtk_notebook_new());
-			gtk_widget_set_size_request(GTK_WIDGET(ui.bottom_panel), -1, 200);
-			gtk_notebook_set_tab_pos(ui.bottom_panel, GTK_POS_BOTTOM);
-			gtk_paned_pack2(GTK_PANED(right_vpaned), GTK_WIDGET(ui.bottom_panel), FALSE, FALSE);
+			app->main_window->bottom_panel = GTK_NOTEBOOK(gtk_notebook_new());
+			gtk_widget_set_size_request(GTK_WIDGET(app->main_window->bottom_panel), -1, 200);
+			gtk_notebook_set_tab_pos(app->main_window->bottom_panel, GTK_POS_BOTTOM);
+			gtk_paned_pack2(GTK_PANED(right_vpaned), GTK_WIDGET(app->main_window->bottom_panel), FALSE, FALSE);
 		}
 
 	}
 
     // statusbar
-    ui.status_bar = GTK_STATUSBAR(gtk_statusbar_new());
-    gtk_box_pack_end(GTK_BOX(vbox), GTK_WIDGET(ui.status_bar), FALSE, FALSE, 0);
+    app->main_window->status_bar = GTK_STATUSBAR(gtk_statusbar_new());
+    gtk_box_pack_end(GTK_BOX(vbox), GTK_WIDGET(app->main_window->status_bar), FALSE, FALSE, 0);
 
 	// show vbox & resize window
 	gtk_widget_show_all(GTK_WIDGET(vbox));
-	gtk_window_resize(ui.window, 1024, 768);
+	gtk_window_resize(app->main_window->window, 1024, 768);
+}
+
+void puss_main_window_destroy( Puss* app ) {
+	if( app->main_window ) {
+		g_free( app->main_window );
+		app->main_window = 0;
+	}
 }
 
 void puss_active_panel_page(GtkNotebook* panel, gint page_num) {

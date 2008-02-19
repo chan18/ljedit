@@ -17,6 +17,7 @@ int main(int argc, char* argv[]) {
 	Puss puss;
 	puss_create(&puss);
 	puss_run(&puss);
+	puss_destroy(&puss);
 
 	return 0;
 }

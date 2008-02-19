@@ -25,6 +25,7 @@ struct MainWindow {
 struct Puss;
 
 void puss_main_window_create(Puss* app);
+void puss_main_window_destroy(Puss* app);
 
 void puss_active_panel_page(GtkNotebook* panel, gint page_num);
 
