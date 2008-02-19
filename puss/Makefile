@@ -52,11 +52,12 @@ $(OBJPATH)/%.o : %.cpp
 	$(CXX) $(CXXFLAGS) $(GTKINCS) -o $@ -c $<
 
 $(OBJPATH)/%.d : %.cpp
+	@echo $(CXX) -MM -o $@ -c $<
+	@rm -f $@
 	@mkdir -p $(dir $@)
-	@$(CXX) $(CXXFLAGS) -o $@.tmp -MM $<	# use tmp file can ignore error!
-	@echo -n $@ $(dir $@) > $@
-	@cat $@.tmp >> $@
-	@rm $@.tmp
+	@echo -n $@ $(dir $@) > $@.tmp
+	@$(CXX) $(CXXFLAGS) -MM $< >> $@.tmp
+	@mv $@.tmp $@
 
 -include $(SRCS:%.cpp=$(OBJPATH)/%.d)
 
