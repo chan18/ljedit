@@ -224,15 +224,15 @@ void cb_file_menu_quit( GtkAction* action, Puss* app ) {
 }
 
 void cb_edit_menu_goto( GtkAction* action, Puss* app ) {
-	puss_mini_line_active(app, 0, 0, puss_mini_line_goto_get_callback());
+	puss_mini_line_active(app, puss_mini_line_GOTO_get_callback());
 }
 
 void cb_edit_menu_find( GtkAction* action, Puss* app ) {
-	g_message("find");
+	puss_mini_line_active(app, puss_mini_line_FIND_get_callback());
 }
 
 void cb_edit_menu_replace( GtkAction* action, Puss* app ) {
-	g_message("replace");
+	puss_mini_line_active(app, puss_mini_line_REPLACE_get_callback());
 }
 
 void cb_edit_menu_go_back( GtkAction* action, Puss* app ) {
@@ -244,11 +244,21 @@ void cb_edit_menu_go_forward( GtkAction* action, Puss* app ) {
 }
 
 void cb_view_menu_fullscreen( GtkAction* action, Puss* app ) {
-	g_message("fullscreen");
+	static bool is_fullscreen = false;
+	is_fullscreen = !is_fullscreen;
+	if( is_fullscreen )
+		gtk_window_fullscreen(app->main_window->window);
+	else
+		gtk_window_unfullscreen(app->main_window->window);
 }
 
 void cb_view_menu_active_doc_page( GtkAction* action, Puss* app ) {
-	g_message("active document page");
+	gint page_num = gtk_notebook_get_current_page(app->main_window->doc_panel);
+	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
+	if( !view )
+		return;
+
+	gtk_widget_grab_focus(GTK_WIDGET(view));
 }
 
 void cb_view_menu_left_panel( GtkAction* action, Puss* app ) {
@@ -277,7 +287,6 @@ void cb_view_menu_bottom_panel( GtkAction* action, Puss* app ) {
 
 void cb_view_menu_bottom_page_n( GtkAction* action, GtkRadioAction* current, Puss* app ) {
 	gint page_num = gtk_radio_action_get_current_value(current);
-	//g_message("bottom page : %d", page_num);
 	puss_active_panel_page(app->main_window->bottom_panel, page_num);
 }
 
