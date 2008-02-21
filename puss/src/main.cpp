@@ -1,6 +1,7 @@
 // main.c
 
 #include <libintl.h>
+#include <gtk/gtk.h>
 
 #include "Puss.h"
 
@@ -14,10 +15,12 @@ int main(int argc, char* argv[]) {
 
 	gtk_init(&argc, &argv);
 
-	Puss puss;
-	puss_create(&puss);
-	puss_run(&puss);
-	puss_destroy(&puss);
+	Puss* app = puss_create();
+	if( !app )
+		return 1;
+
+	puss_run(app);
+	puss_destroy(app);
 
 	return 0;
 }

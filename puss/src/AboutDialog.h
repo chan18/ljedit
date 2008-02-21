@@ -6,7 +6,7 @@
 
 #include <gtk/gtk.h>
 
-void puss_show_about_dialog(GtkWindow* window);
+void	puss_show_about_dialog(GtkWindow* window);
 
 #endif//PUSS_INC_ABOUTDIALOG_H
 

@@ -8,7 +8,7 @@
 
 struct Puss;
 
-void puss_create_ui_manager(Puss* app);
+void	puss_create_ui_manager(Puss* app);
 
 #endif//PUSS_INC_MENU_H
 

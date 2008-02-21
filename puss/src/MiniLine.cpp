@@ -6,7 +6,7 @@
 #include <glib/gi18n.h>
 #include <memory.h>
 
-#include "Puss.h"
+#include "IPuss.h"
 #include "Utils.h"
 #include "DocManager.h"
 
@@ -48,12 +48,11 @@ gboolean mini_line_cb_button_press_event( GtkWidget* widget, GdkEventButton* eve
 }
 
 void puss_mini_line_create( Puss* app ) {
-	app->mini_line = (MiniLine*)g_malloc(sizeof(MiniLineImpl));
-	memset(app->mini_line, 0, sizeof(MiniLineImpl));
-
-	MiniLineImpl* self = (MiniLineImpl*)app->mini_line;
-	MiniLine* ui = app->mini_line;
-
+	MiniLineImpl* self = (MiniLineImpl*)g_malloc(sizeof(MiniLineImpl));
+	memset(self, 0, sizeof(MiniLineImpl));
+	MiniLine* ui = (MiniLine*)self;
+	app->mini_line = ui;
+	
 	ui->label = GTK_LABEL(gtk_label_new(0));
 	ui->entry = GTK_ENTRY(gtk_entry_new());
 
@@ -81,10 +80,8 @@ void puss_mini_line_create( Puss* app ) {
 }
 
 void puss_mini_line_destroy( Puss* app ) {
-	if( app->mini_line ) {
+	if( app && app->mini_line )
 		g_free(app->mini_line);
-		app->mini_line = 0;
-	}
 }
 
 void puss_mini_line_active( Puss* app, MiniLineCallback* cb ) {
@@ -115,7 +112,7 @@ void puss_mini_line_active( Puss* app, MiniLineCallback* cb ) {
 	// 
 	//puss_send_focus_change(GTK_WIDGET(view), FALSE);
 	puss_send_focus_change(GTK_WIDGET(app->mini_line->entry), TRUE);
-	//gtk_widget_grab_focus(GTK_WIDGET(app->mini_line->entry));
+	//gtk_widget_grab_focus(GTK_WIDGET(ui->entry));
 
 	g_signal_handler_block(G_OBJECT(app->mini_line->entry), self->signal_id_changed);
 	gboolean res = self->cb->cb_active(app, self->cb->tag);

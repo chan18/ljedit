@@ -4,8 +4,10 @@
 
 #include <glib/gi18n.h>
 
-#include "Puss.h"
+#include "IPuss.h"
+#include "Utils.h"
 #include "DocManager.h"
+#include "MiniLine.h"
 #include "MiniLineModules.h"
 #include "AboutDialog.h"
 

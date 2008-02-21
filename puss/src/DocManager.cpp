@@ -2,12 +2,17 @@
 // 
 
 #include "DocManager.h"
-#include "Puss.h"
 
 #include <glib/gi18n.h>
 
 #include <gtksourceview/gtksourceview.h>
+#include <gtksourceview/gtksourceiter.h>
 #include <string.h>
+
+#include "IPuss.h"
+#include "Puss.h"
+#include "Utils.h"
+
 
 void __free_g_string( GString* gstr ) {
 	g_string_free(gstr, TRUE);
@@ -333,6 +338,34 @@ void puss_doc_set_charset( GtkTextBuffer* buffer, const gchar* charset ) {
 
 GString* puss_doc_get_charset( GtkTextBuffer* buffer ) {
 	return (GString*)g_object_get_data(G_OBJECT(buffer), "puss-doc-charset");
+}
+
+void puss_doc_replace_all( GtkTextBuffer* buf
+		, const gchar* find_text
+		, const gchar* replace_text
+		, gint flags )
+{
+	GtkTextIter iter;
+	gtk_text_buffer_get_start_iter(buf, &iter);
+
+	gtk_text_buffer_begin_user_action(buf);
+	{
+		gint replace_text_len = (gint)strlen(replace_text);
+
+		GtkTextIter ps, pe;
+		while( gtk_source_iter_forward_search(&iter
+				, find_text
+				, (GtkSourceSearchFlags)flags
+				, &ps
+				, &pe
+				, 0) )
+		{
+			gtk_text_buffer_delete(buf, &ps, &pe);
+			gtk_text_buffer_insert(buf, &ps, replace_text, replace_text_len);
+			iter = ps;
+		}
+	}
+	gtk_text_buffer_end_user_action(buf);
 }
 
 GtkTextView* puss_doc_get_view_from_page( GtkWidget* page ) {

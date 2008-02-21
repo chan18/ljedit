@@ -8,14 +8,22 @@
 
 struct Puss;
 
+// doc & view
 void			puss_doc_set_url( GtkTextBuffer* buffer, const gchar* url );
 GString*		puss_doc_get_url( GtkTextBuffer* buffer );
 
 void			puss_doc_set_charset( GtkTextBuffer* buffer, const gchar* charset );
 GString*		puss_doc_get_charset( GtkTextBuffer* buffer );
 
+void			puss_doc_replace_all( GtkTextBuffer* buf
+									, const gchar* find_text
+									, const gchar* replace_text
+									, gint flags );
+
 GtkTextView*	puss_doc_get_view_from_page( GtkWidget* page );
 GtkTextBuffer*	puss_doc_get_buffer_from_page( GtkWidget* page );
+
+// doc manager
 
 GtkLabel*		puss_doc_get_label_from_page_num( Puss* app, int page_num );
 GtkTextView*	puss_doc_get_view_from_page_num( Puss* app, gint page_num );

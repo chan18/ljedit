@@ -3,7 +3,6 @@
 
 #include "MiniLineModules.h"
 
-#include "MiniLine.h"
 
 #include <glib/gi18n.h>
 #include <gdk/gdkkeysyms.h>
@@ -14,9 +13,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "Puss.h"
-#include "Utils.h"
+#include "IPuss.h"
+#include "MiniLine.h"
 #include "DocManager.h"
+#include "Utils.h"
 
 
 GdkColor FAILED_COLOR = { 0, 65535, 10000, 10000 };
@@ -414,55 +414,22 @@ void REPLACE_cb_changed(Puss* app, gpointer tag) {
 	g_free(text);
 }
 
-// TODO : 
-
-void do_replace_all(GtkTextBuffer* buf, const gchar* find_text, const gchar* replace_text) {
-	GtkTextIter iter, end;
-	gtk_text_buffer_get_start_iter(buf, &iter);
-	gtk_text_buffer_get_end_iter(buf, &end);
-
-	GtkSourceSearchFlags flags = (GtkSourceSearchFlags)(GTK_SOURCE_SEARCH_TEXT_ONLY | GTK_SOURCE_SEARCH_CASE_INSENSITIVE);
-
-	gtk_text_buffer_begin_user_action(buf);
-	{
-		gint replace_text_len = (gint)strlen(replace_text);
-
-		GtkTextIter ps, pe;
-		while( gtk_source_iter_forward_search(&iter
-				, find_text
-				, flags
-				, &ps
-				, &pe
-				, &end) )
-		{
-			//gtk_text_buffer_delete_selection(buf, FALSE, FALSE);
-			//gtk_text_buffer_insert_at_cursor(buf, replace_text, replace_text_len);
-			//gtk_text_buffer_get_iter_at_mark(buf, &iter, gtk_text_buffer_get_insert(buf));
+gchar* locate_next_scope(gchar* text) {
+	gchar* pos = 0;
+	for( gchar* p = text; *p; ++p ) {
+		if( *p=='/' ) {
+			*p = '\0';
+			pos = p + 1;
+			break;
 		}
 	}
-	gtk_text_buffer_end_user_action(buf);
-}
-
-void do_replace_and_locate_text(GtkTextBuffer* buf, const gchar* find_text, const gchar* replace_text, gboolean replace_all) {
-	if( replace_all )
-	{
-		do_replace_all(buf, find_text, replace_text);
-	}
+	return pos;
 }
 
 void replace_and_locate_text(Puss* app, GtkTextView* view) {
 	gchar* find_text = g_strdup(gtk_entry_get_text(app->mini_line->entry));
 
-	gchar* replace_text = 0;
-	{
-		for( gchar* p = find_text; *p; ++p ) {
-			if( *p=='/' ) {
-				*p = '\0';
-				replace_text = p + 1;
-				break;
-			}
-		}
-	}
+	gchar* replace_text = locate_next_scope(find_text);
 
 	if( !replace_text ) {
 		gchar* text = g_strconcat(find_text, "/<replace>/[all]", NULL);
@@ -472,20 +439,34 @@ void replace_and_locate_text(Puss* app, GtkTextView* view) {
 		gtk_entry_select_region(app->mini_line->entry, (gint)strlen(find_text), -1);
 
 	} else {
-		gchar* ops_text = 0;
-		{
-			for( gchar* p = replace_text; *p; ++p ) {
-				if( *p=='/' ) {
-					*p = '\0';
-					ops_text = p + 1;
-					break;
-				}
-			}
-		}
-
+		gchar* ops_text = locate_next_scope(replace_text);
 		gboolean replace_all_sign = (ops_text && ops_text[0]=='a');
 
-		do_replace_and_locate_text(gtk_text_view_get_buffer(view), find_text, replace_text, replace_all_sign);
+		GtkTextBuffer* buf = gtk_text_view_get_buffer(view);
+
+		if( replace_all_sign ) {
+			puss_doc_replace_all( buf
+								, find_text
+								, replace_text
+								, GTK_SOURCE_SEARCH_TEXT_ONLY | GTK_SOURCE_SEARCH_CASE_INSENSITIVE );
+
+			puss_mini_line_deactive(app);
+
+		} else {
+			GtkTextIter ps, pe;
+			gtk_text_buffer_get_selection_bounds(buf, &ps, &pe);
+			if( gtk_text_iter_is_end(&ps) || gtk_text_iter_is_end(&pe) ) {
+				puss_mini_line_deactive(app);
+				
+			} else {
+				gtk_text_buffer_begin_user_action(buf);
+				gtk_text_buffer_delete(buf, &ps, &pe);
+				gtk_text_buffer_insert(buf, &ps, replace_text, (gint)strlen(replace_text));
+				gtk_text_buffer_end_user_action(buf);
+
+				find_and_locate_text(app, view, find_text, TRUE, FALSE);
+			}
+		}
 	}
 
 	g_free(find_text);
@@ -529,12 +510,11 @@ gboolean REPLACE_cb_key_press(Puss* app, GdkEventKey* event, gpointer tag) {
 		}
 	}
 
-
 	return FALSE;
 }
 
 MiniLineCallback* puss_mini_line_REPLACE_get_callback() {
-	static MiniLineFind me;
+	static MiniLineREPLACE me;
 	me.cb.tag = &me;
 	me.cb.cb_active = &REPLACE_cb_active;
 	me.cb.cb_changed = &REPLACE_cb_changed;

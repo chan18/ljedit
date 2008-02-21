@@ -262,6 +262,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\PluginEngine.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\PluginEngine.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Puss.cpp"
 				>
 			</File>
@@ -282,7 +290,7 @@
 			Name="include"
 			>
 			<File
-				RelativePath=".\include\Plugin.h"
+				RelativePath=".\include\IPuss.h"
 				>
 			</File>
 		</Filter>
