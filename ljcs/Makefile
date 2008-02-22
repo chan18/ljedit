@@ -25,7 +25,7 @@ INCS = ds.h parser.h searcher.h index.h skey.h ljcs.h crt_debug.h
 all : lib/libljcs.a lib/libljcs.so $(INCS:%.h=$(INCPATH)/%.h)
 
 lib/libljcs.a :  $(OBJS)
-	ar -rc $@ $^
+	$(AR) -rc $@ $^
 
 lib/libljcs.so : $(OBJS)
 	$(CXX) $(CXXFLAGS) -shared -o $@ $^
