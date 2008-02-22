@@ -78,6 +78,16 @@ void puss_extend_engine_create(Puss* app) {
 			if( !filename )
 				break;
 
+			size_t len = strlen(filename);
+			if(    len < 5
+				|| filename[len-4] != '.'
+				|| filename[len-3] != 'e'
+				|| filename[len-2] != 'x'
+				|| filename[len-1] != 't' )
+			{
+				continue;
+			}
+
 			gchar* filepath = g_build_filename(extends_dir, filename, NULL);
 			extend = extend_load(app, filepath);
 			g_free(filepath);

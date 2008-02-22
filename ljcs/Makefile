@@ -13,29 +13,25 @@ ifeq ($(BUILD), release)
 	OBJPATH = release
 endif
 
-SRCPATH = src
 
-SRCS = $(wildcard $(SRCPATH)/*.cpp $(SRCPATH)/cps/*.cpp)
+SRCS = src/mlexer.cpp $(wildcard src/*.cpp src/cps/*.cpp)
 
-OBJS = $(SRCS:$(SRCPATH)/%.cpp=$(OBJPATH)/%.o)
+OBJS = $(SRCS:%.cpp=$(OBJPATH)/%.o)
 
-all : lib/libljcs.so
+INCPATH  = include/ljcs
 
-LJCS_INCS = ds.h parser.h searcher.h index.h skey.h ljcs.h crt_debug.h
+INCS = ds.h parser.h searcher.h index.h skey.h ljcs.h crt_debug.h
 
-lib/libljcs.so : $(OBJS) $(OBJPATH)/mlexer.o
+all : lib/libljcs.a lib/libljcs.so $(INCS:%.h=$(INCPATH)/%.h)
+
+lib/libljcs.a :  $(OBJS)
+	ar -rc $@ $^
+
+lib/libljcs.so : $(OBJS)
 	$(CXX) $(CXXFLAGS) -shared -o $@ $^
-	cp $(LJCS_INCS:%.h=$(SRCPATH)/%.h) include/ljcs/
 
-$(OBJPATH)/%.o : $(SRCPATH)/%.cpp
-	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -o $@ -c $<
-
-$(OBJPATH)/mlexer.o : $(SRCPATH)/mlexer.cpp $(SRCPATH)/ml.l $(SRCPATH)/ml.h $(SRCPATH)/parser.h $(SRCPATH)/ds.h
-	$(CXX) $(CXXFLAGS) -DYY_STACK_USED -c -o $@ $<
-
-$(SRCPATH)/mlexer.cpp : $(SRCPATH)/ml.l
-	flex -o $@ $<
+$(INCPATH)/%.h : src/%.h
+	cp -f $^ $@
 
 clean :
 	rm -rf debug
@@ -43,20 +39,25 @@ clean :
 	rm -f lib/*
 	rm -f src/mlexer.cpp
 	rm -f src/ljcs_py_wrap.*
-	rm -f include/ljcs/*
+	rm -f $(INCPATH)/*
 
-#PYTHON_INC=/usr/include/python2.5
-#PYTHON_LIB=python2.5
-#LJCS_PYOBJS = $(LJCSOBJS) src/ljcs_py_wrap.o
+$(OBJPATH)/src/mlexer.o : src/mlexer.cpp src/ml.l
+	$(CXX) $(CXXFLAGS) -DYY_STACK_USED -c -o $@ $<
 
-#lib/_ljcs_py.so : $(LJCS_PYOBJS)
-#	$(CXX) $(CXXFLAGS) -shared -o $@ $(LJCS_PYOBJS) -l$(PYTHON_LIB)
-#	cp lib/_ljcs_py.so plugin/gedit/ljcs/
-#	cp lib/ljcs_py.py plugin/gedit/ljcs/
+src/mlexer.cpp : src/ml.l
+	flex -o $@ $<
 
-#src/ljcs_py_wrap.o : src/ljcs_py_wrap.cpp
-#	$(CXX) $(CXXFLAGS) -I$(PYTHON_INC) -Iinclude -c -o $@ $<
+$(OBJPATH)/%.o : %.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) $(GTKINCS) -o $@ -c $<
 
-#src/ljcs_py_wrap.cpp : src/ljcs_py.i src/searcher.h
-#	swig -c++ -python -outdir lib -o ljcs_py_wrap.cpp $<
-#	mv -f ljcs_py_wrap.* src/
+$(OBJPATH)/%.d : %.cpp
+	@echo $(CXX) -MM -o $@ -c $<
+	@rm -f $@
+	@mkdir -p $(dir $@)
+	@echo -n $@ $(dir $@) > $@.tmp
+	@$(CXX) $(CXXFLAGS) -MM $< >> $@.tmp
+	@mv $@.tmp $@
+
+-include $(SRCS:%.cpp=$(OBJPATH)/%.d)
+
