@@ -83,21 +83,8 @@ private:
 
 class Environ : public IParserEnviron {
 public:
-	static bool __create(Puss* app);
-
-	static void __destroy();
-
-	static Environ& self();
-
-private:
-	Environ(Puss* app);
+	Environ();
 	~Environ();
-
-	Environ(const Environ& o);				// no implement
-	Environ& operator = (const Environ& o);	// no implement
-
-public:
-	Puss* app() { g_assert(app_); return app_; }
 
 public:
 	StrVector	get_include_paths()   { return include_paths_.copy(); }

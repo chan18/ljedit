@@ -80,36 +80,16 @@ const char* cpp_keywords[] = { "asm"
 	, 0
 };
 
-Environ* __self = 0;
+Environ::Environ() : keywords_("") {
+	keywords_.ref_count = 1;
 
-bool Environ::__create(Puss* app) {
-	assert( !__self );
-
-	Environ* p = new Environ(app);
-	if( !p )
-		return false;
-
-	p->index_->set_env(p);
+	index_->set_env(this);
 
 	for( const char** key=cpp_keywords; *key!=0; ++key ) {
-		cpp::KeywordElement* elem = new cpp::KeywordElement(p->keywords_, *key);
+		cpp::KeywordElement* elem = new cpp::KeywordElement(keywords_, *key);
 		if( elem )
-			p->keywords_.scope.elems.push_back(elem);
+			keywords_.scope.elems.push_back(elem);
 	}
-
-	__self = p;
-	return true;
-}
-
-void Environ::__destroy() {
-	if( __self ) {
-		delete __self;
-		__self = 0;
-	}
-}
-
-Environ::Environ(Puss* app) : app_(app), keywords_("") {
-	keywords_.ref_count = 1;
 }
 
 Environ::~Environ() {

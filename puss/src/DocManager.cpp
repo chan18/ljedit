@@ -64,7 +64,7 @@ gboolean doc_load_convert_text(gchar** text, gsize* len, const gchar* charset, G
 
 const gchar* charset_order_list[] = { "GBK", 0 };
 
-gboolean doc_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST_RETURN gchar** charset, GError** err) {
+gboolean puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST_RETURN gchar** charset, GError** err) {
 	gchar* sbuf = 0;
 	gsize  slen = 0;
 	const gchar** p = 0;
@@ -190,7 +190,7 @@ gint doc_open_file( Puss* app, const gchar* url ) {
 		const gchar* charset = 0;
 		GError* err = 0;
 
-		if( doc_load_file(url, &text, &len, &charset, &err) ) {
+		if( puss_load_file(url, &text, &len, &charset, &err) ) {
 			GtkSourceBuffer* buf = gtk_source_buffer_new(0);
 			gtk_source_buffer_begin_not_undoable_action(buf);
 			gtk_text_buffer_set_text(GTK_TEXT_BUFFER(buf), text, len);
