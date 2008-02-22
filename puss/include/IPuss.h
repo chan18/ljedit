@@ -39,16 +39,7 @@ struct MiniLineCallback {
 	void     		(*cb_changed)	( Puss* app, gpointer tag );
 };
 
-struct PluginEngine {
-};
-
-struct Puss {
-	MainWindow*		main_window;
-	MiniLine*		mini_line;
-	PluginEngine*	plugin_engine;
-};
-
-struct IPussCAPI {
+struct C_API {
 	// app
 
 	// main window
@@ -90,6 +81,27 @@ struct IPussCAPI {
 	void			(*send_focus_change)			( GtkWidget* widget, gboolean in );
 	void			(*active_panel_page)			( GtkNotebook* panel, gint page_num );
 };
+
+struct Puss {
+	MainWindow*		main_window;
+	MiniLine*		mini_line;
+
+	gchar*			module_path;
+
+	C_API*			api;
+};
+
+#ifdef  __cplusplus
+#	define __EXTERN_C extern "C"
+#else
+#	define __EXTERN_C
+#endif
+
+#ifdef WIN32
+#	define	PUSS_EXPORT		__EXTERN_C __declspec(dllexport)
+#else
+#	define	PUSS_EXPORT		__EXTERN_C
+#endif
 
 #endif//PUSS_INC_IPUSS_H
 

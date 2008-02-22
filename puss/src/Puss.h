@@ -6,7 +6,7 @@
 
 struct Puss;
 
-Puss*	puss_create();
+Puss*	puss_create(const char* filepath);
 void	puss_destroy(Puss* app);
 
 void	puss_run(Puss* app);
