@@ -4,26 +4,33 @@
 #include <gtk/gtk.h>
 
 #include <glib/gi18n.h>
-
+#include <string.h>
 
 #include "Puss.h"
 
 #define PACKAGE		"puss"
 #define LOCALEDIR	"locale"
 
-int main(int argc, char* argv[]) {
-	g_thread_init(NULL);
 
-	gtk_set_locale();
-	bindtextdomain(PACKAGE, LOCALEDIR);
-	textdomain(PACKAGE);
+#ifdef G_OS_WIN32
+#include <Windows.h>
+#endif
 
-	gtk_init(&argc, &argv);
+gchar* find_module_filepath(const char* argv0) {
+	gchar* filepath = 0;
 
-	gchar* filepath = g_find_program_in_path(argv[0]);
+#ifdef G_OS_WIN32
+
+	gchar buf[4096];
+	int len = GetModuleFileNameA(0, buf, 4096);
+	filepath = g_locale_to_utf8(buf, len, NULL, NULL, NULL);
+
+#else
+	filepath = g_find_program_in_path(argv[0]);
+
 	if( !filepath ) {
 		g_printerr(_("ERROR : can not find puss in $PATH\n"));
-		return 1;
+		return 0;
 	}
 
 	if( !g_path_is_absolute(filepath) ) {
@@ -38,9 +45,24 @@ int main(int argc, char* argv[]) {
 		g_printerr(_("ERROR : can not find puss directory!\n"));
 		g_printerr(_("        can not use indirect search path in $PATH!\n"));
 		g_free(filepath);
-		return 2;
+		return 0;
 	}
 
+#endif
+
+	return filepath;
+}
+
+int main(int argc, char* argv[]) {
+	g_thread_init(NULL);
+
+	gtk_set_locale();
+	bindtextdomain(PACKAGE, LOCALEDIR);
+	textdomain(PACKAGE);
+
+	gtk_init(&argc, &argv);
+
+	gchar* filepath = find_module_filepath(argv[0]);
 	Puss* app = puss_create(filepath);
 	g_free(filepath);
 

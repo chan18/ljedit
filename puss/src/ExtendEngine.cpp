@@ -7,6 +7,7 @@
 #include <glib/gi18n.h>
 #include <gmodule.h>
 #include <memory.h>
+#include <string.h>
 
 #include "IPuss.h"
 
@@ -71,35 +72,36 @@ void puss_extend_engine_create(Puss* app) {
 
 	gchar* extends_dir = g_build_filename(app->module_path, "extends", NULL);
 	GDir* dir = g_dir_open(extends_dir, 0, NULL);
-	if( dir ) {
-		Extend* extend = 0;
-		for(;;) { 
-			const gchar* filename = g_dir_read_name(dir);
-			if( !filename )
-				break;
+	if( !dir )
+		return;
 
-			size_t len = strlen(filename);
-			if(    len < 5
-				|| filename[len-4] != '.'
-				|| filename[len-3] != 'e'
-				|| filename[len-2] != 'x'
-				|| filename[len-1] != 't' )
-			{
-				continue;
-			}
+	Extend* extend = 0;
+	for(;;) { 
+		const gchar* filename = g_dir_read_name(dir);
+		if( !filename )
+			break;
 
-			gchar* filepath = g_build_filename(extends_dir, filename, NULL);
-			extend = extend_load(app, filepath);
-			g_free(filepath);
-
-			if( extend ) {
-				extend->next = extends_list;
-				extends_list = extend;
-			}
+		size_t len = strlen(filename);
+		if(    len < 5
+			|| filename[len-4] != '.'
+			|| filename[len-3] != 'e'
+			|| filename[len-2] != 'x'
+			|| filename[len-1] != 't' )
+		{
+			continue;
 		}
 
-		g_dir_close(dir);
+		gchar* filepath = g_build_filename(extends_dir, filename, NULL);
+		extend = extend_load(app, filepath);
+		g_free(filepath);
+
+		if( extend ) {
+			extend->next = extends_list;
+			extends_list = extend;
+		}
 	}
+
+	g_dir_close(dir);
 }
 
 void puss_extend_engine_destroy(Puss* app) {

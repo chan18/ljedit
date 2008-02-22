@@ -16,7 +16,7 @@ GdkPixbuf* load_icon(const gchar* app_path, const gchar* name) {
 
 	GdkPixbuf* icon = gdk_pixbuf_new_from_file(filepath, NULL);
 	if( !icon )
-		g_printerr(_("* ERROR : ljcs load icon(%s) failed!"), filepath);
+		g_printerr(_("* ERROR : ljcs load icon(%s) failed!\n"), filepath);
 
 	g_free(filepath);
 

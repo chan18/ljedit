@@ -16,6 +16,8 @@ bool LJCS::create(Puss* _app) {
 }
 
 void LJCS::destroy() {
+	icons.destroy();
+
 	app = 0;
 }
 

@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(ProjectDir)bin\$(ProjectName).exe"
+				OutputFile="$(SolutionDir)bin\$(ProjectName).exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories=""
 				IgnoreDefaultLibraryNames=""
@@ -146,7 +146,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(ProjectDir)bin\$(ProjectName).exe"
+				OutputFile="$(SolutionDir)bin\$(ProjectName).exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="false"
@@ -208,6 +208,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\ExtendEngine.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\ExtendEngine.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\main.cpp"
 				>
 				<FileConfiguration
@@ -259,14 +267,6 @@
 			</File>
 			<File
 				RelativePath=".\src\MiniLineModules.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\PluginEngine.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\PluginEngine.h"
 				>
 			</File>
 			<File

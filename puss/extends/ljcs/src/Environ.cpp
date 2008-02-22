@@ -5,6 +5,7 @@
 
 #include <sstream>
 #include <fstream>
+#include <algorithm>
 #include <sys/stat.h>
 
 // c++ keywords & macro keywords
@@ -259,7 +260,7 @@ void Environ::remove_parsed(const std::string& file) {
 }
 
 bool Environ::pe_is_abspath(std::string& filepath) {
-	return g_path_is_absolute(filepath.c_str())==TRUE;
+	return g_path_is_absolute(filepath.c_str()) != 0;
 }
 
 void Environ::pe_format_filekey(std::string& filename) {
