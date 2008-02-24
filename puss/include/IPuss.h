@@ -25,8 +25,6 @@ struct MainWindow {
 };
 
 struct MiniLine {
-	GtkWindow*		window;
-
 	GtkLabel*		label;
 	GtkEntry*		entry;
 };
