@@ -33,10 +33,11 @@ void mini_line_cb_changed( GtkEditable* editable, Puss* app ) {
 	}
 }
 
-void mini_line_cb_key_press_event( GtkWidget* widget, GdkEventKey* event, Puss* app ) {
+gboolean mini_line_cb_key_press_event( GtkWidget* widget, GdkEventKey* event, Puss* app ) {
 	MiniLineImpl* self = (MiniLineImpl*)app->mini_line;
-	if( self->cb )
-		self->cb->cb_key_press(app, event, self->cb->tag);
+	return self->cb
+		? self->cb->cb_key_press(app, event, self->cb->tag)
+		: FALSE;
 }
 
 gboolean puss_mini_line_focus_out_event( GtkWidget* widget, GdkEventFocus* event, Puss* app ) {
