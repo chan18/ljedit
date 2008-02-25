@@ -26,7 +26,7 @@ gchar* find_module_filepath(const char* argv0) {
 	filepath = g_locale_to_utf8(buf, len, NULL, NULL, NULL);
 
 #else
-	filepath = g_find_program_in_path(argv[0]);
+	filepath = g_find_program_in_path(argv0);
 
 	if( !filepath ) {
 		g_printerr(_("ERROR : can not find puss in $PATH\n"));
