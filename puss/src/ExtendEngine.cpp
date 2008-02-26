@@ -9,6 +9,22 @@
 #include <memory.h>
 #include <string.h>
 
+#ifdef WIN32
+	#include <windows.h>
+
+	GModule* puss_g_module_open(const gchar  *file_name, GModuleFlags  flags) {
+		// do not show not find DLL dialog
+		UINT uOldErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
+		GModule* ret = g_module_open(file_name, flags);
+		SetErrorMode(uOldErrorMode);
+		return ret;
+	}
+
+#else
+	#define puss_g_module_open g_module_open
+
+#endif
+
 #include "IPuss.h"
 
 struct Extend {
@@ -21,7 +37,7 @@ Extend* extend_load(Puss* app, const gchar* filepath) {
 	Extend* extend = (Extend*)g_malloc(sizeof(Extend));
 	memset(extend, 0, sizeof(Extend));
 
-	extend->module = g_module_open(filepath, G_MODULE_BIND_LAZY);
+	extend->module = puss_g_module_open(filepath, G_MODULE_BIND_LAZY);
 	if( !extend->module ) {
 		g_printerr(_("ERROR  : load extend(%s) failed!\n"), filepath);
 		g_printerr(_("REASON : %s\n"), g_module_error());
