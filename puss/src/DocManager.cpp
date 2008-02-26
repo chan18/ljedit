@@ -485,11 +485,7 @@ gboolean puss_doc_locate( Puss* app, const gchar* url, gint line, gint line_offs
 }
 
 void puss_doc_save_current( Puss* app, gboolean save_as ) {
-	doc_save_page(app, gtk_notebook_get_current_page(app->main_window->doc_panel), FALSE);
-}
-
-void puss_doc_save_current_as( Puss* app ) {
-	doc_save_page(app, gtk_notebook_get_current_page(app->main_window->doc_panel), TRUE);
+	doc_save_page(app, gtk_notebook_get_current_page(app->main_window->doc_panel), save_as);
 }
 
 gboolean puss_doc_close_current( Puss* app ) {

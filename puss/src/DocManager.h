@@ -35,7 +35,6 @@ void			puss_doc_new( Puss* app );
 gboolean		puss_doc_open( Puss* app, const gchar* url, gint line, gint line_offset );
 gboolean		puss_doc_locate( Puss* app, const gchar* url, gint line, gint line_offset );
 void			puss_doc_save_current( Puss* app, gboolean save_as );
-void			puss_doc_save_current_as( Puss* app );
 gboolean		puss_doc_close_current( Puss* app );
 void			puss_doc_save_all( Puss* app );
 gboolean		puss_doc_close_all( Puss* app );

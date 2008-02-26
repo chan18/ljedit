@@ -71,37 +71,39 @@ void puss_extend_engine_create(Puss* app) {
 		return;
 
 	gchar* extends_dir = g_build_filename(app->module_path, "extends", NULL);
-	GDir* dir = g_dir_open(extends_dir, 0, NULL);
-	if( !dir )
+	if( !extends_dir )
 		return;
 
-	Extend* extend = 0;
-	for(;;) { 
-		const gchar* filename = g_dir_read_name(dir);
-		if( !filename )
-			break;
+	GDir* dir = g_dir_open(extends_dir, 0, NULL);
+	if( dir ) {
+		Extend* extend = 0;
 
-		size_t len = strlen(filename);
-		if(    len < 5
-			|| filename[len-4] != '.'
-			|| filename[len-3] != 'e'
-			|| filename[len-2] != 'x'
-			|| filename[len-1] != 't' )
-		{
-			continue;
+		const gchar* match_str = ".ext";
+		size_t match_len = strlen(match_str);
+
+		for(;;) { 
+			const gchar* filename = g_dir_read_name(dir);
+			if( !filename )
+				break;
+
+			size_t len = strlen(filename);
+			if( len < match_len || strcmp(filename+len-match_len, match_str)!=0 )
+				continue;
+
+			gchar* filepath = g_build_filename(extends_dir, filename, NULL);
+			extend = extend_load(app, filepath);
+			g_free(filepath);
+
+			if( extend ) {
+				extend->next = extends_list;
+				extends_list = extend;
+			}
 		}
 
-		gchar* filepath = g_build_filename(extends_dir, filename, NULL);
-		extend = extend_load(app, filepath);
-		g_free(filepath);
-
-		if( extend ) {
-			extend->next = extends_list;
-			extends_list = extend;
-		}
+		g_dir_close(dir);
 	}
 
-	g_dir_close(dir);
+	g_free(extends_dir);
 }
 
 void puss_extend_engine_destroy(Puss* app) {

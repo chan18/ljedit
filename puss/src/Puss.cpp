@@ -43,7 +43,6 @@ C_API* create_puss_c_api() {
 	api->doc_open = &puss_doc_open;
 	api->doc_locate = &puss_doc_locate;
 	api->doc_save_current = &puss_doc_save_current;
-	api->doc_save_current_as = &puss_doc_save_current_as;
 	api->doc_close_current = &puss_doc_close_current;
 	api->doc_save_all = &puss_doc_save_all;
 	api->doc_close_all = &puss_doc_close_all;

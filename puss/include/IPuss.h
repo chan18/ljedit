@@ -20,8 +20,6 @@ struct MainWindow {
 	GtkNotebook*	bottom_panel;
 
 	GtkStatusbar*	status_bar;
-
-	GtkWindow*		cmd_line_window;
 };
 
 struct MiniLine {
@@ -66,7 +64,6 @@ struct C_API {
 	gboolean		(*doc_open)						( Puss* app, const gchar* url, gint line, gint line_offset );
 	gboolean		(*doc_locate)					( Puss* app, const gchar* url, gint line, gint line_offset );
 	void			(*doc_save_current)				( Puss* app, gboolean save_as );
-	void			(*doc_save_current_as)			( Puss* app );
 	gboolean		(*doc_close_current)			( Puss* app );
 	void			(*doc_save_all)					( Puss* app );
 	gboolean		(*doc_close_all)				( Puss* app );

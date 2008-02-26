@@ -1,0 +1,133 @@
+// PussPyAPI.wrapper
+//
+
+int app_convert(PyObject* py_obj, Puss** papp) {
+	if( !PyCObject_Check(py_obj) ) {
+		PyErr_SetString(PyExc_TypeError,  "need puss app cobject");
+		return 0;
+	}
+
+	*papp = (Puss*)PyCObject_AsVoidPtr(py_obj);
+	return 1;
+}
+
+int buf_convert(PyObject* py_obj, GtkTextBuffer** pbuf) {
+	// TODO : need check py_obj type
+	//*pbuf = GTK_TEXT_BUFFER(pygobject_get(py_obj));
+	//return 1;
+	return 0;
+}
+
+PyObject* py_wrapper_doc_get_url_buffer(PyObject* self, PyObject* args) {
+	Puss* app = 0;
+	GtkTextBuffer* buf = 0;
+	if(!PyArg_ParseTuple(args, "O&O&:py_wrapper_doc_get_url_buffer", &app_convert, &app, &buf_convert, &buf))
+		return 0;
+
+	GString* url = app->api->doc_get_url(buf);
+	if( !url ) {
+		Py_INCREF(Py_None);
+		return Py_None;
+	}
+
+	return PyString_FromString(url->str);
+}
+
+PyObject* py_wrapper_doc_get_buffer_from_page_num(PyObject* self, PyObject* args) {
+	Puss* app = 0;
+	int page_num = 0;
+	if(!PyArg_ParseTuple(args, "O&i:py_wrapper_doc_get_buffer_from_page_num", &app_convert, &app, &page_num))
+		return 0;
+
+	GtkTextBuffer* buf = app->api->doc_get_buffer_from_page_num(app, page_num);
+	if( !buf ) {
+		Py_INCREF(Py_None);
+		return Py_None;
+	}		
+
+	return pygobject_new(G_OBJECT(buf));
+}
+
+PyObject* py_wrapper_doc_find_page_from_url(PyObject* self, PyObject* args) {
+	Puss* app = 0;
+	const char* url = 0;
+	if(!PyArg_ParseTuple(args, "O&s:py_wrapper_doc_find_page_from_url", &app_convert, &app, &url))
+		return 0;
+
+	gint res = app->api->doc_find_page_from_url(app, url);
+	return PyInt_FromLong((long)res);
+}
+
+PyObject* py_wrapper_doc_new(PyObject* self, PyObject* args) {
+	Puss* app = 0;
+	if(!PyArg_ParseTuple(args, "O&:py_wrapper_doc_new", &app_convert, &app))
+		return 0;
+
+	app->api->doc_new(app);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+PyObject* py_wrapper_doc_open(PyObject* self, PyObject* args) {
+	Puss* app = 0;
+	const char* url = 0;
+	int line = 0;
+	int offset = 0;
+	if(!PyArg_ParseTuple(args, "O&zii:py_wrapper_doc_open", &app_convert, &app, &url, &line, &offset))
+		return 0;
+
+	gboolean res = app->api->doc_open(app, url, line, offset);
+	return PyBool_FromLong((long)res);
+}
+
+PyObject* py_wrapper_doc_locate(PyObject* self, PyObject* args) {
+	Puss* app = 0;
+	const char* url = 0;
+	int line = 0;
+	int offset = 0;
+	if(!PyArg_ParseTuple(args, "O&sii:py_wrapper_doc_locate", &app_convert, &app, &url, &line, &offset))
+		return 0;
+
+	gboolean res = app->api->doc_locate(app, url, line, offset);
+	return PyBool_FromLong((long)res);
+}
+
+PyObject* py_wrapper_doc_save_current(PyObject* self, PyObject* args) {
+	Puss* app = 0;
+	int py_save_as = 0;
+	if(!PyArg_ParseTuple(args, "O&i:py_wrapper_doc_save_current", &app_convert, &app, &py_save_as))
+		return 0;
+
+	app->api->doc_save_current(app, (gboolean)py_save_as);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+PyObject* py_wrapper_doc_close_current(PyObject* self, PyObject* args) {
+	Puss* app = 0;
+	if(!PyArg_ParseTuple(args, "O&:py_wrapper_doc_close_current", &app_convert, &app))
+		return 0;
+
+	gboolean res = app->api->doc_close_current(app);
+	return PyBool_FromLong((long)res);
+}
+
+PyObject* py_wrapper_doc_save_all(PyObject* self, PyObject* args) {
+	Puss* app = 0;
+	if(!PyArg_ParseTuple(args, "O&:py_wrapper_doc_save_all", &app_convert, &app))
+		return 0;
+
+	app->api->doc_save_all(app);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+PyObject* py_wrapper_doc_close_all(PyObject* self, PyObject* args) {
+	Puss* app = 0;
+	if(!PyArg_ParseTuple(args, "O&:py_wrapper_doc_close_all", &app_convert, &app))
+		return 0;
+
+	gboolean res = app->api->doc_close_all(app);
+	return PyBool_FromLong((long)res);
+}
+
