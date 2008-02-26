@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ljcs", "extends\ljcs\ljcs.v
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "plugin_engine", "extends\plugin_engine\plugin_engine.vcproj", "{44F803E0-12E8-4F44-8B7A-2FAB5DB9FEE3}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pyextend", "extends\pyextend\pyextend.vcproj", "{44F803E0-12E8-4F44-8B7A-2FAB5DB8EEE4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -27,6 +29,10 @@ Global
 		{44F803E0-12E8-4F44-8B7A-2FAB5DB9FEE3}.Debug|Win32.Build.0 = Debug|Win32
 		{44F803E0-12E8-4F44-8B7A-2FAB5DB9FEE3}.Release|Win32.ActiveCfg = Release|Win32
 		{44F803E0-12E8-4F44-8B7A-2FAB5DB9FEE3}.Release|Win32.Build.0 = Release|Win32
+		{44F803E0-12E8-4F44-8B7A-2FAB5DB8EEE4}.Debug|Win32.ActiveCfg = Debug|Win32
+		{44F803E0-12E8-4F44-8B7A-2FAB5DB8EEE4}.Debug|Win32.Build.0 = Debug|Win32
+		{44F803E0-12E8-4F44-8B7A-2FAB5DB8EEE4}.Release|Win32.ActiveCfg = Release|Win32
+		{44F803E0-12E8-4F44-8B7A-2FAB5DB8EEE4}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -34,5 +40,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{E2C258E0-041C-4ABB-9652-918084A27CD4} = {1FA2A3CA-86BD-4F54-8D1E-67A9EECC4182}
 		{44F803E0-12E8-4F44-8B7A-2FAB5DB9FEE3} = {1FA2A3CA-86BD-4F54-8D1E-67A9EECC4182}
+		{44F803E0-12E8-4F44-8B7A-2FAB5DB8EEE4} = {1FA2A3CA-86BD-4F54-8D1E-67A9EECC4182}
 	EndGlobalSection
 EndGlobal
