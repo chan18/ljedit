@@ -27,8 +27,6 @@ C_API* create_puss_c_api() {
 	api->doc_set_charset = &puss_doc_set_charset;
 	api->doc_get_charset = &puss_doc_get_charset;
 
-	api->doc_replace_all = &puss_doc_replace_all;
-
 	api->doc_get_view_from_page = &puss_doc_get_view_from_page;
 	api->doc_get_buffer_from_page = &puss_doc_get_buffer_from_page;
 

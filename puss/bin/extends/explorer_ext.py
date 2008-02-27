@@ -275,7 +275,7 @@ try:
 
     def on_switch_page(nb, gp, page):
     	buf = puss.doc_get_buffer_from_page_num(page)
-        filepath = puss.doc_get_url_buffer(buf)
+        filepath = puss.doc_get_url(buf)
         ufilepath = filepath.decode('utf8')
         filepath = ufilepath.encode(sys.getfilesystemencoding())
         explorer.locate_to_file(filepath)

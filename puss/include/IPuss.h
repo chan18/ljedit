@@ -47,14 +47,12 @@ struct C_API {
 	void			(*doc_set_charset)				( GtkTextBuffer* buffer, const gchar* charset );
 	GString*		(*doc_get_charset)				( GtkTextBuffer* buffer );
 
-	void			(*doc_replace_all)				( GtkTextBuffer* buf, const gchar* find_text, const gchar* replace_text, gint flags );
-
 	GtkTextView*	(*doc_get_view_from_page)		( GtkWidget* page );
 	GtkTextBuffer*	(*doc_get_buffer_from_page)		( GtkWidget* page );
 
 	// doc manager
 
-	GtkLabel*		(*doc_get_label_from_page_num)	( Puss* app, int page_num );
+	GtkLabel*		(*doc_get_label_from_page_num)	( Puss* app, gint page_num );
 	GtkTextView*	(*doc_get_view_from_page_num)	( Puss* app, gint page_num );
 	GtkTextBuffer*	(*doc_get_buffer_from_page_num)	( Puss* app, gint page_num );
 

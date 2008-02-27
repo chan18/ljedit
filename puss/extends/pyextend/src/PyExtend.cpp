@@ -29,17 +29,25 @@ int app_convert(PyObject* py_obj, Puss** papp) {
 	return 1;
 }
 
-int buf_convert(PyObject* py_obj, GtkTextBuffer** pbuf) {
-	// !!! check type in puss.py
-	// 
-	*pbuf = GTK_TEXT_BUFFER(pygobject_get(py_obj));
-	return 1;
-}
+//----------------------------------------------------------------
+// !!! check type in puss.py
 
-PyObject* py_wrapper_doc_get_url_buffer(PyObject* self, PyObject* args) {
+int buf_convert(PyObject* py_obj, GtkTextBuffer** pbuf)
+	{ *pbuf = GTK_TEXT_BUFFER(pygobject_get(py_obj)); return 1; }
+
+int widget_convert(PyObject* py_obj, GtkWidget** pwidget)
+	{ *pwidget = GTK_WIDGET(pygobject_get(py_obj));	return 1; }
+
+int notebook_convert(PyObject* py_obj, GtkNotebook** pnb)
+	{ *pnb = GTK_NOTEBOOK(pygobject_get(py_obj)); return 1; }
+
+//----------------------------------------------------------------
+// IPuss wrappers
+
+PyObject* py_wrapper_doc_get_url(PyObject* self, PyObject* args) {
 	Puss* app = 0;
 	GtkTextBuffer* buf = 0;
-	if(!PyArg_ParseTuple(args, "O&O&:py_wrapper_doc_get_url_buffer", &app_convert, &app, &buf_convert, &buf))
+	if(!PyArg_ParseTuple(args, "O&O&:py_wrapper_doc_get_url", &app_convert, &app, &buf_convert, &buf))
 		return 0;
 
 	GString* url = app->api->doc_get_url(buf);
@@ -51,9 +59,80 @@ PyObject* py_wrapper_doc_get_url_buffer(PyObject* self, PyObject* args) {
 	return PyString_FromString(url->str);
 }
 
+PyObject* py_wrapper_doc_set_url(PyObject* self, PyObject* args) {
+	Puss* app = 0;
+	GtkTextBuffer* buf = 0;
+	const gchar* url = 0;
+	if(!PyArg_ParseTuple(args, "O&O&s:py_wrapper_doc_set_url", &app_convert, &app, &buf_convert, &buf, &url))
+		return 0;
+
+	app->api->doc_set_url(buf, url);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+PyObject* py_wrapper_doc_get_charset(PyObject* self, PyObject* args) {
+	Puss* app = 0;
+	GtkTextBuffer* buf = 0;
+	if(!PyArg_ParseTuple(args, "O&O&:py_wrapper_doc_get_charset", &app_convert, &app, &buf_convert, &buf))
+		return 0;
+
+	GString* charset = app->api->doc_get_charset(buf);
+	if( !charset ) {
+		Py_INCREF(Py_None);
+		return Py_None;
+	}
+
+	return PyString_FromString(charset->str);
+}
+
+PyObject* py_wrapper_doc_set_charset(PyObject* self, PyObject* args) {
+	Puss* app = 0;
+	GtkTextBuffer* buf = 0;
+	const gchar* charset = 0;
+	if(!PyArg_ParseTuple(args, "O&O&s:py_wrapper_doc_set_url", &app_convert, &app, &buf_convert, &buf, &charset))
+		return 0;
+
+	app->api->doc_set_charset(buf, charset);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+PyObject* py_wrapper_doc_get_label_from_page_num(PyObject* self, PyObject* args) {
+	Puss* app = 0;
+	gint page_num = 0;
+	if(!PyArg_ParseTuple(args, "O&i:py_wrapper_doc_get_label_from_page_num", &app_convert, &app, &page_num))
+		return 0;
+
+	GtkLabel* label = app->api->doc_get_label_from_page_num(app, page_num);
+	if( !label ) {
+		Py_INCREF(Py_None);
+		return Py_None;
+	}
+
+	PyObject* py_label = pygobject_new(G_OBJECT(label));
+	return py_label;
+}
+
+PyObject* py_wrapper_doc_get_view_from_page_num(PyObject* self, PyObject* args) {
+	Puss* app = 0;
+	gint page_num = 0;
+	if(!PyArg_ParseTuple(args, "O&i:py_wrapper_doc_get_view_from_page_num", &app_convert, &app, &page_num))
+		return 0;
+
+	GtkTextView* view = app->api->doc_get_view_from_page_num(app, page_num);
+	if( !view ) {
+		Py_INCREF(Py_None);
+		return Py_None;
+	}
+
+	PyObject* py_view = pygobject_new(G_OBJECT(view));
+	return py_view;
+}
+
 PyObject* py_wrapper_doc_get_buffer_from_page_num(PyObject* self, PyObject* args) {
 	Puss* app = 0;
-	int page_num = 0;
+	gint page_num = 0;
 	if(!PyArg_ParseTuple(args, "O&i:py_wrapper_doc_get_buffer_from_page_num", &app_convert, &app, &page_num))
 		return 0;
 
@@ -113,11 +192,11 @@ PyObject* py_wrapper_doc_locate(PyObject* self, PyObject* args) {
 
 PyObject* py_wrapper_doc_save_current(PyObject* self, PyObject* args) {
 	Puss* app = 0;
-	int py_save_as = 0;
-	if(!PyArg_ParseTuple(args, "O&i:py_wrapper_doc_save_current", &app_convert, &app, &py_save_as))
+	int save_as = 0;
+	if(!PyArg_ParseTuple(args, "O&i:py_wrapper_doc_save_current", &app_convert, &app, &save_as))
 		return 0;
 
-	app->api->doc_save_current(app, (gboolean)py_save_as);
+	app->api->doc_save_current(app, (gboolean)save_as);
 	Py_INCREF(Py_None);
 	return Py_None;
 }
@@ -150,9 +229,40 @@ PyObject* py_wrapper_doc_close_all(PyObject* self, PyObject* args) {
 	return PyBool_FromLong((long)res);
 }
 
+PyObject* py_wrapper_send_focus_change(PyObject* self, PyObject* args) {
+	Puss* app = 0;
+	GtkWidget* widget = 0;
+	int force_in = 0;
+	if(!PyArg_ParseTuple(args, "O&O&i:py_wrapper_doc_close_all", &app_convert, &app, &widget_convert, &widget, &force_in))
+		return 0;
+
+	app->api->send_focus_change(widget, force_in);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+PyObject* py_wrapper_active_panel_page(PyObject* self, PyObject* args) {
+	Puss* app = 0;
+	GtkNotebook* nb = 0;
+	gint page_num = 0;
+	if(!PyArg_ParseTuple(args, "O&O&i:py_wrapper_doc_close_all", &app_convert, &app, &notebook_convert, &nb, &page_num))
+		return 0;
+
+	app->api->active_panel_page(nb, page_num);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 PyMethodDef puss_methods[] =
-	{ { "__doc_get_url_buffer", &py_wrapper_doc_get_url_buffer, METH_VARARGS, NULL }
+	{ { "__doc_get_url", &py_wrapper_doc_get_url, METH_VARARGS, NULL }
+	, { "__doc_set_url", &py_wrapper_doc_set_url, METH_VARARGS, NULL }
+	, { "__doc_get_charset", &py_wrapper_doc_get_charset, METH_VARARGS, NULL }
+	, { "__doc_set_charset", &py_wrapper_doc_set_charset, METH_VARARGS, NULL }
+
+	, { "__doc_doc_get_label_from_page_num", &py_wrapper_doc_get_label_from_page_num, METH_VARARGS, NULL }
+	, { "__doc_doc_get_view_from_page_num", &py_wrapper_doc_get_view_from_page_num, METH_VARARGS, NULL }
 	, { "__doc_doc_get_buffer_from_page_num", &py_wrapper_doc_get_buffer_from_page_num, METH_VARARGS, NULL }
+
 	, { "__doc_find_page_from_url",	&py_wrapper_doc_find_page_from_url, METH_VARARGS, NULL }
 	, { "__doc_new", &py_wrapper_doc_new, METH_VARARGS, NULL }
 	, { "__doc_open", &py_wrapper_doc_open, METH_VARARGS, NULL }
@@ -162,7 +272,14 @@ PyMethodDef puss_methods[] =
 	, { "__doc_save_all", &py_wrapper_doc_save_all, METH_VARARGS, NULL }
 	, { "__doc_close_all", &py_wrapper_doc_close_all, METH_VARARGS, NULL }
 
+	, { "__send_focus_change", &py_wrapper_send_focus_change, METH_VARARGS, NULL }
+	, { "__active_panel_page", &py_wrapper_active_panel_page, METH_VARARGS, NULL }
+
 	, { NULL, NULL, 0, NULL } };
+
+
+//----------------------------------------------------------------
+// PyExtend implements
 
 struct PyExtend {
 	Puss*		app;

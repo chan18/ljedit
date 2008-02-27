@@ -12,10 +12,10 @@ main_window.right_panel		= __puss.right_panel
 main_window.bottom_panel	= __puss.bottom_panel
 main_window.status_bar		= __puss.status_bar
 
-def doc_get_url_buffer(buf):
+def doc_get_url(buf):
 	if not isinstance(buf, gtk.TextBuffer):
 		raise TypeError("not gtk.TextBuffer")
-	return __puss.__doc_get_url_buffer(__puss.__app, buf)
+	return __puss.__doc_get_url(__puss.__app, buf)
 
 def doc_get_buffer_from_page_num(page):		return __puss.__doc_doc_get_buffer_from_page_num(__puss.__app, page)
 
