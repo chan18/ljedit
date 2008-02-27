@@ -37,15 +37,26 @@ OBJS = $(SRCS:%.cpp=$(OBJPATH)/%.o)
 
 TARGET = bin/puss
 
-all : $(TARGET)
+EXTENDS = 
+
+all : $(TARGET) puss_extends
 
 $(TARGET) : $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^ -ldl $(LIBS)
+
+puss_extends :
+	@cd extends/ljcs;			make BUILD=$(BUILD)
+	@cd extends/pyextend;		make BUILD=$(BUILD)
+	@cd extends/plugin_engine;	make BUILD=$(BUILD)
 
 clean :
 	rm -f $(TARGET)
 	rm -rf debug
 	rm -rf release
+
+	@cd extends/ljcs;			make clean
+	@cd extends/pyextend;		make clean
+	@cd extends/plugin_engine;	make clean
 
 $(OBJPATH)/%.o : %.cpp
 	@mkdir -p $(dir $@)

@@ -289,7 +289,7 @@ void cb_view_menu_bottom_panel( GtkAction* action, Puss* app ) {
 
 void cb_view_menu_bottom_page_n( GtkAction* action, GtkRadioAction* current, Puss* app ) {
 	gint page_num = gtk_radio_action_get_current_value(current);
-	puss_active_panel_page(app->main_window->bottom_panel, page_num);
+	puss_active_panel_page(app->main_window->bottom_panel, (page_num - 1));
 }
 
 void cb_help_menu_about( GtkAction* action, Puss* app ) {
