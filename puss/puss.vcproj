@@ -294,6 +294,18 @@
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath=".\puss.ico"
+			>
+		</File>
+		<File
+			RelativePath=".\puss.rc"
+			>
+		</File>
+		<File
+			RelativePath=".\resource.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
