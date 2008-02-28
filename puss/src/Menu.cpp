@@ -12,33 +12,101 @@
 #include "AboutDialog.h"
 
 // file menu
-void cb_file_menu_new( GtkAction* action, Puss* app );
-void cb_file_menu_open( GtkAction* action, Puss* app );
-void cb_file_menu_save( GtkAction* action, Puss* app );
-void cb_file_menu_save_as( GtkAction* action, Puss* app );
-void cb_file_menu_close( GtkAction* action, Puss* app );
-void cb_file_menu_quit( GtkAction* action, Puss* app );
 
-// edit menu
-void cb_edit_menu_goto( GtkAction* action, Puss* app );
-void cb_edit_menu_find( GtkAction* action, Puss* app );
-void cb_edit_menu_replace( GtkAction* action, Puss* app );
-void cb_edit_menu_go_back( GtkAction* action, Puss* app );
-void cb_edit_menu_go_forward( GtkAction* action, Puss* app );
+void cb_file_menu_new( GtkAction* action, Puss* app ) {
+	puss_doc_new(app);
+}
 
-// view menu
-void cb_view_menu_fullscreen( GtkAction* action, Puss* app );
+void cb_file_menu_open( GtkAction* action, Puss* app ) {
+	puss_doc_open(app, 0, 0, 0);
+}
 
-void cb_view_menu_active_doc_page( GtkAction* action, Puss* app );
+void cb_file_menu_save( GtkAction* action, Puss* app ) {
+	puss_doc_save_current(app, FALSE);
+}
 
-void cb_view_menu_left_panel( GtkAction* action, Puss* app );
-void cb_view_menu_right_panel( GtkAction* action, Puss* app );
-void cb_view_menu_bottom_panel( GtkAction* action, Puss* app );
+void cb_file_menu_save_as( GtkAction* action, Puss* app ) {
+	puss_doc_save_current(app, TRUE);
+}
 
-void cb_view_menu_bottom_page_n( GtkAction* action, GtkRadioAction* current, Puss* app );
+void cb_file_menu_close( GtkAction* action, Puss* app ) {
+	puss_doc_close_current(app);
+}
 
-// help menu
-void cb_help_menu_about( GtkAction* action, Puss* app );
+void cb_file_menu_quit( GtkAction* action, Puss* app ) {
+	gtk_widget_destroy(GTK_WIDGET(app->main_window->window));
+}
+
+void cb_edit_menu_goto( GtkAction* action, Puss* app ) {
+	puss_mini_line_active(app, puss_mini_line_GOTO_get_callback());
+}
+
+void cb_edit_menu_find( GtkAction* action, Puss* app ) {
+	puss_mini_line_active(app, puss_mini_line_FIND_get_callback());
+}
+
+void cb_edit_menu_replace( GtkAction* action, Puss* app ) {
+	puss_mini_line_active(app, puss_mini_line_REPLACE_get_callback());
+}
+
+void cb_edit_menu_go_back( GtkAction* action, Puss* app ) {
+	g_message("go back");
+}
+
+void cb_edit_menu_go_forward( GtkAction* action, Puss* app ) {
+	g_message("go forward");
+}
+
+void cb_view_menu_fullscreen( GtkAction* action, Puss* app ) {
+	static bool is_fullscreen = false;
+	is_fullscreen = !is_fullscreen;
+	if( is_fullscreen )
+		gtk_window_fullscreen(app->main_window->window);
+	else
+		gtk_window_unfullscreen(app->main_window->window);
+}
+
+void cb_view_menu_active_doc_page( GtkAction* action, Puss* app ) {
+	gint page_num = gtk_notebook_get_current_page(app->main_window->doc_panel);
+	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
+	if( !view )
+		return;
+
+	gtk_widget_grab_focus(GTK_WIDGET(view));
+}
+
+void cb_view_menu_left_panel( GtkAction* action, Puss* app ) {
+	gboolean active = gtk_toggle_action_get_active(GTK_TOGGLE_ACTION(action));
+	if( active )
+		gtk_widget_show(GTK_WIDGET(app->main_window->left_panel));
+	else
+		gtk_widget_hide(GTK_WIDGET(app->main_window->left_panel));
+}
+
+void cb_view_menu_right_panel( GtkAction* action, Puss* app ) {
+	gboolean active = gtk_toggle_action_get_active(GTK_TOGGLE_ACTION(action));
+	if( active )
+		gtk_widget_show(GTK_WIDGET(app->main_window->right_panel));
+	else
+		gtk_widget_hide(GTK_WIDGET(app->main_window->right_panel));
+}
+
+void cb_view_menu_bottom_panel( GtkAction* action, Puss* app ) {
+	gboolean active = gtk_toggle_action_get_active(GTK_TOGGLE_ACTION(action));
+	if( active )
+		gtk_widget_show(GTK_WIDGET(app->main_window->bottom_panel));
+	else
+		gtk_widget_hide(GTK_WIDGET(app->main_window->bottom_panel));
+}
+
+void cb_view_menu_bottom_page_n( GtkAction* action, GtkRadioAction* current, Puss* app ) {
+	gint page_num = gtk_radio_action_get_current_value(current);
+	puss_active_panel_page(app->main_window->bottom_panel, (page_num - 1));
+}
+
+void cb_help_menu_about( GtkAction* action, Puss* app ) {
+	puss_show_about_dialog(app->main_window->window);
+}
 
 void puss_create_ui_manager(Puss* app) {
 	GError* error = 0;
@@ -197,102 +265,5 @@ void puss_create_ui_manager(Puss* app) {
 		}
 		gtk_ui_manager_insert_action_group(app->main_window->ui_manager, action_group, 0);
 	}
-}
-
-// file menu
-
-void cb_file_menu_new( GtkAction* action, Puss* app ) {
-	puss_doc_new(app);
-}
-
-void cb_file_menu_open( GtkAction* action, Puss* app ) {
-	puss_doc_open(app, 0, 0, 0);
-}
-
-void cb_file_menu_save( GtkAction* action, Puss* app ) {
-	puss_doc_save_current(app, FALSE);
-}
-
-void cb_file_menu_save_as( GtkAction* action, Puss* app ) {
-	puss_doc_save_current(app, TRUE);
-}
-
-void cb_file_menu_close( GtkAction* action, Puss* app ) {
-	puss_doc_close_current(app);
-}
-
-void cb_file_menu_quit( GtkAction* action, Puss* app ) {
-	gtk_widget_destroy(GTK_WIDGET(app->main_window->window));
-}
-
-void cb_edit_menu_goto( GtkAction* action, Puss* app ) {
-	puss_mini_line_active(app, puss_mini_line_GOTO_get_callback());
-}
-
-void cb_edit_menu_find( GtkAction* action, Puss* app ) {
-	puss_mini_line_active(app, puss_mini_line_FIND_get_callback());
-}
-
-void cb_edit_menu_replace( GtkAction* action, Puss* app ) {
-	puss_mini_line_active(app, puss_mini_line_REPLACE_get_callback());
-}
-
-void cb_edit_menu_go_back( GtkAction* action, Puss* app ) {
-	g_message("go back");
-}
-
-void cb_edit_menu_go_forward( GtkAction* action, Puss* app ) {
-	g_message("go forward");
-}
-
-void cb_view_menu_fullscreen( GtkAction* action, Puss* app ) {
-	static bool is_fullscreen = false;
-	is_fullscreen = !is_fullscreen;
-	if( is_fullscreen )
-		gtk_window_fullscreen(app->main_window->window);
-	else
-		gtk_window_unfullscreen(app->main_window->window);
-}
-
-void cb_view_menu_active_doc_page( GtkAction* action, Puss* app ) {
-	gint page_num = gtk_notebook_get_current_page(app->main_window->doc_panel);
-	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
-	if( !view )
-		return;
-
-	gtk_widget_grab_focus(GTK_WIDGET(view));
-}
-
-void cb_view_menu_left_panel( GtkAction* action, Puss* app ) {
-	gboolean active = gtk_toggle_action_get_active(GTK_TOGGLE_ACTION(action));
-	if( active )
-		gtk_widget_show(GTK_WIDGET(app->main_window->left_panel));
-	else
-		gtk_widget_hide(GTK_WIDGET(app->main_window->left_panel));
-}
-
-void cb_view_menu_right_panel( GtkAction* action, Puss* app ) {
-	gboolean active = gtk_toggle_action_get_active(GTK_TOGGLE_ACTION(action));
-	if( active )
-		gtk_widget_show(GTK_WIDGET(app->main_window->right_panel));
-	else
-		gtk_widget_hide(GTK_WIDGET(app->main_window->right_panel));
-}
-
-void cb_view_menu_bottom_panel( GtkAction* action, Puss* app ) {
-	gboolean active = gtk_toggle_action_get_active(GTK_TOGGLE_ACTION(action));
-	if( active )
-		gtk_widget_show(GTK_WIDGET(app->main_window->bottom_panel));
-	else
-		gtk_widget_hide(GTK_WIDGET(app->main_window->bottom_panel));
-}
-
-void cb_view_menu_bottom_page_n( GtkAction* action, GtkRadioAction* current, Puss* app ) {
-	gint page_num = gtk_radio_action_get_current_value(current);
-	puss_active_panel_page(app->main_window->bottom_panel, (page_num - 1));
-}
-
-void cb_help_menu_about( GtkAction* action, Puss* app ) {
-	puss_show_about_dialog(app->main_window->window);
 }
 
