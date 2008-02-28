@@ -216,6 +216,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\GlobMatch.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\GlobMatch.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\main.cpp"
 				>
 				<FileConfiguration
@@ -300,10 +308,6 @@
 		</File>
 		<File
 			RelativePath=".\puss.rc"
-			>
-		</File>
-		<File
-			RelativePath=".\resource.h"
 			>
 		</File>
 	</Files>

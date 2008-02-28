@@ -4,6 +4,8 @@
 #include "GlobMatch.h"
 
 #include <glib.h>
+#include <string.h>
+#include <gtksourceview/gtksourcelanguagemanager.h>
 
 void glob_matcher_add_glob(GHashTable* suffix_map, const gchar* glob, GtkSourceLanguage* lang) {
 	const gchar* p = glob;
@@ -31,16 +33,9 @@ void glob_matcher_add_glob(GHashTable* suffix_map, const gchar* glob, GtkSourceL
 		p = glob;
 	}
 
-	GtkSourceLanguage* res = (GtkSourceLanguage*)g_hash_table_find(suffix_map, g_str_equal, p);
-	if( res ) {
-		if( res != lang )
-			g_hash_table_insert(suffix_map, p, lang);
-
-	} else {
-		gchar* suffix = g_strdup(p);
-		if( suffix )
-			g_hash_table_insert(suffix_map, p, lang);
-	}
+	gchar* suffix = g_strdup(p);
+	if( suffix )
+		g_hash_table_replace(suffix_map, suffix, lang);
 }
 
 GHashTable* puss_glob_create() {
@@ -57,15 +52,15 @@ GHashTable* puss_glob_create() {
 	glob_matcher_add_glob(suffix_map, "*.f90", gtk_source_language_manager_get_language(lm, "fortran"));
 	glob_matcher_add_glob(suffix_map, "*.f95", gtk_source_language_manager_get_language(lm, "fortran"));
 
-	const gchar** languages = gtk_source_language_manager_get_language_ids(lm);
-	for( const gchar** it = languages; *it; ++it ) {
-		GtkSourceLanguage* lang = gtk_source_language_manager_get_language(*it);
+	G_CONST_RETURN gchar* G_CONST_RETURN* languages = gtk_source_language_manager_get_language_ids(lm);
+	for( G_CONST_RETURN gchar* G_CONST_RETURN* it = languages; *it; ++it ) {
+		GtkSourceLanguage* lang = gtk_source_language_manager_get_language(lm, *it);
 		gchar** globs = gtk_source_language_get_globs(lang);
 		if( !globs )
 			continue;
 
 		for( gchar** git = globs; *git; ++git )
-			glob_matcher_add_glob(suffix_map, *git, lang)
+			glob_matcher_add_glob(suffix_map, *git, lang);
 			
 		g_strfreev(globs);
 	}
@@ -89,7 +84,7 @@ GtkSourceLanguage* puss_glob_get_language_by_filename(GHashTable* suffix_map, co
 			if( *(suffix-1)=='.' )
 				break;
 
-		lang = g_hash_table_lookup(suffix_map, suffix);
+		lang = (GtkSourceLanguage*)g_hash_table_lookup(suffix_map, suffix);
 		g_free(filename);
 	}
 

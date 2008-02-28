@@ -9,10 +9,9 @@
 #include <gtksourceview/gtksourceiter.h>
 #include <string.h>
 
-#include "IPuss.h"
 #include "Puss.h"
 #include "Utils.h"
-
+#include "GlobMatch.h"
 
 void __free_g_string( GString* gstr ) {
 	g_string_free(gstr, TRUE);
@@ -31,20 +30,22 @@ gboolean doc_scroll_to_pos( GtkTextView* view ) {
 }
 
 void doc_locate_page_line( Puss* app, gssize page_num, gint line, gint offset ) {
-	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
-	GtkTextBuffer* buf = gtk_text_view_get_buffer(view);
+	if( line > 0 ) {
+		GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
+		GtkTextBuffer* buf = gtk_text_view_get_buffer(view);
 
-	GtkTextIter iter;
-	gtk_text_buffer_get_iter_at_line_offset(buf, &iter, line, offset);
-	gtk_text_buffer_place_cursor(buf, &iter);
+		GtkTextIter iter;
+		gtk_text_buffer_get_iter_at_line_offset(buf, &iter, line-1, offset);
+		gtk_text_buffer_place_cursor(buf, &iter);
 
-	GtkTextMark* mark = gtk_text_buffer_get_mark(buf, scroll_mark_name);
-	if( mark )
-		gtk_text_buffer_move_mark(buf, mark, &iter);
-	else
-		gtk_text_buffer_create_mark(buf, "scroll-to-pos-mark", &iter, TRUE);
+		GtkTextMark* mark = gtk_text_buffer_get_mark(buf, scroll_mark_name);
+		if( mark )
+			gtk_text_buffer_move_mark(buf, mark, &iter);
+		else
+			gtk_text_buffer_create_mark(buf, "scroll-to-pos-mark", &iter, TRUE);
 
-	g_idle_add_full(G_PRIORITY_DEFAULT_IDLE, (GSourceFunc)&doc_scroll_to_pos, g_object_ref(G_OBJECT(view)), &g_object_unref);
+		g_idle_add_full(G_PRIORITY_DEFAULT_IDLE, (GSourceFunc)&doc_scroll_to_pos, g_object_ref(G_OBJECT(view)), &g_object_unref);
+	}
 }
 
 gboolean doc_load_convert_text(gchar** text, gsize* len, const gchar* charset, GError** err) {
@@ -154,6 +155,13 @@ gint doc_open_page( Puss* app, GtkSourceBuffer* buf, gboolean active_page ) {
 
 	view = GTK_SOURCE_VIEW(gtk_source_view_new_with_buffer(buf));
 	g_object_unref(G_OBJECT(buf));
+	gtk_source_view_set_auto_indent(view, TRUE);
+	gtk_source_view_set_highlight_current_line(view, TRUE);
+	gtk_source_view_set_show_line_numbers(view, TRUE);
+	gtk_source_view_set_smart_home_end(view, GTK_SOURCE_SMART_HOME_END_BEFORE);
+	gtk_source_view_set_right_margin_position(view, 120);
+	gtk_source_view_set_show_right_margin(view, TRUE);
+	gtk_source_view_set_tab_width(view, 4);
 
 	label = GTK_LABEL(gtk_label_new(0));
 	doc_reset_page_label(GTK_TEXT_BUFFER(buf), label);
@@ -191,6 +199,7 @@ gint doc_open_file( Puss* app, const gchar* url ) {
 		GError* err = 0;
 
 		if( puss_load_file(url, &text, &len, &charset, &err) ) {
+			// create text buffer & set text
 			GtkSourceBuffer* buf = gtk_source_buffer_new(0);
 			gtk_source_buffer_begin_not_undoable_action(buf);
 			gtk_text_buffer_set_text(GTK_TEXT_BUFFER(buf), text, len);
@@ -198,15 +207,28 @@ gint doc_open_file( Puss* app, const gchar* url ) {
 			gtk_text_buffer_set_modified(GTK_TEXT_BUFFER(buf), FALSE);
 			g_free(text);
 
+			// save url & charset
 			puss_doc_set_url(GTK_TEXT_BUFFER(buf), url);
 			puss_doc_set_charset(GTK_TEXT_BUFFER(buf), charset);
 
+			// select highlight language
+			gtk_source_buffer_set_language(buf, puss_glob_get_language_by_filename(((PussImpl*)app)->suffix_map, url));
+			gtk_source_buffer_set_highlight_matching_brackets(buf, TRUE);
+
+			// create text view
 			page_num = doc_open_page(app, buf, TRUE);
 
 		} else {
 			g_assert( err );
 			g_printerr("ERROR : %s", err->message);
 			g_error_free(err);
+		}
+
+	} else {
+		GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
+		if( view ) {
+			gtk_notebook_set_current_page(app->main_window->doc_panel, page_num);
+			gtk_widget_grab_focus(GTK_WIDGET(view));
 		}
 	}
 

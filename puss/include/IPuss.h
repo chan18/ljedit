@@ -76,12 +76,12 @@ struct C_API {
 };
 
 struct Puss {
+	C_API*			api;
+
 	MainWindow*		main_window;
 	MiniLine*		mini_line;
 
 	gchar*			module_path;
-
-	C_API*			api;
 };
 
 #ifdef  __cplusplus

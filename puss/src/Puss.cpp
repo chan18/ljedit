@@ -5,12 +5,12 @@
 #include <glib/gi18n.h>
 #include <memory.h>
 
-#include "IPuss.h"
 #include "MainWindow.h"
 #include "MiniLine.h"
 #include "DocManager.h"
-#include "Utils.h"
 #include "ExtendEngine.h"
+#include "Utils.h"
+#include "GlobMatch.h"
 
 C_API* create_puss_c_api() {
 	C_API* api = (C_API*)g_malloc(sizeof(C_API));
@@ -57,30 +57,34 @@ C_API* create_puss_c_api() {
 }
 
 Puss* puss_create(const char* filepath) {
-	Puss* app = (Puss*)g_malloc(sizeof(Puss));
-	memset(app, 0, sizeof(Puss));
+	PussImpl* impl = (PussImpl*)g_malloc(sizeof(PussImpl));
+	Puss* app = (Puss*)impl;
+	g_assert(app);
+
+	memset(impl, 0, sizeof(PussImpl));
 
 	app->module_path = g_path_get_dirname(filepath);
-	g_assert(app->module_path);
-
 	app->api = create_puss_c_api();
-	g_assert(app->api);
+	impl->suffix_map = puss_glob_create();
 
-	if( app ) {
-		puss_main_window_create(app);
-		puss_mini_line_create(app);
-		puss_extend_engine_create(app);
-	}
+	g_assert(app->module_path && app->api && impl->suffix_map);
+
+	puss_main_window_create(app);
+	puss_mini_line_create(app);
+	puss_extend_engine_create(app);
+
 	return app;
 }
 
 void puss_destroy(Puss* app) {
+	PussImpl* impl = (PussImpl*)app;
 	g_assert( app );
 
 	puss_extend_engine_destroy(app);
 	puss_mini_line_destroy(app);
 	puss_main_window_destroy(app);
 
+	puss_glob_destroy(impl->suffix_map);
 	g_free(app->module_path);
 	g_free(app);
 }
