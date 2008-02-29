@@ -1,4 +1,4 @@
-// MenuCommands.h
+// Menu.h
 //
 
 #ifndef PUSS_INC_MENU_H

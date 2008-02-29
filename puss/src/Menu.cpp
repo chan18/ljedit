@@ -254,6 +254,9 @@ void puss_create_ui_manager(Puss* app) {
 				"<toolbar name='ToolBar'>"
 					"<toolitem action='Open'/>"
 					"<toolitem action='Quit'/>"
+					"<separator/>"
+					"<toolitem action='GoBack'/>"
+					"<toolitem action='GoForward'/>"
 				"</toolbar>"
 			"</ui>";
 

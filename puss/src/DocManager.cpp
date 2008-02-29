@@ -10,12 +10,15 @@
 #include <string.h>
 
 #include "Puss.h"
+#include "IPuss.h"
 #include "Utils.h"
 #include "GlobMatch.h"
 
 void __free_g_string( GString* gstr ) {
 	g_string_free(gstr, TRUE);
 }
+
+gboolean doc_close_page( Puss* app, gint page_num );
 
 const gchar* scroll_mark_name = "scroll-to-pos-mark";
 
@@ -145,6 +148,24 @@ void doc_reset_page_label(GtkTextBuffer* buf, GtkLabel* label) {
 	g_free(text);
 }
 
+gboolean doc_cb_button_release_on_label(GtkWidget* widget, GdkEventButton *event, Puss* app) {
+	if( event->button==2 ) {
+		gint count = gtk_notebook_get_n_pages(app->main_window->doc_panel);
+		for( gint i=0; i < count; ++i ) {
+			GtkWidget* page = gtk_notebook_get_nth_page(app->main_window->doc_panel, i);
+			GtkWidget* label = gtk_notebook_get_tab_label(app->main_window->doc_panel, page);
+			if( widget==label ) {
+				doc_close_page(app, i);
+				break;
+			}
+		}
+
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
 gint doc_open_page( Puss* app, GtkSourceBuffer* buf, gboolean active_page ) {
 	gint page_num;
 	GtkSourceView* view;
@@ -165,10 +186,11 @@ gint doc_open_page( Puss* app, GtkSourceBuffer* buf, gboolean active_page ) {
 
 	label = GTK_LABEL(gtk_label_new(0));
 	doc_reset_page_label(GTK_TEXT_BUFFER(buf), label);
+	g_signal_connect(buf, "modified-changed", (GCallback)&doc_reset_page_label, label);
 
-	g_signal_connect(GTK_TEXT_BUFFER(buf), "modified-changed", (GCallback)&doc_reset_page_label, label);
+	tab = gtk_event_box_new();
+	gtk_container_add(GTK_CONTAINER(tab), GTK_WIDGET(label));
 
-	tab = GTK_WIDGET(label);
 	gtk_widget_show_all(tab);
 
 	page = gtk_scrolled_window_new(0, 0);
@@ -178,6 +200,7 @@ gint doc_open_page( Puss* app, GtkSourceBuffer* buf, gboolean active_page ) {
 	g_object_set_data(G_OBJECT(page), "puss-doc-view", view);
 
 	page_num = gtk_notebook_append_page(app->main_window->doc_panel, page, tab);
+	g_signal_connect(tab, "button-release-event", (GCallback)&doc_cb_button_release_on_label, (gpointer)app);
 
 	if( active_page ) {
 		gtk_notebook_set_current_page(app->main_window->doc_panel, page_num);
@@ -346,6 +369,39 @@ gboolean doc_save_page( Puss* app, gint page_num, gboolean is_save_as ) {
 	return result;
 }
 
+gboolean doc_close_page( Puss* app, gint page_num ) {
+	GtkTextBuffer* buf = puss_doc_get_buffer_from_page_num(app, page_num);
+	if( buf && gtk_text_buffer_get_modified(buf) ) {
+		gint res;
+		GtkWidget* dlg;
+
+		dlg = gtk_message_dialog_new( app->main_window->window
+			, GTK_DIALOG_MODAL
+			, GTK_MESSAGE_QUESTION
+			, GTK_BUTTONS_YES_NO
+			, _("file modified, save it?") );
+
+		gtk_dialog_set_default_response(GTK_DIALOG(dlg), GTK_RESPONSE_YES);
+
+		res = gtk_dialog_run(GTK_DIALOG(dlg));
+		gtk_widget_destroy(dlg);
+
+		switch( res ) {
+		case GTK_RESPONSE_YES:
+			if( !doc_save_page(app, page_num, FALSE) )
+				return FALSE;
+			break;
+		case GTK_RESPONSE_NO:
+			break;
+		default:
+			return FALSE;
+		}
+	}
+
+	gtk_notebook_remove_page(app->main_window->doc_panel, page_num);
+	return TRUE;
+}
+
 void puss_doc_set_url( GtkTextBuffer* buffer, const gchar* url ) {
 	g_object_set_data_full(G_OBJECT(buffer), "puss-doc-url", g_string_new(url), (GDestroyNotify)&__free_g_string);
 }
@@ -511,41 +567,8 @@ void puss_doc_save_current( Puss* app, gboolean save_as ) {
 }
 
 gboolean puss_doc_close_current( Puss* app ) {
-	GtkTextBuffer* buf;
 	gint page_num = gtk_notebook_get_current_page(app->main_window->doc_panel);
-	if( page_num < 0 )
-		return TRUE;
-
-	buf = puss_doc_get_buffer_from_page_num(app, page_num);
-	if( gtk_text_buffer_get_modified(buf) ) {
-		gint res;
-		GtkWidget* dlg;
-
-		dlg = gtk_message_dialog_new( app->main_window->window
-			, GTK_DIALOG_MODAL
-			, GTK_MESSAGE_QUESTION
-			, GTK_BUTTONS_YES_NO
-			, _("file modified, save it?") );
-
-		gtk_dialog_set_default_response(GTK_DIALOG(dlg), GTK_RESPONSE_YES);
-
-		res = gtk_dialog_run(GTK_DIALOG(dlg));
-		gtk_widget_destroy(dlg);
-
-		switch( res ) {
-		case GTK_RESPONSE_YES:
-			if( !doc_save_page(app, page_num, FALSE) )
-				return FALSE;
-			break;
-		case GTK_RESPONSE_NO:
-			break;
-		default:
-			return FALSE;
-		}
-	}
-
-	gtk_notebook_remove_page(app->main_window->doc_panel, page_num);
-	return TRUE;
+	return doc_close_page(app, page_num);
 }
 
 void puss_doc_save_all( Puss* app ) {

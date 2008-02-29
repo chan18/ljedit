@@ -12,11 +12,29 @@ main_window.right_panel		= __puss.right_panel
 main_window.bottom_panel	= __puss.bottom_panel
 main_window.status_bar		= __puss.status_bar
 
+
 def doc_get_url(buf):
 	if not isinstance(buf, gtk.TextBuffer):
-		raise TypeError("not gtk.TextBuffer")
+		raise TypeError("need gtk.TextBuffer")
 	return __puss.__doc_get_url(__puss.__app, buf)
 
+def doc_set_url(buf, url):
+	if not isinstance(buf, gtk.TextBuffer):
+		raise TypeError("need gtk.TextBuffer")
+	return __puss.__doc_set_url(__puss.__app, buf, url)
+
+def doc_get_charset(buf):
+	if not isinstance(buf, gtk.TextBuffer):
+		raise TypeError("need gtk.TextBuffer")
+	return __puss.__doc_get_charset(__puss.__app, buf)
+
+def doc_set_charset(buf, charset):
+	if not isinstance(buf, gtk.TextBuffer):
+		raise TypeError("need gtk.TextBuffer")
+	return __puss.__doc_set_charset(__puss.__app, buf, charset)
+
+def doc_get_label_from_page_num(page):		return __puss.__doc_doc_get_label_from_page_num(__puss.__app, page)
+def doc_get_view_from_page_num(page):		return __puss.__doc_doc_get_view_from_page_num(__puss.__app, page)
 def doc_get_buffer_from_page_num(page):		return __puss.__doc_doc_get_buffer_from_page_num(__puss.__app, page)
 
 def doc_find_page_from_url(url):			return __puss.__doc_find_page_from_url(__puss.__app, url)
@@ -29,8 +47,19 @@ def doc_close_current():					return __puss.__doc_close_current(__puss.__app)
 def doc_save_all():							return __puss.__doc_save_all(__puss.__app)
 def doc_close_all():						return __puss.__doc_close_all(__puss.__app)
 
+def send_focus_change(widget, force_in):
+	if not isinstance(widget, gtk.Widget):
+		raise TypeError("need gtk.Widget")
+	return __puss.__send_focus_change(__puss.__app, widget, force_in)
+
+def active_panel_page(notebook, page):
+	if not isinstance(notebook, gtk.Notebook):
+		raise TypeError("need gtk.Notebook")
+	return __puss.__active_panel_page(__puss.__app, notebook, page)
+
+
 def show_msgbox(message):
-	dlg = gtk.MessageDialog(parent=main_window, buttons=gtk.BUTTONS_YES_NO, message_format=str(message))
+	dlg = gtk.MessageDialog(parent=main_window, buttons=gtk.BUTTONS_YES_NO, message_format=repr(message))
 	dlg.run()
 	dlg.destroy()
 
