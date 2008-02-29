@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="plugin_engine"
-	ProjectGUID="{44F803E0-12E8-4F44-8B7A-2FAB5DB9FEE3}"
-	RootNamespace="plugin_engine"
+	Name="dndopen"
+	ProjectGUID="{44F873E0-12E8-4F44-777A-2FAB5DB9AEE3}"
+	RootNamespace="dndopen"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -177,14 +177,6 @@
 	<Files>
 		<File
 			RelativePath=".\src\module.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\src\PluginEngine.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\src\PluginEngine.h"
 			>
 		</File>
 	</Files>

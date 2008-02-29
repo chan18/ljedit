@@ -79,6 +79,11 @@ void puss_main_window_create( Puss* app ) {
 	// show vbox & resize window
 	gtk_widget_show_all(GTK_WIDGET(vbox));
 	gtk_window_resize(self->window, 1024, 768);
+
+	// set icon
+	gchar* icon_file = g_build_filename(app->module_path, "res", "puss.png", NULL);
+	gtk_window_set_icon_from_file(self->window, icon_file, NULL);
+	g_free(icon_file);
 }
 
 void puss_main_window_destroy( Puss* app ) {
