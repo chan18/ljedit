@@ -4,13 +4,7 @@
 #ifndef PUSS_INC_PUSS_H
 #define PUSS_INC_PUSS_H
 
-#include "IPuss.h"
-
-struct PussImpl {
-	Puss		parent;
-
-	GHashTable*	suffix_map;
-};
+struct Puss;
 
 Puss*	puss_create(const char* filepath);
 void	puss_destroy(Puss* app);

@@ -9,7 +9,7 @@
 #include <memory.h>
 #include <string.h>
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	#include <windows.h>
 
 	GModule* puss_g_module_open(const gchar  *file_name, GModuleFlags  flags) {
@@ -34,8 +34,9 @@ struct Extend {
 };
 
 Extend* extend_load(Puss* app, const gchar* filepath) {
-	Extend* extend = (Extend*)g_malloc(sizeof(Extend));
-	memset(extend, 0, sizeof(Extend));
+	Extend* extend = g_try_new0(Extend, 1);
+	if( !extend )
+		return 0;
 
 	extend->module = puss_g_module_open(filepath, G_MODULE_BIND_LAZY);
 	if( !extend->module ) {

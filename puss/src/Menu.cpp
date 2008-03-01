@@ -8,6 +8,7 @@
 #include "Utils.h"
 #include "DocManager.h"
 #include "MiniLine.h"
+#include "PosLocate.h"
 #include "MiniLineModules.h"
 #include "AboutDialog.h"
 
@@ -50,11 +51,11 @@ void cb_edit_menu_replace( GtkAction* action, Puss* app ) {
 }
 
 void cb_edit_menu_go_back( GtkAction* action, Puss* app ) {
-	g_message("go back");
+	puss_pos_locate_back(app);
 }
 
 void cb_edit_menu_go_forward( GtkAction* action, Puss* app ) {
-	g_message("go forward");
+	puss_pos_locate_forward(app);
 }
 
 void cb_view_menu_fullscreen( GtkAction* action, Puss* app ) {

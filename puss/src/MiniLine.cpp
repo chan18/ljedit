@@ -51,15 +51,14 @@ gboolean mini_line_cb_button_press_event( GtkWidget* widget, GdkEventButton* eve
 }
 
 void puss_mini_line_create( Puss* app ) {
-	MiniLineImpl* self = (MiniLineImpl*)g_malloc(sizeof(MiniLineImpl));
-	memset(self, 0, sizeof(MiniLineImpl));
+	MiniLineImpl* self = g_new0(MiniLineImpl, 1);
 	app->mini_line = (MiniLine*)self;
 	
 	app->mini_line->label = GTK_LABEL(gtk_label_new(0));
 	app->mini_line->entry = GTK_ENTRY(gtk_entry_new());
 
-	self->signal_id_changed = g_signal_connect(G_OBJECT(app->mini_line->entry), "changed", (GCallback)&mini_line_cb_changed, app);
-	self->signal_id_key_press = g_signal_connect(G_OBJECT(app->mini_line->entry), "key-press-event", (GCallback)&mini_line_cb_key_press_event, app);
+	self->signal_id_changed = g_signal_connect(app->mini_line->entry, "changed", G_CALLBACK(&mini_line_cb_changed), app);
+	self->signal_id_key_press = g_signal_connect(app->mini_line->entry, "key-press-event", G_CALLBACK(&mini_line_cb_key_press_event), app);
 
 	GtkBox* hbox = GTK_BOX(gtk_hbox_new(FALSE, 0));
 	gtk_box_pack_start(hbox, GTK_WIDGET(app->mini_line->label), FALSE, FALSE, 0);
@@ -74,16 +73,19 @@ void puss_mini_line_create( Puss* app ) {
 	self->window = GTK_WINDOW(gtk_window_new(GTK_WINDOW_POPUP));
 	gtk_container_add(GTK_CONTAINER(self->window), frame);
 
-	self->signal_id_focus_out = g_signal_connect(G_OBJECT(self->window), "focus-out-event", (GCallback)&puss_mini_line_focus_out_event, app);
-	self->signal_id_button_press = g_signal_connect(G_OBJECT(self->window), "button-press-event", (GCallback)&mini_line_cb_button_press_event, app);
+	self->signal_id_focus_out = g_signal_connect(self->window, "focus-out-event", G_CALLBACK(&puss_mini_line_focus_out_event), app);
+	self->signal_id_button_press = g_signal_connect(self->window, "button-press-event", G_CALLBACK(&mini_line_cb_button_press_event), app);
 
 	gtk_window_resize(self->window, 120, 24);
 	gtk_window_set_modal(self->window, TRUE);
 }
 
 void puss_mini_line_destroy( Puss* app ) {
-	if( app && app->mini_line )
+	if( app && app->mini_line ) {
+		MiniLineImpl* self = (MiniLineImpl*)app->mini_line;
+		gtk_widget_destroy(GTK_WIDGET(self->window));
 		g_free(app->mini_line);
+	}
 }
 
 void puss_mini_line_active( Puss* app, MiniLineCallback* cb ) {

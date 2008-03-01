@@ -60,7 +60,7 @@ struct C_API {
 
 	void			(*doc_new)						( Puss* app );
 	gboolean		(*doc_open)						( Puss* app, const gchar* url, gint line, gint line_offset );
-	gboolean		(*doc_locate)					( Puss* app, const gchar* url, gint line, gint line_offset );
+	gboolean		(*doc_locate)					( Puss* app, gint page_num, gint line, gint line_offset, gboolean add_pos_locate );
 	void			(*doc_save_current)				( Puss* app, gboolean save_as );
 	gboolean		(*doc_close_current)			( Puss* app );
 	void			(*doc_save_all)					( Puss* app );

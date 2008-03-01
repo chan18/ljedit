@@ -157,12 +157,7 @@ gboolean GOTO_cb_active(Puss* app, gpointer tag) {
 
 	if( get_current_document_insert_pos(app, &(self->last_line), &(self->last_offset)) ) {
 		gchar text[64] = { 0 };
-		
-#ifdef WIN32
-		sprintf_s(text, "%d", (self->last_line + 1));
-#else
-		snprintf(text, 64, "%d", (self->last_line + 1));
-#endif
+		g_snprintf( text, 64, "%d", (self->last_line + 1) );
 
 		gtk_label_set_text(app->mini_line->label, _("goto : "));
 		gtk_entry_set_text(app->mini_line->entry, text);

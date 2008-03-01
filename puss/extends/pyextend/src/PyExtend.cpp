@@ -180,13 +180,14 @@ PyObject* py_wrapper_doc_open(PyObject* self, PyObject* args) {
 
 PyObject* py_wrapper_doc_locate(PyObject* self, PyObject* args) {
 	Puss* app = 0;
-	const char* url = 0;
+	int page_num = 0;
 	int line = 0;
 	int offset = 0;
-	if(!PyArg_ParseTuple(args, "O&sii:py_wrapper_doc_locate", &app_convert, &app, &url, &line, &offset))
+	int add_pos_locate = 0;
+	if(!PyArg_ParseTuple(args, "O&iiii:py_wrapper_doc_locate", &app_convert, &app, &page_num, &line, &offset, &add_pos_locate))
 		return 0;
 
-	gboolean res = app->api->doc_locate(app, url, line, offset);
+	gboolean res = app->api->doc_locate(app, page_num, line, offset, add_pos_locate);
 	return PyBool_FromLong((long)res);
 }
 
@@ -285,7 +286,6 @@ struct PyExtend {
 	Puss*		app;
 	PyObject*	py_gobject;
 	PyObject*	py_gtk;
-	PyObject*	py_puss;
 	PyObject*	py_impl;
 };
 
@@ -320,21 +320,21 @@ gboolean init_pygtk_library(PyExtend* self) {
 }
 
 gboolean init_puss_module(PyExtend* self) {
-	self->py_puss = Py_InitModule("__puss", puss_methods);
-	if( !self->py_puss )
+	PyObject* py_puss = Py_InitModule("__puss", puss_methods);
+	if( !py_puss )
 		return FALSE;
 
 	{
-		PyModule_AddObject(self->py_puss, "__app",			PyCObject_FromVoidPtr(self->app, 0));
+		PyModule_AddObject(py_puss, "__app",		PyCObject_FromVoidPtr(self->app, 0));
 
-		PyModule_AddObject(self->py_puss, "main_window",	pygobject_new(G_OBJECT(self->app->main_window->window)));
+		PyModule_AddObject(py_puss, "main_window",	pygobject_new(G_OBJECT(self->app->main_window->window)));
 
-		PyModule_AddObject(self->py_puss, "ui_manager",		pygobject_new(G_OBJECT(self->app->main_window->ui_manager)));
-		PyModule_AddObject(self->py_puss, "doc_panel",		pygobject_new(G_OBJECT(self->app->main_window->doc_panel)));
-		PyModule_AddObject(self->py_puss, "left_panel",		pygobject_new(G_OBJECT(self->app->main_window->left_panel)));
-		PyModule_AddObject(self->py_puss, "right_panel",	pygobject_new(G_OBJECT(self->app->main_window->right_panel)));
-		PyModule_AddObject(self->py_puss, "bottom_panel",	pygobject_new(G_OBJECT(self->app->main_window->bottom_panel)));
-		PyModule_AddObject(self->py_puss, "status_bar",		pygobject_new(G_OBJECT(self->app->main_window->status_bar)));
+		PyModule_AddObject(py_puss, "ui_manager",	pygobject_new(G_OBJECT(self->app->main_window->ui_manager)));
+		PyModule_AddObject(py_puss, "doc_panel",	pygobject_new(G_OBJECT(self->app->main_window->doc_panel)));
+		PyModule_AddObject(py_puss, "left_panel",	pygobject_new(G_OBJECT(self->app->main_window->left_panel)));
+		PyModule_AddObject(py_puss, "right_panel",	pygobject_new(G_OBJECT(self->app->main_window->right_panel)));
+		PyModule_AddObject(py_puss, "bottom_panel",	pygobject_new(G_OBJECT(self->app->main_window->bottom_panel)));
+		PyModule_AddObject(py_puss, "status_bar",	pygobject_new(G_OBJECT(self->app->main_window->status_bar)));
 	}
 
 	gchar* extends_path = g_build_filename(self->app->module_path, "extends", NULL);
@@ -395,14 +395,15 @@ void unload_python_extends(PyExtend* self) {
 }
 
 PyExtend* puss_py_extend_create(Puss* app) {
-	Py_Initialize();
+	PyExtend* self = g_try_new0(PyExtend, 1);
+	if( self ) {
+		self->app = app;
 
-	PyExtend* self = (PyExtend*)g_malloc(sizeof(PyExtend));
-	memset(self, 0, sizeof(PyExtend));
-	self->app = app;
+		Py_Initialize();
 
-	if( init_pygtk_library(self) && init_puss_module(self) )
-		load_python_extends(self);
+		if( init_pygtk_library(self) && init_puss_module(self) )
+			;//load_python_extends(self);
+	}
 
 	return self;
 }
@@ -413,14 +414,13 @@ void puss_py_extend_destroy(PyExtend* self) {
 		unload_python_extends(self);
 
 		Py_XDECREF(self->py_impl);
-		Py_XDECREF(self->py_puss);
 		Py_XDECREF(self->py_gtk);
 		Py_XDECREF(self->py_gobject);
+
+		while( PyGC_Collect() )
+			;	
+			
+		Py_Finalize();
 	}
-
-	while( PyGC_Collect() )
-		;	
-
-	Py_Finalize();
 }
 

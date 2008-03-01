@@ -3,6 +3,10 @@
 
 #include "DocManager.h"
 
+#ifdef G_OS_WIN32
+#include <windows.h>
+#endif
+
 #include <glib/gi18n.h>
 
 #include <gtksourceview/gtksourceview.h>
@@ -13,6 +17,7 @@
 #include "IPuss.h"
 #include "Utils.h"
 #include "GlobMatch.h"
+#include "PosLocate.h"
 
 void __free_g_string( GString* gstr ) {
 	g_string_free(gstr, TRUE);
@@ -32,23 +37,29 @@ gboolean doc_scroll_to_pos( GtkTextView* view ) {
     return FALSE;
 }
 
-void doc_locate_page_line( Puss* app, gssize page_num, gint line, gint offset ) {
-	if( line > 0 ) {
-		GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
-		GtkTextBuffer* buf = gtk_text_view_get_buffer(view);
+void doc_locate_page_line( Puss* app, gint page_num, gint line, gint offset ) {
+	if( line <=  0 )
+		return;
 
-		GtkTextIter iter;
-		gtk_text_buffer_get_iter_at_line_offset(buf, &iter, line-1, offset);
-		gtk_text_buffer_place_cursor(buf, &iter);
+	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
+	if( !view )
+		return;
 
-		GtkTextMark* mark = gtk_text_buffer_get_mark(buf, scroll_mark_name);
-		if( mark )
-			gtk_text_buffer_move_mark(buf, mark, &iter);
-		else
-			gtk_text_buffer_create_mark(buf, "scroll-to-pos-mark", &iter, TRUE);
+	GtkTextBuffer* buf = gtk_text_view_get_buffer(view);
+	if( !buf )
+		return;
 
-		g_idle_add_full(G_PRIORITY_DEFAULT_IDLE, (GSourceFunc)&doc_scroll_to_pos, g_object_ref(G_OBJECT(view)), &g_object_unref);
-	}
+	GtkTextIter iter;
+	gtk_text_buffer_get_iter_at_line_offset(buf, &iter, line-1, offset);
+	gtk_text_buffer_place_cursor(buf, &iter);
+
+	GtkTextMark* mark = gtk_text_buffer_get_mark(buf, scroll_mark_name);
+	if( mark )
+		gtk_text_buffer_move_mark(buf, mark, &iter);
+	else
+		gtk_text_buffer_create_mark(buf, "scroll-to-pos-mark", &iter, TRUE);
+
+	g_idle_add_full(G_PRIORITY_DEFAULT_IDLE, (GSourceFunc)&doc_scroll_to_pos, g_object_ref(G_OBJECT(view)), &g_object_unref);
 }
 
 gboolean doc_load_convert_text(gchar** text, gsize* len, const gchar* charset, GError** err) {
@@ -113,28 +124,28 @@ gboolean puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST
 void doc_reset_page_label(GtkTextBuffer* buf, GtkLabel* label) {
 	gboolean modified = gtk_text_buffer_get_modified(buf);
 	GString* url = puss_doc_get_url(buf);
-	gchar* text = url
-		? g_path_get_basename(url->str)
-		: g_strdup(_("Untitled"));
+	gchar* text = 0;
 
-/*
 #ifdef G_OS_WIN32
-	wchar_t* wfname = (wchar_t*)::g_utf8_to_utf16(filekey.c_str(), -1, 0, 0, 0);
-	if( wfname != 0 ) {
-		WIN32_FIND_DATAW wfdd;
-		HANDLE hfd = FindFirstFileW(wfname, &wfdd);
-		if( hfd != INVALID_HANDLE_VALUE ) {
-			gchar* fname = ::g_utf16_to_utf8((gunichar2*)wfdd.cFileName, -1, 0, 0, 0);
-			if( fname != 0 ) {
-				filename = fname;
-				g_free(fname);
+	if( url ) {
+		wchar_t* wfname = (wchar_t*)g_utf8_to_utf16(url->str, url->len, 0, 0, 0);
+		if( wfname != 0 ) {
+			WIN32_FIND_DATAW wfdd;
+			HANDLE hfd = FindFirstFileW(wfname, &wfdd);
+			if( hfd != INVALID_HANDLE_VALUE ) {
+				text = g_utf16_to_utf8((gunichar2*)wfdd.cFileName, -1, 0, 0, 0);
+				FindClose(hfd);
 			}
-			FindClose(hfd);
+			g_free(wfname);
 		}
-		g_free(wfname);
 	}
 #endif
-*/
+
+	if( !text ) {
+		text = url
+			? g_path_get_basename(url->str)
+			: g_strdup(_("Untitled"));
+	}
 
 	if( modified ) {
 		gchar* title = g_strdup_printf("%s*", text);
@@ -174,6 +185,8 @@ gint doc_open_page( Puss* app, GtkSourceBuffer* buf, gboolean active_page ) {
 	GtkWidget* page;
 	GtkTextIter iter;
 
+	gtk_source_buffer_set_highlight_matching_brackets(buf, TRUE);
+
 	view = GTK_SOURCE_VIEW(gtk_source_view_new_with_buffer(buf));
 	g_object_unref(G_OBJECT(buf));
 	gtk_source_view_set_auto_indent(view, TRUE);
@@ -186,7 +199,7 @@ gint doc_open_page( Puss* app, GtkSourceBuffer* buf, gboolean active_page ) {
 
 	label = GTK_LABEL(gtk_label_new(0));
 	doc_reset_page_label(GTK_TEXT_BUFFER(buf), label);
-	g_signal_connect(buf, "modified-changed", (GCallback)&doc_reset_page_label, label);
+	g_signal_connect(buf, "modified-changed", G_CALLBACK(&doc_reset_page_label), label);
 
 	tab = gtk_event_box_new();
 	gtk_container_add(GTK_CONTAINER(tab), GTK_WIDGET(label));
@@ -200,7 +213,7 @@ gint doc_open_page( Puss* app, GtkSourceBuffer* buf, gboolean active_page ) {
 	g_object_set_data(G_OBJECT(page), "puss-doc-view", view);
 
 	page_num = gtk_notebook_append_page(app->main_window->doc_panel, page, tab);
-	g_signal_connect(tab, "button-release-event", (GCallback)&doc_cb_button_release_on_label, (gpointer)app);
+	g_signal_connect(tab, "button-release-event", G_CALLBACK(&doc_cb_button_release_on_label), app);
 
 	if( active_page ) {
 		gtk_notebook_set_current_page(app->main_window->doc_panel, page_num);
@@ -235,8 +248,7 @@ gint doc_open_file( Puss* app, const gchar* url ) {
 			puss_doc_set_charset(GTK_TEXT_BUFFER(buf), charset);
 
 			// select highlight language
-			gtk_source_buffer_set_language(buf, puss_glob_get_language_by_filename(((PussImpl*)app)->suffix_map, url));
-			gtk_source_buffer_set_highlight_matching_brackets(buf, TRUE);
+			gtk_source_buffer_set_language(buf, puss_glob_get_language_by_filename(app, url));
 
 			// create text view
 			page_num = doc_open_page(app, buf, TRUE);
@@ -418,6 +430,7 @@ GString* puss_doc_get_charset( GtkTextBuffer* buffer ) {
 	return (GString*)g_object_get_data(G_OBJECT(buffer), "puss-doc-charset");
 }
 
+
 void puss_doc_replace_all( GtkTextBuffer* buf
 		, const gchar* find_text
 		, const gchar* replace_text
@@ -502,7 +515,8 @@ void puss_doc_new( Puss* app ) {
 	GtkSourceBuffer* buf = gtk_source_buffer_new(0);
 	puss_doc_set_charset(GTK_TEXT_BUFFER(buf), "UTF-8");
 
-	doc_open_page(app, buf, TRUE);
+	gint page_num = doc_open_page(app, buf, TRUE);
+	puss_pos_locate_add(app, page_num, 1, 0);
 }
 
 gboolean puss_doc_open( Puss* app, const gchar* url, gint line, gint line_offset ) {
@@ -512,8 +526,6 @@ gboolean puss_doc_open( Puss* app, const gchar* url, gint line, gint line_offset
 		page_num = doc_open_file(app, url);
 		if( page_num < 0 )
 			return FALSE;
-
-		doc_locate_page_line(app, page_num, line, line_offset);
 
 	} else {
 		gint res;
@@ -547,11 +559,13 @@ gboolean puss_doc_open( Puss* app, const gchar* url, gint line, gint line_offset
 		gtk_widget_destroy(dlg);
 	}
 
+	doc_locate_page_line(app, page_num, line, line_offset);
+	puss_pos_locate_add(app, page_num, line, line_offset);
+
 	return TRUE;
 }
 
-gboolean puss_doc_locate( Puss* app, const gchar* url, gint line, gint line_offset ) {
-	gint page_num = puss_doc_find_page_from_url(app, url);
+gboolean puss_doc_locate( Puss* app, gint page_num, gint line, gint line_offset, gboolean add_pos_locate ) {
 	if( page_num < 0 )
 		return FALSE;
 
@@ -559,6 +573,8 @@ gboolean puss_doc_locate( Puss* app, const gchar* url, gint line, gint line_offs
 		return FALSE;
 
 	doc_locate_page_line(app, page_num, line, line_offset);
+	if( add_pos_locate )
+		puss_pos_locate_add(app, page_num, line, line_offset);
 	return TRUE;
 }
 

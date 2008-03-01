@@ -10,8 +10,7 @@
 #include "Utils.h"
 
 void puss_main_window_create( Puss* app ) {
-	MainWindow* self = (MainWindow*)g_malloc(sizeof(MainWindow));
-	memset(self, 0, sizeof(MainWindow));
+	MainWindow* self = g_new0(MainWindow, 1);
 	app->main_window = self;
 
 	self->window = GTK_WINDOW(gtk_window_new(GTK_WINDOW_TOPLEVEL));

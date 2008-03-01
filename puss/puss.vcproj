@@ -278,6 +278,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\PosLocate.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\PosLocate.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Puss.cpp"
 				>
 			</File>

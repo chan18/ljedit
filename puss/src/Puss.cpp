@@ -5,17 +5,14 @@
 #include <glib/gi18n.h>
 #include <memory.h>
 
+#include "IPuss.h"
 #include "MainWindow.h"
 #include "MiniLine.h"
 #include "DocManager.h"
 #include "ExtendEngine.h"
 #include "Utils.h"
-#include "GlobMatch.h"
 
-C_API* create_puss_c_api() {
-	C_API* api = (C_API*)g_malloc(sizeof(C_API));
-	memset(api, 0, sizeof(C_API));
-
+void init_puss_c_api(C_API* api) {
 	// app
 
 	// main window
@@ -52,41 +49,36 @@ C_API* create_puss_c_api() {
 	// utils
 	api->send_focus_change = &puss_send_focus_change;
 	api->active_panel_page = &puss_active_panel_page;
-
-	return api;
 }
 
 Puss* puss_create(const char* filepath) {
-	PussImpl* impl = (PussImpl*)g_malloc(sizeof(PussImpl));
-	Puss* app = (Puss*)impl;
-	g_assert(app);
+	Puss* app = g_new0(Puss, 1);
+	if( app ) {
+		memset(app, 0, sizeof(Puss));
 
-	memset(impl, 0, sizeof(PussImpl));
+		app->module_path = g_path_get_dirname(filepath);
+		app->api = g_new0(C_API, 1);
+		g_assert(app->module_path && app->api);
+		init_puss_c_api(app->api);
 
-	app->module_path = g_path_get_dirname(filepath);
-	app->api = create_puss_c_api();
-	impl->suffix_map = puss_glob_create();
-
-	g_assert(app->module_path && app->api && impl->suffix_map);
-
-	puss_main_window_create(app);
-	puss_mini_line_create(app);
-	puss_extend_engine_create(app);
+		puss_main_window_create(app);
+		puss_mini_line_create(app);
+		puss_extend_engine_create(app);
+	}
 
 	return app;
 }
 
 void puss_destroy(Puss* app) {
-	PussImpl* impl = (PussImpl*)app;
-	g_assert( app );
+	if( app ) {
+		puss_extend_engine_destroy(app);
+		puss_mini_line_destroy(app);
+		puss_main_window_destroy(app);
 
-	puss_extend_engine_destroy(app);
-	puss_mini_line_destroy(app);
-	puss_main_window_destroy(app);
-
-	puss_glob_destroy(impl->suffix_map);
-	g_free(app->module_path);
-	g_free(app);
+		g_free(app->module_path);
+		g_free(app->api);
+		g_free(app);
+	}
 }
 
 void puss_run(Puss* app) {
@@ -94,7 +86,7 @@ void puss_run(Puss* app) {
 
 	gtk_widget_show( GTK_WIDGET(app->main_window->window) );
 
-	g_signal_connect(G_OBJECT(app->main_window->window), "destroy", G_CALLBACK(gtk_main_quit), 0);
+	g_signal_connect(app->main_window->window, "destroy", G_CALLBACK(gtk_main_quit), 0);
 	gtk_window_set_title(GTK_WINDOW(app->main_window->window), _("Puss - c/c++ source editor"));
 
 	//g_print(_("test locale\n"));
