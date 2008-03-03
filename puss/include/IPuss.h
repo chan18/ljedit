@@ -52,7 +52,6 @@ struct C_API {
 
 	// doc manager
 
-	GtkLabel*		(*doc_get_label_from_page_num)	( Puss* app, gint page_num );
 	GtkTextView*	(*doc_get_view_from_page_num)	( Puss* app, gint page_num );
 	GtkTextBuffer*	(*doc_get_buffer_from_page_num)	( Puss* app, gint page_num );
 

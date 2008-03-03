@@ -26,7 +26,6 @@ GtkTextBuffer*	puss_doc_get_buffer_from_page( GtkWidget* page );
 
 // doc manager
 
-GtkLabel*		puss_doc_get_label_from_page_num( Puss* app, int page_num );
 GtkTextView*	puss_doc_get_view_from_page_num( Puss* app, gint page_num );
 GtkTextBuffer*	puss_doc_get_buffer_from_page_num( Puss* app, gint page_num );
 

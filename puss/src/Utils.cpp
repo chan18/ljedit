@@ -30,6 +30,7 @@ void puss_active_panel_page(GtkNotebook* panel, gint page_num) {
 	GtkWidget* w = gtk_notebook_get_nth_page(panel, page_num);
 	if( w ) {
 		gtk_notebook_set_current_page(panel, page_num);
+		puss_send_focus_change(w, FALSE);
 		puss_send_focus_change(w, TRUE);
 	}
 }

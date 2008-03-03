@@ -28,7 +28,6 @@ void init_puss_c_api(C_API* api) {
 	api->doc_get_buffer_from_page = &puss_doc_get_buffer_from_page;
 
 	// doc manager
-	api->doc_get_label_from_page_num  = &puss_doc_get_label_from_page_num;
 	api->doc_get_view_from_page_num   = &puss_doc_get_view_from_page_num;
 	api->doc_get_buffer_from_page_num = &puss_doc_get_buffer_from_page_num;
 

@@ -26,7 +26,6 @@ import gobject
 import vte
 import gconf
 import gettext
-import gnomevfs
 import os
 
 try:
@@ -184,8 +183,12 @@ try:
 	def active():
 		terminal.show_all()
 
+		def ff(*args):
+			print 'ffff', args
+			terminal._vte.grab_focus()
+
 		puss.main_window.bottom_panel.append_page(terminal, gtk.Label('Terminal'))
-		terminal.connect('focus_in_event', lambda *args : terminal._vte.grab_focus())
+		terminal.connect('focus_in_event', ff)	#lambda *args : terminal._vte.grab_focus())
 
 	def deactive():
 		pass

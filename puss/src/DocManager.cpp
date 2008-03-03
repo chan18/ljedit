@@ -313,8 +313,6 @@ gboolean doc_save_page( Puss* app, gint page_num, gboolean is_save_as ) {
 	GtkTextBuffer* buf;
 	GString* url;
 	gboolean result;
-	gchar* title;
-	GtkLabel* label;
 
 	if( page_num < 0 )
 		return TRUE;
@@ -371,12 +369,6 @@ gboolean doc_save_page( Puss* app, gint page_num, gboolean is_save_as ) {
 
 	// save file
 	result = doc_save_file(buf, 0);
-
-	// update label
-	title = g_path_get_basename(url->str);
-	label = puss_doc_get_label_from_page_num(app, page_num);
-	gtk_label_set_text(label, title);
-	g_free(title);
 
 	return result;
 }
@@ -467,11 +459,6 @@ GtkTextView* puss_doc_get_view_from_page( GtkWidget* page ) {
 GtkTextBuffer* puss_doc_get_buffer_from_page( GtkWidget* page ) {
 	GtkTextView* view = puss_doc_get_view_from_page(page);
 	return view ? gtk_text_view_get_buffer(view) : 0;
-}
-
-GtkLabel* puss_doc_get_label_from_page_num( Puss* app, int page_num ) {
-	GtkWidget* page = gtk_notebook_get_nth_page(app->main_window->doc_panel, page_num);
-	return page ? GTK_LABEL(gtk_notebook_get_tab_label(app->main_window->doc_panel, page)) : 0;
 }
 
 GtkTextView* puss_doc_get_view_from_page_num( Puss* app, gint page_num ) {

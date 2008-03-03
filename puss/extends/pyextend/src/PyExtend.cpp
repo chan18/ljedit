@@ -98,22 +98,6 @@ PyObject* py_wrapper_doc_set_charset(PyObject* self, PyObject* args) {
 	return Py_None;
 }
 
-PyObject* py_wrapper_doc_get_label_from_page_num(PyObject* self, PyObject* args) {
-	Puss* app = 0;
-	gint page_num = 0;
-	if(!PyArg_ParseTuple(args, "O&i:py_wrapper_doc_get_label_from_page_num", &app_convert, &app, &page_num))
-		return 0;
-
-	GtkLabel* label = app->api->doc_get_label_from_page_num(app, page_num);
-	if( !label ) {
-		Py_INCREF(Py_None);
-		return Py_None;
-	}
-
-	PyObject* py_label = pygobject_new(G_OBJECT(label));
-	return py_label;
-}
-
 PyObject* py_wrapper_doc_get_view_from_page_num(PyObject* self, PyObject* args) {
 	Puss* app = 0;
 	gint page_num = 0;
@@ -260,7 +244,6 @@ PyMethodDef puss_methods[] =
 	, { "__doc_get_charset", &py_wrapper_doc_get_charset, METH_VARARGS, NULL }
 	, { "__doc_set_charset", &py_wrapper_doc_set_charset, METH_VARARGS, NULL }
 
-	, { "__doc_doc_get_label_from_page_num", &py_wrapper_doc_get_label_from_page_num, METH_VARARGS, NULL }
 	, { "__doc_doc_get_view_from_page_num", &py_wrapper_doc_get_view_from_page_num, METH_VARARGS, NULL }
 	, { "__doc_doc_get_buffer_from_page_num", &py_wrapper_doc_get_buffer_from_page_num, METH_VARARGS, NULL }
 
@@ -402,7 +385,7 @@ PyExtend* puss_py_extend_create(Puss* app) {
 		Py_Initialize();
 
 		if( init_pygtk_library(self) && init_puss_module(self) )
-			;//load_python_extends(self);
+			load_python_extends(self);
 	}
 
 	return self;
