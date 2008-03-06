@@ -11,85 +11,69 @@
 #include "DocManager.h"
 
 
-struct MiniLineImpl {
-	MiniLine			parent;
-
+struct MiniLine {
 	GtkWindow*			window;
+	GtkLabel*			label;
+	GtkEntry*			entry;
 
 	gulong				signal_id_changed;
 	gulong				signal_id_key_press;
-	gulong				signal_id_focus_out;
-	gulong				signal_id_button_press;
 
 	MiniLineCallback*	cb;
 };
 
-void mini_line_cb_changed( GtkEditable* editable, Puss* app ) {
-	MiniLineImpl* self = (MiniLineImpl*)app->mini_line;
+MiniLine* get_mini_line() {
+	static MiniLine me = { 0 };
+	return &me;
+}
+
+SIGNAL_CALLBACK void mini_line_cb_changed( GtkEditable* editable, Puss* app ) {
+	MiniLine* self = get_mini_line();
 	if( self->cb ) {
-		g_signal_handler_block(G_OBJECT(app->mini_line->entry), self->signal_id_changed);
+		g_signal_handler_block(G_OBJECT(self->entry), self->signal_id_changed);
 		self->cb->cb_changed(app, self->cb->tag);
-		g_signal_handler_unblock(G_OBJECT(app->mini_line->entry), self->signal_id_changed);
+		g_signal_handler_unblock(G_OBJECT(self->entry), self->signal_id_changed);
 	}
 }
 
-gboolean mini_line_cb_key_press_event( GtkWidget* widget, GdkEventKey* event, Puss* app ) {
-	MiniLineImpl* self = (MiniLineImpl*)app->mini_line;
+SIGNAL_CALLBACK gboolean mini_line_cb_key_press_event( GtkWidget* widget, GdkEventKey* event, Puss* app ) {
+	MiniLine* self = get_mini_line();
 	return self->cb
 		? self->cb->cb_key_press(app, event, self->cb->tag)
 		: FALSE;
 }
 
-gboolean puss_mini_line_focus_out_event( GtkWidget* widget, GdkEventFocus* event, Puss* app ) {
+SIGNAL_CALLBACK gboolean puss_mini_line_focus_out_event( GtkWidget* widget, GdkEventFocus* event, Puss* app ) {
 	puss_mini_line_deactive(app);
 	return FALSE;
 }
 
-gboolean mini_line_cb_button_press_event( GtkWidget* widget, GdkEventButton* event, Puss* app ) {
+SIGNAL_CALLBACK gboolean mini_line_cb_button_press_event( GtkWidget* widget, GdkEventButton* event, Puss* app ) {
 	puss_mini_line_deactive(app);
 	return FALSE;
 }
 
 void puss_mini_line_create( Puss* app ) {
-	MiniLineImpl* self = g_new0(MiniLineImpl, 1);
-	app->mini_line = (MiniLine*)self;
-	
-	app->mini_line->label = GTK_LABEL(gtk_label_new(0));
-	app->mini_line->entry = GTK_ENTRY(gtk_entry_new());
+	MiniLine* self = get_mini_line();
 
-	self->signal_id_changed = g_signal_connect(app->mini_line->entry, "changed", G_CALLBACK(&mini_line_cb_changed), app);
-	self->signal_id_key_press = g_signal_connect(app->mini_line->entry, "key-press-event", G_CALLBACK(&mini_line_cb_key_press_event), app);
+	self->window = GTK_WINDOW(gtk_builder_get_object(app->builder, "mini_window"));
+	self->label = GTK_LABEL(gtk_builder_get_object(app->builder, "mini_window_label"));
+	self->entry = GTK_ENTRY(gtk_builder_get_object(app->builder, "mini_window_entry"));
 
-	GtkBox* hbox = GTK_BOX(gtk_hbox_new(FALSE, 0));
-	gtk_box_pack_start(hbox, GTK_WIDGET(app->mini_line->label), FALSE, FALSE, 0);
-	gtk_box_pack_start(hbox, GTK_WIDGET(app->mini_line->entry), TRUE, TRUE, 0);
-	gtk_container_set_border_width(GTK_CONTAINER(hbox), 3);
-
-	GtkWidget* frame = gtk_frame_new(NULL);
-	gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_ETCHED_IN);
-	gtk_container_add(GTK_CONTAINER(frame), GTK_WIDGET(hbox));
-	gtk_widget_show_all(frame);
-
-	self->window = GTK_WINDOW(gtk_window_new(GTK_WINDOW_POPUP));
-	gtk_container_add(GTK_CONTAINER(self->window), frame);
-
-	self->signal_id_focus_out = g_signal_connect(self->window, "focus-out-event", G_CALLBACK(&puss_mini_line_focus_out_event), app);
-	self->signal_id_button_press = g_signal_connect(self->window, "button-press-event", G_CALLBACK(&mini_line_cb_button_press_event), app);
-
-	gtk_window_resize(self->window, 120, 24);
-	gtk_window_set_modal(self->window, TRUE);
+	self->signal_id_changed   = g_signal_handler_find(self->entry, (GSignalMatchType)(G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA), 0, 0, 0,&mini_line_cb_changed, app);
+	self->signal_id_key_press = g_signal_handler_find(self->entry, (GSignalMatchType)(G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA), 0, 0, 0,&mini_line_cb_key_press_event, app);
 }
 
 void puss_mini_line_destroy( Puss* app ) {
-	if( app && app->mini_line ) {
-		MiniLineImpl* self = (MiniLineImpl*)app->mini_line;
+	MiniLine* self = get_mini_line();
+	if( self->window ) {
 		gtk_widget_destroy(GTK_WIDGET(self->window));
-		g_free(app->mini_line);
+		self->window = 0;
 	}
 }
 
 void puss_mini_line_active( Puss* app, MiniLineCallback* cb ) {
-	MiniLineImpl* self = (MiniLineImpl*)app->mini_line;
+	MiniLine* self = get_mini_line();
 	self->cb = cb;
 	if( !cb )
 		return;
@@ -115,25 +99,25 @@ void puss_mini_line_active( Puss* app, MiniLineCallback* cb ) {
 	// keep cursor both in mini_line_entry & text_view
 	// 
 	//puss_send_focus_change(GTK_WIDGET(view), FALSE);
-	puss_send_focus_change(GTK_WIDGET(app->mini_line->entry), TRUE);
-	//gtk_widget_grab_focus(GTK_WIDGET(app->mini_line->entry));
+	puss_send_focus_change(GTK_WIDGET(self->entry), TRUE);
+	//gtk_widget_grab_focus(GTK_WIDGET(self->entry));
 
-	g_signal_handler_block(G_OBJECT(app->mini_line->entry), self->signal_id_changed);
+	g_signal_handler_block(G_OBJECT(self->entry), self->signal_id_changed);
 	gboolean res = self->cb->cb_active(app, self->cb->tag);
-	g_signal_handler_unblock(G_OBJECT(app->mini_line->entry), self->signal_id_changed);
+	g_signal_handler_unblock(G_OBJECT(self->entry), self->signal_id_changed);
 	if( !res )
 		puss_mini_line_deactive(app);
 }
 
 void puss_mini_line_deactive( Puss* app ) {
-	MiniLineImpl* self = (MiniLineImpl*)app->mini_line;
+	MiniLine* self = get_mini_line();
 
 	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(app));
 	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
 
 	gtk_widget_hide(GTK_WIDGET(self->window));
 
-	puss_send_focus_change(GTK_WIDGET(app->mini_line->entry), FALSE);
+	puss_send_focus_change(GTK_WIDGET(self->entry), FALSE);
 	puss_send_focus_change(GTK_WIDGET(view), TRUE);
 	gtk_widget_grab_focus(GTK_WIDGET(view));
 }

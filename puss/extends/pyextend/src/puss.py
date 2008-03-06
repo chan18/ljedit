@@ -3,14 +3,18 @@
 import __puss
 import gtk
 
-main_window = __puss.main_window
+#builder = __puss.__get_puss_ui_builder(__puss.__app)
+#print builder
+#print dir(builder)
 
-main_window.ui_manager		= __puss.ui_manager
-main_window.doc_panel		= __puss.doc_panel
-main_window.left_panel		= __puss.left_panel
-main_window.right_panel		= __puss.right_panel
-main_window.bottom_panel	= __puss.bottom_panel
-main_window.status_bar		= __puss.status_bar
+main_window = __puss.__get_puss_ui_object_by_id(__puss.__app, "main_window")
+
+main_window.ui_manager		= __puss.__get_puss_ui_object_by_id(__puss.__app, "main_ui_manager")
+main_window.doc_panel		= __puss.__get_puss_ui_object_by_id(__puss.__app, "doc_panel")
+main_window.left_panel		= __puss.__get_puss_ui_object_by_id(__puss.__app, "left_panel")
+main_window.right_panel		= __puss.__get_puss_ui_object_by_id(__puss.__app, "right_panel")
+main_window.bottom_panel	= __puss.__get_puss_ui_object_by_id(__puss.__app, "bottom_panel")
+main_window.statusbar		= __puss.__get_puss_ui_object_by_id(__puss.__app, "statusbar")
 
 
 def doc_get_url(buf):

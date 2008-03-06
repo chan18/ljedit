@@ -83,6 +83,7 @@ Puss* puss_create(const char* filepath) {
 		gtk_widget_show_all(GTK_WIDGET(gtk_builder_get_object(app->builder, "main_vbox")));
 
 		puss_mini_line_create(app);
+
 		puss_extend_engine_create(app);
 	}
 
@@ -92,10 +93,12 @@ Puss* puss_create(const char* filepath) {
 void puss_destroy(Puss* app) {
 	if( app ) {
 		puss_extend_engine_destroy(app);
+
 		puss_mini_line_destroy(app);
 
-		GtkWindow* main_window = puss_get_main_window(app);
-		gtk_widget_destroy(GTK_WIDGET(main_window));
+		// for debug, see main_window->ref_count
+		GObject* main_window = G_OBJECT(puss_get_main_window(app));
+
 		g_object_unref(G_OBJECT(app->builder));
 
 		g_free(app->module_path);

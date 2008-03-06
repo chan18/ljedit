@@ -8,11 +8,6 @@
 
 struct Puss;
 
-struct MiniLine {
-	GtkLabel*		label;
-	GtkEntry*		entry;
-};
-
 struct MiniLineCallback {
 	gpointer		 tag;
 
@@ -65,18 +60,19 @@ struct Puss {
 
 	GtkBuilder*		builder;
 
-	MiniLine*		mini_line;
-
 	gchar*			module_path;
 };
 
-inline GtkWindow*		puss_get_main_window(Puss* app)		{ return GTK_WINDOW(gtk_builder_get_object(app->builder, "main_window")); }
-inline GtkUIManager*	puss_get_ui_manager(Puss* app)		{ return GTK_UI_MANAGER(gtk_builder_get_object(app->builder, "main_ui_manager")); }
-inline GtkNotebook*		puss_get_doc_panel(Puss* app)		{ return GTK_NOTEBOOK(gtk_builder_get_object(app->builder, "doc_panel")); }
-inline GtkNotebook*		puss_get_left_panel(Puss* app)		{ return GTK_NOTEBOOK(gtk_builder_get_object(app->builder, "left_panel")); }
-inline GtkNotebook*		puss_get_right_panel(Puss* app)		{ return GTK_NOTEBOOK(gtk_builder_get_object(app->builder, "right_panel")); }
-inline GtkNotebook*		puss_get_bottom_panel(Puss* app)	{ return GTK_NOTEBOOK(gtk_builder_get_object(app->builder, "bottom_panel")); }
-inline GtkStatusbar*	puss_get_statusbar(Puss* app)		{ return GTK_STATUSBAR(gtk_builder_get_object(app->builder, "statusbar")); }
+inline GtkWindow*		puss_get_main_window(Puss* app)			{ return GTK_WINDOW(gtk_builder_get_object(app->builder, "main_window")); }
+inline GtkUIManager*	puss_get_ui_manager(Puss* app)			{ return GTK_UI_MANAGER(gtk_builder_get_object(app->builder, "main_ui_manager")); }
+inline GtkNotebook*		puss_get_doc_panel(Puss* app)			{ return GTK_NOTEBOOK(gtk_builder_get_object(app->builder, "doc_panel")); }
+inline GtkNotebook*		puss_get_left_panel(Puss* app)			{ return GTK_NOTEBOOK(gtk_builder_get_object(app->builder, "left_panel")); }
+inline GtkNotebook*		puss_get_right_panel(Puss* app)			{ return GTK_NOTEBOOK(gtk_builder_get_object(app->builder, "right_panel")); }
+inline GtkNotebook*		puss_get_bottom_panel(Puss* app)		{ return GTK_NOTEBOOK(gtk_builder_get_object(app->builder, "bottom_panel")); }
+inline GtkStatusbar*	puss_get_statusbar(Puss* app)			{ return GTK_STATUSBAR(gtk_builder_get_object(app->builder, "statusbar")); }
+
+inline GtkLabel*		puss_get_mini_window_label(Puss* app)	{ return GTK_LABEL(gtk_builder_get_object(app->builder, "mini_window_label")); }
+inline GtkEntry*		puss_get_mini_window_entry(Puss* app)	{ return GTK_ENTRY(gtk_builder_get_object(app->builder, "mini_window_entry")); }
 
 #ifdef  __cplusplus
 #	define __EXTERN_C extern "C"
@@ -89,6 +85,8 @@ inline GtkStatusbar*	puss_get_statusbar(Puss* app)		{ return GTK_STATUSBAR(gtk_b
 #else
 #	define	PUSS_EXPORT		__EXTERN_C
 #endif
+
+#define	SIGNAL_CALLBACK	PUSS_EXPORT
 
 #endif//PUSS_INC_IPUSS_H
 

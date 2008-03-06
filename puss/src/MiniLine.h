@@ -5,7 +5,6 @@
 #define PUSS_INC_MINILINE_H
 
 struct Puss;
-struct MiniLine;
 struct MiniLineCallback;
 
 void	puss_mini_line_create(Puss* app);
