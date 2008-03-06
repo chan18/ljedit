@@ -246,14 +246,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\src\MainWindow.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\MainWindow.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\Menu.cpp"
 				>
 			</File>
@@ -309,6 +301,22 @@
 				RelativePath=".\include\IPuss.h"
 				>
 			</File>
+		</Filter>
+		<Filter
+			Name="bin"
+			>
+			<Filter
+				Name="res"
+				>
+				<File
+					RelativePath=".\bin\res\puss.png"
+					>
+				</File>
+				<File
+					RelativePath=".\bin\res\puss_ui.xml"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<File
 			RelativePath=".\puss.ico"

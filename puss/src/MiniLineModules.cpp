@@ -29,7 +29,7 @@ void get_insert_pos(GtkTextBuffer* buf, gint* line, gint* offset) {
 }
 
 gboolean get_current_document_insert_pos(Puss* app, gint* line, gint* offset) {
-	gint page_num = gtk_notebook_get_current_page(app->main_window->doc_panel);
+	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(app));
 	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
 	if( !view )
 		return FALSE;
@@ -171,7 +171,7 @@ gboolean GOTO_cb_active(Puss* app, gpointer tag) {
 void GOTO_cb_changed(Puss* app, gpointer tag) {
 	MiniLineGoto* self = (MiniLineGoto*)tag;
 
-	gint page_num = gtk_notebook_get_current_page(app->main_window->doc_panel);
+	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(app));
 	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
 	if( !view ) {
 		puss_mini_line_deactive(app);
@@ -189,7 +189,7 @@ void GOTO_cb_changed(Puss* app, gpointer tag) {
 gboolean GOTO_cb_key_press(Puss* app, GdkEventKey* event, gpointer tag) {
 	MiniLineGoto* self = (MiniLineGoto*)tag;
 
-	gint page_num = gtk_notebook_get_current_page(app->main_window->doc_panel);
+	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(app));
 	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
 	if( !view ) {
 		puss_mini_line_deactive(app);
@@ -236,7 +236,7 @@ struct MiniLineFIND {
 gboolean FIND_cb_active(Puss* app, gpointer tag) {
 	MiniLineFIND* self = (MiniLineFIND*)tag;
 
-	gint page_num = gtk_notebook_get_current_page(app->main_window->doc_panel);
+	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(app));
 	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
 	if( !view )
 		return FALSE;
@@ -266,7 +266,7 @@ gboolean FIND_cb_active(Puss* app, gpointer tag) {
 void FIND_cb_changed(Puss* app, gpointer tag) {
 	MiniLineFIND* self = (MiniLineFIND*)tag;
 
-	gint page_num = gtk_notebook_get_current_page(app->main_window->doc_panel);
+	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(app));
 	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
 	if( !view ) {
 		puss_mini_line_deactive(app);
@@ -283,7 +283,7 @@ void FIND_cb_changed(Puss* app, gpointer tag) {
 gboolean FIND_cb_key_press(Puss* app, GdkEventKey* event, gpointer tag) {
 	MiniLineFIND* self = (MiniLineFIND*)tag;
 
-	gint page_num = gtk_notebook_get_current_page(app->main_window->doc_panel);
+	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(app));
 	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
 	if( !view ) {
 		puss_mini_line_deactive(app);
@@ -354,7 +354,7 @@ gchar* get_replace_search_text(GtkEntry* entry) {
 gboolean REPLACE_cb_active(Puss* app, gpointer tag) {
 	MiniLineREPLACE* self = (MiniLineREPLACE*)tag;
 
-	gint page_num = gtk_notebook_get_current_page(app->main_window->doc_panel);
+	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(app));
 	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
 	if( !view )
 		return FALSE;
@@ -392,7 +392,7 @@ gboolean REPLACE_cb_active(Puss* app, gpointer tag) {
 void REPLACE_cb_changed(Puss* app, gpointer tag) {
 	MiniLineREPLACE* self = (MiniLineREPLACE*)tag;
 
-	gint page_num = gtk_notebook_get_current_page(app->main_window->doc_panel);
+	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(app));
 	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
 	if( !view ) {
 		puss_mini_line_deactive(app);
@@ -470,7 +470,7 @@ void replace_and_locate_text(Puss* app, GtkTextView* view) {
 gboolean REPLACE_cb_key_press(Puss* app, GdkEventKey* event, gpointer tag) {
 	MiniLineREPLACE* self = (MiniLineREPLACE*)tag;
 
-	gint page_num = gtk_notebook_get_current_page(app->main_window->doc_panel);
+	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(app));
 	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
 	if( !view ) {
 		puss_mini_line_deactive(app);

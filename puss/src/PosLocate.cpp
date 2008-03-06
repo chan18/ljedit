@@ -43,7 +43,7 @@ void pos_list_destroy(PosList* pos_list) {
 GQuark quark_pos_list = g_quark_from_static_string("puss_pos_locate_list");
 
 PosList* pos_locate_get_list( Puss* app ) {
-	GObject* owner = G_OBJECT(app->main_window->doc_panel);
+	GObject* owner = G_OBJECT(puss_get_doc_panel(app));
 
 	PosList* pos_list = (PosList*)g_object_get_qdata(owner, quark_pos_list);
 	if( !pos_list ) {
@@ -65,7 +65,7 @@ void puss_pos_locate_add( Puss* app, gint page_num, gint line, gint offset) {
 	if( page_num < 0 || line <= 0 )
 		return;
 
-	GtkWidget* page = gtk_notebook_get_nth_page(app->main_window->doc_panel, page_num);
+	GtkWidget* page = gtk_notebook_get_nth_page(puss_get_doc_panel(app), page_num);
 	if( !page )
 		return;
 

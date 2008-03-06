@@ -308,16 +308,18 @@ gboolean init_puss_module(PyExtend* self) {
 		return FALSE;
 
 	{
+		// TODO : remove those!!!!
+
 		PyModule_AddObject(py_puss, "__app",		PyCObject_FromVoidPtr(self->app, 0));
 
-		PyModule_AddObject(py_puss, "main_window",	pygobject_new(G_OBJECT(self->app->main_window->window)));
+		PyModule_AddObject(py_puss, "main_window",	pygobject_new(G_OBJECT(puss_get_main_window(self->app))));
 
-		PyModule_AddObject(py_puss, "ui_manager",	pygobject_new(G_OBJECT(self->app->main_window->ui_manager)));
-		PyModule_AddObject(py_puss, "doc_panel",	pygobject_new(G_OBJECT(self->app->main_window->doc_panel)));
-		PyModule_AddObject(py_puss, "left_panel",	pygobject_new(G_OBJECT(self->app->main_window->left_panel)));
-		PyModule_AddObject(py_puss, "right_panel",	pygobject_new(G_OBJECT(self->app->main_window->right_panel)));
-		PyModule_AddObject(py_puss, "bottom_panel",	pygobject_new(G_OBJECT(self->app->main_window->bottom_panel)));
-		PyModule_AddObject(py_puss, "status_bar",	pygobject_new(G_OBJECT(self->app->main_window->status_bar)));
+		PyModule_AddObject(py_puss, "ui_manager",	pygobject_new(G_OBJECT(puss_get_ui_manager(self->app))));
+		PyModule_AddObject(py_puss, "doc_panel",	pygobject_new(G_OBJECT(puss_get_doc_panel(self->app))));
+		PyModule_AddObject(py_puss, "left_panel",	pygobject_new(G_OBJECT(puss_get_left_panel(self->app))));
+		PyModule_AddObject(py_puss, "right_panel",	pygobject_new(G_OBJECT(puss_get_right_panel(self->app))));
+		PyModule_AddObject(py_puss, "bottom_panel",	pygobject_new(G_OBJECT(puss_get_bottom_panel(self->app))));
+		PyModule_AddObject(py_puss, "status_bar",	pygobject_new(G_OBJECT(puss_get_statusbar(self->app))));
 	}
 
 	gchar* extends_path = g_build_filename(self->app->module_path, "extends", NULL);

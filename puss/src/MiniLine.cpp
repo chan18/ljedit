@@ -94,9 +94,9 @@ void puss_mini_line_active( Puss* app, MiniLineCallback* cb ) {
 	if( !cb )
 		return;
 
-	gint page_num = gtk_notebook_get_current_page(app->main_window->doc_panel);
+	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(app));
 	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
-	GtkWidget* actived = gtk_window_get_focus(app->main_window->window);
+	GtkWidget* actived = gtk_window_get_focus(puss_get_main_window(app));
 	if( GTK_WIDGET(view)!=actived )
 		gtk_widget_grab_focus(GTK_WIDGET(view));
 
@@ -127,7 +127,8 @@ void puss_mini_line_active( Puss* app, MiniLineCallback* cb ) {
 
 void puss_mini_line_deactive( Puss* app ) {
 	MiniLineImpl* self = (MiniLineImpl*)app->mini_line;
-	gint page_num = gtk_notebook_get_current_page(app->main_window->doc_panel);
+
+	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(app));
 	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
 
 	gtk_widget_hide(GTK_WIDGET(self->window));

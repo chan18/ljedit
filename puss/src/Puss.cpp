@@ -6,7 +6,6 @@
 #include <memory.h>
 
 #include "IPuss.h"
-#include "MainWindow.h"
 #include "MiniLine.h"
 #include "DocManager.h"
 #include "ExtendEngine.h"
@@ -60,7 +59,29 @@ Puss* puss_create(const char* filepath) {
 		g_assert(app->module_path && app->api);
 		init_puss_c_api(app->api);
 
-		puss_main_window_create(app);
+		app->builder = gtk_builder_new();
+		gchar* ui_file = g_build_filename(app->module_path, "res", "puss_ui.xml", NULL);
+		if( ui_file ) {
+			GError* err = 0;
+			gtk_builder_add_from_file(app->builder, ui_file, &err);
+			if (err)
+				g_printerr("ERROR: %s\n", err->message);
+			else
+				gtk_builder_connect_signals(app->builder, app);
+			g_free(ui_file);
+		}
+
+		GtkWindow* main_window = puss_get_main_window(app);
+
+		// set icon
+		gchar* icon_file = g_build_filename(app->module_path, "res", "puss.png", NULL);
+		gtk_window_set_icon_from_file(main_window, icon_file, NULL);
+		g_free(icon_file);
+
+		g_signal_connect(main_window, "destroy", G_CALLBACK(gtk_main_quit), 0);
+
+		gtk_widget_show_all(GTK_WIDGET(gtk_builder_get_object(app->builder, "main_vbox")));
+
 		puss_mini_line_create(app);
 		puss_extend_engine_create(app);
 	}
@@ -72,7 +93,10 @@ void puss_destroy(Puss* app) {
 	if( app ) {
 		puss_extend_engine_destroy(app);
 		puss_mini_line_destroy(app);
-		puss_main_window_destroy(app);
+
+		GtkWindow* main_window = puss_get_main_window(app);
+		gtk_widget_destroy(GTK_WIDGET(main_window));
+		g_object_unref(G_OBJECT(app->builder));
 
 		g_free(app->module_path);
 		g_free(app->api);
@@ -83,10 +107,7 @@ void puss_destroy(Puss* app) {
 void puss_run(Puss* app) {
 	g_assert( app );
 
-	gtk_widget_show( GTK_WIDGET(app->main_window->window) );
-
-	g_signal_connect(app->main_window->window, "destroy", G_CALLBACK(gtk_main_quit), 0);
-	gtk_window_set_title(GTK_WINDOW(app->main_window->window), _("Puss - c/c++ source editor"));
+	gtk_widget_show( GTK_WIDGET(puss_get_main_window(app)) );
 
 	//g_print(_("test locale\n"));
 	gtk_main();

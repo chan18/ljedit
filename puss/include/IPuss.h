@@ -8,20 +8,6 @@
 
 struct Puss;
 
-struct MainWindow {
-	GtkWindow*		window;
-
-	GtkUIManager*	ui_manager;
-
-	GtkNotebook*	doc_panel;
-
-	GtkNotebook*	left_panel;
-	GtkNotebook*	right_panel;
-	GtkNotebook*	bottom_panel;
-
-	GtkStatusbar*	status_bar;
-};
-
 struct MiniLine {
 	GtkLabel*		label;
 	GtkEntry*		entry;
@@ -77,11 +63,20 @@ struct C_API {
 struct Puss {
 	C_API*			api;
 
-	MainWindow*		main_window;
+	GtkBuilder*		builder;
+
 	MiniLine*		mini_line;
 
 	gchar*			module_path;
 };
+
+inline GtkWindow*		puss_get_main_window(Puss* app)		{ return GTK_WINDOW(gtk_builder_get_object(app->builder, "main_window")); }
+inline GtkUIManager*	puss_get_ui_manager(Puss* app)		{ return GTK_UI_MANAGER(gtk_builder_get_object(app->builder, "main_ui_manager")); }
+inline GtkNotebook*		puss_get_doc_panel(Puss* app)		{ return GTK_NOTEBOOK(gtk_builder_get_object(app->builder, "doc_panel")); }
+inline GtkNotebook*		puss_get_left_panel(Puss* app)		{ return GTK_NOTEBOOK(gtk_builder_get_object(app->builder, "left_panel")); }
+inline GtkNotebook*		puss_get_right_panel(Puss* app)		{ return GTK_NOTEBOOK(gtk_builder_get_object(app->builder, "right_panel")); }
+inline GtkNotebook*		puss_get_bottom_panel(Puss* app)	{ return GTK_NOTEBOOK(gtk_builder_get_object(app->builder, "bottom_panel")); }
+inline GtkStatusbar*	puss_get_statusbar(Puss* app)		{ return GTK_STATUSBAR(gtk_builder_get_object(app->builder, "statusbar")); }
 
 #ifdef  __cplusplus
 #	define __EXTERN_C extern "C"

@@ -43,12 +43,14 @@ void page_added( GtkNotebook* notebook
 }
 
 PUSS_EXPORT void* puss_extend_create(Puss* app) {
-	gtk_drag_dest_set(GTK_WIDGET(app->main_window->window), GTK_DEST_DEFAULT_ALL, &uri_target, 1, GDK_ACTION_COPY);
-	g_signal_connect(app->main_window->window, "drag-data-received", G_CALLBACK(&drag_data_received), app);
+	GtkWidget* main_window = GTK_WIDGET(puss_get_main_window(app));
+	gtk_drag_dest_set(main_window, GTK_DEST_DEFAULT_ALL, &uri_target, 1, GDK_ACTION_COPY);
+	g_signal_connect(main_window, "drag-data-received", G_CALLBACK(&drag_data_received), app);
 
-	gtk_drag_dest_set(GTK_WIDGET(app->main_window->doc_panel), GTK_DEST_DEFAULT_ALL, &uri_target, 1, GDK_ACTION_COPY);
-	g_signal_connect(app->main_window->doc_panel, "drag-data-received", G_CALLBACK(&drag_data_received), app);
-	g_signal_connect(app->main_window->doc_panel, "page-added", G_CALLBACK(&page_added), app);
+	GtkWidget* doc_panel = GTK_WIDGET(puss_get_doc_panel(app));
+	gtk_drag_dest_set(doc_panel, GTK_DEST_DEFAULT_ALL, &uri_target, 1, GDK_ACTION_COPY);
+	g_signal_connect(doc_panel, "drag-data-received", G_CALLBACK(&drag_data_received), app);
+	g_signal_connect(doc_panel, "page-added", G_CALLBACK(&page_added), app);
 
 	return 0;
 }

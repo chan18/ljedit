@@ -43,7 +43,7 @@ void glob_matcher_add_glob(GHashTable* suffix_map, const gchar* glob, GtkSourceL
 }
 
 GHashTable* glob_get_suffix_map(Puss* app) {
-	GObject* owner = G_OBJECT(app->main_window->doc_panel);
+	GObject* owner = G_OBJECT(puss_get_doc_panel(app));
 	GHashTable* suffix_map = (GHashTable*)g_object_get_qdata(owner, quark_glob_suffix_map);
 	if( !suffix_map ) {
 		suffix_map = g_hash_table_new_full( &g_str_hash, &g_str_equal, &g_free, NULL );

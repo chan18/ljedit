@@ -161,10 +161,11 @@ void doc_reset_page_label(GtkTextBuffer* buf, GtkLabel* label) {
 
 gboolean doc_cb_button_release_on_label(GtkWidget* widget, GdkEventButton *event, Puss* app) {
 	if( event->button==2 ) {
-		gint count = gtk_notebook_get_n_pages(app->main_window->doc_panel);
+		GtkNotebook* doc_panel = puss_get_doc_panel(app);
+		gint count = gtk_notebook_get_n_pages(doc_panel);
 		for( gint i=0; i < count; ++i ) {
-			GtkWidget* page = gtk_notebook_get_nth_page(app->main_window->doc_panel, i);
-			GtkWidget* label = gtk_notebook_get_tab_label(app->main_window->doc_panel, page);
+			GtkWidget* page = gtk_notebook_get_nth_page(doc_panel, i);
+			GtkWidget* label = gtk_notebook_get_tab_label(doc_panel, page);
 			if( widget==label ) {
 				doc_close_page(app, i);
 				break;
@@ -212,11 +213,12 @@ gint doc_open_page( Puss* app, GtkSourceBuffer* buf, gboolean active_page ) {
 	gtk_widget_show_all(page);
 	g_object_set_data(G_OBJECT(page), "puss-doc-view", view);
 
-	page_num = gtk_notebook_append_page(app->main_window->doc_panel, page, tab);
+	GtkNotebook* doc_panel = puss_get_doc_panel(app);
+	page_num = gtk_notebook_append_page(doc_panel, page, tab);
 	g_signal_connect(tab, "button-release-event", G_CALLBACK(&doc_cb_button_release_on_label), app);
 
 	if( active_page ) {
-		gtk_notebook_set_current_page(app->main_window->doc_panel, page_num);
+		gtk_notebook_set_current_page(doc_panel, page_num);
 		gtk_widget_grab_focus(GTK_WIDGET(view));
 	}
 
@@ -262,7 +264,7 @@ gint doc_open_file( Puss* app, const gchar* url ) {
 	} else {
 		GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
 		if( view ) {
-			gtk_notebook_set_current_page(app->main_window->doc_panel, page_num);
+			gtk_notebook_set_current_page(puss_get_doc_panel(app), page_num);
 			gtk_widget_grab_focus(GTK_WIDGET(view));
 		}
 	}
@@ -305,7 +307,7 @@ gboolean doc_save_file( GtkTextBuffer* buf, GError** err ) {
 }
 
 GtkTextBuffer* doc_get_current_buffer( Puss* app ) {
-	gint page_num = gtk_notebook_get_current_page(app->main_window->doc_panel);
+	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(app));
 	return page_num < 0 ? 0 : puss_doc_get_buffer_from_page_num(app, page_num);
 }
 
@@ -334,7 +336,7 @@ gboolean doc_save_page( Puss* app, gint page_num, gboolean is_save_as ) {
 		gint res;
 
 		dlg = gtk_file_chooser_dialog_new( "Save File"
-			, app->main_window->window
+			, puss_get_main_window(app)
 			, GTK_FILE_CHOOSER_ACTION_SAVE
 			, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL
 			, GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT
@@ -379,7 +381,7 @@ gboolean doc_close_page( Puss* app, gint page_num ) {
 		gint res;
 		GtkWidget* dlg;
 
-		dlg = gtk_message_dialog_new( app->main_window->window
+		dlg = gtk_message_dialog_new( puss_get_main_window(app)
 			, GTK_DIALOG_MODAL
 			, GTK_MESSAGE_QUESTION
 			, GTK_BUTTONS_YES_NO
@@ -402,7 +404,7 @@ gboolean doc_close_page( Puss* app, gint page_num ) {
 		}
 	}
 
-	gtk_notebook_remove_page(app->main_window->doc_panel, page_num);
+	gtk_notebook_remove_page(puss_get_doc_panel(app), page_num);
 	return TRUE;
 }
 
@@ -462,12 +464,12 @@ GtkTextBuffer* puss_doc_get_buffer_from_page( GtkWidget* page ) {
 }
 
 GtkTextView* puss_doc_get_view_from_page_num( Puss* app, gint page_num ) {
-	GtkWidget* page = gtk_notebook_get_nth_page(app->main_window->doc_panel, page_num);
+	GtkWidget* page = gtk_notebook_get_nth_page(puss_get_doc_panel(app), page_num);
 	return page ? puss_doc_get_view_from_page(page) : 0;
 }
 
 GtkTextBuffer* puss_doc_get_buffer_from_page_num( Puss* app, gint page_num ) {
-	GtkWidget* page = gtk_notebook_get_nth_page(app->main_window->doc_panel, page_num);
+	GtkWidget* page = gtk_notebook_get_nth_page(puss_get_doc_panel(app), page_num);
 	return page ? puss_doc_get_buffer_from_page(page) : 0;
 }
 
@@ -478,7 +480,7 @@ gint puss_doc_find_page_from_url( Puss* app, const gchar* url ) {
 	const GString* gstr;
 	gsize url_len = (gsize)strlen(url);
 
-	num = gtk_notebook_get_n_pages(app->main_window->doc_panel);
+	num = gtk_notebook_get_n_pages(puss_get_doc_panel(app));
 	for( i=0; i<num; ++i ) {
 		buf = puss_doc_get_buffer_from_page_num(app, i);
 		if( !buf )
@@ -517,7 +519,7 @@ gboolean puss_doc_open( Puss* app, const gchar* url, gint line, gint line_offset
 	} else {
 		gint res;
 		GtkWidget* dlg = gtk_file_chooser_dialog_new( "Open File"
-			, app->main_window->window
+			, puss_get_main_window(app)
 			, GTK_FILE_CHOOSER_ACTION_OPEN
 			, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL
 			, GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT
@@ -566,16 +568,16 @@ gboolean puss_doc_locate( Puss* app, gint page_num, gint line, gint line_offset,
 }
 
 void puss_doc_save_current( Puss* app, gboolean save_as ) {
-	doc_save_page(app, gtk_notebook_get_current_page(app->main_window->doc_panel), save_as);
+	doc_save_page(app, gtk_notebook_get_current_page(puss_get_doc_panel(app)), save_as);
 }
 
 gboolean puss_doc_close_current( Puss* app ) {
-	gint page_num = gtk_notebook_get_current_page(app->main_window->doc_panel);
+	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(app));
 	return doc_close_page(app, page_num);
 }
 
 void puss_doc_save_all( Puss* app ) {
-	gint num = gtk_notebook_get_n_pages(app->main_window->doc_panel);
+	gint num = gtk_notebook_get_n_pages(puss_get_doc_panel(app));
 	for( gint i=0; i<num; ++i )
 		doc_save_page(app, i, FALSE);
 }
@@ -584,7 +586,9 @@ gboolean puss_doc_close_all( Puss* app ) {
 	gboolean need_prompt = TRUE;
 	gboolean save_file_sign = FALSE;
 
-	while( gtk_notebook_get_n_pages(app->main_window->doc_panel) ) {
+	GtkWindow* main_window = puss_get_main_window(app);
+	GtkNotebook* doc_panel = puss_get_doc_panel(app);
+	while( gtk_notebook_get_n_pages(doc_panel) ) {
 		GtkTextBuffer* buf = puss_doc_get_buffer_from_page_num(app, 0);
 		if( !buf )
 			continue;
@@ -593,7 +597,7 @@ gboolean puss_doc_close_all( Puss* app ) {
 			if( need_prompt ) {
 				GString* url = puss_doc_get_url(buf);
 
-				GtkWidget* dlg = gtk_message_dialog_new( app->main_window->window
+				GtkWidget* dlg = gtk_message_dialog_new( main_window
 					, GTK_DIALOG_MODAL
 					, GTK_MESSAGE_QUESTION
 					, GTK_BUTTONS_NONE
@@ -636,7 +640,7 @@ gboolean puss_doc_close_all( Puss* app ) {
 			}
 		}
 
-		gtk_notebook_remove_page(app->main_window->doc_panel, 0);
+		gtk_notebook_remove_page(doc_panel, 0);
 	}
 
 	return TRUE;
