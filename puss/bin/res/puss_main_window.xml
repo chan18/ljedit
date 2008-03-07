@@ -1,0 +1,108 @@
+<?xml version="1.0" standalone="no"?>
+<!--*- mode: xml -*-->
+<interface>
+ <object class="GtkWindow" id="main_window">
+   <property name="title" translatable="yes">Puss - source editor</property>
+   <property name="default_width">1024</property>
+   <property name="default_height">768</property>
+   <signal handler="cb_main_window_delete" name="delete-event"/>
+
+   <child>
+     <object class="GtkVBox" id="main_vbox">
+       <child>
+         <object class="GtkMenuBar" constructor="main_ui_manager" id="main_menubar"/>
+         <packing>
+           <property name="expand">False</property>
+         </packing>
+       </child>
+
+       <child>
+         <object class="GtkToolbar" constructor="main_ui_manager" id="main_toolbar">
+           <child internal-child="accessible">
+             <object class="AtkObject" id="a11y-toolbar">
+               <property name="AtkObject::accessible-name">The toolbar</property>
+             </object>
+           </child>
+         </object>
+         <packing>
+           <property name="expand">False</property>
+           <property name="position">1</property>
+         </packing>
+       </child>
+
+       <child>
+         <object class="GtkHPaned" id="hpaned1">
+           <child>
+             <object class="GtkNotebook" id="left_panel">
+               <property name="scrollable">True</property>
+               <property name="tab_pos">GTK_POS_BOTTOM</property>
+             </object>
+             <packing>
+               <property name="resize">False</property>
+               <property name="shrink">True</property>
+             </packing>
+           </child>
+           <child>
+             <object class="GtkVPaned" id="vpaned1">
+               <child>
+                 <object class="GtkHPaned" id="hpaned2">
+                   <child>
+                     <object class="GtkNotebook" id="doc_panel">
+                       <property name="scrollable">True</property>
+                     </object>
+                     <packing>
+                       <property name="resize">True</property>
+                       <property name="shrink">True</property>
+                     </packing>
+                   </child>
+                   <child>
+                     <object class="GtkNotebook" id="right_panel">
+                       <property name="scrollable">True</property>
+                       <property name="tab_pos">GTK_POS_BOTTOM</property>
+                     </object>
+                     <packing>
+                       <property name="resize">False</property>
+                       <property name="shrink">True</property>
+                     </packing>
+                   </child>
+                 </object>
+                 <packing>
+                   <property name="resize">True</property>
+                   <property name="shrink">True</property>
+                 </packing>
+               </child>
+               <child>
+                 <object class="GtkNotebook" id="bottom_panel">
+                   <property name="scrollable">True</property>
+                   <property name="tab_pos">GTK_POS_BOTTOM</property>
+                 </object>
+                 <packing>
+                   <property name="resize">False</property>
+                   <property name="shrink">True</property>
+                 </packing>
+               </child>
+             </object>
+             <packing>
+               <property name="resize">True</property>
+               <property name="shrink">True</property>
+             </packing>
+           </child>
+         </object>
+         <packing>
+           <property name="position">2</property>
+         </packing>
+       </child>
+       <child>
+         <object class="GtkStatusbar" id="statusbar">
+           <property name="spacing">2</property>
+         </object>
+         <packing>
+           <property name="expand">False</property>
+           <property name="position">3</property>
+         </packing>
+       </child>
+     </object>
+   </child>
+ </object>
+</interface>
+

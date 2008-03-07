@@ -63,12 +63,13 @@ int main(int argc, char* argv[]) {
 	gtk_init(&argc, &argv);
 
 	gchar* filepath = find_module_filepath(argv[0]);
-	puss_create(filepath);
+	gboolean res = puss_create(filepath);
 	g_free(filepath);
 
-	puss_run();
-
-	puss_destroy();
+	if( res ) {
+		puss_run();
+		puss_destroy();
+	}
 
 	return 0;
 }

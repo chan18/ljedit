@@ -69,7 +69,7 @@ SIGNAL_CALLBACK void cb_view_menu_fullscreen( GtkAction* action ) {
 		gtk_window_unfullscreen(puss_app->main_window);
 }
 
-SIGNAL_CALLBACK void cb_view_menu_active_doc_page( GtkAction* action ) {
+SIGNAL_CALLBACK void cb_view_menu_active_edit_page( GtkAction* action ) {
 	gint page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
 	GtkTextView* view = puss_doc_get_view_from_page_num(page_num);
 	if( !view )

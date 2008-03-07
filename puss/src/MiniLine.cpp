@@ -35,21 +35,30 @@ SIGNAL_CALLBACK gboolean mini_line_cb_button_press_event( GtkWidget* widget, Gdk
 	return FALSE;
 }
 
-void puss_mini_line_create() {
+gboolean puss_mini_line_create() {
 	g_assert( !puss_app->mini_line );
 
 	puss_app->mini_line = g_new(MiniLine, 1);
 	if( !puss_app->mini_line ) {
 		g_printerr("ERROR : new mini line failed!\n");
-		exit(1);
+		return FALSE;
 	}
 
 	puss_app->mini_line->window = GTK_WINDOW(gtk_builder_get_object(puss_app->builder, "mini_window"));
 	puss_app->mini_line->label = GTK_LABEL(gtk_builder_get_object(puss_app->builder, "mini_window_label"));
 	puss_app->mini_line->entry = GTK_ENTRY(gtk_builder_get_object(puss_app->builder, "mini_window_entry"));
 
+	if( !( puss_app->mini_line->window
+		&& puss_app->mini_line->label
+		&& puss_app->mini_line->entry ) )
+	{
+		return FALSE;
+	}
+
 	puss_app->mini_line->signal_id_changed   = g_signal_handler_find(puss_app->mini_line->entry, (GSignalMatchType)(G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA), 0, 0, 0,&mini_line_cb_changed, 0);
 	puss_app->mini_line->signal_id_key_press = g_signal_handler_find(puss_app->mini_line->entry, (GSignalMatchType)(G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA), 0, 0, 0,&mini_line_cb_key_press_event, 0);
+
+	return TRUE;
 }
 
 void puss_mini_line_destroy() {

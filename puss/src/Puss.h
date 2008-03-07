@@ -8,6 +8,7 @@
 
 struct MiniLine;
 struct PosList;
+struct Extend;
 
 struct PussApp {
 	Puss			parent;
@@ -28,11 +29,13 @@ struct PussApp {
 	MiniLine*		mini_line;
 
 	PosList*		pos_list;
+
+	Extend*			extends_list;
 };
 
 extern		PussApp*	puss_app;
 
-void		puss_create(const char* filepath);
+gboolean	puss_create(const char* filepath);
 void		puss_destroy();
 
 void		puss_run();

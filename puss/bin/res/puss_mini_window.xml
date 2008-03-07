@@ -1,0 +1,41 @@
+<?xml version="1.0" standalone="no"?>
+<!--*- mode: xml -*-->
+<interface>
+  <object class="GtkWindow" id="mini_window">
+    <property name="type">GTK_WINDOW_POPUP</property>
+    <property name="modal">True</property>
+    <signal handler="puss_mini_line_focus_out_event" name="focus-out-event"/>
+    <signal handler="mini_line_cb_button_press_event" name="button-press-event"/>
+    <child>
+      <object class="GtkFrame" id="mini_window_frame">
+        <property name="shadow_type">GTK_SHADOW_ETCHED_IN</property>
+        <property name="visible">True</property>
+        <child>
+          <object class="GtkHBox" id="mini_window_hbox">
+            <property name="visible">True</property>
+            <property name="border_width">3</property>
+            <child>
+              <object class="GtkLabel" id="mini_window_label">
+                <property name="visible">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="mini_window_entry">
+                <property name="visible">True</property>
+                <signal handler="mini_line_cb_changed" name="changed"/>
+                <signal handler="mini_line_cb_key_press_event" name="key-press-event"/>
+              </object>
+              <packing>
+                <property name="expand">TRUE</property>
+              </packing>
+            </child>
+          </object>
+        </child>
+      </object>      
+    </child>
+  </object>
+</interface>
+

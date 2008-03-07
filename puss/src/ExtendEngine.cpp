@@ -81,15 +81,13 @@ void extend_unload(Extend* extend) {
 	}
 }
 
-Extend* extends_list = 0;
-
-void puss_extend_engine_create() {
+gboolean puss_extend_engine_create() {
 	if( !g_module_supported() )
-		return;
+		return TRUE;
 
 	gchar* extends_dir = g_build_filename(puss_app->module_path, "extends", NULL);
 	if( !extends_dir )
-		return;
+		return TRUE;
 
 	GDir* dir = g_dir_open(extends_dir, 0, NULL);
 	if( dir ) {
@@ -112,8 +110,8 @@ void puss_extend_engine_create() {
 			g_free(filepath);
 
 			if( extend ) {
-				extend->next = extends_list;
-				extends_list = extend;
+				extend->next = puss_app->extends_list;
+				puss_app->extends_list = extend;
 			}
 		}
 
@@ -121,13 +119,20 @@ void puss_extend_engine_create() {
 	}
 
 	g_free(extends_dir);
+
+	return TRUE;
 }
 
 void puss_extend_engine_destroy() {
-	while( extends_list ) {
-		Extend* p = extends_list->next;
-		extend_unload(extends_list);
-		extends_list = p;
+	Extend* p = puss_app->extends_list;
+	puss_app->extends_list = 0;
+
+	while( p ) {
+		Extend* t = p;
+		p = p->next;
+
+		extend_unload(t);
 	}
+
 }
 

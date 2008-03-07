@@ -50,11 +50,11 @@ gboolean __debug_pos_list_check_node(PosNode* node) {
 	return p==node;
 }
 
-void puss_pos_locate_create() {
+gboolean puss_pos_locate_create() {
 	puss_app->pos_list = g_new0(PosList, 1);
 	if( !puss_app->pos_list ) {
 		g_printerr("ERROR : pos list create failed!\n");
-		exit(1);
+		return FALSE;
 	}
 
 	PosNode* pool = puss_app->pos_list->pool;
@@ -64,6 +64,8 @@ void puss_pos_locate_create() {
 	puss_app->pos_list->free_list = &pool[0];
 
 	g_assert(__debug_pos_list_check());
+
+	return TRUE;
 }
 
 void puss_pos_locate_destroy() {

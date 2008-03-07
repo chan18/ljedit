@@ -63,39 +63,46 @@ void init_puss_c_api(Puss* api) {
 	api->active_panel_page = &puss_active_panel_page;
 }
 
-void puss_create(const char* filepath) {
-	puss_app = g_new0(PussApp, 1);
-	if( !puss_app ) {
-		g_printerr("ERROR : new puss app failed!\n");
-		exit(1);
-	}
-
-	puss_app->module_path = g_path_get_dirname(filepath);
-	init_puss_c_api((Puss*)puss_app);
-
-	puss_app->builder = gtk_builder_new();
-	if( !puss_app->builder ) {
-		g_printerr("ERROR : gtk_builder_new failed!\n");
-		exit(2);
-	};
-
-	gchar* ui_file = g_build_filename(puss_app->module_path, "res", "puss_ui.xml", NULL);
-	if( !ui_file ) {
-		g_printerr("ERROR : build ui filename failed!\n");
-		exit(3);
+gboolean puss_load_ui(const gchar* filename ) {
+	gchar* filepath = g_build_filename(puss_app->module_path, "res", filename, NULL);
+	if( !filepath ) {
+		g_printerr("ERROR : build ui filepath failed!\n");
+		return FALSE;
 	}
 
 	GError* err = 0;
-	gtk_builder_add_from_file(puss_app->builder, ui_file, &err);
+	gtk_builder_add_from_file(puss_app->builder, filepath, &err);
+	g_free(filepath);
+
 	if( err ) {
 		g_printerr("ERROR: %s\n", err->message);
 		g_error_free(err);
-		exit(4);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+gboolean puss_load_ui_files() {
+	puss_app->builder = gtk_builder_new();
+	if( !puss_app->builder ) {
+		g_printerr("ERROR : gtk_builder_new failed!\n");
+		return FALSE;
+	};
+
+	if( !( puss_load_ui("puss_ui_manager.xml")
+		&& puss_load_ui("puss_main_window.xml")
+		&& puss_load_ui("puss_mini_window.xml") ) )
+	{
+		return FALSE;
 	}
 
 	gtk_builder_connect_signals(puss_app->builder, 0);
-	g_free(ui_file);
 
+	return TRUE;
+}
+
+gboolean puss_main_ui_create() {
 	puss_app->main_window	= GTK_WINDOW(gtk_builder_get_object(puss_app->builder, "main_window"));
 	puss_app->ui_manager	= GTK_UI_MANAGER(gtk_builder_get_object(puss_app->builder, "main_ui_manager"));
 	puss_app->doc_panel		= GTK_NOTEBOOK(gtk_builder_get_object(puss_app->builder, "doc_panel"));
@@ -103,6 +110,17 @@ void puss_create(const char* filepath) {
 	puss_app->right_panel	= GTK_NOTEBOOK(gtk_builder_get_object(puss_app->builder, "right_panel"));
 	puss_app->bottom_panel	= GTK_NOTEBOOK(gtk_builder_get_object(puss_app->builder, "bottom_panel"));
 	puss_app->statusbar		= GTK_STATUSBAR(gtk_builder_get_object(puss_app->builder, "statusbar"));
+
+	if( !( puss_app->main_window
+		&& puss_app->ui_manager
+		&& puss_app->doc_panel
+		&& puss_app->left_panel
+		&& puss_app->right_panel
+		&& puss_app->bottom_panel
+		&& puss_app->statusbar ) )
+	{
+		return FALSE;
+	}
 
 	// set icon
 	gchar* icon_file = g_build_filename(puss_app->module_path, "res", "puss.png", NULL);
@@ -113,9 +131,24 @@ void puss_create(const char* filepath) {
 
 	gtk_widget_show_all(GTK_WIDGET(gtk_builder_get_object(puss_app->builder, "main_vbox")));
 
-	puss_mini_line_create();
-	puss_pos_locate_create();
-	puss_extend_engine_create();
+	return TRUE;
+}
+
+gboolean puss_create(const char* filepath) {
+	puss_app = g_new0(PussApp, 1);
+	if( !puss_app ) {
+		g_printerr("ERROR : new puss app failed!\n");
+		return FALSE;
+	}
+
+	puss_app->module_path = g_path_get_dirname(filepath);
+	init_puss_c_api((Puss*)puss_app);
+
+	return puss_load_ui_files()
+		&& puss_main_ui_create()
+		&& puss_mini_line_create()
+		&& puss_pos_locate_create()
+		&& puss_extend_engine_create();
 }
 
 void puss_destroy() {

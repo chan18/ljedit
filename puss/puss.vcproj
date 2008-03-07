@@ -313,7 +313,15 @@
 					>
 				</File>
 				<File
-					RelativePath=".\bin\res\puss_ui.xml"
+					RelativePath=".\bin\res\puss_main_window.xml"
+					>
+				</File>
+				<File
+					RelativePath=".\bin\res\puss_mini_window.xml"
+					>
+				</File>
+				<File
+					RelativePath=".\bin\res\puss_ui_manager.xml"
 					>
 				</File>
 			</Filter>

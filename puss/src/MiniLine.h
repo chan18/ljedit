@@ -19,11 +19,11 @@ struct MiniLine {
 	MiniLineCallback*	cb;
 };
 
-void	puss_mini_line_create();
-void	puss_mini_line_destroy();
+gboolean	puss_mini_line_create();
+void		puss_mini_line_destroy();
 
-void	puss_mini_line_active(MiniLineCallback* cb);
-void	puss_mini_line_deactive();
+void		puss_mini_line_active(MiniLineCallback* cb);
+void		puss_mini_line_deactive();
 
 #endif//PUSS_INC_MINILINE_H
 
