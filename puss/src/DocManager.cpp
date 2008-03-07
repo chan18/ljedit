@@ -37,7 +37,7 @@ gboolean doc_scroll_to_pos( GtkTextView* view ) {
 }
 
 void doc_locate_page_line( gint page_num, gint line, gint offset ) {
-	if( line <=  0 )
+	if( line <  0 )
 		return;
 
 	GtkTextView* view = puss_doc_get_view_from_page_num(page_num);
@@ -49,7 +49,20 @@ void doc_locate_page_line( gint page_num, gint line, gint offset ) {
 		return;
 
 	GtkTextIter iter;
-	gtk_text_buffer_get_iter_at_line_offset(buf, &iter, line-1, offset);
+	if( line >= gtk_text_buffer_get_line_count(buf) ) {
+		gtk_text_buffer_get_end_iter(buf, &iter);
+
+	} else {
+		gtk_text_buffer_get_iter_at_line(buf, &iter, line);
+		if( offset < 0 )
+			offset = 0;
+
+		if( offset < gtk_text_iter_get_chars_in_line(&iter) )
+			gtk_text_iter_set_line_offset(&iter, offset);
+		else
+			gtk_text_iter_forward_to_line_end(&iter);
+	}
+
 	gtk_text_buffer_place_cursor(buf, &iter);
 
 	GtkTextMark* mark = gtk_text_buffer_get_mark(buf, scroll_mark_name);
@@ -226,7 +239,7 @@ gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 	return page_num;
 }
 
-gint doc_open_file( const gchar* url ) {
+gint doc_open_file( const gchar* url, gint line, gint line_offset ) {
 	gint page_num = puss_doc_find_page_from_url(url);
 	if( page_num < 0 ) {
 		gchar* text = 0;
@@ -253,6 +266,9 @@ gint doc_open_file( const gchar* url ) {
 			// create text view
 			page_num = doc_open_page(buf, TRUE);
 
+			if( line < 0 )
+				line = 0;
+
 		} else {
 			g_assert( err );
 			g_printerr("ERROR : %s", err->message);
@@ -265,6 +281,11 @@ gint doc_open_file( const gchar* url ) {
 			gtk_notebook_set_current_page(puss_app->doc_panel, page_num);
 			gtk_widget_grab_focus(GTK_WIDGET(view));
 		}
+	}
+
+	if( page_num >= 0 && line >= 0 ) {
+		doc_locate_page_line(page_num, line, line_offset);
+		puss_pos_locate_add(page_num, line, line_offset);
 	}
 
 	return page_num;
@@ -505,16 +526,15 @@ void puss_doc_new() {
 
 	puss_pos_locate_add_current_pos();
 	gint page_num = doc_open_page(buf, TRUE);
-	puss_pos_locate_add(page_num, 1, 0);
+	puss_pos_locate_add(page_num, 0, 0);
 }
 
 gboolean puss_doc_open( const gchar* url, gint line, gint line_offset ) {
 	gint page_num = -1;
-
 	puss_pos_locate_add_current_pos();
 
 	if( url ) {
-		page_num = doc_open_file(url);
+		page_num = doc_open_file(url, line, line_offset);
 		if( page_num < 0 )
 			return FALSE;
 
@@ -543,18 +563,13 @@ gboolean puss_doc_open( const gchar* url, gint line, gint line_offset ) {
 		res = gtk_dialog_run(GTK_DIALOG(dlg));
 		if( res == GTK_RESPONSE_ACCEPT ) {
 			gchar* filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dlg));
-			page_num = doc_open_file(filename);
+			page_num = doc_open_file(filename, line, line_offset);
+			line = -1;
 			g_free(filename);
 		}
 
 		gtk_widget_destroy(dlg);
 	}
-
-	if( line<=0 )
-		line = 1;
-
-	doc_locate_page_line(page_num, line, line_offset);
-	puss_pos_locate_add(page_num, line, line_offset);
 
 	return TRUE;
 }
@@ -563,16 +578,18 @@ gboolean puss_doc_locate( gint page_num, gint line, gint line_offset, gboolean a
 	if( page_num < 0 )
 		return FALSE;
 
-	if( line <= 0 )
+	if( line < 0 )
 		return FALSE;
 
-	if( add_pos_locate )
+	if( add_pos_locate ) {
 		puss_pos_locate_add_current_pos();
-
-	doc_locate_page_line(page_num, line, line_offset);
-
-	if( add_pos_locate )
+		doc_locate_page_line(page_num, line, line_offset);
 		puss_pos_locate_add(page_num, line, line_offset);
+
+	} else {
+		doc_locate_page_line(page_num, line, line_offset);
+	}
+
 	return TRUE;
 }
 

@@ -100,7 +100,7 @@ void page_delete_notify(PosNode* node, GObject* where_the_object_was) {
 }
 
 void puss_pos_locate_add(int page_num, int line, int offset) {
-	if( page_num < 0 || line <= 0 )
+	if( page_num < 0 || line < 0 )
 		return;
 
 	GtkWidget* page = gtk_notebook_get_nth_page(puss_app->doc_panel, page_num);

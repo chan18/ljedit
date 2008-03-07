@@ -22,7 +22,7 @@ void drag_data_received( GtkWidget* widget
 	for( gchar** p=uris; *p; ++p ) {
 		gchar* filepath = g_filename_from_uri(*p, NULL, NULL);
 		if( filepath ) {
-			app->doc_open(filepath, 0, 0);
+			app->doc_open(filepath, -1, -1);
 			g_free(filepath);
 		}
 	}
