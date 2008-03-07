@@ -4,17 +4,31 @@
 
 #include <glib/gi18n.h>
 #include <memory.h>
+#include <stdlib.h>
 
 #include "IPuss.h"
 #include "MiniLine.h"
 #include "DocManager.h"
 #include "ExtendEngine.h"
+#include "PosLocate.h"
 #include "Utils.h"
 
-void init_puss_c_api(C_API* api) {
-	// app
+PussApp* puss_app = 0;
 
-	// main window
+const gchar* puss_get_module_path() {
+	return puss_app->module_path;
+}
+
+GtkBuilder* puss_get_ui_builder() {
+	return puss_app->builder;
+}
+
+void init_puss_c_api(Puss* api) {
+	// app
+	api->get_module_path = &puss_get_module_path;
+
+	// UI
+	api->get_ui_builder = &puss_get_ui_builder;
 
 	// doc & view
 	api->doc_set_url = &puss_doc_set_url;
@@ -49,68 +63,75 @@ void init_puss_c_api(C_API* api) {
 	api->active_panel_page = &puss_active_panel_page;
 }
 
-Puss* puss_create(const char* filepath) {
-	Puss* app = g_new0(Puss, 1);
-	if( app ) {
-		memset(app, 0, sizeof(Puss));
-
-		app->module_path = g_path_get_dirname(filepath);
-		app->api = g_new0(C_API, 1);
-		g_assert(app->module_path && app->api);
-		init_puss_c_api(app->api);
-
-		app->builder = gtk_builder_new();
-		gchar* ui_file = g_build_filename(app->module_path, "res", "puss_ui.xml", NULL);
-		if( ui_file ) {
-			GError* err = 0;
-			gtk_builder_add_from_file(app->builder, ui_file, &err);
-			if (err)
-				g_printerr("ERROR: %s\n", err->message);
-			else
-				gtk_builder_connect_signals(app->builder, app);
-			g_free(ui_file);
-		}
-
-		GtkWindow* main_window = puss_get_main_window(app);
-
-		// set icon
-		gchar* icon_file = g_build_filename(app->module_path, "res", "puss.png", NULL);
-		gtk_window_set_icon_from_file(main_window, icon_file, NULL);
-		g_free(icon_file);
-
-		g_signal_connect(main_window, "destroy", G_CALLBACK(gtk_main_quit), 0);
-
-		gtk_widget_show_all(GTK_WIDGET(gtk_builder_get_object(app->builder, "main_vbox")));
-
-		puss_mini_line_create(app);
-
-		puss_extend_engine_create(app);
+void puss_create(const char* filepath) {
+	puss_app = g_new0(PussApp, 1);
+	if( !puss_app ) {
+		g_printerr("ERROR : new puss app failed!\n");
+		exit(1);
 	}
 
-	return app;
-}
+	puss_app->module_path = g_path_get_dirname(filepath);
+	init_puss_c_api((Puss*)puss_app);
 
-void puss_destroy(Puss* app) {
-	if( app ) {
-		puss_extend_engine_destroy(app);
+	puss_app->builder = gtk_builder_new();
+	if( !puss_app->builder ) {
+		g_printerr("ERROR : gtk_builder_new failed!\n");
+		exit(2);
+	};
 
-		puss_mini_line_destroy(app);
-
-		// for debug, see main_window->ref_count
-		GObject* main_window = G_OBJECT(puss_get_main_window(app));
-
-		g_object_unref(G_OBJECT(app->builder));
-
-		g_free(app->module_path);
-		g_free(app->api);
-		g_free(app);
+	gchar* ui_file = g_build_filename(puss_app->module_path, "res", "puss_ui.xml", NULL);
+	if( !ui_file ) {
+		g_printerr("ERROR : build ui filename failed!\n");
+		exit(3);
 	}
+
+	GError* err = 0;
+	gtk_builder_add_from_file(puss_app->builder, ui_file, &err);
+	if( err ) {
+		g_printerr("ERROR: %s\n", err->message);
+		g_error_free(err);
+		exit(4);
+	}
+
+	gtk_builder_connect_signals(puss_app->builder, 0);
+	g_free(ui_file);
+
+	puss_app->main_window	= GTK_WINDOW(gtk_builder_get_object(puss_app->builder, "main_window"));
+	puss_app->ui_manager	= GTK_UI_MANAGER(gtk_builder_get_object(puss_app->builder, "main_ui_manager"));
+	puss_app->doc_panel		= GTK_NOTEBOOK(gtk_builder_get_object(puss_app->builder, "doc_panel"));
+	puss_app->left_panel	= GTK_NOTEBOOK(gtk_builder_get_object(puss_app->builder, "left_panel"));
+	puss_app->right_panel	= GTK_NOTEBOOK(gtk_builder_get_object(puss_app->builder, "right_panel"));
+	puss_app->bottom_panel	= GTK_NOTEBOOK(gtk_builder_get_object(puss_app->builder, "bottom_panel"));
+	puss_app->statusbar		= GTK_STATUSBAR(gtk_builder_get_object(puss_app->builder, "statusbar"));
+
+	// set icon
+	gchar* icon_file = g_build_filename(puss_app->module_path, "res", "puss.png", NULL);
+	gtk_window_set_icon_from_file(puss_app->main_window, icon_file, 0);
+	g_free(icon_file);
+
+	g_signal_connect(puss_app->main_window, "destroy", G_CALLBACK(&gtk_main_quit), 0);
+
+	gtk_widget_show_all(GTK_WIDGET(gtk_builder_get_object(puss_app->builder, "main_vbox")));
+
+	puss_mini_line_create();
+	puss_pos_locate_create();
+	puss_extend_engine_create();
 }
 
-void puss_run(Puss* app) {
-	g_assert( app );
+void puss_destroy() {
+	puss_extend_engine_destroy();
+	puss_pos_locate_destroy();
+	puss_mini_line_destroy();
 
-	gtk_widget_show( GTK_WIDGET(puss_get_main_window(app)) );
+	g_object_unref(G_OBJECT(puss_app->builder));
+
+	g_free(puss_app->module_path);
+	g_free(puss_app);
+	puss_app = 0;
+}
+
+void puss_run() {
+	gtk_widget_show( GTK_WIDGET(puss_app->main_window) );
 
 	//g_print(_("test locale\n"));
 	gtk_main();

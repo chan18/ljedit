@@ -51,7 +51,7 @@ PyObject* py_wrapper_get_puss_ui_builder(PyObject* self, PyObject* args) {
 	if( !PyArg_ParseTuple(args, "O&:py_wrapper_get_puss_ui_builder", &app_convert, &app) )
 		return 0;
 
-	PyObject* res = pygobject_new(G_OBJECT(app->builder));
+	PyObject* res = pygobject_new(G_OBJECT(app->get_ui_builder()));
 	return res;
 }
 
@@ -61,7 +61,7 @@ PyObject* py_wrapper_get_puss_ui_object_by_id(PyObject* self, PyObject* args) {
 	if( !PyArg_ParseTuple(args, "O&s:py_wrapper_get_puss_ui_object_by_id", &app_convert, &app, &id) )
 		return 0;
 
-	GObject* gobj = gtk_builder_get_object(app->builder, id);
+	GObject* gobj = gtk_builder_get_object(app->get_ui_builder(), id);
 	if( !gobj ) {
 		Py_INCREF(Py_None);
 		return Py_None;
@@ -77,7 +77,7 @@ PyObject* py_wrapper_doc_get_url(PyObject* self, PyObject* args) {
 	if( !PyArg_ParseTuple(args, "O&O&:py_wrapper_doc_get_url", &app_convert, &app, &buf_convert, &buf))
 		return 0;
 
-	GString* url = app->api->doc_get_url(buf);
+	GString* url = app->doc_get_url(buf);
 	if( !url ) {
 		Py_INCREF(Py_None);
 		return Py_None;
@@ -93,7 +93,7 @@ PyObject* py_wrapper_doc_set_url(PyObject* self, PyObject* args) {
 	if( !PyArg_ParseTuple(args, "O&O&s:py_wrapper_doc_set_url", &app_convert, &app, &buf_convert, &buf, &url))
 		return 0;
 
-	app->api->doc_set_url(buf, url);
+	app->doc_set_url(buf, url);
 	Py_INCREF(Py_None);
 	return Py_None;
 }
@@ -104,7 +104,7 @@ PyObject* py_wrapper_doc_get_charset(PyObject* self, PyObject* args) {
 	if( !PyArg_ParseTuple(args, "O&O&:py_wrapper_doc_get_charset", &app_convert, &app, &buf_convert, &buf))
 		return 0;
 
-	GString* charset = app->api->doc_get_charset(buf);
+	GString* charset = app->doc_get_charset(buf);
 	if( !charset ) {
 		Py_INCREF(Py_None);
 		return Py_None;
@@ -120,7 +120,7 @@ PyObject* py_wrapper_doc_set_charset(PyObject* self, PyObject* args) {
 	if( !PyArg_ParseTuple(args, "O&O&s:py_wrapper_doc_set_url", &app_convert, &app, &buf_convert, &buf, &charset))
 		return 0;
 
-	app->api->doc_set_charset(buf, charset);
+	app->doc_set_charset(buf, charset);
 	Py_INCREF(Py_None);
 	return Py_None;
 }
@@ -131,7 +131,7 @@ PyObject* py_wrapper_doc_get_view_from_page_num(PyObject* self, PyObject* args) 
 	if( !PyArg_ParseTuple(args, "O&i:py_wrapper_doc_get_view_from_page_num", &app_convert, &app, &page_num))
 		return 0;
 
-	GtkTextView* view = app->api->doc_get_view_from_page_num(app, page_num);
+	GtkTextView* view = app->doc_get_view_from_page_num(page_num);
 	if( !view ) {
 		Py_INCREF(Py_None);
 		return Py_None;
@@ -147,7 +147,7 @@ PyObject* py_wrapper_doc_get_buffer_from_page_num(PyObject* self, PyObject* args
 	if( !PyArg_ParseTuple(args, "O&i:py_wrapper_doc_get_buffer_from_page_num", &app_convert, &app, &page_num))
 		return 0;
 
-	GtkTextBuffer* buf = app->api->doc_get_buffer_from_page_num(app, page_num);
+	GtkTextBuffer* buf = app->doc_get_buffer_from_page_num(page_num);
 	if( !buf ) {
 		Py_INCREF(Py_None);
 		return Py_None;
@@ -163,7 +163,7 @@ PyObject* py_wrapper_doc_find_page_from_url(PyObject* self, PyObject* args) {
 	if( !PyArg_ParseTuple(args, "O&s:py_wrapper_doc_find_page_from_url", &app_convert, &app, &url))
 		return 0;
 
-	gint res = app->api->doc_find_page_from_url(app, url);
+	gint res = app->doc_find_page_from_url(url);
 	return PyInt_FromLong((long)res);
 }
 
@@ -172,7 +172,7 @@ PyObject* py_wrapper_doc_new(PyObject* self, PyObject* args) {
 	if( !PyArg_ParseTuple(args, "O&:py_wrapper_doc_new", &app_convert, &app))
 		return 0;
 
-	app->api->doc_new(app);
+	app->doc_new();
 	Py_INCREF(Py_None);
 	return Py_None;
 }
@@ -185,7 +185,7 @@ PyObject* py_wrapper_doc_open(PyObject* self, PyObject* args) {
 	if( !PyArg_ParseTuple(args, "O&zii:py_wrapper_doc_open", &app_convert, &app, &url, &line, &offset))
 		return 0;
 
-	gboolean res = app->api->doc_open(app, url, line, offset);
+	gboolean res = app->doc_open(url, line, offset);
 	return PyBool_FromLong((long)res);
 }
 
@@ -198,7 +198,7 @@ PyObject* py_wrapper_doc_locate(PyObject* self, PyObject* args) {
 	if( !PyArg_ParseTuple(args, "O&iiii:py_wrapper_doc_locate", &app_convert, &app, &page_num, &line, &offset, &add_pos_locate))
 		return 0;
 
-	gboolean res = app->api->doc_locate(app, page_num, line, offset, add_pos_locate);
+	gboolean res = app->doc_locate(page_num, line, offset, add_pos_locate);
 	return PyBool_FromLong((long)res);
 }
 
@@ -208,7 +208,7 @@ PyObject* py_wrapper_doc_save_current(PyObject* self, PyObject* args) {
 	if( !PyArg_ParseTuple(args, "O&i:py_wrapper_doc_save_current", &app_convert, &app, &save_as))
 		return 0;
 
-	app->api->doc_save_current(app, (gboolean)save_as);
+	app->doc_save_current((gboolean)save_as);
 	Py_INCREF(Py_None);
 	return Py_None;
 }
@@ -218,7 +218,7 @@ PyObject* py_wrapper_doc_close_current(PyObject* self, PyObject* args) {
 	if( !PyArg_ParseTuple(args, "O&:py_wrapper_doc_close_current", &app_convert, &app))
 		return 0;
 
-	gboolean res = app->api->doc_close_current(app);
+	gboolean res = app->doc_close_current();
 	return PyBool_FromLong((long)res);
 }
 
@@ -227,7 +227,7 @@ PyObject* py_wrapper_doc_save_all(PyObject* self, PyObject* args) {
 	if( !PyArg_ParseTuple(args, "O&:py_wrapper_doc_save_all", &app_convert, &app))
 		return 0;
 
-	app->api->doc_save_all(app);
+	app->doc_save_all();
 	Py_INCREF(Py_None);
 	return Py_None;
 }
@@ -237,7 +237,7 @@ PyObject* py_wrapper_doc_close_all(PyObject* self, PyObject* args) {
 	if( !PyArg_ParseTuple(args, "O&:py_wrapper_doc_close_all", &app_convert, &app))
 		return 0;
 
-	gboolean res = app->api->doc_close_all(app);
+	gboolean res = app->doc_close_all();
 	return PyBool_FromLong((long)res);
 }
 
@@ -248,7 +248,7 @@ PyObject* py_wrapper_send_focus_change(PyObject* self, PyObject* args) {
 	if( !PyArg_ParseTuple(args, "O&O&i:py_wrapper_doc_close_all", &app_convert, &app, &widget_convert, &widget, &force_in))
 		return 0;
 
-	app->api->send_focus_change(widget, force_in);
+	app->send_focus_change(widget, force_in);
 	Py_INCREF(Py_None);
 	return Py_None;
 }
@@ -260,7 +260,7 @@ PyObject* py_wrapper_active_panel_page(PyObject* self, PyObject* args) {
 	if( !PyArg_ParseTuple(args, "O&O&i:py_wrapper_doc_close_all", &app_convert, &app, &notebook_convert, &nb, &page_num))
 		return 0;
 
-	app->api->active_panel_page(nb, page_num);
+	app->active_panel_page(nb, page_num);
 	Py_INCREF(Py_None);
 	return Py_None;
 }
@@ -337,13 +337,9 @@ gboolean init_puss_module(PyExtend* self) {
 	if( !py_puss )
 		return FALSE;
 
-	{
-		// TODO : remove those!!!!
+	PyModule_AddObject(py_puss, "__app",		PyCObject_FromVoidPtr(self->app, 0));
 
-		PyModule_AddObject(py_puss, "__app",		PyCObject_FromVoidPtr(self->app, 0));
-	}
-
-	gchar* extends_path = g_build_filename(self->app->module_path, "extends", NULL);
+	gchar* extends_path = g_build_filename(self->app->get_module_path(), "extends", NULL);
 	{
 		PyObject* py_sys_path = PySys_GetObject("path");
 		PyObject* py_extends_path = PyString_FromString(extends_path);
@@ -416,8 +412,6 @@ PyExtend* puss_py_extend_create(Puss* app) {
 
 void puss_py_extend_destroy(PyExtend* self) {
 	if( self ) {
-		GtkWindow* main_window = puss_get_main_window(self->app);
-
 		// unload python extends
 		unload_python_extends(self);
 

@@ -7,7 +7,7 @@
 #include <string.h>
 #include <gtksourceview/gtksourcelanguagemanager.h>
 
-#include "IPuss.h"
+#include "Puss.h"
 
 GQuark quark_glob_suffix_map = g_quark_from_static_string("puss_glob_suffix_map");
 
@@ -42,8 +42,8 @@ void glob_matcher_add_glob(GHashTable* suffix_map, const gchar* glob, GtkSourceL
 		g_hash_table_replace(suffix_map, suffix, lang);
 }
 
-GHashTable* glob_get_suffix_map(Puss* app) {
-	GObject* owner = G_OBJECT(puss_get_doc_panel(app));
+GHashTable* glob_get_suffix_map() {
+	GObject* owner = G_OBJECT(puss_app->doc_panel);
 	GHashTable* suffix_map = (GHashTable*)g_object_get_qdata(owner, quark_glob_suffix_map);
 	if( !suffix_map ) {
 		suffix_map = g_hash_table_new_full( &g_str_hash, &g_str_equal, &g_free, NULL );
@@ -78,7 +78,7 @@ GHashTable* glob_get_suffix_map(Puss* app) {
 	return suffix_map;
 }
 
-GtkSourceLanguage* puss_glob_get_language_by_filename(Puss* app, const gchar* filepath) {
+GtkSourceLanguage* puss_glob_get_language_by_filename(const gchar* filepath) {
 	GtkSourceLanguage* lang = 0;
 	gchar* filename = g_path_get_basename(filepath);
 	if( filename ) {
@@ -87,7 +87,7 @@ GtkSourceLanguage* puss_glob_get_language_by_filename(Puss* app, const gchar* fi
 			if( *(suffix-1)=='.' )
 				break;
 
-		GHashTable* suffix_map = glob_get_suffix_map(app);
+		GHashTable* suffix_map = glob_get_suffix_map();
 		lang = (GtkSourceLanguage*)g_hash_table_lookup(suffix_map, suffix);
 		g_free(filename);
 	}

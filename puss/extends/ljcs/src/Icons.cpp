@@ -29,15 +29,17 @@ void free_icon(GdkPixbuf* icon) {
 }
 
 void Icons::create(Puss* app) {
-	icon_keyword   = load_icon(app->module_path, "keyword.png");
-	icon_var       = load_icon(app->module_path, "var.png");
-	icon_fun       = load_icon(app->module_path, "fun.png");
-	icon_macro     = load_icon(app->module_path, "macro.png");
-	icon_class     = load_icon(app->module_path, "class.png");
-	icon_typedef   = load_icon(app->module_path, "typedef.png");
-	icon_namespace = load_icon(app->module_path, "namespace.png");
-	icon_enum      = load_icon(app->module_path, "enum.png");
-	icon_enumitem  = load_icon(app->module_path, "enumitem.png");
+	const gchar* module_path = app->get_module_path();
+
+	icon_keyword   = load_icon(module_path, "keyword.png");
+	icon_var       = load_icon(module_path, "var.png");
+	icon_fun       = load_icon(module_path, "fun.png");
+	icon_macro     = load_icon(module_path, "macro.png");
+	icon_class     = load_icon(module_path, "class.png");
+	icon_typedef   = load_icon(module_path, "typedef.png");
+	icon_namespace = load_icon(module_path, "namespace.png");
+	icon_enum      = load_icon(module_path, "enum.png");
+	icon_enumitem  = load_icon(module_path, "enumitem.png");
 }
 
 void Icons::destroy() {

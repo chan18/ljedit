@@ -63,17 +63,12 @@ int main(int argc, char* argv[]) {
 	gtk_init(&argc, &argv);
 
 	gchar* filepath = find_module_filepath(argv[0]);
-	Puss* app = puss_create(filepath);
+	puss_create(filepath);
 	g_free(filepath);
 
-	if( !app ) {
-		g_printerr(_("ERROR : create application failed!\n"));
-		return 3;
-	}
+	puss_run();
 
-	puss_run(app);
-
-	puss_destroy(app);
+	puss_destroy();
 
 	return 0;
 }

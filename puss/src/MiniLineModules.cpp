@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "IPuss.h"
+#include "Puss.h"
 #include "MiniLine.h"
 #include "DocManager.h"
 #include "Utils.h"
@@ -28,9 +28,9 @@ void get_insert_pos(GtkTextBuffer* buf, gint* line, gint* offset) {
 	*offset = gtk_text_iter_get_line_offset(&iter);
 }
 
-gboolean get_current_document_insert_pos(Puss* app, gint* line, gint* offset) {
-	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(app));
-	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
+gboolean get_current_document_insert_pos(gint* line, gint* offset) {
+	gint page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
+	GtkTextView* view = puss_doc_get_view_from_page_num(page_num);
 	if( !view )
 		return FALSE;
 
@@ -115,18 +115,18 @@ gboolean find_prev_text(GtkTextView* view, const gchar* text, GtkTextIter* ps, G
 	return TRUE;
 }
 
-void find_and_locate_text(Puss* app, GtkTextView* view, const gchar* text, gboolean is_forward, gboolean skip_current) {
+void find_and_locate_text(GtkTextView* view, const gchar* text, gboolean is_forward, gboolean skip_current) {
 	GtkTextIter ps, pe;
 	gboolean res = is_forward
 		? find_next_text(view, text, &ps, &pe, skip_current)
 		: find_prev_text(view, text, &ps, &pe, skip_current);
 
 	if( res ) {
-		gtk_widget_modify_base(GTK_WIDGET(puss_get_mini_window_entry(app)), GTK_STATE_NORMAL, NULL);
+		gtk_widget_modify_base(GTK_WIDGET(puss_app->mini_line->entry), GTK_STATE_NORMAL, NULL);
 		gtk_text_buffer_select_range(gtk_text_view_get_buffer(view), &ps, &pe);
 		gtk_text_view_scroll_to_iter(view, &ps, FALSE, FALSE, 0.25, 0.25);
 	} else {
-		gtk_widget_modify_base(GTK_WIDGET(puss_get_mini_window_entry(app)), GTK_STATE_NORMAL, &FAILED_COLOR);
+		gtk_widget_modify_base(GTK_WIDGET(puss_app->mini_line->entry), GTK_STATE_NORMAL, &FAILED_COLOR);
 	}
 }
 
@@ -150,62 +150,62 @@ struct MiniLineGoto {
 	MiniLineCallback cb;
 };
 
-gboolean GOTO_cb_active(Puss* app, gpointer tag) {
+gboolean GOTO_cb_active(gpointer tag) {
 	MiniLineGoto* self = (MiniLineGoto*)tag;
 
-	gtk_widget_modify_base(GTK_WIDGET(puss_get_mini_window_entry(app)), GTK_STATE_NORMAL, NULL);
+	gtk_widget_modify_base(GTK_WIDGET(puss_app->mini_line->entry), GTK_STATE_NORMAL, NULL);
 
-	if( get_current_document_insert_pos(app, &(self->last_line), &(self->last_offset)) ) {
+	if( get_current_document_insert_pos(&(self->last_line), &(self->last_offset)) ) {
 		gchar text[64] = { 0 };
 		g_snprintf( text, 64, "%d", (self->last_line + 1) );
 
-		gtk_label_set_text(puss_get_mini_window_label(app), _("goto : "));
-		gtk_entry_set_text(puss_get_mini_window_entry(app), text);
-		gtk_entry_select_region(puss_get_mini_window_entry(app), 0, -1);
+		gtk_label_set_text(puss_app->mini_line->label, _("goto : "));
+		gtk_entry_set_text(puss_app->mini_line->entry, text);
+		gtk_entry_select_region(puss_app->mini_line->entry, 0, -1);
 
 		return TRUE;
 	}	
 	return FALSE;
 }
 
-void GOTO_cb_changed(Puss* app, gpointer tag) {
+void GOTO_cb_changed(gpointer tag) {
 	MiniLineGoto* self = (MiniLineGoto*)tag;
 
-	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(app));
-	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
+	gint page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
+	GtkTextView* view = puss_doc_get_view_from_page_num(page_num);
 	if( !view ) {
-		puss_mini_line_deactive(app);
+		puss_mini_line_deactive();
 		return;
 	}
 
-	const gchar* text = gtk_entry_get_text(puss_get_mini_window_entry(app));
+	const gchar* text = gtk_entry_get_text(puss_app->mini_line->entry);
 	gint line = atoi(text) - 1;
 	gboolean res = move_cursor_to_pos(view
 		, (line < 0) ? self->last_line : line
 		, self->last_offset);
-	gtk_widget_modify_base(GTK_WIDGET(puss_get_mini_window_entry(app)), GTK_STATE_NORMAL, res ? NULL : &FAILED_COLOR);
+	gtk_widget_modify_base(GTK_WIDGET(puss_app->mini_line->entry), GTK_STATE_NORMAL, res ? NULL : &FAILED_COLOR);
 }
 
-gboolean GOTO_cb_key_press(Puss* app, GdkEventKey* event, gpointer tag) {
+gboolean GOTO_cb_key_press(GdkEventKey* event, gpointer tag) {
 	MiniLineGoto* self = (MiniLineGoto*)tag;
 
-	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(app));
-	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
+	gint page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
+	GtkTextView* view = puss_doc_get_view_from_page_num(page_num);
 	if( !view ) {
-		puss_mini_line_deactive(app);
+		puss_mini_line_deactive();
 		return TRUE;
 	}
 
 	switch( event->keyval ) {
 	case GDK_Escape:
 		move_cursor_to_pos(view, self->last_line, self->last_offset);
-		puss_mini_line_deactive(app);
+		puss_mini_line_deactive();
 		return TRUE;
 
 	case GDK_Return:
 		//doc_mgr_.pos_add(*current_page_, last.get_line(), last.get_line_offset());
 		//doc_mgr_.pos_add(*current_page_, iter.get_line(), iter.get_line_offset());
-		puss_mini_line_deactive(app);
+		puss_mini_line_deactive();
 		return TRUE;
 	}
 
@@ -233,11 +233,11 @@ struct MiniLineFIND {
 	MiniLineCallback cb;
 };
 
-gboolean FIND_cb_active(Puss* app, gpointer tag) {
+gboolean FIND_cb_active(gpointer tag) {
 	MiniLineFIND* self = (MiniLineFIND*)tag;
 
-	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(app));
-	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
+	gint page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
+	GtkTextView* view = puss_doc_get_view_from_page_num(page_num);
 	if( !view )
 		return FALSE;
 
@@ -247,72 +247,72 @@ gboolean FIND_cb_active(Puss* app, gpointer tag) {
 
 	get_insert_pos(buf, &(self->last_line), &(self->last_offset));
 
-	gtk_widget_modify_base(GTK_WIDGET(puss_get_mini_window_entry(app)), GTK_STATE_NORMAL, NULL);
+	gtk_widget_modify_base(GTK_WIDGET(puss_app->mini_line->entry), GTK_STATE_NORMAL, NULL);
 
-	gtk_label_set_text(puss_get_mini_window_label(app), _("find : "));
+	gtk_label_set_text(puss_app->mini_line->label, _("find : "));
 
 	GtkTextIter ps, pe;
 	if( gtk_text_buffer_get_selection_bounds(buf, &ps, &pe) ) {
 		gchar* text = 0;
 		text = gtk_text_buffer_get_text(buf, &ps, &pe, FALSE);
-		gtk_entry_set_text(puss_get_mini_window_entry(app), text);
+		gtk_entry_set_text(puss_app->mini_line->entry, text);
 		g_free(text);
 	}
-	gtk_entry_select_region(puss_get_mini_window_entry(app), 0, -1);
+	gtk_entry_select_region(puss_app->mini_line->entry, 0, -1);
 
 	return TRUE;
 }
 
-void FIND_cb_changed(Puss* app, gpointer tag) {
+void FIND_cb_changed(gpointer tag) {
 	MiniLineFIND* self = (MiniLineFIND*)tag;
 
-	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(app));
-	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
+	gint page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
+	GtkTextView* view = puss_doc_get_view_from_page_num(page_num);
 	if( !view ) {
-		puss_mini_line_deactive(app);
+		puss_mini_line_deactive();
 		return;
 	}
 
-	const gchar* text = gtk_entry_get_text(puss_get_mini_window_entry(app));
+	const gchar* text = gtk_entry_get_text(puss_app->mini_line->entry);
 	if( *text=='\0' )
 		move_cursor_to_pos(view, self->last_line, self->last_offset);
 	else
-		find_and_locate_text(app, view, text, TRUE, FALSE);
+		find_and_locate_text(view, text, TRUE, FALSE);
 }
 
-gboolean FIND_cb_key_press(Puss* app, GdkEventKey* event, gpointer tag) {
+gboolean FIND_cb_key_press(GdkEventKey* event, gpointer tag) {
 	MiniLineFIND* self = (MiniLineFIND*)tag;
 
-	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(app));
-	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
+	gint page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
+	GtkTextView* view = puss_doc_get_view_from_page_num(page_num);
 	if( !view ) {
-		puss_mini_line_deactive(app);
+		puss_mini_line_deactive();
 		return TRUE;
 	}
 
-	const gchar* text = gtk_entry_get_text(puss_get_mini_window_entry(app));
+	const gchar* text = gtk_entry_get_text(puss_app->mini_line->entry);
 	if( *text=='\0' )
 		return FALSE;
 
 	switch( event->keyval ) {
 	case GDK_Escape:
 		move_cursor_to_pos(view, self->last_line, self->last_offset);
-		puss_mini_line_deactive(app);
+		puss_mini_line_deactive();
 		return TRUE;
 
 	case GDK_Return:
 		//doc_mgr_.pos_add(*current_page_, last.get_line(), last.get_line_offset());
 		//doc_mgr_.pos_add(*current_page_, iter.get_line(), iter.get_line_offset());
-		puss_mini_line_deactive(app);
+		puss_mini_line_deactive();
 		fix_selected_range(view);
 		return TRUE;
 
 	case GDK_Up:
-		find_and_locate_text(app, view, text, FALSE, TRUE);
+		find_and_locate_text(view, text, FALSE, TRUE);
 		return TRUE;
 
 	case GDK_Down:
-		find_and_locate_text(app, view, text, TRUE, TRUE);
+		find_and_locate_text(view, text, TRUE, TRUE);
 		return TRUE;
 	}
 
@@ -351,11 +351,11 @@ gchar* get_replace_search_text(GtkEntry* entry) {
 	return text;
 }
 
-gboolean REPLACE_cb_active(Puss* app, gpointer tag) {
+gboolean REPLACE_cb_active(gpointer tag) {
 	MiniLineREPLACE* self = (MiniLineREPLACE*)tag;
 
-	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(app));
-	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
+	gint page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
+	GtkTextView* view = puss_doc_get_view_from_page_num(page_num);
 	if( !view )
 		return FALSE;
 
@@ -365,9 +365,9 @@ gboolean REPLACE_cb_active(Puss* app, gpointer tag) {
 
 	get_insert_pos(buf, &(self->last_line), &(self->last_offset));
 
-	gtk_widget_modify_base(GTK_WIDGET(puss_get_mini_window_entry(app)), GTK_STATE_NORMAL, NULL);
+	gtk_widget_modify_base(GTK_WIDGET(puss_app->mini_line->entry), GTK_STATE_NORMAL, NULL);
 
-	gtk_label_set_text(puss_get_mini_window_label(app), _("replace : "));
+	gtk_label_set_text(puss_app->mini_line->label, _("replace : "));
 
 	gchar* text = 0;
 	gint sel_ps = 0;
@@ -380,8 +380,8 @@ gboolean REPLACE_cb_active(Puss* app, gpointer tag) {
 	}
 
 	gchar* stext = g_strconcat(text, "/<replace>/[all]", NULL);
-	gtk_entry_set_text(puss_get_mini_window_entry(app), stext);
-	gtk_entry_select_region(puss_get_mini_window_entry(app), sel_ps, -1);
+	gtk_entry_set_text(puss_app->mini_line->entry, stext);
+	gtk_entry_select_region(puss_app->mini_line->entry, sel_ps, -1);
 
 	g_free(text);
 	g_free(stext);
@@ -389,22 +389,22 @@ gboolean REPLACE_cb_active(Puss* app, gpointer tag) {
 	return TRUE;
 }
 
-void REPLACE_cb_changed(Puss* app, gpointer tag) {
+void REPLACE_cb_changed(gpointer tag) {
 	MiniLineREPLACE* self = (MiniLineREPLACE*)tag;
 
-	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(app));
-	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
+	gint page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
+	GtkTextView* view = puss_doc_get_view_from_page_num(page_num);
 	if( !view ) {
-		puss_mini_line_deactive(app);
+		puss_mini_line_deactive();
 		return;
 	}
 
-	gchar* text = get_replace_search_text(puss_get_mini_window_entry(app));
+	gchar* text = get_replace_search_text(puss_app->mini_line->entry);
 
 	if( *text=='\0' )
 		move_cursor_to_pos(view, self->last_line, self->last_offset);
 	else
-		find_and_locate_text(app, view, text, TRUE, FALSE);
+		find_and_locate_text(view, text, TRUE, FALSE);
 
 	g_free(text);
 }
@@ -421,17 +421,17 @@ gchar* locate_next_scope(gchar* text) {
 	return pos;
 }
 
-void replace_and_locate_text(Puss* app, GtkTextView* view) {
-	gchar* find_text = g_strdup(gtk_entry_get_text(puss_get_mini_window_entry(app)));
+void replace_and_locate_text(GtkTextView* view) {
+	gchar* find_text = g_strdup(gtk_entry_get_text(puss_app->mini_line->entry));
 
 	gchar* replace_text = locate_next_scope(find_text);
 
 	if( !replace_text ) {
 		gchar* text = g_strconcat(find_text, "/<replace>/[all]", NULL);
-		gtk_entry_set_text(puss_get_mini_window_entry(app), text);
+		gtk_entry_set_text(puss_app->mini_line->entry, text);
 		g_free(text);
 
-		gtk_entry_select_region(puss_get_mini_window_entry(app), (gint)strlen(find_text), -1);
+		gtk_entry_select_region(puss_app->mini_line->entry, (gint)strlen(find_text), -1);
 
 	} else {
 		gchar* ops_text = locate_next_scope(replace_text);
@@ -445,13 +445,13 @@ void replace_and_locate_text(Puss* app, GtkTextView* view) {
 								, replace_text
 								, GTK_SOURCE_SEARCH_TEXT_ONLY | GTK_SOURCE_SEARCH_CASE_INSENSITIVE );
 
-			puss_mini_line_deactive(app);
+			puss_mini_line_deactive();
 
 		} else {
 			GtkTextIter ps, pe;
 			gtk_text_buffer_get_selection_bounds(buf, &ps, &pe);
 			if( gtk_text_iter_is_end(&ps) || gtk_text_iter_is_end(&pe) ) {
-				puss_mini_line_deactive(app);
+				puss_mini_line_deactive();
 				
 			} else {
 				gtk_text_buffer_begin_user_action(buf);
@@ -459,7 +459,7 @@ void replace_and_locate_text(Puss* app, GtkTextView* view) {
 				gtk_text_buffer_insert(buf, &ps, replace_text, (gint)strlen(replace_text));
 				gtk_text_buffer_end_user_action(buf);
 
-				find_and_locate_text(app, view, find_text, TRUE, FALSE);
+				find_and_locate_text(view, find_text, TRUE, FALSE);
 			}
 		}
 	}
@@ -467,17 +467,17 @@ void replace_and_locate_text(Puss* app, GtkTextView* view) {
 	g_free(find_text);
 }
 
-gboolean REPLACE_cb_key_press(Puss* app, GdkEventKey* event, gpointer tag) {
+gboolean REPLACE_cb_key_press(GdkEventKey* event, gpointer tag) {
 	MiniLineREPLACE* self = (MiniLineREPLACE*)tag;
 
-	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(app));
-	GtkTextView* view = puss_doc_get_view_from_page_num(app, page_num);
+	gint page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
+	GtkTextView* view = puss_doc_get_view_from_page_num(page_num);
 	if( !view ) {
-		puss_mini_line_deactive(app);
+		puss_mini_line_deactive();
 		return TRUE;
 	}
 
-	const gchar* text = gtk_entry_get_text(puss_get_mini_window_entry(app));
+	const gchar* text = gtk_entry_get_text(puss_app->mini_line->entry);
 	if( *text=='\0' || *text=='/' )
 		return FALSE;
 
@@ -485,20 +485,20 @@ gboolean REPLACE_cb_key_press(Puss* app, GdkEventKey* event, gpointer tag) {
 		switch( event->keyval ) {
 		case GDK_Escape:
 			move_cursor_to_pos(view, self->last_line, self->last_offset);
-			puss_mini_line_deactive(app);
+			puss_mini_line_deactive();
 			return TRUE;
 
 		case GDK_Return:
 			//doc_mgr_.pos_add(*current_page_, last.get_line(), last.get_line_offset());
 			//doc_mgr_.pos_add(*current_page_, iter.get_line(), iter.get_line_offset());
-			replace_and_locate_text(app, view);
+			replace_and_locate_text(view);
 			return TRUE;
 
 		case GDK_Up:
 		case GDK_Down:
 			{
-				gchar* text = get_replace_search_text(puss_get_mini_window_entry(app));
-				find_and_locate_text(app, view, text, event->keyval==GDK_Down, TRUE);
+				gchar* text = get_replace_search_text(puss_app->mini_line->entry);
+				find_and_locate_text(view, text, event->keyval==GDK_Down, TRUE);
 				g_free(text);
 			}
 			return TRUE;

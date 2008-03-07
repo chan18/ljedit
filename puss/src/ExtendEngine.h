@@ -4,10 +4,8 @@
 #ifndef PUSS_INC_EXTENDENGINE_H
 #define PUSS_INC_EXTENDENGINE_H
 
-struct Puss;
-
-void	puss_extend_engine_create(Puss* app);
-void	puss_extend_engine_destroy(Puss* app);
+void	puss_extend_engine_create();
+void	puss_extend_engine_destroy();
 
 #endif//PUSS_INC_EXTENDENGINE_H
 

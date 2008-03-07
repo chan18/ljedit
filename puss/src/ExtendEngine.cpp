@@ -25,7 +25,7 @@
 
 #endif
 
-#include "IPuss.h"
+#include "Puss.h"
 
 struct Extend {
 	GModule*	module;
@@ -33,7 +33,7 @@ struct Extend {
 	Extend*		next;
 };
 
-Extend* extend_load(Puss* app, const gchar* filepath) {
+Extend* extend_load(const gchar* filepath) {
 	Extend* extend = g_try_new0(Extend, 1);
 	if( !extend )
 		return 0;
@@ -53,7 +53,7 @@ Extend* extend_load(Puss* app, const gchar* filepath) {
 			g_printerr(_("ERROR  : not find puss_extend_create() in extend(%s)!\n"), filepath);
 
 		} else {
-			extend->handle = (*create_fun)(app);
+			extend->handle = (*create_fun)((Puss*)puss_app);
 			return extend;
 		}
 	}
@@ -83,11 +83,11 @@ void extend_unload(Extend* extend) {
 
 Extend* extends_list = 0;
 
-void puss_extend_engine_create(Puss* app) {
+void puss_extend_engine_create() {
 	if( !g_module_supported() )
 		return;
 
-	gchar* extends_dir = g_build_filename(app->module_path, "extends", NULL);
+	gchar* extends_dir = g_build_filename(puss_app->module_path, "extends", NULL);
 	if( !extends_dir )
 		return;
 
@@ -108,7 +108,7 @@ void puss_extend_engine_create(Puss* app) {
 				continue;
 
 			gchar* filepath = g_build_filename(extends_dir, filename, NULL);
-			extend = extend_load(app, filepath);
+			extend = extend_load(filepath);
 			g_free(filepath);
 
 			if( extend ) {
@@ -123,7 +123,7 @@ void puss_extend_engine_create(Puss* app) {
 	g_free(extends_dir);
 }
 
-void puss_extend_engine_destroy(Puss* app) {
+void puss_extend_engine_destroy() {
 	while( extends_list ) {
 		Extend* p = extends_list->next;
 		extend_unload(extends_list);
