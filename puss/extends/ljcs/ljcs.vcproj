@@ -207,6 +207,14 @@
 			RelativePath=".\src\module.cpp"
 			>
 		</File>
+		<File
+			RelativePath=".\src\PreviewPage.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\src\PreviewPage.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

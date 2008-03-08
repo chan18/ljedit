@@ -40,7 +40,7 @@ gboolean puss_mini_line_create() {
 
 	puss_app->mini_line = g_new(MiniLine, 1);
 	if( !puss_app->mini_line ) {
-		g_printerr("ERROR : new mini line failed!\n");
+		g_printerr("ERROR(mini_line) : new mini line failed!\n");
 		return FALSE;
 	}
 
@@ -57,6 +57,8 @@ gboolean puss_mini_line_create() {
 
 	puss_app->mini_line->signal_id_changed   = g_signal_handler_find(puss_app->mini_line->entry, (GSignalMatchType)(G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA), 0, 0, 0,&mini_line_cb_changed, 0);
 	puss_app->mini_line->signal_id_key_press = g_signal_handler_find(puss_app->mini_line->entry, (GSignalMatchType)(G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA), 0, 0, 0,&mini_line_cb_key_press_event, 0);
+
+	gtk_widget_show_all( gtk_bin_get_child(GTK_BIN(puss_app->mini_line->window)) );
 
 	return TRUE;
 }

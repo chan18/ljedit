@@ -103,6 +103,12 @@
           </object>
         </child>
         <child>
+          <object class="GtkAction" id="view_menu_unfullscreen">
+            <property name="stock_id">gtk-leave-fullscreen</property>
+            <signal handler="cb_view_menu_unfullscreen" name="activate"/>
+          </object>
+        </child>
+        <child>
           <object class="GtkAction" id="view_menu_active_edit_page">
             <property name="stock_id">gtk-edit</property>
             <signal handler="cb_view_menu_active_edit_page" name="activate"/>
@@ -137,6 +143,7 @@
         </child>
         <child>
           <object class="GtkRadioAction" id="view_menu_bottom_page_1">
+            <property name="value">1</property>
             <property name="active">True</property>
             <property name="label" translatable="yes">Bottom Page 1</property>
             <signal handler="cb_view_menu_bottom_page_n" name="activate"/>
@@ -145,6 +152,7 @@
         </child>
         <child>
           <object class="GtkRadioAction" id="view_menu_bottom_page_2">
+            <property name="value">2</property>
             <property name="group">view_menu_bottom_page_1</property>
             <property name="label" translatable="yes">Bottom Page 2</property>
             <signal handler="cb_view_menu_bottom_page_n" name="activate"/>
@@ -153,6 +161,7 @@
         </child>
         <child>
           <object class="GtkRadioAction" id="view_menu_bottom_page_3">
+            <property name="value">3</property>
             <property name="group">view_menu_bottom_page_1</property>
             <property name="label" translatable="yes">Bottom Page 3</property>
             <signal handler="cb_view_menu_bottom_page_n" name="activate"/>
@@ -161,6 +170,7 @@
         </child>
         <child>
           <object class="GtkRadioAction" id="view_menu_bottom_page_4">
+            <property name="value">4</property>
             <property name="group">view_menu_bottom_page_1</property>
             <property name="label" translatable="yes">Bottom Page 4</property>
             <signal handler="cb_view_menu_bottom_page_n" name="activate"/>
@@ -169,6 +179,7 @@
         </child>
         <child>
           <object class="GtkRadioAction" id="view_menu_bottom_page_5">
+            <property name="value">5</property>
             <property name="group">view_menu_bottom_page_1</property>
             <property name="label" translatable="yes">Bottom Page 5</property>
             <signal handler="cb_view_menu_bottom_page_n" name="activate"/>
@@ -177,6 +188,7 @@
         </child>
         <child>
           <object class="GtkRadioAction" id="view_menu_bottom_page_6">
+            <property name="value">6</property>
             <property name="group">view_menu_bottom_page_1</property>
             <property name="label" translatable="yes">Bottom Page 6</property>
             <signal handler="cb_view_menu_bottom_page_n" name="activate"/>
@@ -185,6 +197,7 @@
         </child>
         <child>
           <object class="GtkRadioAction" id="view_menu_bottom_page_7">
+            <property name="value">7</property>
             <property name="group">view_menu_bottom_page_1</property>
             <property name="label" translatable="yes">Bottom Page 7</property>
             <signal handler="cb_view_menu_bottom_page_n" name="activate"/>
@@ -193,6 +206,7 @@
         </child>
         <child>
           <object class="GtkRadioAction" id="view_menu_bottom_page_8">
+            <property name="value">8</property>
             <property name="group">view_menu_bottom_page_1</property>
             <property name="label" translatable="yes">Bottom Page 8</property>
             <signal handler="cb_view_menu_bottom_page_n" name="activate"/>
@@ -201,6 +215,7 @@
         </child>
         <child>
           <object class="GtkRadioAction" id="view_menu_bottom_page_9">
+            <property name="value">9</property>
             <property name="group">view_menu_bottom_page_1</property>
             <property name="label" translatable="yes">Bottom Page 9</property>
             <signal handler="cb_view_menu_bottom_page_n" name="activate"/>
@@ -238,6 +253,7 @@
         </menu>
         <menu action="view_menu">
           <menuitem action="view_menu_fullscreen"/>
+          <menuitem action="view_menu_unfullscreen"/>
           <separator/>
           <menuitem action="view_menu_active_edit_page"/>
           <separator/>

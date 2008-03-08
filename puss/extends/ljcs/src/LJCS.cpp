@@ -11,6 +11,7 @@ bool LJCS::create(Puss* _app) {
 	app = _app;
 
 	icons.create(app);
+	preview_page.create(app);
 
 	return true;
 }

@@ -7,6 +7,7 @@
 #include "IPuss.h"
 #include "Environ.h"
 #include "Icons.h"
+#include "PreviewPage.h"
 
 class LJCS {
 public:
@@ -14,6 +15,7 @@ public:
 
 	Environ		env;
 	Icons		icons;
+	PreviewPage	preview_page;
 
 public:
 	LJCS();

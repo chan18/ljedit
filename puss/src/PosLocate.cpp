@@ -53,7 +53,7 @@ gboolean __debug_pos_list_check_node(PosNode* node) {
 gboolean puss_pos_locate_create() {
 	puss_app->pos_list = g_new0(PosList, 1);
 	if( !puss_app->pos_list ) {
-		g_printerr("ERROR : pos list create failed!\n");
+		g_printerr("ERROR(pos locate) : pos list create failed!\n");
 		return FALSE;
 	}
 

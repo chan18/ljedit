@@ -66,7 +66,7 @@ void init_puss_c_api(Puss* api) {
 gboolean puss_load_ui(const gchar* filename ) {
 	gchar* filepath = g_build_filename(puss_app->module_path, "res", filename, NULL);
 	if( !filepath ) {
-		g_printerr("ERROR : build ui filepath failed!\n");
+		g_printerr("ERROR(puss) : build ui filepath failed!\n");
 		return FALSE;
 	}
 
@@ -75,7 +75,7 @@ gboolean puss_load_ui(const gchar* filename ) {
 	g_free(filepath);
 
 	if( err ) {
-		g_printerr("ERROR: %s\n", err->message);
+		g_printerr("ERROR(puss): %s\n", err->message);
 		g_error_free(err);
 		return FALSE;
 	}
@@ -86,7 +86,7 @@ gboolean puss_load_ui(const gchar* filename ) {
 gboolean puss_load_ui_files() {
 	puss_app->builder = gtk_builder_new();
 	if( !puss_app->builder ) {
-		g_printerr("ERROR : gtk_builder_new failed!\n");
+		g_printerr("ERROR(puss) : gtk_builder_new failed!\n");
 		return FALSE;
 	};
 
@@ -129,7 +129,7 @@ gboolean puss_main_ui_create() {
 
 	g_signal_connect(puss_app->main_window, "destroy", G_CALLBACK(&gtk_main_quit), 0);
 
-	gtk_widget_show_all(GTK_WIDGET(gtk_builder_get_object(puss_app->builder, "main_vbox")));
+	gtk_widget_show_all( gtk_bin_get_child(GTK_BIN(puss_app->main_window)) );
 
 	return TRUE;
 }
@@ -137,7 +137,7 @@ gboolean puss_main_ui_create() {
 gboolean puss_create(const char* filepath) {
 	puss_app = g_new0(PussApp, 1);
 	if( !puss_app ) {
-		g_printerr("ERROR : new puss app failed!\n");
+		g_printerr("ERROR(puss) : new puss app failed!\n");
 		return FALSE;
 	}
 

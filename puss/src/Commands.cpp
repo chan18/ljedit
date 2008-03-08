@@ -60,13 +60,11 @@ SIGNAL_CALLBACK void cb_edit_menu_go_forward( GtkAction* action ) {
 }
 
 SIGNAL_CALLBACK void cb_view_menu_fullscreen( GtkAction* action ) {
-	static bool is_fullscreen = false;
-	is_fullscreen = !is_fullscreen;
+	gtk_window_fullscreen(puss_app->main_window);
+}
 
-	if( is_fullscreen )
-		gtk_window_fullscreen(puss_app->main_window);
-	else
-		gtk_window_unfullscreen(puss_app->main_window);
+SIGNAL_CALLBACK void cb_view_menu_unfullscreen( GtkAction* action ) {
+	gtk_window_unfullscreen(puss_app->main_window);
 }
 
 SIGNAL_CALLBACK void cb_view_menu_active_edit_page( GtkAction* action ) {
@@ -102,10 +100,15 @@ SIGNAL_CALLBACK void cb_view_menu_bottom_panel( GtkAction* action ) {
 		gtk_widget_hide(GTK_WIDGET(puss_app->bottom_panel));
 }
 
-SIGNAL_CALLBACK void cb_view_menu_bottom_page_n( GtkAction* action ) {
-	GtkRadioAction* current = GTK_RADIO_ACTION(action); 
-	gint page_num = gtk_radio_action_get_current_value(current);
-	puss_active_panel_page(puss_app->bottom_panel, (page_num - 1));
+SIGNAL_CALLBACK void cb_view_menu_bottom_page_n( GtkRadioAction* action ) {
+	GValue value = { 0 };
+	g_value_init(&value, G_TYPE_INT);
+	g_object_get_property(G_OBJECT(action), "value", &value);
+	gint action_value = g_value_get_int(&value);
+	gint page_num = gtk_radio_action_get_current_value(action);
+
+	if( page_num==action_value )
+		puss_active_panel_page(puss_app->bottom_panel, (page_num - 1));
 }
 
 SIGNAL_CALLBACK void cb_help_menu_about( GtkAction* action ) {

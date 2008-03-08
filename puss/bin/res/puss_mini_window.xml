@@ -9,14 +9,11 @@
     <child>
       <object class="GtkFrame" id="mini_window_frame">
         <property name="shadow_type">GTK_SHADOW_ETCHED_IN</property>
-        <property name="visible">True</property>
         <child>
           <object class="GtkHBox" id="mini_window_hbox">
-            <property name="visible">True</property>
             <property name="border_width">3</property>
             <child>
               <object class="GtkLabel" id="mini_window_label">
-                <property name="visible">True</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -24,12 +21,11 @@
             </child>
             <child>
               <object class="GtkEntry" id="mini_window_entry">
-                <property name="visible">True</property>
                 <signal handler="mini_line_cb_changed" name="changed"/>
                 <signal handler="mini_line_cb_key_press_event" name="key-press-event"/>
               </object>
               <packing>
-                <property name="expand">TRUE</property>
+                <property name="expand">True</property>
               </packing>
             </child>
           </object>
