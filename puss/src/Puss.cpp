@@ -61,6 +61,7 @@ void init_puss_c_api(Puss* api) {
 	// utils
 	api->send_focus_change = &puss_send_focus_change;
 	api->active_panel_page = &puss_active_panel_page;
+	api->load_file = &puss_load_file;
 }
 
 gboolean puss_load_ui(const gchar* filename ) {

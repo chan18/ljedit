@@ -23,6 +23,10 @@ public:
 
     bool create(Puss* _app);
     void destroy();
+
+private:
+	static void on_doc_page_added(GtkNotebook* doc_panel, GtkWidget* child, guint page_num, gpointer self);
+	static void on_doc_page_removed(GtkNotebook* doc_panel, GtkWidget* child, guint page_num, gpointer self);
 };
 
 #endif//PUSS_EXTEND_INC_LJCS_H

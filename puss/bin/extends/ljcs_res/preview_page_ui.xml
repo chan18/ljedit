@@ -1,4 +1,4 @@
-<?xml version="1.0" standalone="no"?>
+<?xml version="1.0"?>
 <!--*- mode: xml -*-->
 <interface>
   <object class="GtkVBox" id="vbox">
@@ -15,8 +15,30 @@
           </packing>
         </child>
         <child>
-          <object class="GtkLabel" id="filename_label">
-          <property name="ellipsize">PANGO_ELLIPSIZE_MIDDLE</property>
+          <object class="GtkButton" id="filename_button">
+            <child>
+              <object class="GtkHBox" id="filename_hbox">
+                <child>
+                  <object class="GtkImage" id="filename_image">
+                    <property name="stock">gtk-find</property>
+                    <property name="icon-size">1</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="filename_label">
+                    <property name="ellipsize">PANGO_ELLIPSIZE_MIDDLE</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                  </packing>
+                </child>
+              </object>
+            </child>
           </object>
           <packing>
             <property name="expand">True</property>
@@ -32,7 +54,7 @@
     <child>
       <object class="GtkScrolledWindow" id="scrolled_window">
         <child>
-          <object class="GtkSourceView" id="view">
+          <object class="GtkSourceView" id="preview_view">
           </object>
         </child>
       </object>
@@ -43,3 +65,4 @@
     </child>
   </object>
 </interface>
+

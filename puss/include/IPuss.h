@@ -53,6 +53,7 @@ struct Puss {
 	// utils
 	void			(*send_focus_change)( GtkWidget* widget, gboolean in );
 	void			(*active_panel_page)( GtkNotebook* panel, gint page_num );
+	gboolean		(*load_file)(const gchar* filename, gchar** text, gsize* len, G_CONST_RETURN gchar** charset, GError** err);
 };
 
 #ifdef  __cplusplus

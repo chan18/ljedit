@@ -55,8 +55,8 @@ gboolean puss_mini_line_create() {
 		return FALSE;
 	}
 
-	puss_app->mini_line->signal_id_changed   = g_signal_handler_find(puss_app->mini_line->entry, (GSignalMatchType)(G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA), 0, 0, 0,&mini_line_cb_changed, 0);
-	puss_app->mini_line->signal_id_key_press = g_signal_handler_find(puss_app->mini_line->entry, (GSignalMatchType)(G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA), 0, 0, 0,&mini_line_cb_key_press_event, 0);
+	puss_app->mini_line->signal_id_changed   = g_signal_handler_find(puss_app->mini_line->entry, (GSignalMatchType)(G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA), 0, 0, 0, (gpointer)&mini_line_cb_changed, 0);
+	puss_app->mini_line->signal_id_key_press = g_signal_handler_find(puss_app->mini_line->entry, (GSignalMatchType)(G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA), 0, 0, 0, (gpointer)&mini_line_cb_key_press_event, 0);
 
 	gtk_widget_show_all( gtk_bin_get_child(GTK_BIN(puss_app->mini_line->window)) );
 
@@ -77,6 +77,9 @@ void puss_mini_line_active( MiniLineCallback* cb ) {
 		return;
 
 	gint page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
+	if( page_num < 0 )
+		return;
+
 	GtkTextView* view = puss_doc_get_view_from_page_num(page_num);
 	GtkWidget* actived = gtk_window_get_focus(puss_app->main_window);
 	if( GTK_WIDGET(view)!=actived )
@@ -89,7 +92,7 @@ void puss_mini_line_active( MiniLineCallback* cb ) {
 	gint x = 0, y = 0;
 	gdk_window_get_origin(gdk_window, &x, &y);
 	if( x > 16 )	x -= 16;
-	if( y > 16 )	y -= 16;
+	if( y > 16 )	y -= 32;
 
 	gtk_window_move(puss_app->mini_line->window, x, y);
 	gtk_widget_show(GTK_WIDGET(puss_app->mini_line->window));

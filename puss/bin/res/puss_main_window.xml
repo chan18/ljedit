@@ -1,4 +1,4 @@
-<?xml version="1.0" standalone="no"?>
+<?xml version="1.0"?>
 <!--*- mode: xml -*-->
 <interface>
  <object class="GtkWindow" id="main_window">
@@ -17,13 +17,7 @@
        </child>
 
        <child>
-         <object class="GtkToolbar" constructor="main_ui_manager" id="main_toolbar">
-           <child internal-child="accessible">
-             <object class="AtkObject" id="a11y-toolbar">
-               <property name="AtkObject::accessible-name">The toolbar</property>
-             </object>
-           </child>
-         </object>
+         <object class="GtkToolbar" constructor="main_ui_manager" id="main_toolbar"/>
          <packing>
            <property name="expand">False</property>
            <property name="position">1</property>

@@ -179,6 +179,14 @@
 	<References>
 	</References>
 	<Files>
+		<Filter
+			Name="res"
+			>
+			<File
+				RelativePath="..\..\bin\extends\ljcs_res\preview_page_ui.xml"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\src\Environ.cpp"
 			>
@@ -213,6 +221,10 @@
 		</File>
 		<File
 			RelativePath=".\src\PreviewPage.h"
+			>
+		</File>
+		<File
+			RelativePath=".\src\Utils.h"
 			>
 		</File>
 	</Files>

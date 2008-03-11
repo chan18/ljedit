@@ -75,65 +75,6 @@ void doc_locate_page_line( gint page_num, gint line, gint offset ) {
 	g_idle_add_full(G_PRIORITY_DEFAULT_IDLE, (GSourceFunc)&doc_scroll_to_pos, g_object_ref(G_OBJECT(view)), &g_object_unref);
 }
 
-gboolean doc_load_convert_text(gchar** text, gsize* len, const gchar* charset, GError** err) {
-	gsize bytes_written = 0;
-	gchar* result = g_convert(*text, *len, "UTF-8", charset, 0, &bytes_written, err);
-	if( result ) {
-		g_assert( !(*err) );
-
-		g_free(*text);
-		*text = result;
-		*len = bytes_written;
-		return TRUE;
-	}
-
-	return FALSE;
-}
-
-const gchar* charset_order_list[] = { "GBK", 0 };
-
-gboolean puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST_RETURN gchar** charset, GError** err) {
-	gchar* sbuf = 0;
-	gsize  slen = 0;
-	const gchar** p = 0;
-
-	g_return_val_if_fail(filename && text && len && err, FALSE);
-	g_return_val_if_fail(*filename && !(*text) && !(*err), FALSE);
-
-	if( !g_file_get_contents(filename, &sbuf, &slen, err) )
-		return FALSE;
-
-	if( g_utf8_validate(sbuf, slen, 0) ) {
-		*charset = "UTF-8";
-		*text = sbuf;
-		*len = slen;
-		return TRUE;
-	}
-
-	if( !g_get_charset(charset) && *charset ) {		// get locale charset, and not UTF-8
-		if( doc_load_convert_text(&sbuf, &slen, *charset, err) ) {
-			*text = sbuf;
-			*len = slen;
-			return TRUE;
-		}
-	}
-
-	for( p=charset_order_list; *p!=0; ++p ) {
-		g_clear_error(err);
-
-		*charset = *p;
-
-		if( doc_load_convert_text(&sbuf, &slen, *charset, err) ) {
-			*text = sbuf;
-			*len = slen;
-			return TRUE;
-		}
-	}
-
-	g_free(sbuf);
-	return FALSE;
-}
-
 void doc_reset_page_label(GtkTextBuffer* buf, GtkLabel* label) {
 	gboolean modified = gtk_text_buffer_get_modified(buf);
 	GString* url = puss_doc_get_url(buf);
