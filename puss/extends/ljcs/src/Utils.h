@@ -11,8 +11,8 @@ struct _RWLock {
 	~_RWLock()	{ g_static_rw_lock_free(&lock); }
 	
 	gboolean reader_try_lock() { return g_static_rw_lock_reader_trylock(&lock); }
-	void reader_lock() { g_static_rw_lock_writer_lock(&lock); }
-	void reader_unlock() { g_static_rw_lock_writer_unlock(&lock); }
+	void reader_lock() { g_static_rw_lock_reader_lock(&lock); }
+	void reader_unlock() { g_static_rw_lock_reader_unlock(&lock); }
 
 	void writer_lock() { g_static_rw_lock_writer_lock(&lock); }
 	void writer_unlock() { g_static_rw_lock_writer_unlock(&lock); }

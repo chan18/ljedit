@@ -56,8 +56,8 @@ gboolean puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST
 	gsize  slen = 0;
 	const gchar** cs = 0;
 
-	g_return_val_if_fail(filename && text && len && err, FALSE);
-	g_return_val_if_fail(*filename && !(*text) && !(*err), FALSE);
+	g_return_val_if_fail(filename && text && len , FALSE);
+	g_return_val_if_fail(*filename, FALSE);
 
 	if( !g_file_get_contents(filename, &sbuf, &slen, err) )
 		return FALSE;

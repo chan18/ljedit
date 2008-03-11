@@ -10,6 +10,65 @@
 
 #include "LJCS.h"
 
+SIGNAL_CALLBACK void preview_page_cb_number_button_clicked(GtkButton* button, PreviewPage* self);
+
+SIGNAL_CALLBACK void preview_page_cb_filename_button_clicked(GtkButton* button, PreviewPage* self);
+
+class PreviewPage {
+	friend void preview_page_cb_number_button_clicked(GtkButton* button, PreviewPage* self);
+	friend void preview_page_cb_filename_button_clicked(GtkButton* button, PreviewPage* self);
+
+public:
+    gboolean create(Puss* app, Environ* env);
+    void destroy();
+
+	void preview(const gchar* key, const gchar* key_text, cpp::File& file, size_t line);
+
+private:
+	struct SearchContent {
+		std::string key;
+		std::string key_text;
+		cpp::File*  file;
+		size_t      line;
+
+		SearchContent() : file(0) {}
+	};
+
+	void search_thread();
+
+	static gpointer search_thread_wrapper(gpointer self);
+
+private:
+    void do_preview(size_t index);
+    void do_preview_impl(size_t index);
+	void do_scroll_to_define_line();
+
+	static gboolean search_result_update_timeout_wrapper(gpointer self);
+	static gboolean scroll_to_define_line_wrapper(gpointer self);
+
+private:
+	Puss*					app_;
+	Environ*				env_;
+
+	// UI
+	GtkWidget*				self_panel_;
+	GtkLabel*				filename_label_;
+	GtkButton*				number_button_;
+	GtkTextView*			preview_view_;
+
+	// search thread
+	GThread*				search_thread_;
+	Mutex<SearchContent>	search_content_;
+	Cond					search_run_sem_;
+	volatile gboolean		search_stopsign_;
+
+	// preview result
+    volatile gboolean		search_resultsign_;
+    RWLock<cpp::Elements>	elems_;
+	size_t					index_;
+	cpp::File*				last_preview_file_;
+};
+
 gboolean PreviewPage::create(Puss* app, Environ* env) {
 	app_ = app;
 	env_ = env;
@@ -53,6 +112,7 @@ gboolean PreviewPage::create(Puss* app, Environ* env) {
 	gtk_widget_show_all(self_panel_);
 	gtk_notebook_append_page(puss_get_bottom_panel(app_), self_panel_, gtk_label_new(_("Preview")));
 
+	gtk_builder_connect_signals(builder, this);
 	g_object_unref(G_OBJECT(builder));
 
 	// init search thread
@@ -144,7 +204,7 @@ void PreviewPage::search_thread() {
 			env_->file_incref_all_elems(elems);
 
 			search_resultsign_ = true;
-			//index_ = find_best_matched_index(elems);
+			index_ = find_best_matched_index(elems);
 		}
 	}
 }
@@ -167,6 +227,7 @@ void PreviewPage::do_preview(size_t index) {
 void PreviewPage::do_preview_impl(size_t index) {
 	RLocker locker(elems_);
 
+	gchar* text = 0;
 	cpp::Elements& elems = elems_.ref();
 	GtkTextBuffer* buffer = gtk_text_view_get_buffer(preview_view_);
 
@@ -181,8 +242,13 @@ void PreviewPage::do_preview_impl(size_t index) {
 	index_ = index % elems.size();
     cpp::Element* elem = elems[index_];
 
+	// set number button
+	text = g_strdup_printf("%d/%d", index_ + 1, elems.size());
+	gtk_button_set_label(number_button_, text);
+	g_free(text);
+
 	// set filename label
-	gchar* text = g_strdup_printf("%s:%d", elem->file.filename.c_str(), elem->sline);
+	text = g_strdup_printf("%s:%d", elem->file.filename.c_str(), elem->sline);
 	gtk_label_set_text(filename_label_, text);
 	g_free(text);
 
@@ -211,7 +277,7 @@ void PreviewPage::do_scroll_to_define_line() {
 	assert( elem != 0 );
 
 	GtkTextBuffer* buffer = gtk_text_view_get_buffer(preview_view_);
-	if( gtk_text_buffer_get_line_count(buffer) < (gint)elem->sline ) {
+	if( (gint)elem->sline < gtk_text_buffer_get_line_count(buffer) ) {
 		GtkTextIter iter;
 		gtk_text_buffer_get_iter_at_line(buffer, &iter, (gint)(elem->sline - 1));
 		if( !gtk_text_iter_is_end(&iter) ) {
@@ -230,3 +296,45 @@ gboolean PreviewPage::scroll_to_define_line_wrapper(gpointer self) {
 	((PreviewPage*)self)->do_scroll_to_define_line();
     return FALSE;
 }
+
+SIGNAL_CALLBACK void preview_page_cb_number_button_clicked(GtkButton* button, PreviewPage* self) {
+	self->do_preview(self->index_ + 1);
+}
+
+SIGNAL_CALLBACK void preview_page_cb_filename_button_clicked(GtkButton* button, PreviewPage* self) {
+	RLocker locker(self->elems_);
+	cpp::Elements& elems = self->elems_.ref();
+    if( elems.empty() )
+        return;
+
+	cpp::Element* elem = elems[self->index_];
+	assert( elem != 0 );
+
+	self->app_->doc_open(elem->file.filename.c_str(), (int)(elem->sline - 1), 0);
+}
+
+PreviewPage* preview_page_create(Puss* app, Environ* env) {
+	PreviewPage* self = new PreviewPage();
+	if( self ) {
+		if( !self->create(app,env) ) {
+			delete self;
+			self = 0;
+		}
+	}
+
+	return self;
+}
+
+void preview_page_destroy(PreviewPage* preview_page) {
+	if( preview_page ) {
+		delete preview_page;
+		preview_page = 0;
+	}
+}
+
+void preview_page_preview(PreviewPage* preview_page, const gchar* key, const gchar* key_text, cpp::File& file, size_t line) {
+	assert( preview_page );
+
+	preview_page->preview(key, key_text, file, line);
+}
+

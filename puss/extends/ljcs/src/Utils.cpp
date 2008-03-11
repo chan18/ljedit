@@ -30,8 +30,8 @@ gboolean find_keys( StrVector& keys
     LJEditorDocIter ps(it);
     LJEditorDocIter pe(end);
     std::string key;
-    if( !find_key(key, ps, pe, find_startswith) )
-        return false;
+	if( !find_key(key, ps, pe, find_startswith ? true : false) )
+        return FALSE;
     keys.push_back(key);
 
 	/*
@@ -41,7 +41,7 @@ gboolean find_keys( StrVector& keys
     if( !rkey.empty() && rkey!=key )
         keys.push_back(rkey);
 	*/
-    return true;
+    return TRUE;
 }
 
 bool compare_best_matched_less(cpp::Element& l, cpp::Element& r) {

@@ -6,8 +6,9 @@
       <object class="GtkHBox" id="hbox">
         <child>
           <object class="GtkButton" id="number_button">
-          <property name="label">0/0</property>
-          <property name="relief">GTK_RELIEF_HALF</property>
+            <signal handler="preview_page_cb_number_button_clicked" name="clicked"/>
+            <property name="label">0/0</property>
+            <property name="relief">GTK_RELIEF_HALF</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -16,6 +17,7 @@
         </child>
         <child>
           <object class="GtkButton" id="filename_button">
+            <signal handler="preview_page_cb_filename_button_clicked" name="clicked"/>
             <child>
               <object class="GtkHBox" id="filename_hbox">
                 <child>

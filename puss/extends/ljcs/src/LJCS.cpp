@@ -3,6 +3,8 @@
 
 #include "LJCS.h"
 
+#include "PreviewPage.h"
+
 GRegex* re_include = g_regex_new("^[ \t]*#[ \t]*include[ \t]*(.*)", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
 GRegex* re_include_tip = g_regex_new("([\"<])(.*)", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
 GRegex* re_include_info = g_regex_new("([\"<])([^\">]*)[\">].*", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
@@ -15,17 +17,21 @@ bool LJCS::create(Puss* _app) {
 	app = _app;
 
 	icons.create(app);
-	preview_page.create(app, &env);
+
+	preview_page = preview_page_create(app, &env);
 
 	GtkNotebook* doc_panel = puss_get_doc_panel(app);
 	g_signal_connect(doc_panel, "page-added",   G_CALLBACK(&LJCS::on_doc_page_added),   this);
 	g_signal_connect(doc_panel, "page-removed", G_CALLBACK(&LJCS::on_doc_page_removed), this);
 
+	parse_thread.run(&env);
+
 	return true;
 }
 
 void LJCS::destroy() {
-	preview_page.destroy();
+	parse_thread.stop();
+	preview_page_destroy(preview_page);
 	icons.destroy();
 
 	app = 0;
@@ -142,7 +148,7 @@ void LJCS::do_button_release_event(GtkWidget* view, GtkTextBuffer* buf, GdkEvent
 			return;
 
 		gchar* key_text = gtk_text_iter_get_text(&it, &end);
-		preview_page.preview(key.c_str(), key_text, *file, line);
+		preview_page_preview(preview_page, key.c_str(), key_text, *file, line);
 		g_free(key_text);
 	}
 }
@@ -185,10 +191,8 @@ void LJCS::on_doc_page_added(GtkNotebook* doc_panel, GtkWidget* page, guint page
     //cons.push_back( view.get_buffer()->signal_modified_changed().connect( sigc::bind( sigc::mem_fun(this, &LJCSPluginImpl::on_modified_changed), &page ) ) );
 
 	GString* url = self->app->doc_get_url(buf);
-	if( url ) {
-        //parse_thread_.add(url);
-    }
-
+	if( url )
+		self->parse_thread.add(std::string(url->str, url->len));
 }
 
 void LJCS::on_doc_page_removed(GtkNotebook* doc_panel, GtkWidget* page, guint page_num, gpointer tag) {

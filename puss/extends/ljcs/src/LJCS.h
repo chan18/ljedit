@@ -7,15 +7,18 @@
 #include "IPuss.h"
 #include "Environ.h"
 #include "Icons.h"
-#include "PreviewPage.h"
+#include "ParseThread.h"
+
+class PreviewPage;
 
 class LJCS {
 public:
-	Puss*		app;
+	Puss*			app;
 
-	Environ		env;
-	Icons		icons;
-	PreviewPage	preview_page;
+	Environ			env;
+	Icons			icons;
+	PreviewPage*	preview_page;
+	ParseThread		parse_thread;
 
 public:
 	LJCS();
