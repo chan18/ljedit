@@ -55,6 +55,10 @@
       <object class="GtkScrolledWindow" id="scrolled_window">
         <child>
           <object class="GtkSourceView" id="preview_view">
+            <property name="editable">False</property>
+            <property name="tab-width">4</property>
+            <property name="show-line-numbers">True</property>
+            <property name="highlight-current-line">True</property>
           </object>
         </child>
       </object>
