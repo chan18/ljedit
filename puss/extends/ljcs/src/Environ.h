@@ -36,6 +36,8 @@ public:
 
 	void	find_keyword(const std::string& key, IMatched& cb);
 
+	bool	check_cpp_files(const std::string& filepath);
+
 private:
 	void	add_parsed(cpp::File* file);			// add and ref
 	void	remove_parsed(cpp::File* file);			// remove and unref

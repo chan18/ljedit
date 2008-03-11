@@ -259,6 +259,45 @@ void Environ::remove_parsed(const std::string& file) {
 	}
 }
 
+std::set<std::string> init_exts() {
+	std::set<std::string> exts;
+	exts.insert("c");
+	exts.insert("h");
+	exts.insert("cpp");
+	exts.insert("hpp");
+	exts.insert("cc");
+	exts.insert("hh");
+	exts.insert("inl");
+	exts.insert("cxx");
+	exts.insert("hxx");
+
+	return exts;
+}
+
+bool Environ::check_cpp_files(const std::string& filepath) {
+	gchar* name = g_path_get_basename(filepath.c_str());
+	size_t len = strlen(name);
+	gchar* ptr = name + len;
+	for( ; ptr!=name && *ptr != '.'; --ptr );
+
+	bool retval = false;
+	if( ptr!=name ) {
+		// check ext filename is .c .h .cpp .hpp .cc .hh .inl ...
+		++ptr;
+		for(char* p=ptr; p!=(name+len); ++p)
+			*p = tolower(*p);
+
+		static std::set<std::string> exts = init_exts();
+		retval = exts.find(name) != exts.end();
+
+	} else {
+		// if no ext filename, check path in system header path
+		retval = in_include_path(filepath);
+	}
+
+	return false;
+}
+
 bool Environ::pe_is_abspath(std::string& filepath) {
 	return g_path_is_absolute(filepath.c_str()) != 0;
 }

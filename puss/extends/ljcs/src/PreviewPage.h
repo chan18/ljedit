@@ -17,7 +17,7 @@ public:
     gboolean create(Puss* app, Environ* env);
     void destroy();
 
-	void preview(const std::string& key, const std::string& key_text, cpp::File& file, size_t line);
+	void preview(const gchar* key, const gchar* key_text, cpp::File& file, size_t line);
 
 private:
 	struct SearchContent {

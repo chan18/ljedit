@@ -25,6 +25,8 @@ public:
     void destroy();
 
 private:
+	void open_include_file(const gchar* filename, gboolean system_header, const gchar* owner_path);
+
 	void do_button_release_event(GtkWidget* view, GtkTextBuffer* buf, GdkEventButton* event, cpp::File* file);
 
 private:
