@@ -7,9 +7,18 @@ void cb_about_activate_email(GtkAboutDialog* about, const gchar* link, gpointer 
 	g_message("send email : %s", link);
 }
 
-void cb_about_activate_url(GtkAboutDialog* about, const gchar* link, gpointer data) {
-	g_message("open url : %s", link);
-}
+#ifdef WIN32
+	#include <windows.h>
+
+	void cb_about_activate_url(GtkAboutDialog* about, const gchar* link, gpointer data)
+		{ ShellExecuteA(HWND_DESKTOP, "open", link, NULL, NULL, SW_SHOWNORMAL); }
+#else
+	//#include <libgnome/gnome-url.h>
+
+	void cb_about_activate_url(GtkAboutDialog* about, const gchar* link, gpointer data)
+		{ /*gnome_url_show(link, NULL);*/ }
+#endif
+
 
 void puss_show_about_dialog(GtkWindow* window) {
 	const gchar* license =
