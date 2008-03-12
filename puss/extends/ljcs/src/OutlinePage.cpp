@@ -8,7 +8,10 @@
 #include "LJCS.h"
 
 
+SIGNAL_CALLBACK void outline_page_cb_row_activated(GtkTreeView* tree_view, GtkTreePath* path, GtkTreeViewColumn* col, OutlinePage* self);
+
 class OutlinePage {
+	friend void outline_page_cb_row_activated(GtkTreeView* tree_view, GtkTreePath* path, GtkTreeViewColumn* col, OutlinePage* self) ;
 public:
     gboolean create(Puss* app, Environ* env, Icons* icons) {
 		app_ = app;
@@ -38,17 +41,10 @@ public:
 			return FALSE;
 		}
 
-		GtkWidget*	self_panel = GTK_WIDGET(gtk_builder_get_object(builder, "outline_panel"));
-		GtkCellLayout* cell_layout = GTK_CELL_LAYOUT(gtk_builder_get_object(builder, "elem_column"));
-		GtkCellRenderer* icon_cell_renderer = GTK_CELL_RENDERER(gtk_builder_get_object(builder, "icon_cell_renderer"));
-		GtkCellRenderer* decl_cell_renderer = GTK_CELL_RENDERER(gtk_builder_get_object(builder, "decl_cell_renderer"));
-
-		gtk_cell_layout_set_cell_data_func(cell_layout, icon_cell_renderer, (GtkCellLayoutDataFunc)&OutlinePage::cb_icon_cell_get_data, this, 0);
-		gtk_cell_layout_set_cell_data_func(cell_layout, decl_cell_renderer, (GtkCellLayoutDataFunc)&OutlinePage::cb_decl_cell_get_data, this, 0);
-
 		tree_view_ = GTK_TREE_VIEW(gtk_builder_get_object(builder, "outline_treeview"));
 		tree_store_ = GTK_TREE_STORE(g_object_ref(gtk_builder_get_object(builder, "outline_store")));
 
+		GtkWidget*	self_panel = GTK_WIDGET(gtk_builder_get_object(builder, "outline_panel"));
 		gtk_widget_show_all(self_panel);
 		gtk_notebook_append_page(puss_get_right_panel(app_), self_panel, gtk_label_new(_("Outline")));
 
@@ -81,17 +77,11 @@ public:
 			if( file ) {
 				env_->file_incref(file);
 
-				// test
-				GtkTreeIter iter;
-				gtk_tree_store_append(tree_store_, &iter, NULL);
-				gtk_tree_store_set(tree_store_, &iter, 0, (gpointer)0, -1, -1);
-				/*
-				const Gtk::TreeNodeChildren& node = store_->children();
+				gtk_tree_store_clear(tree_store_);
 				cpp::Elements::iterator it = file->scope.elems.begin();
 				cpp::Elements::iterator end = file->scope.elems.end();
 				for( ; it!=end; ++it )
-					view_add_elem(*it, node);
-				*/
+					add_elem(*it, 0);
 			}
 
 			if( file_ )
@@ -105,15 +95,74 @@ public:
 		if( file && line_!=line ) {
 			line_ = line;
 
-			/*
-			view_.get_selection()->unselect_all();
-			const Gtk::TreeNodeChildren& root = store_->children();
-			view_locate_line((size_t)(line + 1), root);
-			*/
+			GtkTreeSelection* sel = gtk_tree_view_get_selection(tree_view_);
+			gtk_tree_selection_unselect_all(sel);
+			locate_line( (size_t)line + 1, 0 );
 		}
 	}
 
 private:
+	void add_elem(const cpp::Element* elem, GtkTreeIter* parent) {
+		switch(elem->type) {
+		case cpp::ET_INCLUDE:
+		case cpp::ET_UNDEF:
+			return;
+		}
+
+		GtkTreeIter iter;
+		gtk_tree_store_append(tree_store_, &iter, parent);
+		gtk_tree_store_set( tree_store_, &iter
+			, 0, icons_->get_icon_from_elem(*elem)
+			, 1, elem->name.c_str()
+			, 2, elem->decl.c_str()
+			, 3, elem
+			, -1 );
+
+		cpp::Scope* scope = 0;
+		switch(elem->type) {
+		case cpp::ET_ENUM:		scope = &((cpp::Enum*)elem)->scope;			break;
+		case cpp::ET_CLASS:		scope = &((cpp::Class*)elem)->scope;		break;
+		case cpp::ET_NAMESPACE:	scope = &((cpp::Namespace*)elem)->scope;	break;
+		}
+
+		if( scope != 0 ) {
+			// add children
+			cpp::Elements::iterator it = scope->elems.begin();
+			cpp::Elements::iterator end = scope->elems.end();
+			for( ; it!=end; ++it )
+				add_elem(*it, &iter);
+		}
+	}
+
+	void locate_line(size_t line, GtkTreeIter* parent) {
+		GtkTreeIter iter;
+		if( !gtk_tree_model_iter_children(GTK_TREE_MODEL(tree_store_), &iter, parent) )
+			return;
+
+		do {
+			GValue value = { G_TYPE_INVALID };
+			gtk_tree_model_get_value(GTK_TREE_MODEL(tree_store_), &iter, 3, &value);
+			cpp::Element* elem = (cpp::Element*)g_value_get_pointer(&value);
+			g_assert( elem );
+
+			if( line < elem->sline )
+				break;
+
+			else if( line > elem->eline )
+				continue;
+
+			GtkTreeSelection* sel = gtk_tree_view_get_selection(tree_view_);
+			gtk_tree_selection_select_iter(sel, &iter);
+			GtkTreePath* path = gtk_tree_model_get_path(GTK_TREE_MODEL(tree_store_), &iter);
+			gtk_tree_view_expand_to_path(tree_view_, path);
+			gtk_tree_view_scroll_to_cell(tree_view_, path, NULL, FALSE, 0.0f, 0.0f);
+			if( !gtk_tree_model_iter_has_child(GTK_TREE_MODEL(tree_store_), &iter) )
+				locate_line(line, &iter);
+			break;
+
+		} while( gtk_tree_model_iter_next(GTK_TREE_MODEL(tree_store_), &iter) );
+	}
+
 	static gboolean outline_update_timeout(OutlinePage* self) {
 		GtkNotebook* doc_panel = puss_get_doc_panel(self->app_);
 		gint page_num = gtk_notebook_get_current_page(doc_panel);
@@ -142,37 +191,9 @@ private:
 	}
 
 private:
-	static void cb_icon_cell_get_data( GtkCellLayout* cell_layout
-			, GtkCellRenderer* cell
-			, GtkTreeModel* tree_model
-			, GtkTreeIter* iter
-			, OutlinePage* self )
-	{
-		//self->icons_->get_icon_from_elem();
-
-		GdkPixbuf* icon = gdk_pixbuf_new_from_file("D:/louis/lj/puss/bin/extends/ljcs_res/class.png", NULL);
-		GValue value = { GDK_TYPE_PIXBUF };
-		value.data->v_pointer = (gpointer)icon;
-		g_object_set_property(G_OBJECT(cell), "pixbuf", &value);
-		g_object_unref(G_OBJECT(icon));
-	}
-
-	static void cb_decl_cell_get_data( GtkCellLayout* cell_layout
-			, GtkCellRenderer* cell
-			, GtkTreeModel* tree_model
-			, GtkTreeIter* iter
-			, OutlinePage* self )
-	{
-		const gchar* text = "vvvvvvvvvvvvvvvvv";
-		GValue value = { G_TYPE_STRING };
-		value.data->v_pointer = (gpointer)text;
-		g_object_set_property(G_OBJECT(cell), "text", &value);
-	}
-
-private:
-	Puss*		app_;
-	Environ*	env_;
-	Icons*		icons_;
+	Puss*			app_;
+	Environ*		env_;
+	Icons*			icons_;
 
 	// UI
 	GtkTreeView*	tree_view_;
@@ -183,65 +204,19 @@ private:
     int				line_;
 };
 
-SIGNAL_CALLBACK void outline_page_cb_row_activated(GtkTreePath* path, GtkTreeViewColumn* col, OutlinePage* self) {
-	g_print("vvvvvvvv\n");
+SIGNAL_CALLBACK void outline_page_cb_row_activated(GtkTreeView* tree_view, GtkTreePath* path, GtkTreeViewColumn* col, OutlinePage* self) {
+	GtkTreeIter iter;
+	if( !gtk_tree_model_get_iter(GTK_TREE_MODEL(self->tree_store_), &iter, path) )
+		return;
 
-	/*
-	GtkTreeModelIfa::iterator it = store_->get_iter(path);
-    const cpp::Element* elem = it->get_value(columns_.elem);
-	if( elem )
-		app_->doc_open(elem->filename.c_str(), (elem->sline - 1), 0);
-	*/
+	GValue value = { G_TYPE_INVALID };
+	gtk_tree_model_get_value(GTK_TREE_MODEL(self->tree_store_), &iter, 3, &value);
+	const cpp::Element* elem = (const cpp::Element*)g_value_get_pointer(&value);
+	if( !elem )
+		return;
+
+	self->app_->doc_open(elem->file.filename.c_str(), (gint)elem->sline - 1, -1);
 }
-
-/*
-void OutlinePage::view_add_elem(const cpp::Element* elem, const Gtk::TreeNodeChildren& parent) {
-    Gtk::TreeRow row = *(store_->append(parent));
-	row[columns_.icon] = LJCSIcons::self().get_icon_from_elem(*elem);
-    row[columns_.decl] = elem->decl;
-    row[columns_.elem] = elem;
-
-    cpp::Scope* scope = 0;
-    switch(elem->type) {
-    case cpp::ET_ENUM:		scope = &((cpp::Enum*)elem)->scope;			break;
-    case cpp::ET_CLASS:		scope = &((cpp::Class*)elem)->scope;		break;
-    case cpp::ET_NAMESPACE:	scope = &((cpp::Namespace*)elem)->scope;	break;
-    }
-
-    if( scope != 0 ) {
-        // add children
-        const Gtk::TreeNodeChildren& node = row.children();
-        cpp::Elements::iterator it = scope->elems.begin();
-        cpp::Elements::iterator end = scope->elems.end();
-        for( ; it!=end; ++it )
-            view_add_elem(*it, node);
-    }
-}
-*/
-
-/*
-void OutlinePage::view_locate_line(size_t line, const Gtk::TreeNodeChildren& parent) {
-    Gtk::TreeStore::iterator it = parent.begin();
-    Gtk::TreeStore::iterator end = parent.end();
-    for( ; it!=end; ++it ) {
-        const cpp::Element* elem = it->get_value(columns_.elem);
-        assert( elem != 0 );
-
-        if( line < elem->sline )
-            break;
-
-        else if( line > elem->eline )
-            continue;
-
-        view_.get_selection()->select(it);
-        view_.expand_to_path(store_->get_path(it));
-        view_.scroll_to_row(store_->get_path(it));
-        if( !it->children().empty() )
-            view_locate_line( line, it->children() );
-        break;
-    }
-}
-*/
 
 OutlinePage* outline_page_create(Puss* app, Environ* env, Icons* icons) {
 	OutlinePage* self = new OutlinePage();

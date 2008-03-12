@@ -54,8 +54,11 @@ void doc_locate_page_line( gint page_num, gint line, gint offset ) {
 
 	} else {
 		gtk_text_buffer_get_iter_at_line(buf, &iter, line);
-		if( offset < 0 )
-			offset = 0;
+		if( offset < 0 ) {
+			GtkTextIter insert_iter;
+			gtk_text_buffer_get_iter_at_mark(buf, &insert_iter, gtk_text_buffer_get_insert(buf));
+			offset = gtk_text_iter_get_line_offset(&insert_iter);
+		}
 
 		if( offset < gtk_text_iter_get_chars_in_line(&iter) )
 			gtk_text_iter_set_line_offset(&iter, offset);

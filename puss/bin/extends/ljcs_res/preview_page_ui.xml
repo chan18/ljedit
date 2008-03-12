@@ -2,6 +2,7 @@
 <!--*- mode: xml -*-->
 <interface>
   <object class="GtkVBox" id="preview_panel">
+    <property name="height-request">150</property>
     <child>
       <object class="GtkHBox" id="hbox">
         <child>
@@ -55,6 +56,8 @@
     </child>
     <child>
       <object class="GtkScrolledWindow" id="scrolled_window">
+        <property name="hscrollbar_policy">automatic</property>
+        <property name="vscrollbar_policy">automatic</property>
         <child>
           <object class="GtkSourceView" id="preview_view">
             <property name="editable">False</property>

@@ -310,7 +310,7 @@ SIGNAL_CALLBACK void preview_page_cb_filename_button_clicked(GtkButton* button, 
 	cpp::Element* elem = elems[self->index_];
 	assert( elem != 0 );
 
-	self->app_->doc_open(elem->file.filename.c_str(), (int)(elem->sline - 1), 0);
+	self->app_->doc_open(elem->file.filename.c_str(), (int)(elem->sline - 1), -1);
 }
 
 PreviewPage* preview_page_create(Puss* app, Environ* env) {
