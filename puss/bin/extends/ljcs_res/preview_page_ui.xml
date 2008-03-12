@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--*- mode: xml -*-->
 <interface>
-  <object class="GtkVBox" id="vbox">
+  <object class="GtkVBox" id="preview_panel">
     <child>
       <object class="GtkHBox" id="hbox">
         <child>

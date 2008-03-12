@@ -10,6 +10,7 @@
 #include "ParseThread.h"
 
 class PreviewPage;
+class OutlinePage;
 
 class LJCS {
 public:
@@ -18,6 +19,7 @@ public:
 	Environ			env;
 	Icons			icons;
 	PreviewPage*	preview_page;
+	OutlinePage*	outline_page;
 	ParseThread		parse_thread;
 
 public:

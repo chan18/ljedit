@@ -96,10 +96,10 @@ gboolean PreviewPage::create(Puss* app, Environ* env) {
 		return FALSE;
 	}
 
-	self_panel_     = GTK_WIDGET(g_object_ref(gtk_builder_get_object(builder, "vbox")));
-	filename_label_ = GTK_LABEL(g_object_ref(gtk_builder_get_object(builder, "filename_label")));
-	number_button_  = GTK_BUTTON(g_object_ref(gtk_builder_get_object(builder, "number_button")));
-	preview_view_   = GTK_TEXT_VIEW(g_object_ref(gtk_builder_get_object(builder, "preview_view")));
+	self_panel_     = GTK_WIDGET(gtk_builder_get_object(builder, "preview_panel"));
+	filename_label_ = GTK_LABEL(gtk_builder_get_object(builder, "filename_label"));
+	number_button_  = GTK_BUTTON(gtk_builder_get_object(builder, "number_button"));
+	preview_view_   = GTK_TEXT_VIEW(gtk_builder_get_object(builder, "preview_view"));
 	g_assert( self_panel_ && filename_label_ && number_button_ && preview_view_ );
 
 	GtkSourceLanguageManager* lm = gtk_source_language_manager_get_default();
@@ -316,7 +316,7 @@ SIGNAL_CALLBACK void preview_page_cb_filename_button_clicked(GtkButton* button, 
 PreviewPage* preview_page_create(Puss* app, Environ* env) {
 	PreviewPage* self = new PreviewPage();
 	if( self ) {
-		if( !self->create(app,env) ) {
+		if( !self->create(app, env) ) {
 			delete self;
 			self = 0;
 		}
@@ -325,16 +325,16 @@ PreviewPage* preview_page_create(Puss* app, Environ* env) {
 	return self;
 }
 
-void preview_page_destroy(PreviewPage* preview_page) {
-	if( preview_page ) {
-		delete preview_page;
-		preview_page = 0;
+void preview_page_destroy(PreviewPage* self) {
+	if( self ) {
+		delete self;
+		self = 0;
 	}
 }
 
-void preview_page_preview(PreviewPage* preview_page, const gchar* key, const gchar* key_text, cpp::File& file, size_t line) {
-	assert( preview_page );
+void preview_page_preview(PreviewPage* self, const gchar* key, const gchar* key_text, cpp::File& file, size_t line) {
+	assert( self );
 
-	preview_page->preview(key, key_text, file, line);
+	self->preview(key, key_text, file, line);
 }
 

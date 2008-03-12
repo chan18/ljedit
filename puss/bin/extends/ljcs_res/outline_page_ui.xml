@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!--*- mode: xml -*-->
+<interface>
+  <object class="GtkTreeStore" id="outline_store">
+    <columns>
+      <column type="gpointer"/>
+    </columns>
+  </object>
+
+  <object class="GtkScrolledWindow" id="outline_panel">
+    <property name="hscrollbar_policy">automatic</property>
+    <property name="vscrollbar_policy">automatic</property>
+    <property name="shadow_type">in</property>
+    <child>
+      <object class="GtkTreeView" id="outline_treeview">
+        <property name="model">outline_store</property>
+        <property name="headers-visible">False</property>
+        <property name="enable-tree-lines">True</property>
+        <signal handler="outline_page_cb_row_activated" name="row-activated"/>
+        <child>
+          <object class="GtkTreeViewColumn" id="elem_column">
+            <property name="title">icon</property>
+            <child>
+              <object class="GtkCellRendererPixbuf" id="icon_cell_renderer"/>
+            </child>
+            <child>
+              <object class="GtkCellRendererText" id="decl_cell_renderer"/>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>
+

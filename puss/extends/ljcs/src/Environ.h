@@ -58,7 +58,7 @@ private:	// IParserEnviron
 	virtual void		pe_on_parsed(cpp::File* file);
 
 private:
-	Puss*					app_;
+	//Puss*					app_;
 
 	RWLock<StrVector>		include_paths_;
 

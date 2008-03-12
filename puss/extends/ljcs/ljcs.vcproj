@@ -183,6 +183,10 @@
 			Name="res"
 			>
 			<File
+				RelativePath="..\..\bin\extends\ljcs_res\outline_page_ui.xml"
+				>
+			</File>
+			<File
 				RelativePath="..\..\bin\extends\ljcs_res\preview_page_ui.xml"
 				>
 			</File>
@@ -213,6 +217,14 @@
 		</File>
 		<File
 			RelativePath=".\src\module.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\src\OutlinePage.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\src\OutlinePage.h"
 			>
 		</File>
 		<File

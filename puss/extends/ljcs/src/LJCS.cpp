@@ -4,6 +4,7 @@
 #include "LJCS.h"
 
 #include "PreviewPage.h"
+#include "OutlinePage.h"
 
 GRegex* re_include = g_regex_new("^[ \t]*#[ \t]*include[ \t]*(.*)", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
 GRegex* re_include_tip = g_regex_new("([\"<])(.*)", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
@@ -19,6 +20,7 @@ bool LJCS::create(Puss* _app) {
 	icons.create(app);
 
 	preview_page = preview_page_create(app, &env);
+	outline_page = outline_page_create(app, &env, &icons);
 
 	GtkNotebook* doc_panel = puss_get_doc_panel(app);
 	g_signal_connect(doc_panel, "page-added",   G_CALLBACK(&LJCS::on_doc_page_added),   this);
@@ -32,6 +34,7 @@ bool LJCS::create(Puss* _app) {
 void LJCS::destroy() {
 	parse_thread.stop();
 	preview_page_destroy(preview_page);
+	outline_page_destroy(outline_page);
 	icons.destroy();
 
 	app = 0;
@@ -160,11 +163,12 @@ gboolean LJCS::on_button_release_event(GtkWidget* view, GdkEventButton* event, g
 
 	GtkTextBuffer* buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
 	GString* url = self->app->doc_get_url(buf);
-
-	cpp::File* file = self->env.find_parsed(std::string(url->str, url->len));
-	self->do_button_release_event(view, buf, event, file);
-	if( file )
-		self->env.file_decref(file);
+	if( url ) {
+		cpp::File* file = self->env.find_parsed(std::string(url->str, url->len));
+		self->do_button_release_event(view, buf, event, file);
+		if( file )
+			self->env.file_decref(file);
+	}
 
     return FALSE;
 }
