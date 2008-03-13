@@ -156,7 +156,7 @@ private:
 			GtkTreePath* path = gtk_tree_model_get_path(GTK_TREE_MODEL(tree_store_), &iter);
 			gtk_tree_view_expand_to_path(tree_view_, path);
 			gtk_tree_view_scroll_to_cell(tree_view_, path, NULL, FALSE, 0.0f, 0.0f);
-			if( !gtk_tree_model_iter_has_child(GTK_TREE_MODEL(tree_store_), &iter) )
+			if( gtk_tree_model_iter_has_child(GTK_TREE_MODEL(tree_store_), &iter) )
 				locate_line(line, &iter);
 			break;
 

@@ -165,6 +165,15 @@ void puss_destroy() {
 }
 
 void puss_run() {
+	if( gtk_notebook_get_n_pages(puss_app->left_panel) > 0 )
+		gtk_notebook_set_current_page(puss_app->left_panel, 0);
+
+	if( gtk_notebook_get_n_pages(puss_app->right_panel) > 0 )
+		gtk_notebook_set_current_page(puss_app->right_panel, 0);
+
+	if( gtk_notebook_get_n_pages(puss_app->bottom_panel) > 0 )
+		gtk_notebook_set_current_page(puss_app->bottom_panel, 0);
+
 	gtk_widget_show( GTK_WIDGET(puss_app->main_window) );
 
 	//g_print(_("test locale\n"));

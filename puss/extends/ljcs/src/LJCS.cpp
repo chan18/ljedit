@@ -6,9 +6,12 @@
 #include "PreviewPage.h"
 #include "OutlinePage.h"
 
+#include <gdk/gdkkeysyms.h>
+
 GRegex* re_include = g_regex_new("^[ \t]*#[ \t]*include[ \t]*(.*)", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
 GRegex* re_include_tip = g_regex_new("([\"<])(.*)", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
 GRegex* re_include_info = g_regex_new("([\"<])([^\">]*)[\">].*", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
+
 
 LJCS::LJCS() : app(0) {}
 
@@ -138,7 +141,7 @@ void LJCS::do_button_release_event(GtkWidget* view, GtkTextBuffer* buf, GdkEvent
 
 			cpp::Element* elem = find_best_matched_element(mset.elems());
 			if( elem )
-				app->doc_open(elem->file.filename.c_str(), int(elem->sline - 1), 0);
+				app->doc_open(elem->file.filename.c_str(), int(elem->sline - 1), -1);
 		}
 
 
@@ -156,9 +159,186 @@ void LJCS::do_button_release_event(GtkWidget* view, GtkTextBuffer* buf, GdkEvent
 	}
 }
 
-gboolean LJCS::on_button_release_event(GtkWidget* view, GdkEventButton* event, gpointer tag) {
-	LJCS* self = (LJCS*)tag;
+gboolean LJCS::on_key_press_event(GtkWidget* view, GdkEventKey* event, LJCS* self) {
+    if( event->state & (GDK_CONTROL_MASK | GDK_MOD1_MASK) ) {
+        //tip_.hide_all_tip();
+        return FALSE;
+    }
 
+	switch( event->keyval ) {
+	case GDK_Tab:
+		//if( tip_.list_window().is_visible() || tip_.include_window().is_visible() ) {
+		//	auto_complete(*page);
+		//	return TRUE;
+		//}
+		break;
+
+	case GDK_Return:
+		//tip_.hide_all_tip();
+		break;
+
+	case GDK_Up:
+		//if( tip_.list_window().is_visible() || tip_.include_window().is_visible() ) {
+		//	tip_.select_prev();
+		//	return TRUE;
+		//}
+
+		//if( tip_.decl_window().is_visible() )
+		//	tip_.decl_window().hide();
+		break;
+
+	case GDK_Down:
+		//if( tip_.list_window().is_visible() || tip_.include_window().is_visible() ) {
+		//	tip_.select_next();
+		//	return TRUE;
+		//}
+
+		//if( tip_.decl_window().is_visible() )
+		//	tip_.decl_window().hide();
+		break;
+
+	case GDK_Escape:
+		//tip_.hide_all_tip();
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+gboolean LJCS::on_key_release_event(GtkWidget* view, GdkEventKey* event, LJCS* self) {
+    if( event->state & (GDK_CONTROL_MASK | GDK_MOD1_MASK) ) {
+        //tip_.hide_all_tip();
+        return FALSE;
+    }
+
+    switch( event->keyval ) {
+    case GDK_Tab:
+    case GDK_Return:
+    case GDK_Up:
+    case GDK_Down:
+    case GDK_Escape:
+	case GDK_Shift_L:
+	case GDK_Shift_R:
+        return FALSE;
+    }
+
+	//printf("%d - %s\n", event->keyval, event->string);
+
+	/*
+    Glib::RefPtr<Gtk::TextBuffer> buf = page->buffer();
+    Gtk::TextIter it = buf->get_iter_at_mark(buf->get_insert());
+
+    if( is_in_comment(it) )
+        return false;
+ 
+	// include tip
+	{
+		Gtk::TextIter ps = it;
+		Gtk::TextIter pe = it;
+		ps.set_line_offset(0);
+		pe.forward_to_line_end();
+		Glib::ustring line = ps.get_text(pe);
+
+		GMatchInfo* inc_info = 0;
+		bool is_start = false;
+		bool is_include_line = g_regex_match(re_include, line.c_str(), (GRegexMatchFlags)0, &inc_info);
+		if( is_include_line ) {
+			gchar* inc_info_text = g_match_info_fetch(inc_info, 1);
+			GMatchInfo* info = 0;
+			if( g_regex_match(re_include_tip, inc_info_text, (GRegexMatchFlags)0, &info) ) {
+				gchar* sign = g_match_info_fetch(info, 1);
+				gchar* filename = g_match_info_fetch(info, 2);
+				if( filename[0]=='\0' )
+					is_start = true;
+				show_include_hint(filename, *sign=='<', *page);
+				g_free(sign);
+				g_free(filename);
+			}
+			g_free(inc_info_text);
+			g_match_info_free(info);
+		}
+		g_match_info_free(inc_info);
+
+		if( is_include_line ) {
+			switch( event->keyval ) {
+			case '"':
+				if( is_start )
+					break;
+			case '>':
+				tip_.include_window().hide();
+				break;
+			}
+
+			return false;
+		}
+	}
+
+    Gtk::TextIter end = it;
+
+    switch( event->keyval ) {
+    case '.':
+        {
+            show_hint(*page, it, end, 's');
+        }
+        break;
+    case ':':
+        {
+            if( it.backward_chars(2) && it.get_char()==':' ) {
+                it.forward_chars(2);
+                show_hint(*page, it, end, 's');
+            }
+        }
+        break;
+    case '(':
+        {
+            show_hint(*page, it, end, 'f');
+        }
+        break;
+	case ')':
+		{
+			if( tip_.decl_window().is_visible() ) {
+				tip_.decl_window().hide();
+			}
+		}
+		break;
+    case '<':
+        {
+            if( it.backward_chars(2) && it.get_char()!='<' ) {
+                it.forward_chars(2);
+                show_hint(*page, it, end, 'f');
+			}
+        }
+        break;
+    case '>':
+        {
+            if( it.backward_chars(2) && it.get_char()=='-' ) {
+                it.forward_chars(2);
+                show_hint(*page, it, end, 's');
+
+			} else if( tip_.decl_window().is_visible() ) {
+				tip_.decl_window().hide();
+			}
+        }
+        break;
+    default:
+		if( (event->keyval <= 0x7f) && ::isalnum(event->keyval) || event->keyval=='_' ) {
+			if( tip_.list_window().is_visible() ) {
+				locate_sub_hint(*page);
+
+			} else {
+				set_show_hint_timer(*page);
+			}
+		} else {
+			tip_.list_window().hide();
+		}
+        break;
+    }
+	*/
+
+	return TRUE;
+}
+
+gboolean LJCS::on_button_release_event(GtkWidget* view, GdkEventButton* event, LJCS* self) {
     //tip_.hide_all_tip();
 
 	GtkTextBuffer* buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
@@ -173,9 +353,23 @@ gboolean LJCS::on_button_release_event(GtkWidget* view, GdkEventButton* event, g
     return FALSE;
 }
 
-void LJCS::on_doc_page_added(GtkNotebook* doc_panel, GtkWidget* page, guint page_num, gpointer tag) {
-	LJCS* self = (LJCS*)tag;
+gboolean LJCS::on_focus_out_event(GtkWidget* view, GdkEventFocus* event, LJCS* self) {
+    //tip_.hide_all_tip();
+	return FALSE;
+}
 
+gboolean LJCS::on_scroll_event(GtkWidget* view, GdkEventScroll* event, LJCS* self) {
+    //tip_.hide_all_tip();
+	return FALSE;
+}
+
+void LJCS::on_modified_changed(GtkTextBuffer* buf, LJCS* self) {
+	GString* url = self->app->doc_get_url(buf);
+	if( url )
+		self->parse_thread.add(std::string(url->str, url->len));
+}
+
+void LJCS::on_doc_page_added(GtkNotebook* doc_panel, GtkWidget* page, guint page_num, LJCS* self) {
 	GtkTextView* view = self->app->doc_get_view_from_page(page);
 	if( !view )
 		return;
@@ -184,21 +378,20 @@ void LJCS::on_doc_page_added(GtkNotebook* doc_panel, GtkWidget* page, guint page
 	if( !buf )
 		return;
 
-	g_signal_connect(view, "button-release-event", G_CALLBACK(&LJCS::on_button_release_event), tag);
+	g_signal_connect(view, "key-press-event", G_CALLBACK(&LJCS::on_key_press_event), self);
+	g_signal_connect(view, "key-release-event", G_CALLBACK(&LJCS::on_key_release_event), self);
 
-    //cons.push_back( view.signal_key_press_event().connect(		sigc::bind( sigc::mem_fun(this, &LJCSPluginImpl::on_key_press_event),		&page ), false ) );
-    //cons.push_back( view.signal_key_release_event().connect(	sigc::bind( sigc::mem_fun(this, &LJCSPluginImpl::on_key_release_event),		&page )		   ) );
-    //cons.push_back( view.signal_button_release_event().connect(	sigc::bind( sigc::mem_fun(this, &LJCSPluginImpl::on_button_release_event),	&page ), false ) );
-    //cons.push_back( view.signal_motion_notify_event().connect(	sigc::bind( sigc::mem_fun(this, &LJCSPluginImpl::on_motion_notify_event),	&page )		   ) );
-    //cons.push_back( view.signal_focus_out_event().connect(		sigc::bind( sigc::mem_fun(this, &LJCSPluginImpl::on_focus_out_event),		&page )		   ) );
-    //cons.push_back( view.signal_scroll_event().connect(			sigc::bind( sigc::mem_fun(this, &LJCSPluginImpl::on_scroll_event),			&page )		   ) );
-    //cons.push_back( view.get_buffer()->signal_modified_changed().connect( sigc::bind( sigc::mem_fun(this, &LJCSPluginImpl::on_modified_changed), &page ) ) );
+	g_signal_connect(view, "button-release-event", G_CALLBACK(&LJCS::on_button_release_event), self);
+	g_signal_connect(view, "focus-out-event", G_CALLBACK(&LJCS::on_focus_out_event), self);
+	g_signal_connect(view, "scroll-event", G_CALLBACK(&LJCS::on_scroll_event), self);
 
+	g_signal_connect(buf, "modified-changed", G_CALLBACK(&LJCS::on_modified_changed), self);
+	
 	GString* url = self->app->doc_get_url(buf);
 	if( url )
 		self->parse_thread.add(std::string(url->str, url->len));
 }
 
-void LJCS::on_doc_page_removed(GtkNotebook* doc_panel, GtkWidget* page, guint page_num, gpointer tag) {
+void LJCS::on_doc_page_removed(GtkNotebook* doc_panel, GtkWidget* page, guint page_num, LJCS* self) {
 }
 
