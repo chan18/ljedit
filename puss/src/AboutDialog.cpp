@@ -3,6 +3,8 @@
 
 #include "AboutDialog.h"
 
+#include "Puss.h"
+
 void cb_about_activate_email(GtkAboutDialog* about, const gchar* link, gpointer data) {
 	g_message("send email : %s", link);
 }
@@ -20,7 +22,7 @@ void cb_about_activate_email(GtkAboutDialog* about, const gchar* link, gpointer 
 #endif
 
 
-void puss_show_about_dialog(GtkWindow* window) {
+void puss_show_about_dialog() {
 	const gchar* license =
 		"This library is free software; you can redistribute it and/or\n"
 		"modify it under the terms of the GNU Library General Public License as\n"
@@ -33,20 +35,17 @@ void puss_show_about_dialog(GtkWindow* window) {
 		"Library General Public License for more details.\n"
 		"\n";
 
-	const gchar* authors[] = {
-		  "Louis LJ"
-		, NULL
-	};
+	const gchar* authors[] = { "Louis LJ", NULL };
 
 	gtk_about_dialog_set_email_hook(&cb_about_activate_email, 0, 0);
 	gtk_about_dialog_set_url_hook(&cb_about_activate_url, 0, 0);
-	gtk_show_about_dialog( window,
-		"name",      "puss",
-		"version",   "0.1",
-		"copyright", "(C) 2007-2008 The Puss Team",
-		"license",   license,
-		"website",   "http://ljedit.googlecode.com",
-		"authors",   authors,
-		NULL );
+	gtk_show_about_dialog( puss_app->main_window
+		, "name",      "puss"
+		, "version",   "0.1"
+		, "copyright", "(C) 2007-2008 The Puss Team"
+		, "license",   license
+		, "website",   "http://ljedit.googlecode.com"
+		, "authors",   authors
+		, NULL );
 }
 

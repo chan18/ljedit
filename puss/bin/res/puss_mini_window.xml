@@ -4,6 +4,7 @@
   <object class="GtkWindow" id="mini_window">
     <property name="type">GTK_WINDOW_POPUP</property>
     <property name="modal">True</property>
+    <property name="opacity">0.95</property>
     <signal handler="puss_mini_line_focus_out_event" name="focus-out-event"/>
     <signal handler="mini_line_cb_button_press_event" name="button-press-event"/>
     <child>

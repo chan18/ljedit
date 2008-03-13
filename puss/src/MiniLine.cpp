@@ -92,7 +92,7 @@ void puss_mini_line_active( MiniLineCallback* cb ) {
 	gint x = 0, y = 0;
 	gdk_window_get_origin(gdk_window, &x, &y);
 	if( x > 16 )	x -= 16;
-	if( y > 16 )	y -= 32;
+	if( y > 32 )	y -= 32;
 
 	gtk_window_move(puss_app->mini_line->window, x, y);
 	gtk_widget_show(GTK_WIDGET(puss_app->mini_line->window));

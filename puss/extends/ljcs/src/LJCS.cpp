@@ -17,10 +17,60 @@ LJCS::LJCS() : app(0) {}
 
 LJCS::~LJCS() { destroy(); }
 
+#include <gtksourceview/gtksourcebuffer.h>
+#include <gtksourceview/gtksourcelanguagemanager.h>
+
+gboolean TipWindow_create(Puss* app, Environ* env) {
+	// init UI
+	GtkBuilder* builder = gtk_builder_new();
+	if( !builder )
+		return FALSE;
+
+	gchar* filepath = g_build_filename(app->get_module_path(), "extends", "ljcs_res", "tip_window_ui.xml", NULL);
+	if( !filepath ) {
+		g_printerr("ERROR(ljcs) : build ui filepath failed!\n");
+		g_object_unref(G_OBJECT(builder));
+		return FALSE;
+	}
+
+	GError* err = 0;
+	gtk_builder_add_from_file(builder, filepath, &err);
+	g_free(filepath);
+
+	if( err ) {
+		g_printerr("ERROR(ljcs): %s\n", err->message);
+		g_error_free(err);
+		g_object_unref(G_OBJECT(builder));
+		return FALSE;
+	}
+
+	GtkWidget* tip_window = GTK_WIDGET(gtk_builder_get_object(builder, "tip_window"));
+	GtkWidget* notebook = GTK_WIDGET(gtk_builder_get_object(builder, "notebook"));
+	GtkListStore* list_store = GTK_LIST_STORE(gtk_builder_get_object(builder, "list_store"));
+
+	{
+		GtkSourceLanguageManager* lm = gtk_source_language_manager_get_default();
+		GtkSourceLanguage* lang = gtk_source_language_manager_get_language(lm, "cpp");
+		GtkSourceBuffer* source_buffer = gtk_source_buffer_new_with_language(lang);
+		gtk_text_view_set_buffer(GTK_TEXT_VIEW(gtk_builder_get_object(builder, "decl_view")), GTK_TEXT_BUFFER(source_buffer));
+		gtk_source_buffer_set_max_undo_levels(source_buffer, 0);
+		g_object_unref(G_OBJECT(source_buffer));
+	}
+
+	gtk_widget_show_all(notebook);
+	g_object_unref(G_OBJECT(builder));
+
+	//gtk_widget_show(tip_window);
+
+	return TRUE;
+}
+
 bool LJCS::create(Puss* _app) {
 	app = _app;
 
 	icons.create(app);
+
+	TipWindow_create(app, &env);
 
 	preview_page = preview_page_create(app, &env);
 	outline_page = outline_page_create(app, &env, &icons);

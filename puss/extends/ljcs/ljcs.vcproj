@@ -190,6 +190,10 @@
 				RelativePath="..\..\bin\extends\ljcs_res\preview_page_ui.xml"
 				>
 			</File>
+			<File
+				RelativePath="..\..\bin\extends\ljcs_res\tip_window_ui.xml"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\src\Environ.cpp"

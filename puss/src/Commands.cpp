@@ -120,7 +120,7 @@ SIGNAL_CALLBACK void view_menu_bottom_page_n( GtkRadioAction* action ) {
 }
 
 SIGNAL_CALLBACK void help_menu_about( GtkAction* action ) {
-	puss_show_about_dialog(puss_app->main_window);
+	puss_show_about_dialog();
 }
 
 SIGNAL_CALLBACK gboolean cb_main_window_delete(GtkWidget *widget, GdkEvent *event) {
