@@ -175,44 +175,44 @@ void LJCS::do_button_release_event(GtkWidget* view, GtkTextBuffer* buf, GdkEvent
 
 gboolean LJCS::on_key_press_event(GtkWidget* view, GdkEventKey* event, LJCS* self) {
     if( event->state & (GDK_CONTROL_MASK | GDK_MOD1_MASK) ) {
-        //tip_.hide_all_tip();
+		tips_hide_all(self->tips);
         return FALSE;
     }
 
 	switch( event->keyval ) {
 	case GDK_Tab:
-		//if( tip_.list_window().is_visible() || tip_.include_window().is_visible() ) {
-		//	auto_complete(*page);
-		//	return TRUE;
-		//}
+		if( tips_list_is_visible(self->tips) || tips_include_is_visible(self->tips) ) {
+			// auto_complete(*page);
+			return TRUE;
+		}
 		break;
 
 	case GDK_Return:
-		//tip_.hide_all_tip();
+		tips_hide_all(self->tips);
 		break;
 
 	case GDK_Up:
-		//if( tip_.list_window().is_visible() || tip_.include_window().is_visible() ) {
-		//	tip_.select_prev();
-		//	return TRUE;
-		//}
+		if( tips_list_is_visible(self->tips) || tips_include_is_visible(self->tips) ) {
+			tips_select_prev(self->tips);
+			return TRUE;
+		}
 
-		//if( tip_.decl_window().is_visible() )
-		//	tip_.decl_window().hide();
+		if( tips_decl_is_visible(self->tips) )
+			tips_decl_tip_hide(self->tips);
 		break;
 
 	case GDK_Down:
-		//if( tip_.list_window().is_visible() || tip_.include_window().is_visible() ) {
-		//	tip_.select_next();
-		//	return TRUE;
-		//}
+		if( tips_list_is_visible(self->tips) || tips_include_is_visible(self->tips) ) {
+			tips_select_next(self->tips);
+			return TRUE;
+		}
 
-		//if( tip_.decl_window().is_visible() )
-		//	tip_.decl_window().hide();
+		if( tips_decl_is_visible(self->tips) )
+			tips_decl_tip_hide(self->tips);
 		break;
 
 	case GDK_Escape:
-		//tip_.hide_all_tip();
+		tips_hide_all(self->tips);
 		return TRUE;
 	}
 
@@ -221,7 +221,7 @@ gboolean LJCS::on_key_press_event(GtkWidget* view, GdkEventKey* event, LJCS* sel
 
 gboolean LJCS::on_key_release_event(GtkWidget* view, GdkEventKey* event, LJCS* self) {
     if( event->state & (GDK_CONTROL_MASK | GDK_MOD1_MASK) ) {
-        //tip_.hide_all_tip();
+        tips_hide_all(self->tips);
         return FALSE;
     }
 
@@ -238,24 +238,26 @@ gboolean LJCS::on_key_release_event(GtkWidget* view, GdkEventKey* event, LJCS* s
 
 	//printf("%d - %s\n", event->keyval, event->string);
 
-	/*
-    Glib::RefPtr<Gtk::TextBuffer> buf = page->buffer();
-    Gtk::TextIter it = buf->get_iter_at_mark(buf->get_insert());
+	GtkTextBuffer* buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
 
-    if( is_in_comment(it) )
-        return false;
- 
+	GtkTextIter iter;
+	gtk_text_buffer_get_iter_at_mark(buf, &iter, gtk_text_buffer_get_insert(buf));
+
+	if( is_in_comment(&iter) )
+		return FALSE;
+
 	// include tip
 	{
-		Gtk::TextIter ps = it;
-		Gtk::TextIter pe = it;
-		ps.set_line_offset(0);
-		pe.forward_to_line_end();
-		Glib::ustring line = ps.get_text(pe);
+		GtkTextIter ps = iter;
+		GtkTextIter pe = iter;
+		gtk_text_iter_set_line_offset(&ps, 0);
+		if( !gtk_text_iter_forward_to_line_end(&pe) )
+			return FALSE;
 
+		gchar* line = gtk_text_iter_get_text(&ps, &pe);
 		GMatchInfo* inc_info = 0;
-		bool is_start = false;
-		bool is_include_line = g_regex_match(re_include, line.c_str(), (GRegexMatchFlags)0, &inc_info);
+		gboolean is_start = FALSE;
+		gboolean is_include_line = g_regex_match(re_include, line, (GRegexMatchFlags)0, &inc_info);
 		if( is_include_line ) {
 			gchar* inc_info_text = g_match_info_fetch(inc_info, 1);
 			GMatchInfo* info = 0;
@@ -263,8 +265,10 @@ gboolean LJCS::on_key_release_event(GtkWidget* view, GdkEventKey* event, LJCS* s
 				gchar* sign = g_match_info_fetch(info, 1);
 				gchar* filename = g_match_info_fetch(info, 2);
 				if( filename[0]=='\0' )
-					is_start = true;
-				show_include_hint(filename, *sign=='<', *page);
+					is_start = TRUE;
+
+				//show_include_hint(filename, *sign=='<', *page);
+
 				g_free(sign);
 				g_free(filename);
 			}
@@ -272,6 +276,7 @@ gboolean LJCS::on_key_release_event(GtkWidget* view, GdkEventKey* event, LJCS* s
 			g_match_info_free(info);
 		}
 		g_match_info_free(inc_info);
+		g_free(line);
 
 		if( is_include_line ) {
 			switch( event->keyval ) {
@@ -279,7 +284,7 @@ gboolean LJCS::on_key_release_event(GtkWidget* view, GdkEventKey* event, LJCS* s
 				if( is_start )
 					break;
 			case '>':
-				tip_.include_window().hide();
+				tips_include_tip_hide(self->tips);
 				break;
 			}
 
@@ -287,73 +292,61 @@ gboolean LJCS::on_key_release_event(GtkWidget* view, GdkEventKey* event, LJCS* s
 		}
 	}
 
-    Gtk::TextIter end = it;
+	GtkTextIter end = iter;
+	switch( event->keyval ) {
+	case '.':
+		//show_hint(*page, it, end, 's');
+		break;
 
-    switch( event->keyval ) {
-    case '.':
-        {
-            show_hint(*page, it, end, 's');
-        }
-        break;
-    case ':':
-        {
-            if( it.backward_chars(2) && it.get_char()==':' ) {
-                it.forward_chars(2);
-                show_hint(*page, it, end, 's');
-            }
-        }
-        break;
-    case '(':
-        {
-            show_hint(*page, it, end, 'f');
-        }
-        break;
-	case ')':
-		{
-			if( tip_.decl_window().is_visible() ) {
-				tip_.decl_window().hide();
-			}
+	case ':':
+		if( gtk_text_iter_backward_chars(&iter, 2) && gtk_text_iter_get_char(&iter)==':' ) {
+			gtk_text_iter_forward_chars(&iter, 2);
+			//show_hint(*page, it, end, 's');
 		}
 		break;
-    case '<':
-        {
-            if( it.backward_chars(2) && it.get_char()!='<' ) {
-                it.forward_chars(2);
-                show_hint(*page, it, end, 'f');
-			}
-        }
-        break;
-    case '>':
-        {
-            if( it.backward_chars(2) && it.get_char()=='-' ) {
-                it.forward_chars(2);
-                show_hint(*page, it, end, 's');
 
-			} else if( tip_.decl_window().is_visible() ) {
-				tip_.decl_window().hide();
-			}
-        }
-        break;
-    default:
+	case '(':
+		//show_hint(*page, it, end, 'f');
+		break;
+
+	case ')':
+		tips_decl_tip_hide(self->tips);
+		break;
+	case '<':
+		if( gtk_text_iter_backward_chars(&iter, 2) && gtk_text_iter_get_char(&iter)!='<' ) {
+			gtk_text_iter_forward_chars(&iter, 2);
+			//show_hint(*page, it, end, 'f');
+		}
+		break;
+	case '>':
+		if( gtk_text_iter_backward_chars(&iter, 2) && gtk_text_iter_get_char(&iter)=='-' ) {
+			gtk_text_iter_forward_chars(&iter, 2);
+			//show_hint(*page, it, end, 's');
+
+		} else {
+			tips_decl_tip_hide(self->tips);
+		}
+		break;
+	default:
 		if( (event->keyval <= 0x7f) && ::isalnum(event->keyval) || event->keyval=='_' ) {
-			if( tip_.list_window().is_visible() ) {
-				locate_sub_hint(*page);
+			if( tips_list_is_visible(self->tips) ) {
+				// locate_sub_hint(view);
 
 			} else {
-				set_show_hint_timer(*page);
+				// set_show_hint_timer(*page);
 			}
+
 		} else {
-			tip_.list_window().hide();
+			tips_list_tip_hide(self->tips);
 		}
-        break;
-    }
-	*/
+		break;
+	}
 
 	return TRUE;
 }
 
 gboolean LJCS::on_button_release_event(GtkWidget* view, GdkEventButton* event, LJCS* self) {
-    //tip_.hide_all_tip();
+    tips_hide_all(self->tips);
 
 	GtkTextBuffer* buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
 	GString* url = self->app->doc_get_url(buf);
@@ -368,12 +361,12 @@ gboolean LJCS::on_button_release_event(GtkWidget* view, GdkEventButton* event, L
 }
 
 gboolean LJCS::on_focus_out_event(GtkWidget* view, GdkEventFocus* event, LJCS* self) {
-    //tip_.hide_all_tip();
+    tips_hide_all(self->tips);
 	return FALSE;
 }
 
 gboolean LJCS::on_scroll_event(GtkWidget* view, GdkEventScroll* event, LJCS* self) {
-    //tip_.hide_all_tip();
+    tips_hide_all(self->tips);
 	return FALSE;
 }
 

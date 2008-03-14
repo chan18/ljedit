@@ -30,6 +30,12 @@ void tips_list_tip_hide(Tips* self);
 void tips_decl_tip_show(Tips* self, gint x, gint y, cpp::ElementSet& mset);
 void tips_decl_tip_hide(Tips* self);
 
+inline void tips_hide_all( Tips* self ) {
+	tips_include_tip_hide(self);
+	tips_list_tip_hide(self);
+	tips_decl_tip_hide(self);
+}
+
 gboolean tips_locate_sub(Tips* self, gint x, gint y, const gchar* key);
 
 cpp::Element* tips_list_get_selected(Tips* self);
