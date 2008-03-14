@@ -134,5 +134,7 @@ size_t find_best_matched_index(cpp::Elements& elems);
 
 cpp::Element* find_best_matched_element(cpp::ElementSet& eset);
 
+GtkTextBuffer* set_cpp_lang_to_source_view(GtkTextView* source_view);
+
 #endif//PUSS_EXTEND_INC_LJCS_UTILS_H
 

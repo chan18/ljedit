@@ -1,0 +1,78 @@
+<?xml version="1.0" ?>
+<!--*- mode: xml -*-->
+<interface>
+  <object class="GtkListStore" id="list_store">
+    <columns>
+      <column type="GdkPixbuf"/>
+      <column type="gchararray"/>
+      <column type="gchararray"/>
+      <column type="gpointer"/>
+    </columns>
+  </object>
+
+  <object class="GtkListStore" id="include_store">
+    <columns>
+      <column type="gchararray"/>
+    </columns>
+  </object>
+
+  <object class="GtkWindow" id="list_window">
+    <property name="type">GTK_WINDOW_POPUP</property>
+    <property name="resizable">False</property>
+    <property name="accept_focus">False</property>
+    <property name="opacity">0.95</property>
+    <child>
+      <object class="GtkScrolledWindow" id="list_panel">
+        <property name="hscrollbar_policy">automatic</property>
+        <property name="vscrollbar_policy">automatic</property>
+        <child>
+          <object class="GtkTreeView" id="list_view">
+            <property name="model">list_store</property>
+            <property name="tooltip-column">2</property>
+            <property name="headers-visible">False</property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+
+  <object class="GtkWindow" id="include_window">
+    <property name="type">GTK_WINDOW_POPUP</property>
+    <property name="resizable">False</property>
+    <property name="accept_focus">False</property>
+    <property name="opacity">0.95</property>
+    <child>
+      <object class="GtkScrolledWindow" id="include_panel">
+        <property name="hscrollbar_policy">automatic</property>
+        <property name="vscrollbar_policy">automatic</property>
+        <child>
+          <object class="GtkTreeView" id="include_view">
+            <property name="model">include_store</property>
+            <property name="headers-visible">False</property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+
+  <object class="GtkWindow" id="decl_window">
+    <property name="type">GTK_WINDOW_POPUP</property>
+    <property name="resizable">False</property>
+    <property name="accept_focus">False</property>
+    <property name="opacity">0.95</property>
+    <child>
+      <object class="GtkScrolledWindow" id="decl_panel">
+        <property name="hscrollbar_policy">automatic</property>
+        <property name="vscrollbar_policy">automatic</property>
+        <child>
+          <object class="GtkSourceView" id="decl_view">
+            <property name="editable">False</property>
+            <property name="tab-width">4</property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+
+</interface>
+

@@ -7,11 +7,9 @@
 
 #include "LJCS.h"
 
-
-SIGNAL_CALLBACK void outline_page_cb_row_activated(GtkTreeView* tree_view, GtkTreePath* path, GtkTreeViewColumn* col, OutlinePage* self);
-
+// TODO : use struct replace class
+// 
 class OutlinePage {
-	friend void outline_page_cb_row_activated(GtkTreeView* tree_view, GtkTreePath* path, GtkTreeViewColumn* col, OutlinePage* self) ;
 public:
     gboolean create(Puss* app, Environ* env, Icons* icons) {
 		app_ = app;
@@ -25,7 +23,7 @@ public:
 
 		gchar* filepath = g_build_filename(app_->get_module_path(), "extends", "ljcs_res", "outline_page_ui.xml", NULL);
 		if( !filepath ) {
-			g_printerr("ERROR(ljcs) : build ui filepath failed!\n");
+			g_printerr("ERROR(ljcs) : build outline ui filepath failed!\n");
 			g_object_unref(G_OBJECT(builder));
 			return FALSE;
 		}
@@ -50,8 +48,6 @@ public:
 
 		gtk_builder_connect_signals(builder, this);
 		g_object_unref(G_OBJECT(builder));
-
-		g_timeout_add(1000, (GSourceFunc)&OutlinePage::outline_update_timeout, this);
 
 		return TRUE;
 	}
@@ -101,7 +97,7 @@ public:
 		}
 	}
 
-private:
+public:
 	void add_elem(const cpp::Element* elem, GtkTreeIter* parent) {
 		switch(elem->type) {
 		case cpp::ET_INCLUDE:
@@ -163,34 +159,33 @@ private:
 		} while( gtk_tree_model_iter_next(GTK_TREE_MODEL(tree_store_), &iter) );
 	}
 
-	static gboolean outline_update_timeout(OutlinePage* self) {
-		GtkNotebook* doc_panel = puss_get_doc_panel(self->app_);
+	void do_update() {
+		GtkNotebook* doc_panel = puss_get_doc_panel(app_);
 		gint page_num = gtk_notebook_get_current_page(doc_panel);
 		if( page_num < 0 )
-			return TRUE;
+			return;
 
-		GtkTextBuffer* buf = self->app_->doc_get_buffer_from_page_num(page_num);
+		GtkTextBuffer* buf = app_->doc_get_buffer_from_page_num(page_num);
 		if( !buf )
-			return TRUE;
+			return;
 
-		GString* url = self->app_->doc_get_url(buf);
+		GString* url = app_->doc_get_url(buf);
 		if( !url )
-			return TRUE;
+			return;
 
-		cpp::File* file = self->env_->find_parsed(std::string(url->str, url->len));
+		cpp::File* file = env_->find_parsed(std::string(url->str, url->len));
 		if( !file )
-			return TRUE;
+			return;
 
 		GtkTextIter iter;
 		gtk_text_buffer_get_iter_at_mark(buf, &iter, gtk_text_buffer_get_insert(buf));
 		gint line = gtk_text_iter_get_line(&iter);
-		self->set_file(file, line);
+		set_file(file, line);
 
-		self->env_->file_decref(file);
-		return TRUE;
+		env_->file_decref(file);
 	}
 
-private:
+public:
 	Puss*			app_;
 	Environ*		env_;
 	Icons*			icons_;
@@ -239,9 +234,7 @@ void outline_page_destroy(OutlinePage* self) {
 	}
 }
 
-void preview_page_set_file(OutlinePage* self, cpp::File* file, gint line) {
-	assert( self );
-
-	self->set_file(file, line);
+void outline_page_update(OutlinePage* self) {
+	self->do_update();
 }
 

@@ -191,7 +191,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\bin\extends\ljcs_res\tip_window_ui.xml"
+				RelativePath="..\..\bin\extends\ljcs_res\tips_ui.xml"
 				>
 			</File>
 		</Filter>
@@ -245,6 +245,14 @@
 		</File>
 		<File
 			RelativePath=".\src\PreviewPage.h"
+			>
+		</File>
+		<File
+			RelativePath=".\src\Tips.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\src\Tips.h"
 			>
 		</File>
 		<File

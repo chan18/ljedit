@@ -162,3 +162,19 @@ cpp::Element* find_best_matched_element(cpp::ElementSet& eset) {
 	return matched;
 }
 
+#include <gtksourceview/gtksourcebuffer.h>
+#include <gtksourceview/gtksourcelanguagemanager.h>
+
+GtkTextBuffer* set_cpp_lang_to_source_view(GtkTextView* source_view) {
+	GtkSourceLanguageManager* lm = gtk_source_language_manager_get_default();
+	GtkSourceLanguage* lang = gtk_source_language_manager_get_language(lm, "cpp");
+
+	GtkSourceBuffer* source_buffer = gtk_source_buffer_new_with_language(lang);
+	GtkTextBuffer* retval = GTK_TEXT_BUFFER(source_buffer);
+	gtk_text_view_set_buffer(source_view, retval);
+	gtk_source_buffer_set_max_undo_levels(source_buffer, 0);
+	g_object_unref(G_OBJECT(source_buffer));
+
+	return retval;
+}
+

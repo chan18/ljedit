@@ -5,6 +5,7 @@
 
 #include "PreviewPage.h"
 #include "OutlinePage.h"
+#include "Tips.h"
 
 #include <gdk/gdkkeysyms.h>
 
@@ -17,50 +18,9 @@ LJCS::LJCS() : app(0) {}
 
 LJCS::~LJCS() { destroy(); }
 
-#include <gtksourceview/gtksourcebuffer.h>
-#include <gtksourceview/gtksourcelanguagemanager.h>
-
-gboolean TipWindow_create(Puss* app, Environ* env) {
-	// init UI
-	GtkBuilder* builder = gtk_builder_new();
-	if( !builder )
-		return FALSE;
-
-	gchar* filepath = g_build_filename(app->get_module_path(), "extends", "ljcs_res", "tip_window_ui.xml", NULL);
-	if( !filepath ) {
-		g_printerr("ERROR(ljcs) : build ui filepath failed!\n");
-		g_object_unref(G_OBJECT(builder));
-		return FALSE;
-	}
-
-	GError* err = 0;
-	gtk_builder_add_from_file(builder, filepath, &err);
-	g_free(filepath);
-
-	if( err ) {
-		g_printerr("ERROR(ljcs): %s\n", err->message);
-		g_error_free(err);
-		g_object_unref(G_OBJECT(builder));
-		return FALSE;
-	}
-
-	GtkWidget* tip_window = GTK_WIDGET(gtk_builder_get_object(builder, "tip_window"));
-	GtkWidget* notebook = GTK_WIDGET(gtk_builder_get_object(builder, "notebook"));
-	GtkListStore* list_store = GTK_LIST_STORE(gtk_builder_get_object(builder, "list_store"));
-
-	{
-		GtkSourceLanguageManager* lm = gtk_source_language_manager_get_default();
-		GtkSourceLanguage* lang = gtk_source_language_manager_get_language(lm, "cpp");
-		GtkSourceBuffer* source_buffer = gtk_source_buffer_new_with_language(lang);
-		gtk_text_view_set_buffer(GTK_TEXT_VIEW(gtk_builder_get_object(builder, "decl_view")), GTK_TEXT_BUFFER(source_buffer));
-		gtk_source_buffer_set_max_undo_levels(source_buffer, 0);
-		g_object_unref(G_OBJECT(source_buffer));
-	}
-
-	gtk_widget_show_all(notebook);
-	g_object_unref(G_OBJECT(builder));
-
-	//gtk_widget_show(tip_window);
+gboolean ljcs_update_timeout(LJCS* self) {
+	preview_page_update(self->preview_page);
+	outline_page_update(self->outline_page);
 
 	return TRUE;
 }
@@ -70,10 +30,9 @@ bool LJCS::create(Puss* _app) {
 
 	icons.create(app);
 
-	TipWindow_create(app, &env);
-
 	preview_page = preview_page_create(app, &env);
 	outline_page = outline_page_create(app, &env, &icons);
+	tips = tips_create(app, &env, &icons);
 
 	GtkNotebook* doc_panel = puss_get_doc_panel(app);
 	g_signal_connect(doc_panel, "page-added",   G_CALLBACK(&LJCS::on_doc_page_added),   this);
@@ -81,13 +40,18 @@ bool LJCS::create(Puss* _app) {
 
 	parse_thread.run(&env);
 
+	g_timeout_add(500, (GSourceFunc)&ljcs_update_timeout, this);
+
 	return true;
 }
 
 void LJCS::destroy() {
 	parse_thread.stop();
-	preview_page_destroy(preview_page);
+	
+	tips_destroy(tips);
 	outline_page_destroy(outline_page);
+	preview_page_destroy(preview_page);
+
 	icons.destroy();
 
 	app = 0;

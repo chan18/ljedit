@@ -11,6 +11,8 @@
 
 class PreviewPage;
 class OutlinePage;
+struct Tips;
+
 
 class LJCS {
 public:
@@ -20,6 +22,7 @@ public:
 	Icons			icons;
 	PreviewPage*	preview_page;
 	OutlinePage*	outline_page;
+	Tips*			tips;
 	ParseThread		parse_thread;
 
 public:

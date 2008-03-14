@@ -4,27 +4,20 @@
 #include "PreviewPage.h"
 
 #include <glib/gi18n.h>
-#include <gtksourceview/gtksourcebuffer.h>
-#include <gtksourceview/gtksourcelanguagemanager.h>
 #include <sstream>
 
 #include "LJCS.h"
 
-SIGNAL_CALLBACK void preview_page_cb_number_button_clicked(GtkButton* button, PreviewPage* self);
-
-SIGNAL_CALLBACK void preview_page_cb_filename_button_clicked(GtkButton* button, PreviewPage* self);
-
+// TODO : use struct replace class
+// 
 class PreviewPage {
-	friend void preview_page_cb_number_button_clicked(GtkButton* button, PreviewPage* self);
-	friend void preview_page_cb_filename_button_clicked(GtkButton* button, PreviewPage* self);
-
 public:
     gboolean create(Puss* app, Environ* env);
     void destroy();
 
 	void preview(const gchar* key, const gchar* key_text, cpp::File& file, size_t line);
 
-private:
+public:
 	struct SearchContent {
 		std::string key;
 		std::string key_text;
@@ -38,15 +31,14 @@ private:
 
 	static gpointer search_thread_wrapper(gpointer self);
 
-private:
+public:
     void do_preview(size_t index);
     void do_preview_impl(size_t index);
 	void do_scroll_to_define_line();
 
-	static gboolean search_result_update_timeout_wrapper(gpointer self);
 	static gboolean scroll_to_define_line_wrapper(gpointer self);
 
-private:
+public:
 	Puss*					app_;
 	Environ*				env_;
 
@@ -80,7 +72,7 @@ gboolean PreviewPage::create(Puss* app, Environ* env) {
 
 	gchar* filepath = g_build_filename(app_->get_module_path(), "extends", "ljcs_res", "preview_page_ui.xml", NULL);
 	if( !filepath ) {
-		g_printerr("ERROR(ljcs) : build ui filepath failed!\n");
+		g_printerr("ERROR(ljcs) : build preview page ui filepath failed!\n");
 		g_object_unref(G_OBJECT(builder));
 		return FALSE;
 	}
@@ -102,12 +94,7 @@ gboolean PreviewPage::create(Puss* app, Environ* env) {
 	preview_view_   = GTK_TEXT_VIEW(gtk_builder_get_object(builder, "preview_view"));
 	g_assert( self_panel_ && filename_label_ && number_button_ && preview_view_ );
 
-	GtkSourceLanguageManager* lm = gtk_source_language_manager_get_default();
-	GtkSourceLanguage* lang = gtk_source_language_manager_get_language(lm, "cpp");
-	GtkSourceBuffer* source_buffer = gtk_source_buffer_new_with_language(lang);
-	gtk_text_view_set_buffer(preview_view_, GTK_TEXT_BUFFER(source_buffer));
-	gtk_source_buffer_set_max_undo_levels(source_buffer, 0);
-	g_object_unref(G_OBJECT(source_buffer));
+	set_cpp_lang_to_source_view(preview_view_);
 
 	gtk_widget_show_all(self_panel_);
 	gtk_notebook_append_page(puss_get_bottom_panel(app_), self_panel_, gtk_label_new(_("Preview")));
@@ -118,9 +105,6 @@ gboolean PreviewPage::create(Puss* app, Environ* env) {
 	// init search thread
 	search_stopsign_ = FALSE;
 	search_thread_ = g_thread_create(&PreviewPage::search_thread_wrapper, this, TRUE, 0);
-
-	// search result preview timer
-	g_timeout_add(500, &PreviewPage::search_result_update_timeout_wrapper, this);
 
 	return TRUE;
 }
@@ -287,11 +271,6 @@ void PreviewPage::do_scroll_to_define_line() {
 	}
 }
 
-gboolean PreviewPage::search_result_update_timeout_wrapper(gpointer self) {
-	((PreviewPage*)self)->do_preview( ((PreviewPage*)self)->index_ );
-	return TRUE;
-}
-
 gboolean PreviewPage::scroll_to_define_line_wrapper(gpointer self) {
 	((PreviewPage*)self)->do_scroll_to_define_line();
     return FALSE;
@@ -336,5 +315,9 @@ void preview_page_preview(PreviewPage* self, const gchar* key, const gchar* key_
 	assert( self );
 
 	self->preview(key, key_text, file, line);
+}
+
+void preview_page_update(PreviewPage* self) {
+	self->do_preview( ((PreviewPage*)self)->index_ );
 }
 
