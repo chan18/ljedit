@@ -137,7 +137,7 @@ class FindWindow:
 			filepath = ljedit.main_window.doc_manager.get_file_path(page_num)
 			for r, ds, fs in os.walk(os.path.dirname(filepath)):
 				for f in fs:
-					if f.endswith( ('.cpp', '.hpp', '.cc', '.hh', '.c', '.h', '.py') ):
+					if f.endswith( ('.cpp', '.hpp', '.cc', '.hh', '.c', '.h', '.py', 'js', '.xul') ):
 						try:
 							find_in_file(results, find_text, os.path.join(r, f))
 						except Exception, e:

@@ -37,6 +37,8 @@ private:
 
 	void do_button_release_event(GtkWidget* view, GtkTextBuffer* buf, GdkEventButton* event, cpp::File* file);
 
+	void show_include_hint(const gchar* filename, gboolean system_header, GtkTextView* view);
+
 private:
 	static gboolean on_key_press_event(GtkWidget* view, GdkEventKey* event, LJCS* self);
 	static gboolean on_key_release_event(GtkWidget* view, GdkEventKey* event, LJCS* self);

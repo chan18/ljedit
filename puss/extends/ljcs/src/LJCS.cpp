@@ -219,6 +219,91 @@ gboolean LJCS::on_key_press_event(GtkWidget* view, GdkEventKey* event, LJCS* sel
 	return FALSE;
 }
 
+void LJCS::show_include_hint(const gchar* filename, gboolean system_header, GtkTextView* view) {
+/*
+	std::string key;
+	std::set<std::string> files;
+	std::string path;
+
+	if( !filename.empty() ) {
+		char last = filename[filename.size() -1];
+		if( last=='/' || last=='\\' ) {
+			;
+		} else {
+			size_t pos = filename.find_last_of("/\\");
+			if( pos!=filename.npos )
+				key = filename.substr(pos+1);
+			else
+				key = filename;
+		}
+	}
+
+	if( system_header ) {
+		StrVector paths = LJCSEnv::self().get_include_paths();
+		StrVector::iterator it = paths.begin();
+		StrVector::iterator end = paths.end();
+		for( ; it!=end; ++it ) {
+			try {
+				if( filename.empty() ) {
+					path = *it;
+				} else {
+					path = Glib::build_filename(*it, filename);
+					path = Glib::path_get_dirname(path);
+				}
+
+				Glib::Dir dir(path);
+				for( Glib::DirIterator it = dir.begin(); it!=dir.end(); ++it) {
+					path = *it;
+					if( key.empty() || path.find(key)==0 )
+						files.insert(path);
+				}
+			} catch( const Glib::Exception& ) {
+			}
+		}
+
+	} else {
+		try {
+			path = Glib::path_get_dirname(page.filepath());
+			if( !filename.empty() ) {
+				path = Glib::build_filename(path, filename);
+				path = Glib::path_get_dirname(path);
+			}
+
+			Glib::Dir dir(path);
+			for( Glib::DirIterator it = dir.begin(); it!=dir.end(); ++it) {
+				path = *it;
+				if( key.empty() || path.find(key)==0 )
+					files.insert(path);
+			}
+
+		} catch( const Glib::Exception& ) {
+		}
+	}
+
+	if( !files.empty() ) {
+		int view_x = 0;
+		int view_y = 0;
+		Gtk::TextView& view = page.view();
+		view.get_window(Gtk::TEXT_WINDOW_TEXT)->get_origin(view_x, view_y);
+	    
+		Gdk::Rectangle rect;
+		view.get_iter_location(page.buffer()->get_iter_at_mark(page.buffer()->get_insert()), rect);
+
+		int cursor_x = rect.get_x();
+		int cursor_y = rect.get_y();
+		view.buffer_to_window_coords(Gtk::TEXT_WINDOW_TEXT, cursor_x, cursor_y, cursor_x, cursor_y);
+
+		int x = view_x + cursor_x;
+		int y = view_y + cursor_y + rect.get_height() + 2;
+
+		tip_.show_include_tip(x, y, files);
+
+	} else {
+		tip_.include_window().hide();
+	}
+*/
+}
+
 gboolean LJCS::on_key_release_event(GtkWidget* view, GdkEventKey* event, LJCS* self) {
     if( event->state & (GDK_CONTROL_MASK | GDK_MOD1_MASK) ) {
         tips_hide_all(self->tips);
@@ -267,7 +352,7 @@ gboolean LJCS::on_key_release_event(GtkWidget* view, GdkEventKey* event, LJCS* s
 				if( filename[0]=='\0' )
 					is_start = TRUE;
 
-				//show_include_hint(filename, *sign=='<', *page);
+				self->show_include_hint(filename, *sign=='<', GTK_TEXT_VIEW(view));
 
 				g_free(sign);
 				g_free(filename);

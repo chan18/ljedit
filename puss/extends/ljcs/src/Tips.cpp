@@ -323,26 +323,12 @@ gboolean tips_locate_sub(Tips* self, gint x, gint y, const gchar* key) {
 	return FALSE;
 }
 
-gboolean tree_selection_get_first_selected(GtkTreeView* view, GtkTreeIter* iter) {
-	gboolean result = FALSE;
-	GtkTreeSelection* sel = gtk_tree_view_get_selection(view);
-	if( gtk_tree_selection_count_selected_rows(sel) > 0 ) {
-		GtkTreeModel* model = gtk_tree_view_get_model(view);
-		GList* rows = gtk_tree_selection_get_selected_rows(sel, &model);
-		if( rows ) {
-			GtkTreePath* path = (GtkTreePath*)rows->data;
-			result = gtk_tree_model_get_iter(model, iter, path);
-			g_list_foreach(rows, (GFunc)&gtk_tree_path_free, NULL);
-			g_list_free(rows);
-		}
-	}
-	return result;
-}
-
 cpp::Element* tips_list_get_selected(Tips* self) {
     cpp::Element* result = 0;
+
 	GtkTreeIter iter;
-	if( tree_selection_get_first_selected(self->list_view, &iter) ) {
+	GtkTreeSelection* sel = gtk_tree_view_get_selection(self->list_view);
+	if( gtk_tree_selection_get_selected(sel, &self->list_model, &iter) ) {
 		GValue value = { G_TYPE_INVALID };
 		gtk_tree_model_get_value(self->list_model, &iter, 3, &value);
 		result = (cpp::Element*)g_value_get_pointer(&value);
@@ -355,7 +341,8 @@ const gchar* tips_include_get_selected(Tips* self) {
 	const gchar* result = 0;
 
 	GtkTreeIter iter;
-	if( tree_selection_get_first_selected(self->list_view, &iter) ) {
+	GtkTreeSelection* sel = gtk_tree_view_get_selection(self->include_view);
+	if( gtk_tree_selection_get_selected(sel, &self->list_model, &iter) ) {
 		GValue value = { G_TYPE_INVALID };
 		gtk_tree_model_get_value(self->include_model, &iter, 0, &value);
 		result = g_value_get_string(&value);
@@ -374,28 +361,20 @@ void tips_select_next(Tips* self) {
 	if( !view )
 		return;
 
-	GtkTreeSelection* sel = gtk_tree_view_get_selection(view);
-	if( gtk_tree_selection_count_selected_rows(sel) <= 0 )
-		return;
-
 	GtkTreeModel* model = gtk_tree_view_get_model(view);
-	GList* rows = gtk_tree_selection_get_selected_rows(sel, &model);
-	if( !rows )
-		return;
-
-	GtkTreePath* path = (GtkTreePath*)rows->data;
-	gtk_tree_path_next(path);
 
 	GtkTreeIter iter;
-	if( gtk_tree_model_get_iter(model, &iter, path) ) {
-		GtkTreeSelection* sel = gtk_tree_view_get_selection(view);
-		gtk_tree_selection_select_iter(sel, &iter);
+	GtkTreeSelection* sel = gtk_tree_view_get_selection(view);
+	if( gtk_tree_selection_get_selected(sel, &model, &iter) ) {
+		if( !gtk_tree_model_iter_next(model, &iter) )
+			return;
 
-		gtk_tree_view_scroll_to_cell(view, path, NULL, FALSE, 0.0f, 0.0f);
+	} else if( !gtk_tree_model_iter_children(model, &iter, NULL) ) {
+		return;
 	}
 
-	g_list_foreach(rows, (GFunc)&gtk_tree_path_free, NULL);
-	g_list_free(rows);
+	gtk_tree_selection_select_iter(sel, &iter);
+	gtk_tree_view_scroll_to_cell(view, gtk_tree_model_get_path(model, &iter), NULL, FALSE, 0.0f, 0.0f);
 }
 
 void tips_select_prev(Tips* self) {
@@ -408,24 +387,25 @@ void tips_select_prev(Tips* self) {
 	if( !view )
 		return;
 
-	GtkTreeSelection* sel = gtk_tree_view_get_selection(view);
-	if( gtk_tree_selection_count_selected_rows(sel) <= 0 )
-		return;
-
 	GtkTreeModel* model = gtk_tree_view_get_model(view);
-	GList* rows = gtk_tree_selection_get_selected_rows(sel, &model);
-	if( !rows )
-		return;
 
-	GtkTreePath* path = (GtkTreePath*)rows->data;
-	if( gtk_tree_path_prev(path) ) {
-		GtkTreeIter iter;
-		if( gtk_tree_model_get_iter(model, &iter, path) ) {
-			GtkTreeSelection* sel = gtk_tree_view_get_selection(view);
-			gtk_tree_selection_select_iter(sel, &iter);
+	GtkTreeIter iter;
+	GtkTreeSelection* sel = gtk_tree_view_get_selection(view);
+	if( gtk_tree_selection_get_selected(sel, &model, &iter) ) {
+		GtkTreePath* path = gtk_tree_model_get_path(model, &iter);
+		if( !gtk_tree_path_prev(path) )
+			return;
 
-			gtk_tree_view_scroll_to_cell(view, path, NULL, FALSE, 0.0f, 0.0f);
-		}
+		if( !gtk_tree_model_get_iter(model, &iter, path) )
+			return;
+
+	} else {
+		gint count = gtk_tree_model_iter_n_children(model, &iter);
+		if( count <= 0 || !gtk_tree_model_iter_nth_child(model, &iter, NULL, (count-1)) )
+			return;
 	}
+
+	gtk_tree_selection_select_iter(sel, &iter);
+	gtk_tree_view_scroll_to_cell(view, gtk_tree_model_get_path(model, &iter), NULL, FALSE, 0.0f, 0.0f);
 }
 
