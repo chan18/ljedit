@@ -14,6 +14,8 @@ struct Puss;
 
 struct Tips;
 
+typedef std::set<std::string> StringSet;
+
 Tips* tips_create(Puss* app, Environ* env, Icons* icons);
 void tips_destroy(Tips* self);
 
@@ -21,7 +23,7 @@ gboolean tips_include_is_visible(Tips* self);
 gboolean tips_list_is_visible(Tips* self);
 gboolean tips_decl_is_visible(Tips* self);
 
-void tips_include_tip_show(Tips* self, gint x, gint y, StrVector& files);
+void tips_include_tip_show(Tips* self, gint x, gint y, StringSet& files);
 void tips_include_tip_hide(Tips* self);
 
 void tips_list_tip_show(Tips* self, gint x, gint y, cpp::ElementSet& mset);

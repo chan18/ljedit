@@ -7,17 +7,15 @@
 
 #include "LJCS.h"
 
-const gchar DECL_FILENAME_HEADER[] = "\n    // ";
-
 struct Tips {
 	Puss*			app;
-	Environ*		env;
+	Environ*			env;
 	Icons*			icons;
 
 	GtkWidget*		include_window;
 	GtkTreeView*	include_view;
 	GtkTreeModel*	include_model;
-	StrVector*		include_files;
+	StringSet*		include_files;
 
 	GtkWidget*		list_window;
 	GtkTreeView*	list_view;
@@ -74,8 +72,8 @@ gboolean init_tips(Tips* self, Puss* app, Environ* env, Icons* icons) {
 	self->decl_view      = GTK_TEXT_VIEW(gtk_builder_get_object(builder, "decl_view"));
 	self->decl_buffer    = set_cpp_lang_to_source_view(self->decl_view);
 
-	gtk_widget_show_all(GTK_WIDGET(gtk_builder_get_object(builder, "list_panel")));
 	gtk_widget_show_all(GTK_WIDGET(gtk_builder_get_object(builder, "include_panel")));
+	gtk_widget_show_all(GTK_WIDGET(gtk_builder_get_object(builder, "list_panel")));
 	gtk_widget_show_all(GTK_WIDGET(gtk_builder_get_object(builder, "decl_panel")));
 
 	g_object_unref(G_OBJECT(builder));
@@ -160,7 +158,7 @@ Tips* tips_create(Puss* app, Environ* env, Icons* icons) {
 
 		g_object_ref(self->list_model);
 		g_object_ref(self->include_model);
-		self->include_files = new StrVector();
+		self->include_files = new StringSet();
 	}
 
 	return self;
@@ -194,7 +192,7 @@ gboolean tips_decl_is_visible(Tips* self) {
 	return GTK_WIDGET_VISIBLE(self->decl_window);
 }
 
-void tips_include_tip_show(Tips* self, gint x, gint y, StrVector& files) {
+void tips_include_tip_show(Tips* self, gint x, gint y, StringSet& files) {
 	tips_list_tip_hide(self);
 	tips_decl_tip_hide(self);
 
@@ -208,8 +206,8 @@ void tips_include_tip_show(Tips* self, gint x, gint y, StrVector& files) {
 	self->include_files->swap(files);
 
 	GtkTreeIter iter;
-	StrVector::iterator it = self->include_files->begin();
-	StrVector::iterator end = self->include_files->end();
+	StringSet::iterator it = self->include_files->begin();
+	StringSet::iterator end = self->include_files->end();
 	for( ; it!=end; ++it ) {
 		gtk_list_store_append( GTK_LIST_STORE(self->include_model), &iter );
 		gtk_list_store_set( GTK_LIST_STORE(self->include_model), &iter
@@ -225,8 +223,8 @@ void tips_include_tip_show(Tips* self, gint x, gint y, StrVector& files) {
 	gtk_tree_view_columns_autosize(self->include_view);
 
 	gtk_window_move(GTK_WINDOW(self->include_window), x, y);
-	//gtk_window_resize(GTK_WINDOW(self->include_window), 200, 100);
-	//gtk_container_resize_children(GTK_CONTAINER(self->include_window));
+	gtk_window_resize(GTK_WINDOW(self->include_window), 200, 100);
+	gtk_container_resize_children(GTK_CONTAINER(self->include_window));
 	gtk_widget_show(self->include_window);
 }
 
@@ -251,6 +249,19 @@ void tips_list_tip_show(Tips* self, gint x, gint y, cpp::ElementSet& mset) {
 	}
 
 	gtk_tree_view_columns_autosize(self->list_view);
+
+	if( tips_decl_is_visible(self) ) {
+		gint w = 0;
+		gint h = 0;
+		gtk_window_get_size(GTK_WINDOW(self->list_window), &w, &h);
+		if( y >= (h + 16) ) {
+			y -= (h + 16);
+
+		} else {
+			y += (h + 5);
+			//y += ( ( tip_.decl_window().get_height() + 5 );
+		}
+	}
 
 	gtk_window_move(GTK_WINDOW(self->list_window), x, y);
 	//gtk_window_resize(GTK_WINDOW(self->list_window), 200, 100);
@@ -279,8 +290,8 @@ void tips_decl_tip_show(Tips* self, gint x, gint y, cpp::ElementSet& mset) {
 		cpp::Element* elem = *it;
 
 		gtk_text_buffer_insert_at_cursor(self->decl_buffer, elem->decl.c_str(), (gint)elem->decl.size());
-		gtk_text_buffer_insert_at_cursor(self->decl_buffer, DECL_FILENAME_HEADER, sizeof(DECL_FILENAME_HEADER));
-
+		gtk_text_buffer_insert_at_cursor(self->decl_buffer, "\n    // ", -1);
+		gtk_text_buffer_insert_at_cursor(self->decl_buffer, elem->file.filename.c_str(), (gint)elem->file.filename.size());
 		g_snprintf(str, 64, ":%d\n\n", elem->sline);
 		gtk_text_buffer_insert_at_cursor(self->decl_buffer, str, -1);
 	}

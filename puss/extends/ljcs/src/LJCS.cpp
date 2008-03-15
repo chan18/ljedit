@@ -161,8 +161,8 @@ void LJCS::do_button_release_event(GtkWidget* view, GtkTextBuffer* buf, GdkEvent
 
 	} else {
 		// preview
-		LJEditorDocIter ps(&it);
-		LJEditorDocIter pe(&end);
+		DocIter_Gtk ps(&it);
+		DocIter_Gtk pe(&end);
 		std::string key;
 		if( !find_key(key, ps, pe, false) )
 			return;
@@ -188,7 +188,11 @@ gboolean LJCS::on_key_press_event(GtkWidget* view, GdkEventKey* event, LJCS* sel
 		break;
 
 	case GDK_Return:
-		tips_hide_all(self->tips);
+		if( tips_list_is_visible(self->tips) || tips_include_is_visible(self->tips) ) {
+			tips_hide_all(self->tips);
+			// auto_complete(*page);
+			return TRUE;
+		}
 		break;
 
 	case GDK_Up:
@@ -219,89 +223,182 @@ gboolean LJCS::on_key_press_event(GtkWidget* view, GdkEventKey* event, LJCS* sel
 	return FALSE;
 }
 
-void LJCS::show_include_hint(const gchar* filename, gboolean system_header, GtkTextView* view) {
-/*
-	std::string key;
-	std::set<std::string> files;
-	std::string path;
+void LJCS::show_include_hint(gchar* filename, gboolean system_header, GtkTextView* view) {
+	g_assert( filename );
+	GtkTextBuffer* buf = gtk_text_view_get_buffer(view);
+	if( !buf )
+		return;
 
-	if( !filename.empty() ) {
-		char last = filename[filename.size() -1];
-		if( last=='/' || last=='\\' ) {
-			;
-		} else {
-			size_t pos = filename.find_last_of("/\\");
-			if( pos!=filename.npos )
-				key = filename.substr(pos+1);
-			else
-				key = filename;
+	size_t len = strlen(filename);
+	gchar* key = filename;
+	gchar* path =0;
+
+	if( len ) {
+		for( key = filename + len - 1; key>filename; --key ) {
+			if( *key==G_DIR_SEPARATOR ) {
+				if( key!=filename )
+					path = filename;
+
+				*key = '\0';
+				++key;
+				break;
+			}
 		}
 	}
 
+	StringSet files;
+
 	if( system_header ) {
-		StrVector paths = LJCSEnv::self().get_include_paths();
+		StrVector paths = env.get_include_paths();
 		StrVector::iterator it = paths.begin();
 		StrVector::iterator end = paths.end();
 		for( ; it!=end; ++it ) {
-			try {
-				if( filename.empty() ) {
-					path = *it;
-				} else {
-					path = Glib::build_filename(*it, filename);
-					path = Glib::path_get_dirname(path);
-				}
+			GDir* dir = 0;
+			if( path ) {
+				gchar* str = g_build_filename(it->c_str(), path, NULL);
+				dir = g_dir_open(str, 0, 0);
+				g_free(str);
 
-				Glib::Dir dir(path);
-				for( Glib::DirIterator it = dir.begin(); it!=dir.end(); ++it) {
-					path = *it;
-					if( key.empty() || path.find(key)==0 )
-						files.insert(path);
-				}
-			} catch( const Glib::Exception& ) {
+			} else {
+				dir = g_dir_open(it->c_str(), 0, 0);
 			}
+
+			while(dir) {
+				const gchar* fn = g_dir_read_name(dir);
+				if( !fn )
+					break;
+
+				if( len==0 || g_strrstr(key, fn)==key )
+					files.insert(fn);
+			} 
+
+			g_dir_close(dir);
 		}
 
 	} else {
-		try {
-			path = Glib::path_get_dirname(page.filepath());
-			if( !filename.empty() ) {
-				path = Glib::build_filename(path, filename);
-				path = Glib::path_get_dirname(path);
-			}
+		GString* url = app->doc_get_url(buf);
+		GDir* dir = 0;
+		if( !url )
+			return;
+		gchar* str = g_path_get_dirname(url->str);
+		dir = g_dir_open(str, 0, 0);
+		g_free(str);
 
-			Glib::Dir dir(path);
-			for( Glib::DirIterator it = dir.begin(); it!=dir.end(); ++it) {
-				path = *it;
-				if( key.empty() || path.find(key)==0 )
-					files.insert(path);
-			}
+		while(dir) {
+			const gchar* fn = g_dir_read_name(dir);
+			if( !fn )
+				break;
 
-		} catch( const Glib::Exception& ) {
-		}
+			if( len==0 || g_strrstr(key, fn)==key )
+				files.insert(fn);
+		} 
+
+		g_dir_close(dir);
 	}
 
 	if( !files.empty() ) {
-		int view_x = 0;
-		int view_y = 0;
-		Gtk::TextView& view = page.view();
-		view.get_window(Gtk::TEXT_WINDOW_TEXT)->get_origin(view_x, view_y);
-	    
-		Gdk::Rectangle rect;
-		view.get_iter_location(page.buffer()->get_iter_at_mark(page.buffer()->get_insert()), rect);
+		gint x = 0;
+		gint y = 0;
+		GdkWindow* gdkwin = gtk_text_view_get_window(view, GTK_TEXT_WINDOW_TEXT);
+		gdk_window_get_origin(gdkwin, &x, &y);
 
-		int cursor_x = rect.get_x();
-		int cursor_y = rect.get_y();
-		view.buffer_to_window_coords(Gtk::TEXT_WINDOW_TEXT, cursor_x, cursor_y, cursor_x, cursor_y);
+		GtkTextIter iter;
+		gtk_text_buffer_get_iter_at_mark(buf, &iter, gtk_text_buffer_get_insert(buf));
 
-		int x = view_x + cursor_x;
-		int y = view_y + cursor_y + rect.get_height() + 2;
+		GdkRectangle rect;
+		gtk_text_view_get_iter_location(view, &iter, &rect);
+		gtk_text_view_buffer_to_window_coords(view, GTK_TEXT_WINDOW_TEXT, rect.x, rect.y, &rect.x, &rect.y);
 
-		tip_.show_include_tip(x, y, files);
+		x += rect.x;
+		y += (rect.y + rect.height + 2);
+
+		tips_include_tip_show(tips, x, y, files);
 
 	} else {
-		tip_.include_window().hide();
+		tips_include_tip_hide(tips);
 	}
-*/
+}
+
+void LJCS::show_hint(GtkTextIter* it, GtkTextIter* end, char tag, GtkTextView* view) {
+	if( tag=='f' )
+		tips_list_tip_hide(tips);
+
+	//kill_show_hint_timer();
+
+	GtkTextBuffer* buf = gtk_text_view_get_buffer(view);
+	if( !buf )
+		return;
+
+	GString* url = app->doc_get_url(buf);
+	if( !url )
+		return;
+
+	cpp::File* file = env.find_parsed(url->str);
+	if( !file )
+		return;
+
+    size_t line = (size_t)gtk_text_iter_get_line(it) + 1;
+    StrVector keys;
+    DocIter_Gtk ps(it);
+    DocIter_Gtk pe(end);
+	if( find_keys(keys, it, end, file, true) ) {
+		MatchedSet mset(env);
+		if( env.stree().reader_try_lock() ) {
+			search_keys(keys, mset, env.stree().ref(), file, line);
+			env.stree().reader_unlock();
+
+			gint x = 0;
+			gint y = 0;
+			GdkWindow* gdkwin = gtk_text_view_get_window(view, GTK_TEXT_WINDOW_TEXT);
+			gdk_window_get_origin(gdkwin, &x, &y);
+
+			GtkTextIter iter;
+			gtk_text_buffer_get_iter_at_mark(buf, &iter, gtk_text_buffer_get_insert(buf));
+
+			GdkRectangle rect;
+			gtk_text_view_get_iter_location(view, &iter, &rect);
+			gtk_text_view_buffer_to_window_coords(view, GTK_TEXT_WINDOW_TEXT, rect.x, rect.y, &rect.x, &rect.y);
+
+			x += rect.x;
+			y += (rect.y + rect.height + 2);
+
+			if( tag=='s' ) {
+				gchar* str = gtk_text_iter_get_text(it, end);
+				std::string key = str;
+				g_free(str);
+
+				env.find_keyword(key, mset);
+				if( mset.size()==1 && key==(*mset.begin())->name )
+					mset.clear();
+
+				tips_list_tip_show(tips, x, y, mset.elems());
+
+			} else {
+				tips_decl_tip_show(tips, x, y, mset.elems());
+			}
+		}
+
+	}
+
+	env.file_decref(file);
+}
+
+void LJCS::locate_sub_hint(GtkTextView* view) {
+	GtkTextBuffer* buf = gtk_text_view_get_buffer(view);
+	GtkTextIter iter;
+	gtk_text_buffer_get_iter_at_mark(buf, &iter, gtk_text_buffer_get_insert(buf));
+	GtkTextIter end = iter;
+
+	while( gtk_text_iter_backward_char(&iter) ) {
+		gunichar ch = gtk_text_iter_get_char(&iter);
+		if( g_unichar_isalnum(ch) || ch=='_' )
+			continue;
+
+		gtk_text_iter_forward_char(&iter);
+		break;
+	}
+
+	// TODO : 
 }
 
 gboolean LJCS::on_key_release_event(GtkWidget* view, GdkEventKey* event, LJCS* self) {
@@ -380,42 +477,45 @@ gboolean LJCS::on_key_release_event(GtkWidget* view, GdkEventKey* event, LJCS* s
 	GtkTextIter end = iter;
 	switch( event->keyval ) {
 	case '.':
-		//show_hint(*page, it, end, 's');
+		self->show_hint(&iter, &end, 's', GTK_TEXT_VIEW(view));
 		break;
 
 	case ':':
 		if( gtk_text_iter_backward_chars(&iter, 2) && gtk_text_iter_get_char(&iter)==':' ) {
 			gtk_text_iter_forward_chars(&iter, 2);
-			//show_hint(*page, it, end, 's');
+			self->show_hint(&iter, &end, 's', GTK_TEXT_VIEW(view));
 		}
 		break;
 
 	case '(':
-		//show_hint(*page, it, end, 'f');
+		self->show_hint(&iter, &end, 'f', GTK_TEXT_VIEW(view));
 		break;
 
 	case ')':
 		tips_decl_tip_hide(self->tips);
 		break;
+
 	case '<':
 		if( gtk_text_iter_backward_chars(&iter, 2) && gtk_text_iter_get_char(&iter)!='<' ) {
 			gtk_text_iter_forward_chars(&iter, 2);
-			//show_hint(*page, it, end, 'f');
+			self->show_hint(&iter, &end, 'f', GTK_TEXT_VIEW(view));
 		}
 		break;
+
 	case '>':
 		if( gtk_text_iter_backward_chars(&iter, 2) && gtk_text_iter_get_char(&iter)=='-' ) {
 			gtk_text_iter_forward_chars(&iter, 2);
-			//show_hint(*page, it, end, 's');
+			self->show_hint(&iter, &end, 's', GTK_TEXT_VIEW(view));
 
 		} else {
 			tips_decl_tip_hide(self->tips);
 		}
 		break;
+
 	default:
 		if( (event->keyval <= 0x7f) && ::isalnum(event->keyval) || event->keyval=='_' ) {
 			if( tips_list_is_visible(self->tips) ) {
-				// locate_sub_hint(view);
+				self->locate_sub_hint( GTK_TEXT_VIEW(view) );
 
 			} else {
 				// set_show_hint_timer(*page);

@@ -27,8 +27,8 @@ gboolean find_keys( StrVector& keys
     , cpp::File* file
 	, gboolean find_startswith)
 {
-    LJEditorDocIter ps(it);
-    LJEditorDocIter pe(end);
+    DocIter_Gtk ps(it);
+    DocIter_Gtk pe(end);
     std::string key;
 	if( !find_key(key, ps, pe, find_startswith ? true : false) )
         return FALSE;

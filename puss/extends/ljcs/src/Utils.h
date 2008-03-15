@@ -99,9 +99,9 @@ public:
 
 class Environ;
 
-class LJEditorDocIter : public IDocIter {
+class DocIter_Gtk : public IDocIter {
 public:
-    LJEditorDocIter(GtkTextIter* it)
+    DocIter_Gtk(GtkTextIter* it)
         : IDocIter( (char)gtk_text_iter_get_char(it) )
         , it_(it) {}
 
