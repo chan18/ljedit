@@ -70,10 +70,11 @@ gboolean puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST
 		return TRUE;
 	}
 
-	if( !g_get_charset(cs) && *cs ) {		// get locale charset, and not UTF-8
-		if( load_convert_text(&sbuf, &slen, *cs, err) ) {
+	const gchar* locale = 0;
+	if( !g_get_charset(&locale) ) {		// get locale charset, and not UTF-8
+		if( load_convert_text(&sbuf, &slen, locale, err) ) {
 			if( charset )
-				*charset = *cs;
+				*charset = locale;
 			*text = sbuf;
 			*len = slen;
 			return TRUE;
