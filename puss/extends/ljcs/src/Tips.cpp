@@ -85,6 +85,9 @@ gboolean init_tips(Tips* self, Puss* app, Environ* env, Icons* icons) {
 
 gboolean decref_each_file(GtkTreeModel* model, GtkTreePath* path, GtkTreeIter* iter, Tips* self) {
 	GValue value = { G_TYPE_INVALID };
+	GtkTreeModel* mm = gtk_tree_view_get_model(self->list_view);
+	assert( mm==0 || mm==model );
+
 	gtk_tree_model_get_value(model, iter, 3, &value);
 	cpp::Element* elem = (cpp::Element*)g_value_get_pointer(&value);
 	g_assert( elem );
@@ -259,13 +262,12 @@ void tips_list_tip_show(Tips* self, gint x, gint y, cpp::ElementSet& mset) {
 
 		} else {
 			y += (h + 5);
-			//y += ( ( tip_.decl_window().get_height() + 5 );
 		}
 	}
 
 	gtk_window_move(GTK_WINDOW(self->list_window), x, y);
-	//gtk_window_resize(GTK_WINDOW(self->list_window), 200, 100);
-	//gtk_container_resize_children(GTK_CONTAINER(self->list_window));
+	gtk_window_resize(GTK_WINDOW(self->list_window), 200, 100);
+	gtk_container_resize_children(GTK_CONTAINER(self->list_window));
 	gtk_widget_show(self->list_window);
 }
 
@@ -317,7 +319,7 @@ gboolean tips_locate_sub(Tips* self, gint x, gint y, const gchar* key) {
 
 	do {
 		GValue value = { G_TYPE_INVALID };
-		gtk_tree_model_get_value(self->list_model, &iter, 1, &value);
+		gtk_tree_model_get_value(self->list_model, &iter, 3, &value);
 		cpp::Element* elem = (cpp::Element*)g_value_get_pointer(&value);
 		g_assert( elem );
 
@@ -353,7 +355,7 @@ const gchar* tips_include_get_selected(Tips* self) {
 
 	GtkTreeIter iter;
 	GtkTreeSelection* sel = gtk_tree_view_get_selection(self->include_view);
-	if( gtk_tree_selection_get_selected(sel, &self->list_model, &iter) ) {
+	if( gtk_tree_selection_get_selected(sel, &self->include_model, &iter) ) {
 		GValue value = { G_TYPE_INVALID };
 		gtk_tree_model_get_value(self->include_model, &iter, 0, &value);
 		result = g_value_get_string(&value);
