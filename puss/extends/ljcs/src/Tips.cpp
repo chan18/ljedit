@@ -120,8 +120,10 @@ void fill_list_store(Tips* self, cpp::ElementSet& mset) {
 			if( p==iset.end() )
 				iset.insert(*it);
 
-			else if( (*it)->type==cpp::ET_CLASS )
-				*p = *it;
+			else if( (*it)->type==cpp::ET_CLASS && (*p)->type != cpp::ET_CLASS ) {
+				iset.erase(p);
+				iset.insert(*it);
+			}
 		}
 	}
 
