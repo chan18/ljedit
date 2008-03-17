@@ -52,12 +52,10 @@ gboolean move_cursor_to_pos(GtkTextView* view, gint line, gint offset) {
 
 	GtkTextIter iter;
 	gtk_text_buffer_get_iter_at_line(buf, &iter, line);
-	if( offset < 0 )
-		offset = 0;
 
-	if( offset < gtk_text_iter_get_chars_in_line(&iter) )
+	if( offset < gtk_text_iter_get_bytes_in_line(&iter) )
 		gtk_text_iter_set_line_offset(&iter, offset);
-	else
+	else if( !gtk_text_iter_ends_line(&iter) )
 		gtk_text_iter_forward_to_line_end(&iter);
 
 	gtk_text_buffer_place_cursor(buf, &iter);

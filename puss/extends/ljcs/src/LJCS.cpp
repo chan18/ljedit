@@ -105,7 +105,8 @@ void LJCS::do_button_release_event(GtkTextView* view, GtkTextBuffer* buf, GdkEve
 		GtkTextIter ps = it;
 		GtkTextIter pe = it;
 		gtk_text_iter_set_line_offset(&ps, 0);
-		gtk_text_iter_forward_to_line_end(&pe);
+		if( !gtk_text_iter_ends_line(&pe) )
+			gtk_text_iter_forward_to_line_end(&pe);
 
 		gchar* line = gtk_text_iter_get_text(&ps, &pe);
 		GMatchInfo* inc_info = 0;
@@ -535,8 +536,8 @@ gboolean LJCS::on_key_release_event(GtkTextView* view, GdkEventKey* event, LJCS*
 		GtkTextIter ps = iter;
 		GtkTextIter pe = iter;
 		gtk_text_iter_set_line_offset(&ps, 0);
-		if( !gtk_text_iter_forward_to_line_end(&pe) )
-			return FALSE;
+		if( !gtk_text_iter_ends_line(&pe) )
+			gtk_text_iter_forward_to_line_end(&pe);
 
 		gchar* line = gtk_text_iter_get_text(&ps, &pe);
 		GMatchInfo* inc_info = 0;

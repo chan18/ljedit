@@ -60,9 +60,9 @@ void doc_locate_page_line( gint page_num, gint line, gint offset ) {
 			offset = gtk_text_iter_get_line_offset(&insert_iter);
 		}
 
-		if( offset < gtk_text_iter_get_chars_in_line(&iter) )
+		if( offset < gtk_text_iter_get_bytes_in_line(&iter) )
 			gtk_text_iter_set_line_offset(&iter, offset);
-		else
+		else if( !gtk_text_iter_ends_line(&iter) )
 			gtk_text_iter_forward_to_line_end(&iter);
 	}
 
