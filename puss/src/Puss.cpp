@@ -11,6 +11,7 @@
 #include "DocManager.h"
 #include "ExtendEngine.h"
 #include "PosLocate.h"
+#include "OptionManager.h"
 #include "Utils.h"
 
 PussApp* puss_app = 0;
@@ -146,6 +147,7 @@ gboolean puss_create(const char* filepath) {
 	init_puss_c_api((Puss*)puss_app);
 
 	return puss_load_ui_files()
+		&& puss_option_manager_create()
 		&& puss_main_ui_create()
 		&& puss_mini_line_create()
 		&& puss_pos_locate_create()
@@ -156,6 +158,7 @@ void puss_destroy() {
 	puss_extend_engine_destroy();
 	puss_pos_locate_destroy();
 	puss_mini_line_destroy();
+	puss_option_manager_destroy();
 
 	g_object_unref(G_OBJECT(puss_app->builder));
 

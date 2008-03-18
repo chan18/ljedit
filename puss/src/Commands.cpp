@@ -9,6 +9,7 @@
 #include "DocManager.h"
 #include "MiniLine.h"
 #include "PosLocate.h"
+#include "OptionManager.h"
 #include "MiniLineModules.h"
 #include "AboutDialog.h"
 
@@ -118,6 +119,11 @@ SIGNAL_CALLBACK void view_menu_bottom_page_n( GtkRadioAction* action ) {
 	if( page_num==action_value )
 		puss_active_panel_page(puss_app->bottom_panel, (page_num - 1));
 }
+
+SIGNAL_CALLBACK void tools_menu_preferences( GtkAction* action ) {
+	puss_option_manager_active();
+}
+
 
 SIGNAL_CALLBACK void help_menu_about( GtkAction* action ) {
 	puss_show_about_dialog();

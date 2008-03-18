@@ -101,7 +101,7 @@ void page_delete_notify(PosNode* node, GObject* where_the_object_was) {
 	g_assert(__debug_pos_list_check());
 }
 
-void puss_pos_locate_add(int page_num, int line, int offset) {
+void puss_pos_locate_add(gint page_num, gint line, gint offset) {
 	if( page_num < 0 || line < 0 )
 		return;
 

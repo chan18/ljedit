@@ -21,6 +21,11 @@
           </object>
         </child>
         <child>
+          <object class="GtkAction" id="tool_menu">
+            <property name="label" translatable="yes">_Tools</property>
+          </object>
+        </child>
+        <child>
           <object class="GtkAction" id="help_menu">
             <property name="label" translatable="yes">_Help</property>
           </object>
@@ -245,6 +250,14 @@
           <accelerator key="3" modifiers="GDK_CONTROL_MASK"/>
         </child>
 
+        <!-- tools menu actions -->
+        <child>
+          <object class="GtkAction" id="tools_menu_preferences">
+            <property name="stock_id">gtk-preferences</property>
+            <signal handler="tools_menu_preferences" name="activate"/>
+          </object>
+        </child>
+        
         <!-- help menu actions -->
         <child>
           <object class="GtkAction" id="help_menu_about">
@@ -298,6 +311,9 @@
             <menuitem action="view_menu_bottom_page_8"/>
             <menuitem action="view_menu_bottom_page_9"/>
           </menu>
+        </menu>
+        <menu action="tool_menu">
+          <menuitem action="tools_menu_preferences"/>
         </menu>
         <menu action="help_menu">
           <menuitem action="help_menu_about"/>

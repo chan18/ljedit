@@ -9,6 +9,7 @@
 struct MiniLine;
 struct PosList;
 struct Extend;
+struct OptionManager;
 
 struct PussApp {
 	Puss			parent;
@@ -27,10 +28,9 @@ struct PussApp {
 	GtkStatusbar*	statusbar;
 
 	MiniLine*		mini_line;
-
 	PosList*		pos_list;
-
 	Extend*			extends_list;
+	OptionManager*	option_manager;
 };
 
 extern		PussApp*	puss_app;

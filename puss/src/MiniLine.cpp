@@ -38,7 +38,7 @@ SIGNAL_CALLBACK gboolean mini_line_cb_button_press_event( GtkWidget* widget, Gdk
 gboolean puss_mini_line_create() {
 	g_assert( !puss_app->mini_line );
 
-	puss_app->mini_line = g_new(MiniLine, 1);
+	puss_app->mini_line = g_new0(MiniLine, 1);
 	if( !puss_app->mini_line ) {
 		g_printerr("ERROR(mini_line) : new mini line failed!\n");
 		return FALSE;

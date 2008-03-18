@@ -4,7 +4,7 @@
 #include "PyExtend.h"
 #include "IPuss.h"
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 	#ifdef _DEBUG
 		#undef _DEBUG
 		#include <Python.h>
