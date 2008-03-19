@@ -1,5 +1,4 @@
 <?xml version="1.0"?>
-<!--*- mode: xml -*-->
 <interface>
   <object class="GtkWindow" id="mini_window">
     <property name="type">GTK_WINDOW_POPUP</property>
@@ -31,7 +30,7 @@
             </child>
           </object>
         </child>
-      </object>      
+      </object>
     </child>
   </object>
 </interface>

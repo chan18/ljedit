@@ -1,5 +1,4 @@
 <?xml version="1.0"?>
-<!--*- mode: xml -*-->
 <interface>
   <object class="GtkUIManager" id="main_ui_manager">
     <child>
@@ -257,7 +256,7 @@
             <signal handler="tools_menu_preferences" name="activate"/>
           </object>
         </child>
-        
+
         <!-- help menu actions -->
         <child>
           <object class="GtkAction" id="help_menu_about">
@@ -329,7 +328,7 @@
         <toolitem action="edit_menu_go_forward"/>
       </toolbar>
     </ui>
-    
+
   </object>
 </interface>
 

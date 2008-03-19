@@ -329,6 +329,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\bin\res\puss_option_dialog.xml"
+					>
+				</File>
+				<File
 					RelativePath=".\bin\res\puss_ui_manager.xml"
 					>
 				</File>

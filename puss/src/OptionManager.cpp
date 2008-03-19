@@ -36,6 +36,7 @@ void option_node_free(OptionNode* node) {
 struct OptionManager {
 	gchar*		filepath;
 	GKeyFile*	keyfile;
+	gboolean	modified;
 
 	GHashTable*	option_groups;	// group, GHashTable(key, OptionNode)
 };
@@ -115,6 +116,7 @@ gboolean option_manager_check_option(const gchar* group, const gchar* key) {
 
 	g_free(node->current_value);
 	node->current_value = value;
+	self->modified= TRUE;
 	return TRUE;
 }
 
@@ -237,14 +239,38 @@ void testtttttt() {
 }
 
 void puss_option_manager_active() {
-	// TODO : show option UI
-	// when row active [row]
-	//		call [row].option_setter()
-	// then
-	//		call option_manager_check_option()
+	GtkBuilder* builder = gtk_builder_new();
+	if( !builder )
+		return;
 
-	testtttttt();
+	gchar* filepath = g_build_filename(puss_app->module_path, "res", "puss_option_dialog.xml", NULL);
+	if( !filepath ) {
+		g_printerr("ERROR(puss) : build config manager ui filepath failed!\n");
+		g_object_unref(G_OBJECT(builder));
+		return;
+	}
 
-	option_manager_save();
+	GError* err = 0;
+	gtk_builder_add_from_file(builder, filepath, &err);
+	g_free(filepath);
+
+	if( err ) {
+		g_printerr("ERROR(puss): %s\n", err->message);
+		g_error_free(err);
+		g_object_unref(G_OBJECT(builder));
+		return;
+	}
+
+	GtkWidget* dlg = GTK_WIDGET(gtk_builder_get_object(builder, "puss_option_dialog"));
+	gtk_widget_show_all(GTK_DIALOG(dlg)->vbox);
+	g_object_unref(G_OBJECT(builder));
+
+	OptionManager* self = puss_app->option_manager;
+	gtk_window_set_transient_for(GTK_WINDOW(dlg), puss_app->main_window);
+	gint res = gtk_dialog_run(GTK_DIALOG(dlg));
+	gtk_widget_destroy(dlg);
+
+	if( self->modified )
+		option_manager_save();
 }
 

@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<interface>
+  <object class="GtkTreeStore" id="option_store">
+    <columns>
+      <column type="gchararray"/>
+      <column type="gchararray"/>
+      <column type="gchararray"/>
+    </columns>
+  </object>
+
+  <object class="GtkDialog" id="puss_option_dialog">
+    <child internal-child="vbox">
+      <object class="GtkVBox" id="vbox">
+        <child>
+          <object class="GtkScrolledWindow" id="option_panel">
+            <property name="width-request">180</property>
+            <property name="hscrollbar_policy">automatic</property>
+            <property name="vscrollbar_policy">automatic</property>
+            <property name="shadow_type">in</property>
+            <child>
+              <object class="GtkTreeView" id="option_treeview">
+                <property name="model">option_store</property>
+                <property name="headers-visible">True</property>
+                <!--property name="enable-tree-lines">True</property-->
+                <!--signal handler="outline_page_cb_row_activated" name="row-activated"/-->
+                <child>
+                  <object class="GtkTreeViewColumn" id="group_column">
+                    <property name="title">group</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="group_cell_renderer"/>
+                      <attributes>
+                        <attribute name="text">0</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="key_column">
+                    <property name="title">key</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="key_cell_renderer"/>
+                      <attributes>
+                        <attribute name="text">1</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="value_column">
+                    <property name="title">value</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="value_cell_renderer"/>
+                      <attributes>
+                        <attribute name="text">2</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="hbuttonbox">
+            <child>
+              <object class="GtkButton" id="close_button">
+                <property name="label">close</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+    <action-widgets>
+      <action-widget response="0">close_button</action-widget>
+    </action-widgets>
+  </object>
+</interface>
+

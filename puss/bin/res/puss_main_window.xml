@@ -1,5 +1,4 @@
 <?xml version="1.0"?>
-<!--*- mode: xml -*-->
 <interface>
  <object class="GtkWindow" id="main_window">
    <property name="title" translatable="yes">Puss - source editor</property>
