@@ -14,7 +14,7 @@ struct MiniLineCallback {
 	void     		(*cb_changed)( gpointer tag );
 };
 
-typedef gboolean	(*OptionSetter)(GKeyFile* options, const gchar* group, const gchar* key, gpointer tag);
+typedef gboolean	(*OptionSetter)(GtkWindow* parent, GKeyFile* options, const gchar* group, const gchar* key, gpointer tag);
 typedef void		(*OptionChanged)(const gchar* key, const gchar* group, const gchar* new_value, const gchar* current_value, gpointer tag);
 
 struct Puss {

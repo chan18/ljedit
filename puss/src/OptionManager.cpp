@@ -12,6 +12,9 @@ struct OptionNotifer {
 };
 
 struct OptionNode {
+	const gchar*	group;
+	const gchar*	key;
+
 	gchar*			current_value;
 	gchar*			default_value;
 	OptionSetter	setter_fun;
@@ -89,33 +92,23 @@ void puss_option_manager_destroy() {
 	}
 }
 
-gboolean option_manager_check_option(const gchar* group, const gchar* key) {
+gboolean option_manager_check_option(OptionNode* option) {
 	OptionManager* self = puss_app->option_manager;
 
-	GHashTable* option_group = (GHashTable*)g_hash_table_lookup(self->option_groups, group);
-	if( !option_group )
+	gchar* value = g_key_file_get_value(self->keyfile, option->group, option->key, 0);
+	if( value==0 && option->current_value==0 )
 		return FALSE;
 
-	OptionNode* node = (OptionNode*)g_hash_table_lookup(option_group, key);
-	if( !node )
+	if( value && option->current_value && g_str_equal(value, option->current_value) )
 		return FALSE;
 
-	gchar* value = g_key_file_get_value(self->keyfile, group, key, 0);
-	if( value==0 && node->current_value==0 )
-		return FALSE;
-
-	if( value && node->current_value && g_str_equal(value, node->current_value) )
-		return FALSE;
-
-	for( OptionNotifer* p = node->notifer_list; p; p = p->next ) {
+	for( OptionNotifer* p = option->notifer_list; p; p = p->next ) {
 		g_assert( p->fun );
-		p->fun(group, key, value, node->current_value, p->tag);
+		p->fun(option->group, option->key, value, option->current_value, p->tag);
 	}
 
-	// call
-
-	g_free(node->current_value);
-	node->current_value = value;
+	g_free(option->current_value);
+	option->current_value = value;
 	self->modified= TRUE;
 	return TRUE;
 }
@@ -140,12 +133,15 @@ void option_manager_save() {
 gboolean puss_option_manager_option_reg(const gchar* group, const gchar* key, const gchar* default_value, OptionSetter fun, gpointer tag) {
 	OptionManager* self = puss_app->option_manager;
 
+	gchar* ptr_group = g_strdup(group);
+	gchar* ptr_key = g_strdup(key);
+
 	GHashTable* option_group = (GHashTable*)g_hash_table_lookup(self->option_groups, group);
 	if( !option_group ) {
 		option_group = (GHashTable*)g_hash_table_new_full( &g_str_hash, &g_str_equal, &g_free, GDestroyNotify(&option_node_free) );
 		if( !option_group )
 			return FALSE;
-		g_hash_table_insert(self->option_groups, g_strdup(group), option_group);
+		g_hash_table_insert(self->option_groups, ptr_group, option_group);
 	}
 
 	OptionNode* node = (OptionNode*)g_hash_table_lookup(option_group, key);
@@ -154,28 +150,35 @@ gboolean puss_option_manager_option_reg(const gchar* group, const gchar* key, co
 
 	node = g_new0(OptionNode, 1);
 	if( node ) {
+		node->group = ptr_group;
+		node->key = ptr_key;
+
 		node->current_value = g_key_file_get_value(self->keyfile, group, key, 0);
-		if( default_value )
+		if( default_value ) {
 			node->default_value = g_strdup(default_value);
+			if( !node->current_value )
+				node->current_value = g_strdup(default_value);
+		}
+
 		node->setter_fun = fun;
 		node->setter_tag = tag;
 		node->notifer_list = 0;
 
-		g_hash_table_insert(option_group, g_strdup(key), node);
+		g_hash_table_insert(option_group, ptr_key, node);
 		return TRUE;
 	}
 
 	return TRUE;
 }
 
-gboolean puss_option_manager_monitor_reg(const gchar* group, const gchar* key, OptionChanged fun, gpointer tag ) {
+OptionNode* option_manager_find(const gchar* group, const gchar* key) {
 	OptionManager* self = puss_app->option_manager;
-
 	GHashTable* option_group = (GHashTable*)g_hash_table_lookup(self->option_groups, group);
-	if( !option_group )
-		return FALSE;
+	return option_group ? (OptionNode*)g_hash_table_lookup(option_group, key) : 0;
+}
 
-	OptionNode* node = (OptionNode*)g_hash_table_lookup(option_group, key);
+gboolean puss_option_manager_monitor_reg(const gchar* group, const gchar* key, OptionChanged fun, gpointer tag ) {
+	OptionNode* node = option_manager_find(group, key);
 	if( !node )
 		return FALSE;
 
@@ -190,55 +193,114 @@ gboolean puss_option_manager_monitor_reg(const gchar* group, const gchar* key, O
 	return TRUE;
 }
 
-gboolean puss_default_option_setter(GKeyFile* options, const gchar* group, const gchar* key, gpointer tag) {
-	// TODO : 
-	const gchar* args = (const char*)tag;
+gboolean puss_default_option_setter(GtkWindow* parent, GKeyFile* options, const gchar* group, const gchar* key, gpointer tag) {
+	OptionNode* option = option_manager_find(group, key);
+	if( !option )
+		return FALSE;
 
-	if( args==0 ) {
-		g_key_file_set_string(options, group, key, "aaaaaaaaaaaa");
-		return TRUE;
+	GtkWidget* dlg = gtk_dialog_new_with_buttons( "option setting..."
+		, parent
+		, GTK_DIALOG_MODAL
+		, GTK_STOCK_OK, GTK_RESPONSE_OK
+		, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL
+		, NULL );
 
-	} else if( g_str_equal(args, "bool") ) {
-		g_key_file_set_boolean(options, group, key, TRUE);
-		return TRUE;
+	GtkWidget* label = gtk_label_new(key);
+	GtkWidget* entry = gtk_entry_new();
+	if( option->current_value )
+		gtk_entry_set_text(GTK_ENTRY(entry), option->current_value);
+
+	GtkWidget* hbox = gtk_hbox_new(FALSE, 3);
+	gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
+
+	GtkWidget* frame = gtk_frame_new(group);
+	gtk_container_add(GTK_CONTAINER(frame), hbox);
+
+	gtk_box_pack_start( GTK_BOX(GTK_DIALOG(dlg)->vbox), frame, TRUE, TRUE, 0);
+	gtk_widget_show_all(frame);
+
+	gint res = gtk_dialog_run(GTK_DIALOG(dlg));
+
+	if( res==GTK_RESPONSE_OK )
+	{
+		const gchar* value = gtk_entry_get_text(GTK_ENTRY(entry));
+		if( value )
+			g_key_file_set_value(options, group, key, value);
+		else
+			res = GTK_RESPONSE_CANCEL;
 	}
-	// ...
 
-	return FALSE;
+	gtk_widget_destroy(dlg);
+
+	return res==GTK_RESPONSE_OK;
 }
 
-// test
-// 
-void fff(const gchar* group, const gchar* key, const gchar* new_value, const gchar* current_value, gpointer tag) {
-	g_print("fff");
+struct ParentTreePosition {
+	GtkTreeStore*	store;
+	GtkTreeIter*	parent;
+};
+
+void fill_option_keys(gchar* key, OptionNode* value, ParentTreePosition* pos) {
+	GtkTreeIter iter;
+	gtk_tree_store_append(pos->store, &iter, pos->parent);
+	gtk_tree_store_set( pos->store, &iter
+		, 0, key
+		, 1, value->current_value
+		, 2, TRUE
+		, 3, value
+		, -1 );
 }
 
-void ggg(const gchar* group, const gchar* key, const gchar* new_value, const gchar* current_value, gpointer tag) {
-	g_print("ggg");
+
+void fill_option_groups(gchar* group, GHashTable* options, GtkTreeStore* store) {
+	GtkTreeIter iter;
+	gtk_tree_store_append(store, &iter, NULL);
+	gtk_tree_store_set( store, &iter
+		, 0, group
+		, 1, NULL
+		, 2, FALSE
+		, 3, NULL
+		, -1 );
+
+	ParentTreePosition pos = { store, &iter };
+	g_hash_table_foreach(options, (GHFunc)fill_option_keys, &pos);
 }
 
-void testtttttt() {
+void fill_options(GtkTreeStore* store) {
 	OptionManager* self = puss_app->option_manager;
 
-	puss_option_manager_option_reg("puss", "aaa", "abcdef", &puss_default_option_setter, 0);
-	puss_option_manager_option_reg("puss", "bbb", "true", 0, "bool");
+	g_hash_table_foreach(self->option_groups, (GHFunc)fill_option_groups, store);
+}
 
-	puss_option_manager_monitor_reg("puss", "aaa", &fff, 0);
-	puss_option_manager_monitor_reg("puss", "aaa", &ggg, 0);
+SIGNAL_CALLBACK void option_manager_cb_row_activated(GtkTreeView* tree_view, GtkTreePath* path, GtkTreeViewColumn* col, GtkWindow* parent) {
+	OptionManager* self = puss_app->option_manager;
+	GtkTreeModel* model = gtk_tree_view_get_model(tree_view);
 
-	if( puss_default_option_setter(self->keyfile, "puss", "aaa", 0) )
-		option_manager_check_option("puss", "aaa");
-	
-	if( puss_default_option_setter(self->keyfile, "puss", "aaa", "bool") )
-		option_manager_check_option("puss", "aaa");
+	GtkTreeIter iter;
+	if( !gtk_tree_model_get_iter(model, &iter, path) )
+		return;
 
-	if( puss_default_option_setter(self->keyfile, "puss", "aaa", "xxxx") )
-		option_manager_check_option("puss", "aaa");
+	GValue value = { G_TYPE_INVALID };
+	gtk_tree_model_get_value(model, &iter, 3, &value);
+	OptionNode* option = (OptionNode*)g_value_get_pointer(&value);
+	if( !option )
+		return;
 
-	g_print("aaaa\n");
+	OptionSetter setter = option->setter_fun ? option->setter_fun : &puss_default_option_setter;
+	if( (*setter)(parent, self->keyfile, option->group, option->key, option->setter_tag) ) {
+		option_manager_check_option(option);
+
+		gtk_tree_store_set( GTK_TREE_STORE(model), &iter
+			, 1, option->current_value
+			, -1 );
+	}
 }
 
 void puss_option_manager_active() {
+	OptionManager* self = puss_app->option_manager;
+
+	// create UI
 	GtkBuilder* builder = gtk_builder_new();
 	if( !builder )
 		return;
@@ -262,11 +324,23 @@ void puss_option_manager_active() {
 	}
 
 	GtkWidget* dlg = GTK_WIDGET(gtk_builder_get_object(builder, "puss_option_dialog"));
+	GtkTreeStore* store = GTK_TREE_STORE(gtk_builder_get_object(builder, "option_store"));
+	GtkTreeView* view = GTK_TREE_VIEW(gtk_builder_get_object(builder, "option_treeview"));
 	gtk_widget_show_all(GTK_DIALOG(dlg)->vbox);
+	gtk_builder_connect_signals(builder, GTK_WINDOW(dlg));
 	g_object_unref(G_OBJECT(builder));
 
-	OptionManager* self = puss_app->option_manager;
+	// fill data and show
 	gtk_window_set_transient_for(GTK_WINDOW(dlg), puss_app->main_window);
+
+	puss_option_manager_option_reg("puss", "aaa", "abcdef", &puss_default_option_setter, 0);
+	puss_option_manager_option_reg("puss", "bbb", "true", 0, "bool");
+	puss_option_manager_option_reg("vvvv", "bbb", "true", 0, "bool");
+	puss_option_manager_option_reg("aaaa", "bbb", "true", 0, "bool");
+
+	fill_options(store);
+	gtk_tree_view_expand_all(view);
+
 	gint res = gtk_dialog_run(GTK_DIALOG(dlg));
 	gtk_widget_destroy(dlg);
 
