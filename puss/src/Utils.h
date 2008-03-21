@@ -6,11 +6,14 @@
 
 #include <gtk/gtk.h>
 
+gboolean	puss_utils_create();
+void		puss_utils_destroy();
+
 void		puss_send_focus_change(GtkWidget* widget, gboolean in);
 
 void		puss_active_panel_page(GtkNotebook* panel, gint page_num);
 
-gboolean	puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST_RETURN gchar** charset, GError** err);
+gboolean	puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST_RETURN gchar** charset);
 
 #endif//PUSS_INC_UTILS_H
 

@@ -63,6 +63,11 @@ void init_puss_c_api(Puss* api) {
 	api->send_focus_change = &puss_send_focus_change;
 	api->active_panel_page = &puss_active_panel_page;
 	api->load_file = &puss_load_file;
+
+	// option manager
+	api->option_manager_find_option = &puss_option_manager_find_option;
+	api->option_manager_option_reg  = &puss_option_manager_option_reg;
+	api->option_manager_monitor_reg = &puss_option_manager_monitor_reg;
 }
 
 gboolean puss_load_ui(const gchar* filename ) {
@@ -146,8 +151,9 @@ gboolean puss_create(const char* filepath) {
 	puss_app->module_path = g_path_get_dirname(filepath);
 	init_puss_c_api((Puss*)puss_app);
 
-	return puss_load_ui_files()
-		&& puss_option_manager_create()
+	return puss_option_manager_create()
+		&& puss_utils_create()
+		&& puss_load_ui_files()
 		&& puss_main_ui_create()
 		&& puss_mini_line_create()
 		&& puss_pos_locate_create()
@@ -158,6 +164,7 @@ void puss_destroy() {
 	puss_extend_engine_destroy();
 	puss_pos_locate_destroy();
 	puss_mini_line_destroy();
+	puss_utils_destroy();
 	puss_option_manager_destroy();
 
 	g_object_unref(G_OBJECT(puss_app->builder));

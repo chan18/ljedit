@@ -269,7 +269,7 @@ try:
 
         def cb_file_activated(self, filename):
             ufilename = filename.decode(sys.getfilesystemencoding()).encode('utf8')
-            puss.doc_open(ufilename)
+            puss.doc_open(ufilename, -1, -1, True)
 
     explorer = PussExplorer()
 

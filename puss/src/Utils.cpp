@@ -2,6 +2,48 @@
 //
 
 #include "Utils.h"
+#include "Puss.h"
+#include "OptionManager.h"
+
+struct Utils {
+	gchar** charset_list;
+};
+
+void parse_charset_list_option(const Option* option) {
+	Utils* self = puss_app->utils;
+
+	g_strfreev(self->charset_list);
+	self->charset_list = g_strsplit_set(option->current_value, " \t,;", 0);
+	//for( char** p=self->charset_list; *p; ++p )
+	//	printf("%s\n", *p);
+}
+
+void charset_list_option_changed(const Option* option, const gchar* old, gpointer tag) {
+	parse_charset_list_option(option);
+}
+
+gboolean puss_utils_create() {
+	puss_app->utils = g_new0(Utils, 1);
+	if( !puss_app->utils ) {
+		g_printerr("ERROR(puss) : utils create failed!\n");
+		return FALSE;
+	}
+
+	const Option* option = puss_option_manager_option_reg("puss", "fileloader.charset_list", "GBK", 0, 0);
+	parse_charset_list_option(option);
+	puss_option_manager_monitor_reg(option, &charset_list_option_changed, 0);
+
+	return TRUE;
+}
+
+void puss_utils_destroy() {
+	Utils* self = puss_app->utils;
+	if( self ) {
+		g_strfreev(self->charset_list);
+
+		g_free(self);
+	}
+}
 
 void puss_send_focus_change(GtkWidget *widget, gboolean in) {
 	// Cut and paste from gtkwindow.c
@@ -40,26 +82,27 @@ gboolean load_convert_text(gchar** text, gsize* len, const gchar* charset, GErro
 	gsize bytes_written = 0;
 	gchar* result = g_convert(*text, *len, "UTF-8", charset, 0, &bytes_written, err);
 	if( result ) {
-		g_free(*text);
-		*text = result;
-		*len = bytes_written;
-		return TRUE;
+		if( g_utf8_validate(result, bytes_written, 0) ) {
+			g_free(*text);
+			*text = result;
+			*len = bytes_written;
+			return TRUE;
+		}
+
+		g_free(result);
 	}
 
 	return FALSE;
 }
 
-const gchar* charset_order_list[] = { "GBK", 0 };
-
-gboolean puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST_RETURN gchar** charset, GError** err) {
+gboolean puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST_RETURN gchar** charset) {
 	gchar* sbuf = 0;
 	gsize  slen = 0;
-	const gchar** cs = 0;
 
 	g_return_val_if_fail(filename && text && len , FALSE);
 	g_return_val_if_fail(*filename, FALSE);
 
-	if( !g_file_get_contents(filename, &sbuf, &slen, err) )
+	if( !g_file_get_contents(filename, &sbuf, &slen, 0) )
 		return FALSE;
 
 	if( g_utf8_validate(sbuf, slen, 0) ) {
@@ -70,24 +113,27 @@ gboolean puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST
 		return TRUE;
 	}
 
-	const gchar* locale = 0;
-	if( !g_get_charset(&locale) ) {		// get locale charset, and not UTF-8
-		if( load_convert_text(&sbuf, &slen, locale, err) ) {
-			if( charset )
-				*charset = locale;
-			*text = sbuf;
-			*len = slen;
-			return TRUE;
+	Utils* self = puss_app->utils;
+	if( self->charset_list ) {
+		for( gchar** cs=self->charset_list; *cs; ++cs ) {
+			if( (*cs)[0]=='\0' )
+				continue;
+
+			if( load_convert_text(&sbuf, &slen, *cs, 0) ) {
+				if( charset )
+					*charset = *cs;
+				*text = sbuf;
+				*len = slen;
+				return TRUE;
+			}
 		}
 	}
 
-	for( cs=charset_order_list; *cs!=0; ++cs ) {
-		if( err )
-			g_clear_error(err);
-
-		if( load_convert_text(&sbuf, &slen, *cs, err) ) {
+	const gchar* locale = 0;
+	if( !g_get_charset(&locale) ) {		// get locale charset, and not UTF-8
+		if( load_convert_text(&sbuf, &slen, locale, 0) ) {
 			if( charset )
-				*charset = *cs;
+				*charset = locale;
 			*text = sbuf;
 			*len = slen;
 			return TRUE;

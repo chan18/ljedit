@@ -183,15 +183,14 @@ gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 	return page_num;
 }
 
-gint doc_open_file( const gchar* url, gint line, gint line_offset ) {
+gint doc_open_file( const gchar* url, gint line, gint line_offset, gboolean show_message_if_open_failed ) {
 	gint page_num = puss_doc_find_page_from_url(url);
 	if( page_num < 0 ) {
 		gchar* text = 0;
 		gsize len = 0;
 		const gchar* charset = 0;
-		GError* err = 0;
 
-		if( puss_load_file(url, &text, &len, &charset, &err) ) {
+		if( puss_load_file(url, &text, &len, &charset) ) {
 			// create text buffer & set text
 			GtkSourceBuffer* buf = gtk_source_buffer_new(0);
 			gtk_source_buffer_begin_not_undoable_action(buf);
@@ -212,11 +211,6 @@ gint doc_open_file( const gchar* url, gint line, gint line_offset ) {
 
 			if( line < 0 )
 				line = 0;
-
-		} else {
-			g_assert( err );
-			g_printerr("ERROR : %s", err->message);
-			g_error_free(err);
 		}
 
 	} else {
@@ -227,7 +221,20 @@ gint doc_open_file( const gchar* url, gint line, gint line_offset ) {
 		}
 	}
 
-	if( page_num >= 0 && line >= 0 ) {
+	if( page_num < 0 ) {
+		if( show_message_if_open_failed ) {
+			GtkWidget* dlg = gtk_message_dialog_new( puss_app->main_window
+				, GTK_DIALOG_MODAL
+				, GTK_MESSAGE_ERROR
+				, GTK_BUTTONS_OK
+				, _("Error loading file : %s")
+				, url );
+			gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dlg), _("please select charset and retry!"));
+			gtk_dialog_run(GTK_DIALOG(dlg));
+			gtk_widget_destroy(dlg);
+		}
+
+	} else if( line >= 0 ) {
 		doc_locate_page_line(page_num, line, line_offset);
 		puss_pos_locate_add(page_num, line, line_offset);
 	}
@@ -473,12 +480,12 @@ void puss_doc_new() {
 	puss_pos_locate_add(page_num, 0, 0);
 }
 
-gboolean puss_doc_open( const gchar* url, gint line, gint line_offset ) {
+gboolean puss_doc_open( const gchar* url, gint line, gint line_offset, gboolean show_message_if_open_failed ) {
 	gint page_num = -1;
 	puss_pos_locate_add_current_pos();
 
 	if( url ) {
-		page_num = doc_open_file(url, line, line_offset);
+		page_num = doc_open_file(url, line, line_offset, show_message_if_open_failed);
 		if( page_num < 0 )
 			return FALSE;
 
@@ -507,7 +514,7 @@ gboolean puss_doc_open( const gchar* url, gint line, gint line_offset ) {
 		res = gtk_dialog_run(GTK_DIALOG(dlg));
 		if( res == GTK_RESPONSE_ACCEPT ) {
 			gchar* filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dlg));
-			page_num = doc_open_file(filename, line, line_offset);
+			page_num = doc_open_file(filename, line, line_offset, show_message_if_open_failed);
 			line = -1;
 			g_free(filename);
 		}

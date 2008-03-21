@@ -43,8 +43,10 @@ def doc_get_buffer_from_page_num(page):		return __puss.__doc_doc_get_buffer_from
 
 def doc_find_page_from_url(url):			return __puss.__doc_find_page_from_url(__puss.__app, url)
 
+def doc_open(url=None, line=-1, offset=-1, show_message_if_open_failed=False):
+	return __puss.__doc_open(__puss.__app, url, line, offset, show_message_if_open_failed)
+
 def doc_new():								return __puss.__doc_new(__puss.__app)
-def doc_open(url=None, line=-1, offset=-1):	return __puss.__doc_open(__puss.__app, url, line, offset)
 def doc_locate(url, line=0, offset=0):		return __puss.__doc_locate(__puss.__app, url, line, offset)
 def doc_save_current(is_save_as = False):	return __puss.__doc_save_current(__puss.__app, is_save_as)
 def doc_close_current():					return __puss.__doc_close_current(__puss.__app)

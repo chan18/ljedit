@@ -210,7 +210,7 @@ SIGNAL_CALLBACK void outline_page_cb_row_activated(GtkTreeView* tree_view, GtkTr
 	if( !elem )
 		return;
 
-	self->app_->doc_open(elem->file.filename.c_str(), (gint)elem->sline - 1, -1);
+	self->app_->doc_open(elem->file.filename.c_str(), (gint)elem->sline - 1, -1, FALSE);
 }
 
 OutlinePage* outline_page_create(Puss* app, Environ* env, Icons* icons) {

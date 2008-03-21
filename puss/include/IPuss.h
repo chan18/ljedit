@@ -6,6 +6,7 @@
 
 #include <gtk/gtk.h>
 
+// mini line
 struct MiniLineCallback {
 	gpointer		 tag;
 
@@ -14,9 +15,19 @@ struct MiniLineCallback {
 	void     		(*cb_changed)( gpointer tag );
 };
 
-typedef gboolean	(*OptionSetter)(GtkWindow* parent, GKeyFile* options, const gchar* group, const gchar* key, gpointer tag);
-typedef void		(*OptionChanged)(const gchar* key, const gchar* group, const gchar* new_value, const gchar* current_value, gpointer tag);
+// option manager
+struct Option {
+	const gchar*	group;
+	const gchar*	key;
 
+	gchar*			current_value;
+	gchar*			default_value;
+};
+
+typedef gboolean	(*OptionSetter)(GtkWindow* parent, Option* option, gpointer tag);
+typedef void		(*OptionChanged)(const Option* option, const gchar* old, gpointer tag);
+
+// main
 struct Puss {
 	// app
 	const gchar*	(*get_module_path)();
@@ -41,7 +52,7 @@ struct Puss {
 	gint			(*doc_find_page_from_url)( const gchar* url );
 
 	void			(*doc_new)();
-	gboolean		(*doc_open)( const gchar* url, gint line, gint line_offset );
+	gboolean		(*doc_open)( const gchar* url, gint line, gint line_offset, gboolean show_message_if_open_failed );
 	gboolean		(*doc_locate)( gint page_num, gint line, gint line_offset, gboolean add_pos_locate );
 	void			(*doc_save_current)( gboolean save_as );
 	gboolean		(*doc_close_current)();
@@ -55,11 +66,12 @@ struct Puss {
 	// utils
 	void			(*send_focus_change)( GtkWidget* widget, gboolean in );
 	void			(*active_panel_page)( GtkNotebook* panel, gint page_num );
-	gboolean		(*load_file)(const gchar* filename, gchar** text, gsize* len, G_CONST_RETURN gchar** charset, GError** err);
+	gboolean		(*load_file)(const gchar* filename, gchar** text, gsize* len, G_CONST_RETURN gchar** charset);
 
 	// option manager
-	gboolean		(*option_manager_option_reg)(const gchar* group, const gchar* key, const gchar* default_value, OptionSetter fun, gpointer tag);
-	gboolean		(*option_manager_monitor_reg)(const gchar* group, const gchar* key, OptionChanged fun, gpointer tag);
+	const Option*	(*option_manager_find_option)(const gchar* group, const gchar* key);
+	const Option*	(*option_manager_option_reg)(const gchar* group, const gchar* key, const gchar* default_value, OptionSetter fun, gpointer tag);
+	gboolean		(*option_manager_monitor_reg)(const Option* option, OptionChanged fun, gpointer tag);
 };
 
 #ifdef  __cplusplus

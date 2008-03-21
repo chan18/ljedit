@@ -182,10 +182,11 @@ PyObject* py_wrapper_doc_open(PyObject* self, PyObject* args) {
 	const char* url = 0;
 	int line = 0;
 	int offset = 0;
-	if( !PyArg_ParseTuple(args, "O&zii:py_wrapper_doc_open", &app_convert, &app, &url, &line, &offset))
+	gboolean flag = FALSE;
+	if( !PyArg_ParseTuple(args, "O&ziii:py_wrapper_doc_open", &app_convert, &app, &url, &line, &offset, &flag))
 		return 0;
 
-	gboolean res = app->doc_open(url, line, offset);
+	gboolean res = app->doc_open(url, line, offset, flag);
 	return PyBool_FromLong((long)res);
 }
 

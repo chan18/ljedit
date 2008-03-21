@@ -78,7 +78,7 @@ void LJCS::open_include_file(const gchar* filename, gboolean system_header, cons
 	if( owner_path && !system_header ) {
 		gchar* dirpath = g_path_get_dirname(owner_path);
 		gchar* filepath = g_build_filename(dirpath, filename, NULL);
-		succeed = app->doc_open(filepath, -1, -1);
+		succeed = app->doc_open(filepath, -1, -1, FALSE);
 		g_free(dirpath);
 		g_free(filepath);
 	}
@@ -88,7 +88,7 @@ void LJCS::open_include_file(const gchar* filename, gboolean system_header, cons
 	StrVector::iterator end = paths.end();
 	for( ; !succeed && it!=end; ++it ) {
 		gchar* filepath = g_build_filename(it->c_str(), filename, NULL);
-		succeed = app->doc_open(filepath, -1, -1);
+		succeed = app->doc_open(filepath, -1, -1, FALSE);
 		g_free(filepath);
 	}
 }
@@ -171,7 +171,7 @@ void LJCS::do_button_release_event(GtkTextView* view, GtkTextBuffer* buf, GdkEve
 
 			cpp::Element* elem = find_best_matched_element(mset.elems());
 			if( elem )
-				app->doc_open(elem->file.filename.c_str(), int(elem->sline - 1), -1);
+				app->doc_open(elem->file.filename.c_str(), int(elem->sline - 1), -1, FALSE);
 		}
 
 

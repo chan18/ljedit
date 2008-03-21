@@ -241,7 +241,7 @@ void PreviewPage::do_preview_impl(size_t index) {
 		last_preview_file_ = &(elem->file);
 
 		gsize len = 0;
-		if( !app_->load_file(elem->file.filename.c_str(), &text, &len, 0, 0) )
+		if( !app_->load_file(elem->file.filename.c_str(), &text, &len, 0) )
 			return;
 
 		gtk_text_buffer_set_text(buffer, text, len);
@@ -289,7 +289,7 @@ SIGNAL_CALLBACK void preview_page_cb_filename_button_clicked(GtkButton* button, 
 	cpp::Element* elem = elems[self->index_];
 	assert( elem != 0 );
 
-	self->app_->doc_open(elem->file.filename.c_str(), (int)(elem->sline - 1), -1);
+	self->app_->doc_open(elem->file.filename.c_str(), (int)(elem->sline - 1), -1, FALSE);
 }
 
 PreviewPage* preview_page_create(Puss* app, Environ* env) {

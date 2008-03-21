@@ -20,7 +20,7 @@ SIGNAL_CALLBACK void file_menu_new( GtkAction* action ) {
 }
 
 SIGNAL_CALLBACK void file_menu_open( GtkAction* action ) {
-	puss_doc_open(0, -1, -1);
+	puss_doc_open(0, -1, -1, TRUE);
 }
 
 SIGNAL_CALLBACK void file_menu_save( GtkAction* action ) {

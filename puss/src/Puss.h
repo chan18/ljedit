@@ -9,6 +9,7 @@
 struct MiniLine;
 struct PosList;
 struct Extend;
+struct Utils;
 struct OptionManager;
 
 struct PussApp {
@@ -30,6 +31,7 @@ struct PussApp {
 	MiniLine*		mini_line;
 	PosList*		pos_list;
 	Extend*			extends_list;
+	Utils*			utils;
 	OptionManager*	option_manager;
 };
 
