@@ -17,6 +17,7 @@
 #include "Utils.h"
 #include "GlobMatch.h"
 #include "PosLocate.h"
+#include "OptionManager.h"
 
 void __free_g_string( GString* gstr ) {
 	g_string_free(gstr, TRUE);
@@ -153,6 +154,15 @@ gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 	gtk_source_view_set_right_margin_position(view, 120);
 	gtk_source_view_set_show_right_margin(view, TRUE);
 	gtk_source_view_set_tab_width(view, 4);
+
+	const Option* font_option = puss_option_manager_find_option("puss", "document.font");
+	if( font_option && font_option->current_value) {
+		PangoFontDescription* desc = pango_font_description_from_string(font_option->current_value);
+		if( desc ) {
+			gtk_widget_modify_font(GTK_WIDGET(view), desc);
+			pango_font_description_free(desc);
+		}
+	}
 
 	label = GTK_LABEL(gtk_label_new(0));
 	doc_reset_page_label(GTK_TEXT_BUFFER(buf), label);
@@ -395,7 +405,6 @@ GString* puss_doc_get_charset( GtkTextBuffer* buffer ) {
 	return (GString*)g_object_get_data(G_OBJECT(buffer), "puss-doc-charset");
 }
 
-
 void puss_doc_replace_all( GtkTextBuffer* buf
 		, const gchar* find_text
 		, const gchar* replace_text
@@ -623,5 +632,33 @@ gboolean puss_doc_close_all() {
 	}
 
 	return TRUE;
+}
+
+// document manager options
+
+void doc_manager_option_document_font_changed(const Option* option, const gchar* old, gpointer tag) {
+	PangoFontDescription* desc = pango_font_description_from_string(option->current_value);
+	if( desc ) {
+		gint num = gtk_notebook_get_n_pages(puss_app->doc_panel);
+		for( gint i=0; i<num; ++i ) {
+			GtkTextView* view = puss_doc_get_view_from_page_num(i);
+			if( view )
+				gtk_widget_modify_font(GTK_WIDGET(view), desc);
+		}
+
+		pango_font_description_free(desc);
+	}
+}
+
+gboolean puss_doc_manager_create() {
+	const Option* option = 0;
+
+	option = puss_option_manager_option_reg("puss", "document.font", "", 0, (gpointer)GDK_TYPE_FONT);
+	puss_option_manager_monitor_reg(option, &doc_manager_option_document_font_changed, 0);
+
+	return TRUE;
+}
+
+void puss_doc_manager_destroy() {
 }
 

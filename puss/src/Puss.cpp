@@ -153,6 +153,7 @@ gboolean puss_create(const char* filepath) {
 
 	return puss_option_manager_create()
 		&& puss_utils_create()
+		&& puss_doc_manager_create()
 		&& puss_load_ui_files()
 		&& puss_main_ui_create()
 		&& puss_mini_line_create()
@@ -164,6 +165,7 @@ void puss_destroy() {
 	puss_extend_engine_destroy();
 	puss_pos_locate_destroy();
 	puss_mini_line_destroy();
+	puss_doc_manager_destroy();
 	puss_utils_destroy();
 	puss_option_manager_destroy();
 

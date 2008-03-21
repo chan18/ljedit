@@ -3,6 +3,8 @@
 
 #include "OptionManager.h"
 
+#include <glib/gi18n.h>
+
 #include "Puss.h"
 
 struct OptionNotifer {
@@ -193,12 +195,15 @@ gboolean puss_option_manager_monitor_reg(const Option* option, OptionChanged fun
 	return TRUE;
 }
 
-gboolean puss_default_option_setter(GtkWindow* parent, Option* option, gpointer tag) {
-	GtkWidget* dlg = gtk_dialog_new_with_buttons( "option setting..."
+const gint RESPONSE_USE_DEFFAULT_VALUE = 100;
+
+gboolean default_text_option_setter(GtkWindow* parent, Option* option) {
+	GtkWidget* dlg = gtk_dialog_new_with_buttons( _("option setting...")
 		, parent
 		, GTK_DIALOG_MODAL
 		, GTK_STOCK_OK, GTK_RESPONSE_OK
 		, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL
+		, GTK_STOCK_REVERT_TO_SAVED, RESPONSE_USE_DEFFAULT_VALUE
 		, NULL );
 
 	GtkWidget* label = gtk_label_new(option->key);
@@ -218,25 +223,67 @@ gboolean puss_default_option_setter(GtkWindow* parent, Option* option, gpointer 
 
 	gint res = gtk_dialog_run(GTK_DIALOG(dlg));
 
-	if( res==GTK_RESPONSE_OK )
-	{
+	if( res==GTK_RESPONSE_OK ) {
 		const gchar* value = gtk_entry_get_text(GTK_ENTRY(entry));
-		if( value ) {
-			if( option->current_value && g_str_equal(value, option->current_value) ) {
-				res = GTK_RESPONSE_CANCEL;
-			} else {
-				g_free(option->current_value);
-				option->current_value = g_strdup(value);
-			}
-
-		} else {
+		if( value && option->current_value && g_str_equal(value, option->current_value) ) {
 			res = GTK_RESPONSE_CANCEL;
+		} else {
+			g_free(option->current_value);
+			option->current_value = value ? g_strdup(value) : 0;
+		}
+
+	} else if( res==RESPONSE_USE_DEFFAULT_VALUE ) {
+		if( option->current_value && option->default_value && g_str_equal(option->current_value, option->default_value) ) {
+			res = GTK_RESPONSE_CANCEL;
+		} else {
+			g_free(option->current_value);
+			option->current_value = option->default_value ? g_strdup(option->default_value) : 0;
+			res = GTK_RESPONSE_OK;
 		}
 	}
 
 	gtk_widget_destroy(dlg);
 
 	return res==GTK_RESPONSE_OK;
+}
+
+gboolean default_option_setter(GtkWindow* parent, Option* option, gpointer tag) {
+	GType type = (GType)tag;
+	if( type==GDK_TYPE_FONT ) {
+		GtkWidget* dlg = gtk_font_selection_dialog_new( _("font selecting...") );
+		if( option->current_value )
+			gtk_font_selection_dialog_set_font_name(GTK_FONT_SELECTION_DIALOG(dlg), option->current_value);
+		gtk_window_set_transient_for(GTK_WINDOW(dlg), parent);
+
+		gint res = gtk_dialog_run( GTK_DIALOG(dlg) );
+
+		if( res==GTK_RESPONSE_OK ) {
+			gchar* value = gtk_font_selection_dialog_get_font_name(GTK_FONT_SELECTION_DIALOG(dlg));
+			if( value && option->current_value && g_str_equal(value, option->current_value) ) {
+				g_free(value);
+				res = GTK_RESPONSE_CANCEL;
+
+			} else {
+				g_free(option->current_value);
+				option->current_value = value;
+			}
+
+		} else if( res==RESPONSE_USE_DEFFAULT_VALUE ) {
+			if( option->current_value && option->default_value && g_str_equal(option->current_value, option->default_value) ) {
+				res = GTK_RESPONSE_CANCEL;
+			} else {
+				g_free(option->current_value);
+				option->current_value = option->default_value ? g_strdup(option->default_value) : 0;
+				res = GTK_RESPONSE_OK;
+			}
+		}
+
+		gtk_widget_destroy(dlg);
+
+		return res==GTK_RESPONSE_OK;
+	}
+
+	return default_text_option_setter(parent, option);
 }
 
 struct ParentTreePosition {
@@ -290,7 +337,7 @@ SIGNAL_CALLBACK void option_manager_cb_row_activated(GtkTreeView* tree_view, Gtk
 	if( !node )
 		return;
 
-	OptionSetter setter = node->setter_fun ? node->setter_fun : &puss_default_option_setter;
+	OptionSetter setter = node->setter_fun ? node->setter_fun : &default_option_setter;
 	if( (*setter)(parent, &node->option, node->setter_tag) ) {
 		option_manager_notify_option_changed(node);
 

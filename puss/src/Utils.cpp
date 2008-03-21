@@ -30,8 +30,8 @@ gboolean puss_utils_create() {
 	}
 
 	const Option* option = puss_option_manager_option_reg("puss", "fileloader.charset_list", "GBK", 0, 0);
-	parse_charset_list_option(option);
 	puss_option_manager_monitor_reg(option, &charset_list_option_changed, 0);
+	parse_charset_list_option(option);
 
 	return TRUE;
 }

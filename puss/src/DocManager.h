@@ -23,7 +23,6 @@ GtkTextView*	puss_doc_get_view_from_page( GtkWidget* page );
 GtkTextBuffer*	puss_doc_get_buffer_from_page( GtkWidget* page );
 
 // doc manager
-
 GtkTextView*	puss_doc_get_view_from_page_num( gint page_num );
 GtkTextBuffer*	puss_doc_get_buffer_from_page_num( gint page_num );
 
@@ -36,6 +35,9 @@ void			puss_doc_save_current(gboolean save_as );
 gboolean		puss_doc_close_current();
 void			puss_doc_save_all();
 gboolean		puss_doc_close_all();
+
+gboolean		puss_doc_manager_create();
+void			puss_doc_manager_destroy();
 
 #endif//PUSS_INC_DOCMANAGER_H
 
