@@ -36,7 +36,10 @@ public:
     void do_preview_impl(size_t index);
 	void do_scroll_to_define_line();
 
-	static gboolean scroll_to_define_line_wrapper(gpointer self);
+	static gboolean scroll_to_define_line_wrapper(PreviewPage* self);
+
+public:
+	static void option_document_font_changed(const Option* option, PreviewPage* self);
 
 public:
 	Puss*					app_;
@@ -101,6 +104,18 @@ gboolean PreviewPage::create(Puss* app, Environ* env) {
 
 	gtk_builder_connect_signals(builder, this);
 	g_object_unref(G_OBJECT(builder));
+
+	const Option* option = app->option_manager_find("puss", "document.font");
+	if( option ) {
+		app->option_manager_monitor_reg(option, (OptionChanged)&option_document_font_changed, this);
+
+		PangoFontDescription* desc = pango_font_description_from_string(option->value);
+		if( desc ) {
+			gtk_widget_modify_font(GTK_WIDGET(preview_view_), desc);
+
+			pango_font_description_free(desc);
+		}
+	}
 
 	// init search thread
 	search_stopsign_ = FALSE;
@@ -248,7 +263,7 @@ void PreviewPage::do_preview_impl(size_t index) {
 		g_free(text);
     }
 
-	g_idle_add(&PreviewPage::scroll_to_define_line_wrapper, this);
+	g_idle_add((GSourceFunc)&PreviewPage::scroll_to_define_line_wrapper, this);
 }
 
 void PreviewPage::do_scroll_to_define_line() {
@@ -271,9 +286,18 @@ void PreviewPage::do_scroll_to_define_line() {
 	}
 }
 
-gboolean PreviewPage::scroll_to_define_line_wrapper(gpointer self) {
-	((PreviewPage*)self)->do_scroll_to_define_line();
+gboolean PreviewPage::scroll_to_define_line_wrapper(PreviewPage* self) {
+	self->do_scroll_to_define_line();
     return FALSE;
+}
+
+void PreviewPage::option_document_font_changed(const Option* option, PreviewPage* self) {
+	PangoFontDescription* desc = pango_font_description_from_string(option->value);
+	if( desc ) {
+		gtk_widget_modify_font(GTK_WIDGET(self->preview_view_), desc);
+
+		pango_font_description_free(desc);
+	}
 }
 
 SIGNAL_CALLBACK void preview_page_cb_number_button_clicked(GtkButton* button, PreviewPage* self) {

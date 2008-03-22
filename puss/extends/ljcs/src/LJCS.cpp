@@ -40,8 +40,26 @@ gboolean ljcs_update_timeout(LJCS* self) {
 	return TRUE;
 }
 
+void parse_include_path_option(const Option* option, Environ* env) {
+	StrVector paths;
+
+	gchar** items = g_strsplit_set(option->value, ",; \t\r\n", 0);
+	for( gchar** p=items; *p; ++p ) {
+		if( *p[0]=='\0' )
+			continue;
+
+		paths.push_back(*p);
+	}
+	g_strfreev(items);
+	env->set_include_paths(paths);
+}
+
 bool LJCS::create(Puss* _app) {
 	app = _app;
+
+	const Option* option = app->option_manager_option_reg("cpp_helper", "include_path", "/usr/include\n/user/include/c++/4.0\n", 0, "text", 0);
+	app->option_manager_monitor_reg(option, (OptionChanged)&parse_include_path_option, &env);
+	parse_include_path_option(option, &env);
 
 	icons.create(app);
 

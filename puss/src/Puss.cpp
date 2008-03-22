@@ -65,9 +65,64 @@ void init_puss_c_api(Puss* api) {
 	api->load_file = &puss_load_file;
 
 	// option manager
-	api->option_manager_find_option = &puss_option_manager_find_option;
+	api->option_manager_find = &puss_option_manager_find;
 	api->option_manager_option_reg  = &puss_option_manager_option_reg;
 	api->option_manager_monitor_reg = &puss_option_manager_monitor_reg;
+}
+
+void tttt() {
+	gchar* path = gtk_rc_get_theme_dir();
+	GDir* dir = g_dir_open(path, 0, 0);
+	g_free(path);
+
+	if( dir ) {
+		for(;;) {
+			const gchar* fname = g_dir_read_name(dir);
+			if( !fname )
+				break;
+
+			g_print(fname);
+		}
+	}
+
+	gtk_rc_parse_string("gtk-theme-name = 'MS-Windows'");
+}
+
+void parse_puss_theme_option(const Option* option, gpointer tag) {
+	if( !option->value || option->value[0]=='\0' )
+		return;
+
+	gchar* str = g_strdup_printf("gtk-theme-name = \"%s\"", option->value);
+	gtk_rc_parse_string(str);
+	g_free(str);
+}
+
+void puss_reg_global_options() {
+	gchar* path = gtk_rc_get_theme_dir();
+	GDir* dir = g_dir_open(path, 0, 0);
+	g_free(path);
+
+	gchar* tag = g_strdup("enum:");
+	if( dir ) {
+		for(;;) {
+			const gchar* fname = g_dir_read_name(dir);
+			if( !fname )
+				break;
+
+			gchar* tmp = g_strconcat(tag, fname, " ", NULL);
+			g_free(tag);
+			tag = tmp;
+		}
+	}
+
+#ifdef G_OS_WIN32
+	const Option* option = puss_option_manager_option_reg("puss", "theme", "MS-Windows", 0, tag, &g_free);
+#else
+	const Option* option = puss_option_manager_option_reg("puss", "theme", 0, 0, tag, &g_free);
+#endif
+
+	puss_option_manager_monitor_reg(option, &parse_puss_theme_option, 0);
+	parse_puss_theme_option(option, 0);
 }
 
 gboolean puss_load_ui(const gchar* filename ) {
@@ -151,8 +206,14 @@ gboolean puss_create(const char* filepath) {
 	puss_app->module_path = g_path_get_dirname(filepath);
 	init_puss_c_api((Puss*)puss_app);
 
-	return puss_option_manager_create()
-		&& puss_utils_create()
+	if( !puss_option_manager_create() ) {
+		g_printerr("ERROR(puss) : create option manager failed!\n");
+		return FALSE;
+	}
+
+	puss_reg_global_options();
+
+	return puss_utils_create()
 		&& puss_doc_manager_create()
 		&& puss_load_ui_files()
 		&& puss_main_ui_create()
@@ -167,6 +228,7 @@ void puss_destroy() {
 	puss_mini_line_destroy();
 	puss_doc_manager_destroy();
 	puss_utils_destroy();
+
 	puss_option_manager_destroy();
 
 	g_object_unref(G_OBJECT(puss_app->builder));

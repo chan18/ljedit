@@ -13,45 +13,43 @@
 
 
 #ifdef G_OS_WIN32
-#include <Windows.h>
-#endif
+	#include <Windows.h>
 
-gchar* find_module_filepath(const char* argv0) {
-	gchar* filepath = 0;
-
-#ifdef G_OS_WIN32
-
-	gchar buf[4096];
-	int len = GetModuleFileNameA(0, buf, 4096);
-	filepath = g_locale_to_utf8(buf, len, NULL, NULL, NULL);
+	gchar* find_module_filepath(const char* argv0) {
+		gchar buf[4096];
+		int len = GetModuleFileNameA(0, buf, 4096);
+		return g_locale_to_utf8(buf, len, NULL, NULL, NULL);
+	}
 
 #else
-	filepath = g_find_program_in_path(argv0);
+	gchar* find_module_filepath(const char* argv0) {
+		gchar* filepath = g_find_program_in_path(argv0);
 
-	if( !filepath ) {
-		g_printerr(_("ERROR : can not find puss in $PATH\n"));
-		return 0;
-	}
+		if( !filepath ) {
+			g_printerr(_("ERROR : can not find puss in $PATH\n"));
+			return 0;
+		}
 
-	if( !g_path_is_absolute(filepath) ) {
-		gchar* pwd = g_get_current_dir();
-		gchar* prj =  g_build_filename(pwd, filepath, NULL);
-		g_free(pwd);
-		g_free(filepath);
-		filepath = prj;
-	}
+		if( !g_path_is_absolute(filepath) ) {
+			gchar* pwd = g_get_current_dir();
+			gchar* prj =  g_build_filename(pwd, filepath, NULL);
+			g_free(pwd);
+			g_free(filepath);
+			filepath = prj;
+		}
 
-	if( !g_file_test(filepath, G_FILE_TEST_EXISTS) ) {
-		g_printerr(_("ERROR : can not find puss directory!\n"));
-		g_printerr(_("        can not use indirect search path in $PATH!\n"));
-		g_free(filepath);
-		return 0;
+		if( !g_file_test(filepath, G_FILE_TEST_EXISTS) ) {
+			g_printerr(_("ERROR : can not find puss directory!\n"));
+			g_printerr(_("        can not use indirect search path in $PATH!\n"));
+			g_free(filepath);
+			return 0;
+		}
+
+		return filepath;
 	}
 
 #endif
 
-	return filepath;
-}
 
 int main(int argc, char* argv[]) {
 	g_thread_init(NULL);

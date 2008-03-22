@@ -9,17 +9,13 @@ struct Utils {
 	gchar** charset_list;
 };
 
-void parse_charset_list_option(const Option* option) {
+void parse_charset_list_option(const Option* option, gpointer tag) {
 	Utils* self = puss_app->utils;
 
 	g_strfreev(self->charset_list);
-	self->charset_list = g_strsplit_set(option->current_value, " \t,;", 0);
+	self->charset_list = g_strsplit_set(option->value, " \t,;", 0);
 	//for( char** p=self->charset_list; *p; ++p )
 	//	printf("%s\n", *p);
-}
-
-void charset_list_option_changed(const Option* option, const gchar* old, gpointer tag) {
-	parse_charset_list_option(option);
 }
 
 gboolean puss_utils_create() {
@@ -29,9 +25,9 @@ gboolean puss_utils_create() {
 		return FALSE;
 	}
 
-	const Option* option = puss_option_manager_option_reg("puss", "fileloader.charset_list", "GBK", 0, 0);
-	puss_option_manager_monitor_reg(option, &charset_list_option_changed, 0);
-	parse_charset_list_option(option);
+	const Option* option = puss_option_manager_option_reg("puss", "fileloader.charset_list", "GBK", 0, 0, 0);
+	puss_option_manager_monitor_reg(option, &parse_charset_list_option, 0);
+	parse_charset_list_option(option, 0);
 
 	return TRUE;
 }

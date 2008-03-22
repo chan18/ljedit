@@ -155,9 +155,9 @@ gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 	gtk_source_view_set_show_right_margin(view, TRUE);
 	gtk_source_view_set_tab_width(view, 4);
 
-	const Option* font_option = puss_option_manager_find_option("puss", "document.font");
-	if( font_option && font_option->current_value) {
-		PangoFontDescription* desc = pango_font_description_from_string(font_option->current_value);
+	const Option* font_option = puss_option_manager_find("puss", "document.font");
+	if( font_option && font_option->value) {
+		PangoFontDescription* desc = pango_font_description_from_string(font_option->value);
 		if( desc ) {
 			gtk_widget_modify_font(GTK_WIDGET(view), desc);
 			pango_font_description_free(desc);
@@ -636,8 +636,8 @@ gboolean puss_doc_close_all() {
 
 // document manager options
 
-void doc_manager_option_document_font_changed(const Option* option, const gchar* old, gpointer tag) {
-	PangoFontDescription* desc = pango_font_description_from_string(option->current_value);
+void doc_manager_option_document_font_changed(const Option* option, gpointer tag) {
+	PangoFontDescription* desc = pango_font_description_from_string(option->value);
 	if( desc ) {
 		gint num = gtk_notebook_get_n_pages(puss_app->doc_panel);
 		for( gint i=0; i<num; ++i ) {
@@ -653,7 +653,7 @@ void doc_manager_option_document_font_changed(const Option* option, const gchar*
 gboolean puss_doc_manager_create() {
 	const Option* option = 0;
 
-	option = puss_option_manager_option_reg("puss", "document.font", "", 0, (gpointer)GDK_TYPE_FONT);
+	option = puss_option_manager_option_reg("puss", "document.font", "", 0, "font", 0);
 	puss_option_manager_monitor_reg(option, &doc_manager_option_document_font_changed, 0);
 
 	return TRUE;

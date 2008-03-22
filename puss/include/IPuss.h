@@ -20,12 +20,13 @@ struct Option {
 	const gchar*	group;
 	const gchar*	key;
 
-	gchar*			current_value;
+	gchar*			value;
+
 	gchar*			default_value;
 };
 
 typedef gboolean	(*OptionSetter)(GtkWindow* parent, Option* option, gpointer tag);
-typedef void		(*OptionChanged)(const Option* option, const gchar* old, gpointer tag);
+typedef void		(*OptionChanged)(const Option* option, gpointer tag);
 
 // main
 struct Puss {
@@ -69,8 +70,15 @@ struct Puss {
 	gboolean		(*load_file)(const gchar* filename, gchar** text, gsize* len, G_CONST_RETURN gchar** charset);
 
 	// option manager
-	const Option*	(*option_manager_find_option)(const gchar* group, const gchar* key);
-	const Option*	(*option_manager_option_reg)(const gchar* group, const gchar* key, const gchar* default_value, OptionSetter fun, gpointer tag);
+	const Option*	(*option_manager_find)(const gchar* group, const gchar* key);
+
+	const Option*	(*option_manager_option_reg)( const gchar* group
+						, const gchar* key
+						, const gchar* default_value
+						, OptionSetter fun
+						, gpointer tag
+						, GFreeFunc tag_free_fun );
+
 	gboolean		(*option_manager_monitor_reg)(const Option* option, OptionChanged fun, gpointer tag);
 };
 
