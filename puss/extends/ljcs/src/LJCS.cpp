@@ -57,7 +57,7 @@ void parse_include_path_option(const Option* option, Environ* env) {
 bool LJCS::create(Puss* _app) {
 	app = _app;
 
-	const Option* option = app->option_manager_option_reg("cpp_helper", "include_path", "/usr/include\n/user/include/c++/4.0\n", 0, "text", 0);
+	const Option* option = app->option_manager_option_reg("cpp_helper", "include_path", "/usr/include\n/user/include/c++/4.0\n", 0, (gpointer)"text", 0);
 	app->option_manager_monitor_reg(option, (OptionChanged)&parse_include_path_option, &env);
 	parse_include_path_option(option, &env);
 

@@ -430,11 +430,13 @@ gboolean default_enum_option_setter(GtkWindow* parent, Option* option, const gch
 	gchar** items = g_strsplit_set(elems, ",; \t", 0);
 	gint i = 0;
 	for( gchar** p=items; *p; ++p ) {
-		gtk_combo_box_append_text(GTK_COMBO_BOX(combo), *p);
-		if( index < 0 && option->value ) {
-			if( g_str_equal(*p, option->value) )
-				index = i;
-			++i;
+		if( *p[0] ) {
+			gtk_combo_box_append_text(GTK_COMBO_BOX(combo), *p);
+			if( index < 0 && option->value ) {
+				if( g_str_equal(*p, option->value) )
+					index = i;
+				++i;
+			}
 		}
 	}
 	g_strfreev(items);

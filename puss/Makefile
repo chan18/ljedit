@@ -11,11 +11,15 @@
 #	msgfmt -o bin/locale/zh_CN/LC_MESSAGES/puss.mo poss.zh_CN.po
 # 
 
+ifeq ($(OS), Windows_NT)
+	PLATFORM = win32
+endif
+
 CXXFLAGS = -g -Wall
 OBJPATH = debug
 
 ifeq ($(BUILD), release)
-	CXXFLAGS = -O2 -Wall
+	CXXFLAGS = -O3 -Wall
 	OBJPATH = release
 endif
 
@@ -35,19 +39,28 @@ SRCS = $(wildcard src/*.cpp)
 
 OBJS = $(SRCS:%.cpp=$(OBJPATH)/%.o)
 
-TARGET = bin/puss
+ifeq ($(PLATFORM), win32)
+	TARGET = bin/puss.exe
 
-EXTENDS = 
+	ifeq ($(BUILD), release)
+		LDFLAGS = -mwindows
+	endif
+
+else
+	LIBS += -ldl
+	TARGET = bin/puss
+endif
 
 all : $(TARGET) puss_extends
 
 $(TARGET) : $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^ -ldl $(LIBS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
 
 puss_extends :
-	@cd extends/ljcs;			make BUILD=$(BUILD)
-	@cd extends/pyextend;		make BUILD=$(BUILD)
-	@cd extends/plugin_engine;	make BUILD=$(BUILD)
+	@cd extends/dndopen;		make BUILD=$(BUILD) PLATFORM=$(PLATFORM)
+	@cd extends/ljcs;			make BUILD=$(BUILD) PLATFORM=$(PLATFORM)
+	@cd extends/pyextend;		make BUILD=$(BUILD) PLATFORM=$(PLATFORM)
+	@cd extends/plugin_engine;	make BUILD=$(BUILD) PLATFORM=$(PLATFORM)
 
 clean :
 	rm -f $(TARGET)
@@ -66,9 +79,7 @@ $(OBJPATH)/%.d : %.cpp
 	@echo $(CXX) -MM -o $@ -c $<
 	@rm -f $@
 	@mkdir -p $(dir $@)
-	@echo -n $@ $(dir $@) > $@.tmp
-	@$(CXX) $(CXXFLAGS) -MM $< >> $@.tmp
-	@mv $@.tmp $@
+	@$(CXX) $(CXXFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
 
 -include $(SRCS:%.cpp=$(OBJPATH)/%.d)
 

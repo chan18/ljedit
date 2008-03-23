@@ -338,14 +338,6 @@
 				</File>
 			</Filter>
 		</Filter>
-		<File
-			RelativePath=".\puss.ico"
-			>
-		</File>
-		<File
-			RelativePath=".\puss.rc"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

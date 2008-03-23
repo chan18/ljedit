@@ -11,11 +11,15 @@
 #	msgfmt -o bin/locale/zh_CN/LC_MESSAGES/puss.mo poss.zh_CN.po
 # 
 
+ifeq ($(OS), Windows_NT)
+	PLATFORM = win32
+endif
+
 CXXFLAGS = -g -Wall
 OBJPATH = debug
 
 ifeq ($(BUILD), release)
-	CXXFLAGS = -O2 -Wall
+	CXXFLAGS = -O3 -Wall
 	OBJPATH = release
 endif
 
@@ -26,6 +30,10 @@ CXXFLAGS += `pkg-config --cflags gtksourceview-2.0`
 LIBS += `pkg-config --libs gtksourceview-2.0` \
 		`pkg-config --libs gmodule-2.0` \
 		`pkg-config --libs gthread-2.0`
+
+ifneq ($(PLATFORM), win32)
+	LIBS += -ldl
+endif
 
 # project
 # 
@@ -40,7 +48,7 @@ TARGET = ../../bin/extends/plugin_engine.ext
 all : $(TARGET)
 
 $(TARGET) : $(OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o $@ $^ -ldl $(LIBS)
+	$(CXX) $(CXXFLAGS) -shared -o $@ $^ $(LIBS)
 
 clean :
 	rm -f $(TARGET)
@@ -55,9 +63,7 @@ $(OBJPATH)/%.d : %.cpp
 	@echo $(CXX) -MM -o $@ -c $<
 	@rm -f $@
 	@mkdir -p $(dir $@)
-	@echo -n $@ $(dir $@) > $@.tmp
-	@$(CXX) $(CXXFLAGS) -MM $< >> $@.tmp
-	@mv $@.tmp $@
+	@$(CXX) $(CXXFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
 
 -include $(SRCS:%.cpp=$(OBJPATH)/%.d)
 

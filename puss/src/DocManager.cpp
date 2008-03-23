@@ -653,7 +653,7 @@ void doc_manager_option_document_font_changed(const Option* option, gpointer tag
 gboolean puss_doc_manager_create() {
 	const Option* option = 0;
 
-	option = puss_option_manager_option_reg("puss", "document.font", "", 0, "font", 0);
+	option = puss_option_manager_option_reg("puss", "document.font", "", 0, (gpointer)"font", 0);
 	puss_option_manager_monitor_reg(option, &doc_manager_option_document_font_changed, 0);
 
 	return TRUE;

@@ -23,6 +23,8 @@ protected:
 
 class MatchedPrint : public IMatched {
 public:
+	MatchedPrint(IParserEnviron& env) : IMatched(env) {}
+
 	virtual void on_matched(cpp::Element& elem) {
 		std::cout << elem.decl << std::endl;
 	}

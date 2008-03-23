@@ -70,24 +70,6 @@ void init_puss_c_api(Puss* api) {
 	api->option_manager_monitor_reg = &puss_option_manager_monitor_reg;
 }
 
-void tttt() {
-	gchar* path = gtk_rc_get_theme_dir();
-	GDir* dir = g_dir_open(path, 0, 0);
-	g_free(path);
-
-	if( dir ) {
-		for(;;) {
-			const gchar* fname = g_dir_read_name(dir);
-			if( !fname )
-				break;
-
-			g_print(fname);
-		}
-	}
-
-	gtk_rc_parse_string("gtk-theme-name = 'MS-Windows'");
-}
-
 void parse_puss_theme_option(const Option* option, gpointer tag) {
 	if( !option->value || option->value[0]=='\0' )
 		return;
@@ -100,7 +82,6 @@ void parse_puss_theme_option(const Option* option, gpointer tag) {
 void puss_reg_global_options() {
 	gchar* path = gtk_rc_get_theme_dir();
 	GDir* dir = g_dir_open(path, 0, 0);
-	g_free(path);
 
 	gchar* tag = g_strdup("enum:");
 	if( dir ) {
@@ -109,11 +90,16 @@ void puss_reg_global_options() {
 			if( !fname )
 				break;
 
-			gchar* tmp = g_strconcat(tag, fname, " ", NULL);
-			g_free(tag);
-			tag = tmp;
+			gchar* rcfile = g_build_filename(path, fname, "gtk-2.0", "gtkrc", NULL);
+			if( g_file_test(rcfile, G_FILE_TEST_EXISTS) ) {
+				gchar* tmp = g_strconcat(tag, fname, " ", NULL);
+				g_free(tag);
+				tag = tmp;
+			}
+			g_free(rcfile);
 		}
 	}
+	g_free(path);
 
 #ifdef G_OS_WIN32
 	const Option* option = puss_option_manager_option_reg("puss", "theme", "MS-Windows", 0, tag, &g_free);

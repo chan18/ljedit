@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pyextend", "extends\pyexten
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dndopen", "extends\dndopen\dndopen.vcproj", "{44F873E0-12E8-4F44-777A-2FAB5DB9AEE3}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "win32_boot", "win32_boot\win32_boot.vcproj", "{EFCA6A67-B23E-4199-A6B3-26EC9C34A209}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -39,6 +41,10 @@ Global
 		{44F873E0-12E8-4F44-777A-2FAB5DB9AEE3}.Debug|Win32.Build.0 = Debug|Win32
 		{44F873E0-12E8-4F44-777A-2FAB5DB9AEE3}.Release|Win32.ActiveCfg = Release|Win32
 		{44F873E0-12E8-4F44-777A-2FAB5DB9AEE3}.Release|Win32.Build.0 = Release|Win32
+		{EFCA6A67-B23E-4199-A6B3-26EC9C34A209}.Debug|Win32.ActiveCfg = Debug|Win32
+		{EFCA6A67-B23E-4199-A6B3-26EC9C34A209}.Debug|Win32.Build.0 = Debug|Win32
+		{EFCA6A67-B23E-4199-A6B3-26EC9C34A209}.Release|Win32.ActiveCfg = Release|Win32
+		{EFCA6A67-B23E-4199-A6B3-26EC9C34A209}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
