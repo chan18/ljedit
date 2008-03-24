@@ -26,7 +26,6 @@ import gobject
 import vte
 import gconf
 import gettext
-import gnomevfs
 import os
 
 try:

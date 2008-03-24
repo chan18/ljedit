@@ -42,7 +42,11 @@ CXXFLAGS += -I../../include
 # libljcs
 # 
 CXXFLAGS += -I../../../ljcs/include
-LJCSLIB = ../../../ljcs/lib/libljcs.a
+ifeq ($(BUILD), release)
+	LJCSLIB = ../../../ljcs/lib/libljcs.a
+else
+	LJCSLIB = ../../../ljcs/lib/libljcs_d.a
+endif
 
 SRCS = $(wildcard src/*.cpp)
 
