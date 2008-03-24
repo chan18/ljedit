@@ -48,7 +48,15 @@ void parse_include_path_option(const Option* option, Environ* env) {
 		if( *p[0]=='\0' )
 			continue;
 
+		if( g_str_has_suffix(*p, ".c")
+			|| g_str_has_suffix(*p, ".cpp")
+			|| g_str_has_suffix(*p, ".cc") )
+		{
+			continue;
+		}
+
 		paths.push_back(*p);
+
 	}
 	g_strfreev(items);
 	env->set_include_paths(paths);
@@ -57,7 +65,7 @@ void parse_include_path_option(const Option* option, Environ* env) {
 bool LJCS::create(Puss* _app) {
 	app = _app;
 
-	const Option* option = app->option_manager_option_reg("cpp_helper", "include_path", "/usr/include\n/user/include/c++/4.0\n", 0, (gpointer)"text", 0);
+	const Option* option = app->option_manager_option_reg("cpp_helper", "include_path", "/usr/include\n/usr/include/c++/4.2\n", 0, (gpointer)"text", 0);
 	app->option_manager_monitor_reg(option, (OptionChanged)&parse_include_path_option, &env);
 	parse_include_path_option(option, &env);
 

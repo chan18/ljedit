@@ -304,7 +304,8 @@ gboolean doc_save_page( gint page_num, gboolean is_save_as ) {
 		return TRUE;
 
 	if( !gtk_text_buffer_get_modified(buf) )
-		return TRUE;
+		if( !is_save_as )
+			return TRUE;
 
 	url = puss_doc_get_url(buf);
 
