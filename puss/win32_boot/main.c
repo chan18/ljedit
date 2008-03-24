@@ -39,7 +39,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	// run ./puss.exe
 	// 
 	strcpy(buf, basePath);
-	strcat(buf, "puss.exe");
+	strcat(buf, "_puss.exe");
 
 	ShellExecuteA(HWND_DESKTOP, "open", buf, lpCmdLine, NULL, nShowCmd);
 

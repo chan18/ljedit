@@ -9,7 +9,7 @@ CXXFLAGS = -g -Wall
 OBJPATH = debug
 
 ifeq ($(BUILD), release)
-	CXXFLAGS = -O2 -Wall
+	CXXFLAGS = -O3 -Wall
 	OBJPATH = release
 endif
 
@@ -22,13 +22,16 @@ INCPATH  = include/ljcs
 
 INCS = ds.h parser.h searcher.h index.h skey.h ljcs.h crt_debug.h
 
-all : lib/libljcs.a lib/libljcs.so $(INCS:%.h=$(INCPATH)/%.h)
+ifeq ($(BUILD), release)
+	TARGET = lib/libljcs.a
+else
+	TARGET = lib/libljcs_d.a
+endif
 
-lib/libljcs.a :  $(OBJS)
+all : $(TARGET) $(INCS:%.h=$(INCPATH)/%.h)
+
+$(TARGET) : $(OBJS)
 	$(AR) -rc $@ $^
-
-lib/libljcs.so : $(OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o $@ $^
 
 $(INCPATH)/%.h : src/%.h
 	cp -f $^ $@
@@ -36,7 +39,8 @@ $(INCPATH)/%.h : src/%.h
 clean :
 	rm -rf debug
 	rm -rf release
-	rm -f lib/*
+	rm -f lib/libljcs.a
+	rm -f lib/libljcs_d.a
 	rm -f src/mlexer.cpp
 	rm -f src/ljcs_py_wrap.*
 	rm -f $(INCPATH)/*
@@ -55,9 +59,7 @@ $(OBJPATH)/%.d : %.cpp
 	@echo $(CXX) -MM -o $@ -c $<
 	@rm -f $@
 	@mkdir -p $(dir $@)
-	@echo -n $@ $(dir $@) > $@.tmp
-	@$(CXX) $(CXXFLAGS) -MM $< >> $@.tmp
-	@mv $@.tmp $@
+	@$(CXX) $(CXXFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
 
 -include $(SRCS:%.cpp=$(OBJPATH)/%.d)
 

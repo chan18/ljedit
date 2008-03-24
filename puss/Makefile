@@ -40,7 +40,7 @@ SRCS = $(wildcard src/*.cpp)
 OBJS = $(SRCS:%.cpp=$(OBJPATH)/%.o)
 
 ifeq ($(PLATFORM), win32)
-	TARGET = bin/puss.exe
+	TARGET = bin/_puss.exe
 
 	ifeq ($(BUILD), release)
 		LDFLAGS = -mwindows
@@ -49,21 +49,31 @@ ifeq ($(PLATFORM), win32)
 else
 	LIBS += -ldl
 	TARGET = bin/puss
+
 endif
 
+ifeq ($(PLATFORM), win32)
+all : bin/puss.exe $(TARGET) puss_extends
+else
 all : $(TARGET) puss_extends
+endif
 
 $(TARGET) : $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
+
+bin/puss.exe : win32_boot/main.c win32_boot/puss.rc win32_boot/puss.ico
+	windres -i win32_boot/puss.rc -J rc -o $(OBJPATH)/puss_res.o -O coff --include-dir=win32_boot
+	gcc -O3 -Wall -mwindows -o $@ $< $(OBJPATH)/puss_res.o
 
 puss_extends :
-	@cd extends/dndopen;		make BUILD=$(BUILD) PLATFORM=$(PLATFORM)
-	@cd extends/ljcs;			make BUILD=$(BUILD) PLATFORM=$(PLATFORM)
-	@cd extends/pyextend;		make BUILD=$(BUILD) PLATFORM=$(PLATFORM)
-	@cd extends/plugin_engine;	make BUILD=$(BUILD) PLATFORM=$(PLATFORM)
+	@cd extends/dndopen;		make BUILD=$(BUILD)
+	@cd extends/ljcs;			make BUILD=$(BUILD)
+	@cd extends/pyextend;		make BUILD=$(BUILD)
+	@cd extends/plugin_engine;	make BUILD=$(BUILD)
 
 clean :
 	rm -f $(TARGET)
+	rm -f bin/puss.exe
 	rm -rf debug
 	rm -rf release
 

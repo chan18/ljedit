@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(SolutionDir)bin\boot.exe"
+				OutputFile="$(SolutionDir)bin\$(SolutionName).exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -137,7 +137,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(SolutionDir)bin\boot.exe"
+				OutputFile="$(SolutionDir)bin\$(SolutionName).exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -180,11 +180,11 @@
 			>
 		</File>
 		<File
-			RelativePath="..\puss.ico"
+			RelativePath=".\puss.ico"
 			>
 		</File>
 		<File
-			RelativePath="..\puss.rc"
+			RelativePath=".\puss.rc"
 			>
 		</File>
 	</Files>
