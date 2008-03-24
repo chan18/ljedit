@@ -170,6 +170,7 @@ gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 
 	tab = gtk_event_box_new();
 	gtk_container_add(GTK_CONTAINER(tab), GTK_WIDGET(label));
+	g_object_set_data(G_OBJECT(tab), "puss-doc-label", label);
 
 	gtk_widget_show_all(tab);
 
@@ -299,7 +300,9 @@ gboolean doc_save_page( gint page_num, gboolean is_save_as ) {
 	if( page_num < 0 )
 		return TRUE;
 
-	buf = puss_doc_get_buffer_from_page_num(page_num);
+	GtkWidget* page = gtk_notebook_get_nth_page(puss_app->doc_panel, page_num);
+
+	buf = puss_doc_get_buffer_from_page(page);
 	if( !buf )
 		return TRUE;
 
@@ -342,6 +345,10 @@ gboolean doc_save_page( gint page_num, gboolean is_save_as ) {
 			else
 				puss_doc_set_url(buf, filename);
 			g_free (filename);
+
+			GtkWidget* tab = gtk_notebook_get_tab_label(puss_app->doc_panel, page);
+			GtkLabel* label = (GtkLabel*)g_object_get_data(G_OBJECT(tab), "puss-doc-label");
+			doc_reset_page_label(buf, label);
 		}
 
 		gtk_widget_destroy(dlg);
