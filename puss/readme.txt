@@ -14,12 +14,13 @@ how to install puss on windows?
     ------------------------------
     [puss]
         [environ]
+            [gtk]
+            [pylibs]
         [extends]
         [res]
-        boot.exe
         puss.exe
 
-    run boot.exe & enjoy it!
+    run puss.exe & enjoy it!
 
 <DIY way>
     1. download and unzip puss.rar
