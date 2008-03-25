@@ -26,6 +26,29 @@ struct Tips {
 	GtkTextBuffer*	decl_buffer;
 };
 
+SIGNAL_CALLBACK gboolean tips_list_cb_query_tooltip( GtkTreeView* tree_view
+	, gint x
+	, gint y
+	, gboolean keyboard_mode
+	, GtkTooltip* tooltip
+	, Tips* self )
+{
+	GtkTreeModel* model;
+	GtkTreePath* path;
+	GtkTreeIter iter;
+	if( gtk_tree_view_get_tooltip_context(tree_view, &x, &y, keyboard_mode, &model, &path, &iter) ) {
+		GValue value = { G_TYPE_INVALID };
+		gtk_tree_model_get_value(model, &iter, 2, &value);
+		const cpp::Element* elem = (const cpp::Element*)g_value_get_pointer(&value);
+		if( elem ) {
+			gtk_tooltip_set_text(tooltip, elem->decl.c_str());
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
 SIGNAL_CALLBACK void tips_include_cb_row_activated(GtkTreeView* tree_view, GtkTreePath* path, GtkTreeViewColumn* col, Tips* self) {
 }
 
@@ -76,6 +99,8 @@ gboolean init_tips(Tips* self, Puss* app, Environ* env, Icons* icons) {
 	gtk_widget_show_all(GTK_WIDGET(gtk_builder_get_object(builder, "list_panel")));
 	gtk_widget_show_all(GTK_WIDGET(gtk_builder_get_object(builder, "decl_panel")));
 
+	gtk_builder_connect_signals(builder, self);
+
 	g_object_unref(G_OBJECT(builder));
 
 	//gtk_widget_show(tip_window);
@@ -88,7 +113,7 @@ gboolean decref_each_file(GtkTreeModel* model, GtkTreePath* path, GtkTreeIter* i
 	GtkTreeModel* mm = gtk_tree_view_get_model(self->list_view);
 	assert( mm==0 || mm==model );
 
-	gtk_tree_model_get_value(model, iter, 3, &value);
+	gtk_tree_model_get_value(model, iter, 2, &value);
 	cpp::Element* elem = (cpp::Element*)g_value_get_pointer(&value);
 	g_assert( elem );
 
@@ -144,8 +169,7 @@ void fill_list_store(Tips* self, cpp::ElementSet& mset) {
 			gtk_list_store_set( GTK_LIST_STORE(self->list_model), &iter
 				, 0, self->icons->get_icon_from_elem(*elem)
 				, 1, elem->name.c_str()
-				, 2, elem->decl.c_str()
-				, 3, elem
+				, 2, elem
 				, -1 );
 		}
 
@@ -321,7 +345,7 @@ gboolean tips_locate_sub(Tips* self, gint x, gint y, const gchar* key) {
 
 	do {
 		GValue value = { G_TYPE_INVALID };
-		gtk_tree_model_get_value(self->list_model, &iter, 3, &value);
+		gtk_tree_model_get_value(self->list_model, &iter, 2, &value);
 		cpp::Element* elem = (cpp::Element*)g_value_get_pointer(&value);
 		g_assert( elem );
 
@@ -345,7 +369,7 @@ cpp::Element* tips_list_get_selected(Tips* self) {
 	GtkTreeSelection* sel = gtk_tree_view_get_selection(self->list_view);
 	if( gtk_tree_selection_get_selected(sel, &self->list_model, &iter) ) {
 		GValue value = { G_TYPE_INVALID };
-		gtk_tree_model_get_value(self->list_model, &iter, 3, &value);
+		gtk_tree_model_get_value(self->list_model, &iter, 2, &value);
 		result = (cpp::Element*)g_value_get_pointer(&value);
 	}
 

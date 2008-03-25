@@ -11,7 +11,6 @@
     <columns>
       <column type="GdkPixbuf"/>
       <column type="gchararray"/>
-      <column type="gchararray"/>
       <column type="gpointer"/>
     </columns>
   </object>
@@ -72,8 +71,9 @@
             <child>
               <object class="GtkTreeView" id="list_view">
                 <property name="model">list_store</property>
-                <property name="tooltip-column">2</property>
                 <property name="headers-visible">False</property>
+                <property name="has-tooltip">True</property>
+                <signal handler="tips_list_cb_query_tooltip" name="query-tooltip"/>
                 <child>
                   <object class="GtkTreeViewColumn" id="list_column">
                     <child>

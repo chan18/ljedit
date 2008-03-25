@@ -110,8 +110,7 @@ public:
 		gtk_tree_store_set( tree_store_, &iter
 			, 0, icons_->get_icon_from_elem(*elem)
 			, 1, elem->name.c_str()
-			, 2, elem->decl.c_str()
-			, 3, elem
+			, 2, elem
 			, -1 );
 
 		cpp::Scope* scope = 0;
@@ -137,7 +136,7 @@ public:
 
 		do {
 			GValue value = { G_TYPE_INVALID };
-			gtk_tree_model_get_value(GTK_TREE_MODEL(tree_store_), &iter, 3, &value);
+			gtk_tree_model_get_value(GTK_TREE_MODEL(tree_store_), &iter, 2, &value);
 			cpp::Element* elem = (cpp::Element*)g_value_get_pointer(&value);
 			g_assert( elem );
 
@@ -199,13 +198,36 @@ public:
     int				line_;
 };
 
+SIGNAL_CALLBACK gboolean outline_page_cb_query_tooltip( GtkTreeView* tree_view
+	, gint x
+	, gint y
+	, gboolean keyboard_mode
+	, GtkTooltip* tooltip
+	, OutlinePage* self )
+{
+	GtkTreeModel* model;
+	GtkTreePath* path;
+	GtkTreeIter iter;
+	if( gtk_tree_view_get_tooltip_context(tree_view, &x, &y, keyboard_mode, &model, &path, &iter) ) {
+		GValue value = { G_TYPE_INVALID };
+		gtk_tree_model_get_value(model, &iter, 2, &value);
+		const cpp::Element* elem = (const cpp::Element*)g_value_get_pointer(&value);
+		if( elem ) {
+			gtk_tooltip_set_text(tooltip, elem->decl.c_str());
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
 SIGNAL_CALLBACK void outline_page_cb_row_activated(GtkTreeView* tree_view, GtkTreePath* path, GtkTreeViewColumn* col, OutlinePage* self) {
 	GtkTreeIter iter;
 	if( !gtk_tree_model_get_iter(GTK_TREE_MODEL(self->tree_store_), &iter, path) )
 		return;
 
 	GValue value = { G_TYPE_INVALID };
-	gtk_tree_model_get_value(GTK_TREE_MODEL(self->tree_store_), &iter, 3, &value);
+	gtk_tree_model_get_value(GTK_TREE_MODEL(self->tree_store_), &iter, 2, &value);
 	const cpp::Element* elem = (const cpp::Element*)g_value_get_pointer(&value);
 	if( !elem )
 		return;

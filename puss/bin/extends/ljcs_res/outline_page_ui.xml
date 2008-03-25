@@ -5,7 +5,6 @@
     <columns>
       <column type="GdkPixbuf"/>
       <column type="gchararray"/>
-      <column type="gchararray"/>
       <column type="gpointer"/>
     </columns>
   </object>
@@ -18,13 +17,16 @@
     <child>
       <object class="GtkTreeView" id="outline_treeview">
         <property name="model">outline_store</property>
-        <property name="tooltip-column">2</property>
         <property name="headers-visible">False</property>
         <property name="enable-tree-lines">True</property>
+        <property name="search-column">1</property>
+        <!--tooltip-column use markup string, but need plain text.-->
+        <!--property name="tooltip-column">2</property-->
+        <property name="has-tooltip">True</property>
+        <signal handler="outline_page_cb_query_tooltip" name="query-tooltip"/>
         <signal handler="outline_page_cb_row_activated" name="row-activated"/>
         <child>
           <object class="GtkTreeViewColumn" id="elem_column">
-            <property name="title">icon</property>
             <child>
               <object class="GtkCellRendererPixbuf" id="icon_cell_renderer"/>
               <attributes>
