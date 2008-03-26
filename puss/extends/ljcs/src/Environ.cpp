@@ -288,14 +288,15 @@ bool Environ::check_cpp_files(const std::string& filepath) {
 			*p = tolower(*p);
 
 		static std::set<std::string> exts = init_exts();
-		retval = exts.find(name) != exts.end();
+		retval = exts.find(ptr) != exts.end();
 
 	} else {
 		// if no ext filename, check path in system header path
 		retval = in_include_path(filepath);
 	}
+	g_free(name);
 
-	return false;
+	return retval;
 }
 
 bool Environ::pe_is_abspath(std::string& filepath) {

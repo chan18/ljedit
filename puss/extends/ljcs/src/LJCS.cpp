@@ -9,6 +9,9 @@
 
 #include <gdk/gdkkeysyms.h>
 
+#include <gtksourceview/gtksourcebuffer.h>
+#include <gtksourceview/gtksourcelanguagemanager.h>
+
 GRegex* re_include = g_regex_new("^[ \t]*#[ \t]*include[ \t]*(.*)", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
 GRegex* re_include_tip = g_regex_new("([\"<])(.*)", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
 GRegex* re_include_info = g_regex_new("([\"<])([^\">]*)[\">].*", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
@@ -699,6 +702,14 @@ void LJCS::on_doc_page_added(GtkNotebook* doc_panel, GtkWidget* page, guint page
 	if( !buf )
 		return;
 
+	GString* url = self->app->doc_get_url(buf);
+	if( !url )
+		return;
+
+	std::string filepath(url->str, url->len);
+	if( !self->env.check_cpp_files(filepath) )
+		return;
+
 	g_signal_connect(view, "key-press-event", G_CALLBACK(&LJCS::on_key_press_event), self);
 	g_signal_connect(view, "key-release-event", G_CALLBACK(&LJCS::on_key_release_event), self);
 
@@ -707,10 +718,15 @@ void LJCS::on_doc_page_added(GtkNotebook* doc_panel, GtkWidget* page, guint page
 	g_signal_connect(view, "scroll-event", G_CALLBACK(&LJCS::on_scroll_event), self);
 
 	g_signal_connect(buf, "modified-changed", G_CALLBACK(&LJCS::on_modified_changed), self);
-	
-	GString* url = self->app->doc_get_url(buf);
-	if( url )
-		self->parse_thread.add(std::string(url->str, url->len));
+
+	GtkSourceLanguage* lang = gtk_source_buffer_get_language(GTK_SOURCE_BUFFER(buf));
+	if( !lang ) {
+		GtkSourceLanguageManager* lm = gtk_source_language_manager_get_default();
+		GtkSourceLanguage* cpp_lang = gtk_source_language_manager_get_language(lm, "cpp");
+		gtk_source_buffer_set_language(GTK_SOURCE_BUFFER(buf), lang);
+	}
+
+	self->parse_thread.add(filepath);
 }
 
 void LJCS::on_doc_page_removed(GtkNotebook* doc_panel, GtkWidget* page, guint page_num, LJCS* self) {
