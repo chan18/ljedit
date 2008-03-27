@@ -330,6 +330,7 @@ PreviewPage* preview_page_create(Puss* app, Environ* env) {
 
 void preview_page_destroy(PreviewPage* self) {
 	if( self ) {
+		self->destroy();
 		delete self;
 		self = 0;
 	}
