@@ -69,11 +69,11 @@ public:
     void set_file(cpp::File* file, int line) {
 		if( file != file_ ) {
 			gtk_tree_view_set_model(tree_view_, 0);
+			gtk_tree_store_clear(tree_store_);
 
 			if( file ) {
 				env_->file_incref(file);
 
-				gtk_tree_store_clear(tree_store_);
 				cpp::Elements::iterator it = file->scope.elems.begin();
 				cpp::Elements::iterator end = file->scope.elems.end();
 				for( ; it!=end; ++it )
@@ -158,23 +158,23 @@ public:
 		} while( gtk_tree_model_iter_next(GTK_TREE_MODEL(tree_store_), &iter) );
 	}
 
-	void do_update() {
+	bool do_update() {
 		GtkNotebook* doc_panel = puss_get_doc_panel(app_);
 		gint page_num = gtk_notebook_get_current_page(doc_panel);
 		if( page_num < 0 )
-			return;
+			return false;
 
 		GtkTextBuffer* buf = app_->doc_get_buffer_from_page_num(page_num);
 		if( !buf )
-			return;
+			return false;
 
 		GString* url = app_->doc_get_url(buf);
 		if( !url )
-			return;
+			return false;
 
 		cpp::File* file = env_->find_parsed(std::string(url->str, url->len));
 		if( !file )
-			return;
+			return false;
 
 		GtkTextIter iter;
 		gtk_text_buffer_get_iter_at_mark(buf, &iter, gtk_text_buffer_get_insert(buf));
@@ -182,6 +182,7 @@ public:
 		set_file(file, line);
 
 		env_->file_decref(file);
+		return true;
 	}
 
 public:
@@ -257,6 +258,7 @@ void outline_page_destroy(OutlinePage* self) {
 }
 
 void outline_page_update(OutlinePage* self) {
-	self->do_update();
+	if( !self->do_update() )
+		self->set_file(NULL, 0);
 }
 
