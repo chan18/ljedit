@@ -248,7 +248,7 @@ void fill_options(GtkTreeStore* store) {
 gboolean default_option_setter(GtkWindow* parent, Option* option, gpointer tag);
 
 SIGNAL_CALLBACK void option_manager_cb_row_activated(GtkTreeView* tree_view, GtkTreePath* path, GtkTreeViewColumn* col, GtkWindow* parent) {
-	OptionManager* self = puss_app->option_manager;
+	//OptionManager* self = puss_app->option_manager;
 	GtkTreeModel* model = gtk_tree_view_get_model(tree_view);
 
 	GtkTreeIter iter;
@@ -310,7 +310,9 @@ void puss_option_manager_active() {
 	fill_options(store);
 	gtk_tree_view_expand_all(view);
 
-	gint res = gtk_dialog_run(GTK_DIALOG(dlg));
+	//gint res = 
+	gtk_dialog_run(GTK_DIALOG(dlg));
+
 	gtk_widget_destroy(dlg);
 
 	if( self->modified )

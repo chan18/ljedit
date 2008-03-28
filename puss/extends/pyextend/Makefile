@@ -44,8 +44,7 @@ else
 			-I/usr/include/python2.5
 
 	LIBS += `pkg-config --libs pygtk-2.0` \
-			-lpython2.5 \
-			-ldl
+			-lpython2.5
 
 endif
 

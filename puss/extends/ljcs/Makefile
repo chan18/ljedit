@@ -31,10 +31,6 @@ LIBS += `pkg-config --libs gtksourceview-2.0` \
 		`pkg-config --libs gmodule-2.0` \
 		`pkg-config --libs gthread-2.0`
 
-ifneq ($(PLATFORM), win32)
-	LIBS += -ldl
-endif
-
 # project
 # 
 CXXFLAGS += -I../../include

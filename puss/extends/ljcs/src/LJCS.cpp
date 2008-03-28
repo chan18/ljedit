@@ -723,7 +723,7 @@ void LJCS::on_doc_page_added(GtkNotebook* doc_panel, GtkWidget* page, guint page
 	if( !lang ) {
 		GtkSourceLanguageManager* lm = gtk_source_language_manager_get_default();
 		GtkSourceLanguage* cpp_lang = gtk_source_language_manager_get_language(lm, "cpp");
-		gtk_source_buffer_set_language(GTK_SOURCE_BUFFER(buf), lang);
+		gtk_source_buffer_set_language(GTK_SOURCE_BUFFER(buf), cpp_lang);
 	}
 
 	self->parse_thread.add(filepath);
