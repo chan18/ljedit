@@ -320,12 +320,19 @@
       </menubar>
 
       <toolbar name="main_toolbar">
-        <toolitem action="file_menu_new"/>
-        <toolitem action="file_menu_open"/>
-        <toolitem action="file_menu_save"/>
+        <placeholder name="file_place">
+          <toolitem action="file_menu_new"/>
+          <toolitem action="file_menu_open"/>
+          <toolitem action="file_menu_save"/>
+        </placeholder>
         <separator/>
-        <toolitem action="edit_menu_go_back"/>
-        <toolitem action="edit_menu_go_forward"/>
+        <placeholder name="edit_place">
+          <toolitem action="edit_menu_go_back"/>
+          <toolitem action="edit_menu_go_forward"/>
+        </placeholder>
+        <separator/>
+        <placeholder name="view_place">
+        </placeholder>
       </toolbar>
     </ui>
 
