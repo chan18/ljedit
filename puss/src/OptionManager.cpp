@@ -44,8 +44,10 @@ struct OptionManager {
 	GKeyFile*	keyfile;
 	gboolean	modified;
 
-	GHashTable*	option_groups;	// group, GHashTable(key, OptionNode)
+	GTree*		option_groups;	// group, GTree(key, OptionNode)
 };
+
+gint compare_data_func_wrapper(gpointer a, gpointer b, GCompareFunc cmp) { return (*cmp)(a, b); }
 
 gboolean puss_option_manager_create() {
 	g_assert( !puss_app->option_manager );
@@ -69,9 +71,9 @@ gboolean puss_option_manager_create() {
 		return FALSE;
 	}
 
-	self->option_groups = (GHashTable*)g_hash_table_new_full( &g_str_hash, &g_str_equal, &g_free, GDestroyNotify(&g_hash_table_destroy) );
+	self->option_groups = g_tree_new_full( (GCompareDataFunc)&compare_data_func_wrapper, &g_ascii_strcasecmp, (GDestroyNotify)&g_free, (GDestroyNotify)&g_tree_destroy );
 	if( !self->option_groups ) {
-		g_printerr("ERROR(option_manager) : new hash table failed!\n");
+		g_printerr("ERROR(option_manager) : new tree failed!\n");
 		return FALSE;
 	}
 
@@ -89,7 +91,7 @@ void puss_option_manager_destroy() {
 	if( self ) {
 		g_key_file_free(self->keyfile);
 		g_free(self->filepath);
-		g_hash_table_destroy(self->option_groups);
+		g_tree_destroy(self->option_groups);
 
 		g_free(self);
 	}
@@ -142,25 +144,25 @@ const Option* puss_option_manager_option_reg( const gchar* group
 {
 	OptionManager* self = puss_app->option_manager;
 
-	gchar* ptr_group = g_strdup(group);
-	gchar* ptr_key = g_strdup(key);
+	gchar* ptr_group = 0;
+	GTree* option_group = 0;
 
-	GHashTable* option_group = (GHashTable*)g_hash_table_lookup(self->option_groups, group);
-	if( !option_group ) {
-		option_group = (GHashTable*)g_hash_table_new_full( &g_str_hash, &g_str_equal, &g_free, GDestroyNotify(&option_node_free) );
+	if( !g_tree_lookup_extended(self->option_groups, group, (gpointer*)&ptr_group, (gpointer*)&option_group) ) {
+		option_group = g_tree_new_full((GCompareDataFunc)&compare_data_func_wrapper, &g_ascii_strcasecmp, (GDestroyNotify)&g_free, (GDestroyNotify)&option_node_free );
 		if( !option_group )
-			return FALSE;
-		g_hash_table_insert(self->option_groups, ptr_group, option_group);
+			return 0;
+		ptr_group = g_strdup(group);
+		g_tree_insert(self->option_groups, ptr_group, option_group);
 	}
 
-	OptionNode* node = (OptionNode*)g_hash_table_lookup(option_group, key);
+	OptionNode* node = (OptionNode*)g_tree_lookup(option_group, key);
 	if( node )
 		return 0;
 
 	node = g_new0(OptionNode, 1);
 	if( node ) {
 		node->option.group = ptr_group;
-		node->option.key = ptr_key;
+		node->option.key = g_strdup(key);
 
 		node->option.value = g_key_file_get_string(self->keyfile, group, key, 0);
 		if( default_value ) {
@@ -174,7 +176,7 @@ const Option* puss_option_manager_option_reg( const gchar* group
 		node->setter_tag_free_fun = tag_free_fun;
 		node->notifer_list = 0;
 
-		g_hash_table_insert(option_group, ptr_key, node);
+		g_tree_insert(option_group, (gpointer)node->option.key, node);
 		return &node->option;
 	}
 
@@ -183,9 +185,9 @@ const Option* puss_option_manager_option_reg( const gchar* group
 
 const Option* puss_option_manager_find(const gchar* group, const gchar* key) {
 	OptionManager* self = puss_app->option_manager;
-	GHashTable* option_group = (GHashTable*)g_hash_table_lookup(self->option_groups, group);
+	GTree* option_group = (GTree*)g_tree_lookup(self->option_groups, group);
 	if( option_group ) {
-		OptionNode* node = (OptionNode*)g_hash_table_lookup(option_group, key);
+		OptionNode* node = (OptionNode*)g_tree_lookup(option_group, key);
 		if( node )
 			return &node->option;
 	}
@@ -214,7 +216,7 @@ struct ParentTreePosition {
 	GtkTreeIter*	parent;
 };
 
-void fill_option_keys(gchar* key, OptionNode* value, ParentTreePosition* pos) {
+gboolean fill_option_keys(gchar* key, OptionNode* value, ParentTreePosition* pos) {
 	GtkTreeIter iter;
 	gtk_tree_store_append(pos->store, &iter, pos->parent);
 	gtk_tree_store_set( pos->store, &iter
@@ -223,9 +225,11 @@ void fill_option_keys(gchar* key, OptionNode* value, ParentTreePosition* pos) {
 		, 2, TRUE
 		, 3, value
 		, -1 );
+
+	return FALSE;
 }
 
-void fill_option_groups(gchar* group, GHashTable* options, GtkTreeStore* store) {
+gboolean fill_option_groups(gchar* group, GTree* options, GtkTreeStore* store) {
 	GtkTreeIter iter;
 	gtk_tree_store_append(store, &iter, NULL);
 	gtk_tree_store_set( store, &iter
@@ -236,13 +240,16 @@ void fill_option_groups(gchar* group, GHashTable* options, GtkTreeStore* store) 
 		, -1 );
 
 	ParentTreePosition pos = { store, &iter };
-	g_hash_table_foreach(options, (GHFunc)fill_option_keys, &pos);
+
+	g_tree_foreach(options, (GTraverseFunc)&fill_option_keys, &pos);
+
+	return FALSE;
 }
 
 void fill_options(GtkTreeStore* store) {
 	OptionManager* self = puss_app->option_manager;
 
-	g_hash_table_foreach(self->option_groups, (GHFunc)fill_option_groups, store);
+	g_tree_foreach(self->option_groups, (GTraverseFunc)&fill_option_groups, store);
 }
 
 gboolean default_option_setter(GtkWindow* parent, Option* option, gpointer tag);

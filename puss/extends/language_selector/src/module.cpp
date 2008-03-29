@@ -37,13 +37,32 @@ void pls_lang_active(GtkAction* action, GtkSourceLanguage* lang) {
 	gtk_source_buffer_set_language(GTK_SOURCE_BUFFER(buf), lang);
 }
 
+gint compare_data_func_wrapper(gpointer a, gpointer b, GCompareFunc cmp) { return (*cmp)(a, b); }
+
+void fill_languages(gchar* lang, GString* gstr) {
+	g_string_append_printf(gstr, "            <menuitem action='pls_lang_%s'/>\n", lang);
+}
+
+gboolean fill_language_section(gchar* key, GList* value, GString* gstr) {
+	g_string_append_printf(gstr, "          <menu action='pls_sec_%s'>\n", key);
+	g_list_foreach(value, (GFunc)&fill_languages, gstr);
+	g_string_append_printf(gstr, "          </menu>\n");
+
+	return FALSE;
+}
+
+gboolean destroy_language_section(gchar* key, GList* value, gpointer) {
+	g_list_free(value);
+	return FALSE;
+}
+
 PUSS_EXPORT void* puss_extend_create(Puss* app) {
 	puss_app = app;
 
 	GtkActionGroup* action_group = gtk_action_group_new("puss_language_selector_action_group");
 
 	// set select language menu
-	GHashTable* sections = g_hash_table_new_full(&g_str_hash, &g_str_equal, NULL, (GDestroyNotify)&g_list_free);
+	GTree* sections = g_tree_new((GCompareFunc)&g_ascii_strcasecmp);
 	GtkSourceLanguageManager* lm = gtk_source_language_manager_get_default();
 	const gchar* const* ids = gtk_source_language_manager_get_language_ids(lm);
 	for( const gchar* const* id=ids; *id; ++id ) {
@@ -58,20 +77,18 @@ PUSS_EXPORT void* puss_extend_create(Puss* app) {
 			gtk_action_group_add_action(action_group, action);
 
 			const gchar* section = gtk_source_language_get_section(lang);
-			GList* section_list = (GList*)g_hash_table_lookup(sections, section);
-			if( section_list ) {
-				g_hash_table_steal(sections, section);
-				
-			} else {
+
+			GList* section_list = (GList*)g_tree_lookup(sections, section);
+			if( !section_list ) {
 				action_name = g_strdup_printf("pls_sec_%s", section);
 				action = GTK_ACTION(gtk_action_new(action_name, section, NULL, NULL));
 				g_free(action_name);
 				gtk_action_group_add_action(action_group, action);
 			}
 
-			section_list = g_list_insert_sorted(section_list, (gchar*)name, (GCompareFunc)&g_strncasecmp);
+			section_list = g_list_insert_sorted(section_list, (gchar*)name, (GCompareFunc)&g_ascii_strcasecmp);
 			
-			g_hash_table_insert(sections, (gchar*)section, section_list);
+			g_tree_insert(sections, (gchar*)section, section_list);
 		}
 	}
 
@@ -92,21 +109,9 @@ PUSS_EXPORT void* puss_extend_create(Puss* app) {
 	gtk_ui_manager_insert_action_group(ui_mgr, action_group, 0);
 
 	GString* gstr= g_string_new(NULL);
-	{
-		gchar* sec_key = 0;
-		GList* sec_value = 0;
-		GHashTableIter sec_iter;
-		g_hash_table_iter_init(&sec_iter, sections);
-		while( g_hash_table_iter_next(&sec_iter, (gpointer*)&sec_key, (gpointer*)&sec_value) ) {
-			g_string_append_printf(gstr, "          <menu action='pls_sec_%s'>\n", sec_key);
-
-			for( GList* p = g_list_first(sec_value); p; p = g_list_next(p) )
-				g_string_append_printf(gstr, "            <menuitem action='pls_lang_%s'/>\n", (gchar*)(p->data));
-
-			g_string_append_printf(gstr, "          </menu>\n");
-		}
-	}
-	g_hash_table_destroy(sections);
+	g_tree_foreach(sections, (GTraverseFunc)&fill_language_section, gstr);
+	g_tree_foreach(sections, (GTraverseFunc)&destroy_language_section, 0);
+	g_tree_destroy(sections);
 
 	gchar* ui_info = g_strdup_printf(
 		"<ui>\n"
