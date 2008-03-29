@@ -224,6 +224,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\GlobalOptions.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\GlobalOptions.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\GlobMatch.cpp"
 				>
 			</File>
