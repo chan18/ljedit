@@ -71,7 +71,7 @@ gboolean puss_option_manager_create() {
 		return FALSE;
 	}
 
-	self->option_groups = g_tree_new_full( (GCompareDataFunc)&compare_data_func_wrapper, &g_ascii_strcasecmp, (GDestroyNotify)&g_free, (GDestroyNotify)&g_tree_destroy );
+	self->option_groups = g_tree_new_full( (GCompareDataFunc)&compare_data_func_wrapper, (gpointer)&g_ascii_strcasecmp, (GDestroyNotify)&g_free, (GDestroyNotify)&g_tree_destroy );
 	if( !self->option_groups ) {
 		g_printerr("ERROR(option_manager) : new tree failed!\n");
 		return FALSE;
@@ -148,7 +148,7 @@ const Option* puss_option_manager_option_reg( const gchar* group
 	GTree* option_group = 0;
 
 	if( !g_tree_lookup_extended(self->option_groups, group, (gpointer*)&ptr_group, (gpointer*)&option_group) ) {
-		option_group = g_tree_new_full((GCompareDataFunc)&compare_data_func_wrapper, &g_ascii_strcasecmp, (GDestroyNotify)&g_free, (GDestroyNotify)&option_node_free );
+		option_group = g_tree_new_full((GCompareDataFunc)&compare_data_func_wrapper, (gpointer)&g_ascii_strcasecmp, (GDestroyNotify)&g_free, (GDestroyNotify)&option_node_free );
 		if( !option_group )
 			return 0;
 		ptr_group = g_strdup(group);
