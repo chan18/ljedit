@@ -2,7 +2,7 @@
 <interface>
   <object class="GtkUIManager" id="main_ui_manager">
     <child>
-      <object class="GtkActionGroup" id="main_actiongroup">
+      <object class="GtkActionGroup" id="main_action_group">
         <!-- main menu actions-->
         <child>
           <object class="GtkAction" id="file_menu">
@@ -290,26 +290,30 @@
           <menuitem action="edit_menu_go_forward"/>
         </menu>
         <menu action="view_menu">
-          <menuitem action="view_menu_fullscreen"/>
-          <menuitem action="view_menu_unfullscreen"/>
-          <separator/>
-          <menuitem action="view_menu_active_edit_page"/>
-          <separator/>
-          <menuitem action="view_menu_left_panel"/>
-          <menuitem action="view_menu_right_panel"/>
-          <menuitem action="view_menu_bottom_panel"/>
-          <separator/>
-          <menu action="view_menu_bottom_pages">
-            <menuitem action="view_menu_bottom_page_1"/>
-            <menuitem action="view_menu_bottom_page_2"/>
-            <menuitem action="view_menu_bottom_page_3"/>
-            <menuitem action="view_menu_bottom_page_4"/>
-            <menuitem action="view_menu_bottom_page_5"/>
-            <menuitem action="view_menu_bottom_page_6"/>
-            <menuitem action="view_menu_bottom_page_7"/>
-            <menuitem action="view_menu_bottom_page_8"/>
-            <menuitem action="view_menu_bottom_page_9"/>
-          </menu>
+          <placeholder name="view_menu_default_place">
+            <menuitem action="view_menu_fullscreen"/>
+            <menuitem action="view_menu_unfullscreen"/>
+            <separator/>
+            <menuitem action="view_menu_active_edit_page"/>
+            <separator/>
+            <menuitem action="view_menu_left_panel"/>
+            <menuitem action="view_menu_right_panel"/>
+            <menuitem action="view_menu_bottom_panel"/>
+            <separator/>
+            <menu action="view_menu_bottom_pages">
+              <menuitem action="view_menu_bottom_page_1"/>
+              <menuitem action="view_menu_bottom_page_2"/>
+              <menuitem action="view_menu_bottom_page_3"/>
+              <menuitem action="view_menu_bottom_page_4"/>
+              <menuitem action="view_menu_bottom_page_5"/>
+              <menuitem action="view_menu_bottom_page_6"/>
+              <menuitem action="view_menu_bottom_page_7"/>
+              <menuitem action="view_menu_bottom_page_8"/>
+              <menuitem action="view_menu_bottom_page_9"/>
+            </menu>
+          </placeholder>
+          <placeholder name="view_menu_extend_place">
+          </placeholder>
         </menu>
         <menu action="tool_menu">
           <menuitem action="tools_menu_preferences"/>
@@ -320,18 +324,18 @@
       </menubar>
 
       <toolbar name="main_toolbar">
-        <placeholder name="file_place">
+        <placeholder name="main_toolbar_file_place">
           <toolitem action="file_menu_new"/>
           <toolitem action="file_menu_open"/>
           <toolitem action="file_menu_save"/>
         </placeholder>
         <separator/>
-        <placeholder name="edit_place">
+        <placeholder name="main_toolbar_edit_place">
           <toolitem action="edit_menu_go_back"/>
           <toolitem action="edit_menu_go_forward"/>
         </placeholder>
         <separator/>
-        <placeholder name="view_place">
+        <placeholder name="main_toolbar_view_place">
         </placeholder>
       </toolbar>
     </ui>

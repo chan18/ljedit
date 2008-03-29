@@ -70,6 +70,7 @@ puss_extends :
 	@cd extends/ljcs;			make BUILD=$(BUILD)
 	@cd extends/pyextend;		make BUILD=$(BUILD)
 	@cd extends/plugin_engine;	make BUILD=$(BUILD)
+	@cd extends/language_selector;	make BUILD=$(BUILD)
 
 clean :
 	rm -f $(TARGET)
