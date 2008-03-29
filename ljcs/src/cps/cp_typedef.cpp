@@ -11,25 +11,36 @@ void do_parse_normal_typedef(BlockLexer& lexer, Scope& scope) {
 	int dtptr = dt;
 	parse_ptr_ref(lexer, dtptr);
 
-	if( lexer.token().type==TK_ID ) {
-		// typedef A B;
-		Typedef* p = create_element<Typedef>(lexer, lexer.token().word);
-		p->typekey = ns;
+	switch( lexer.token().type ) {
+	case KW_STRUCT:
+	case KW_CLASS:
+	case KW_UNION:
+		// typedef struct A B;
+		throw_parse_error_if( lexer.next().type != TK_ID );
 
-		lexer.next();
-		while( lexer.token().type=='[' ) {
+	case TK_ID:
+		{
+			// typedef A B;
+			Typedef* p = create_element<Typedef>(lexer, lexer.token().word);
+			p->typekey = ns;
+
 			lexer.next();
-			skip_pair_ccc(lexer);
+			while( lexer.token().type=='[' ) {
+				lexer.next();
+				skip_pair_ccc(lexer);
+			}
+
+			meger_tokens(lexer, lexer.begin(), lexer.pos(), p->decl);
+
+			scope_insert(scope, p);
 		}
+		break;
 
-		meger_tokens(lexer, lexer.begin(), lexer.pos(), p->decl);
-
-		scope_insert(scope, p);
-
-	} else {
+	default:
 		// typedef (*TFn)(...);
 		// typedef (T::*TFn)(...);
 		throw_parse_error_if( lexer.token().type!='(' );
+		break;
 	}
 }
 
