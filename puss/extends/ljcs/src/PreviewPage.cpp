@@ -39,7 +39,7 @@ public:
 	static gboolean scroll_to_define_line_wrapper(PreviewPage* self);
 
 public:
-	static void option_document_font_changed(const Option* option, PreviewPage* self);
+	static void parse_editor_font_option(const Option* option, PreviewPage* self);
 
 public:
 	Puss*					app_;
@@ -100,21 +100,15 @@ gboolean PreviewPage::create(Puss* app, Environ* env) {
 	set_cpp_lang_to_source_view(preview_view_);
 
 	gtk_widget_show_all(self_panel_);
-	gtk_notebook_append_page(puss_get_bottom_panel(app_), self_panel_, gtk_label_new(_("Preview")));
+	gtk_notebook_insert_page(puss_get_bottom_panel(app_), self_panel_, gtk_label_new(_("Preview")), 0);
 
 	gtk_builder_connect_signals(builder, this);
 	g_object_unref(G_OBJECT(builder));
 
-	const Option* option = app->option_manager_find("puss", "document.font");
+	const Option* option = app->option_manager_find("puss", "editor.font");
 	if( option ) {
-		app->option_manager_monitor_reg(option, (OptionChanged)&option_document_font_changed, this);
-
-		PangoFontDescription* desc = pango_font_description_from_string(option->value);
-		if( desc ) {
-			gtk_widget_modify_font(GTK_WIDGET(preview_view_), desc);
-
-			pango_font_description_free(desc);
-		}
+		parse_editor_font_option(option, this);
+		app->option_manager_monitor_reg(option, (OptionChanged)&parse_editor_font_option, this);
 	}
 
 	// init search thread
@@ -291,7 +285,7 @@ gboolean PreviewPage::scroll_to_define_line_wrapper(PreviewPage* self) {
     return FALSE;
 }
 
-void PreviewPage::option_document_font_changed(const Option* option, PreviewPage* self) {
+void PreviewPage::parse_editor_font_option(const Option* option, PreviewPage* self) {
 	PangoFontDescription* desc = pango_font_description_from_string(option->value);
 	if( desc ) {
 		gtk_widget_modify_font(GTK_WIDGET(self->preview_view_), desc);

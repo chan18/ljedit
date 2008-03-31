@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<interface>
+  <object class="GtkListStore" id="search_result_store">
+    <columns>
+      <column type="gchararray"/>
+      <column type="gint"/>
+      <column type="gchararray"/>
+      <column type="gpointer"/>
+    </columns>
+    <data>
+      <row>
+        <col id="0">test.cpp</col>
+        <col id="1">3</col>
+        <col id="2">vvvvvv</col>
+      </row>
+      <row>
+        <col id="0">vvvv.cpp</col>
+        <col id="1">100</col>
+        <col id="2">aaaaaaaaa</col>
+      </row>
+    </data>
+  </object>
+
+  <object class="GtkHBox" id="search_tools_panel">
+    <property name="height-request">150</property>
+    <child>
+      <object class="GtkFrame" id="search_result_frame">
+        <child type="label">
+          <object class="GtkLabel" id="search_result_label">
+            <property name="label">search resulsts:</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkScrolledWindow" id="scrolled_window">
+            <property name="hscrollbar_policy">automatic</property>
+            <property name="vscrollbar_policy">automatic</property>
+            <child>
+              <object class="GtkTreeView" id="search_result_view">
+                <property name="model">search_result_store</property>
+                <property name="headers-visible">False</property>
+                <child>
+                  <object class="GtkTreeViewColumn" id="position_column">
+                    <property name="title">position</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="filename_cell_render"/>
+                      <attributes>
+                        <attribute name="text">0</attribute>
+                      </attributes>
+                    </child>
+                    <child>
+                      <object class="GtkCellRendererText" id="line_cell_renderer"/>
+                      <attributes>
+                        <attribute name="text">1</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="preview_column">
+                    <property name="title">preview</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="preview_cell_renderer"/>
+                      <attributes>
+                        <attribute name="text">2</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">True</property>
+        <property name="fill">True</property>
+      </packing>
+    </child>
+    <!--child>
+      <object class="GtkFrame" id="xx">
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">False</property>
+      </packing>
+    </child-->
+  </object>
+</interface>
+

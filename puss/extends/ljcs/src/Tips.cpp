@@ -6,6 +6,7 @@
 #include <glib/gi18n.h>
 
 #include "LJCS.h"
+#include "IPuss.h"
 
 struct Tips {
 	Puss*			app;
@@ -55,6 +56,15 @@ SIGNAL_CALLBACK void tips_include_cb_row_activated(GtkTreeView* tree_view, GtkTr
 SIGNAL_CALLBACK void tips_list_cb_row_activated(GtkTreeView* tree_view, GtkTreePath* path, GtkTreeViewColumn* col, Tips* self) {
 }
 
+void tips_parse_editor_font_option(const Option* option, Tips* self) {
+	PangoFontDescription* desc = pango_font_description_from_string(option->value);
+	if( desc ) {
+		gtk_widget_modify_font(GTK_WIDGET(self->decl_view), desc);
+
+		pango_font_description_free(desc);
+	}
+}
+
 gboolean init_tips(Tips* self, Puss* app, Environ* env, Icons* icons) {
 	self->app = app;
 	self->env = env;
@@ -102,6 +112,12 @@ gboolean init_tips(Tips* self, Puss* app, Environ* env, Icons* icons) {
 	gtk_builder_connect_signals(builder, self);
 
 	g_object_unref(G_OBJECT(builder));
+
+	const Option* option = app->option_manager_find("puss", "editor.font");
+	if( option ) {
+		tips_parse_editor_font_option(option, self);
+		app->option_manager_monitor_reg(option, (OptionChanged)&tips_parse_editor_font_option, self);
+	}
 
 	//gtk_widget_show(tip_window);
 

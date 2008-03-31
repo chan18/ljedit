@@ -38,6 +38,12 @@
 			filepath = prj;
 		}
 
+		if( g_file_test(filepath, G_FILE_TEST_IS_SYMLINK) ) {
+			gchar* realpath = g_file_read_link(filepath, 0);
+			g_free(filepath);
+			filepath = realpath;
+		}
+
 		if( !g_file_test(filepath, G_FILE_TEST_EXISTS) ) {
 			g_printerr(_("ERROR : can not find puss directory!\n"));
 			g_printerr(_("        can not use indirect search path in $PATH!\n"));

@@ -291,16 +291,17 @@ gboolean FIND_cb_key_press(GdkEventKey* event, gpointer tag) {
 		return TRUE;
 	}
 
+	if( event->keyval==GDK_Escape ) {
+		move_cursor_to_pos(view, self->last_line, self->last_offset);
+		puss_mini_line_deactive();
+		return TRUE;
+	}
+
 	const gchar* text = gtk_entry_get_text(puss_app->mini_line->entry);
 	if( *text=='\0' )
 		return FALSE;
 
 	switch( event->keyval ) {
-	case GDK_Escape:
-		move_cursor_to_pos(view, self->last_line, self->last_offset);
-		puss_mini_line_deactive();
-		return TRUE;
-
 	case GDK_Return:
 		//doc_mgr_.pos_add(*current_page_, last.get_line(), last.get_line_offset());
 		//doc_mgr_.pos_add(*current_page_, iter.get_line(), iter.get_line_offset());
@@ -335,9 +336,6 @@ MiniLineCallback* puss_mini_line_FIND_get_callback() {
 //--------------------------------------------------------------
 
 struct MiniLineREPLACE {
-	gint	last_line;
-	gint	last_offset;
-
 	MiniLineCallback cb;
 };
 
@@ -353,8 +351,6 @@ gchar* get_replace_search_text(GtkEntry* entry) {
 }
 
 gboolean REPLACE_cb_active(gpointer tag) {
-	MiniLineREPLACE* self = (MiniLineREPLACE*)tag;
-
 	gint page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
 	GtkTextView* view = puss_doc_get_view_from_page_num(page_num);
 	if( !view )
@@ -363,8 +359,6 @@ gboolean REPLACE_cb_active(gpointer tag) {
 	GtkTextBuffer* buf = gtk_text_view_get_buffer(view);
 	if( !buf )
 		return FALSE;
-
-	get_insert_pos(buf, &(self->last_line), &(self->last_offset));
 
 	gtk_widget_modify_base(GTK_WIDGET(puss_app->mini_line->entry), GTK_STATE_NORMAL, NULL);
 
@@ -402,9 +396,7 @@ void REPLACE_cb_changed(gpointer tag) {
 
 	gchar* text = get_replace_search_text(puss_app->mini_line->entry);
 
-	if( *text=='\0' )
-		move_cursor_to_pos(view, self->last_line, self->last_offset);
-	else
+	if( *text!='\0' )
 		find_and_locate_text(view, text, TRUE, FALSE);
 
 	g_free(text);
@@ -469,7 +461,10 @@ void replace_and_locate_text(GtkTextView* view) {
 }
 
 gboolean REPLACE_cb_key_press(GdkEventKey* event, gpointer tag) {
-	MiniLineREPLACE* self = (MiniLineREPLACE*)tag;
+	if( event->keyval==GDK_Escape ) {
+		puss_mini_line_deactive();
+		return TRUE;
+	}
 
 	gint page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
 	GtkTextView* view = puss_doc_get_view_from_page_num(page_num);
@@ -484,14 +479,7 @@ gboolean REPLACE_cb_key_press(GdkEventKey* event, gpointer tag) {
 
 	if( *text!='\0' ) {
 		switch( event->keyval ) {
-		case GDK_Escape:
-			move_cursor_to_pos(view, self->last_line, self->last_offset);
-			puss_mini_line_deactive();
-			return TRUE;
-
 		case GDK_Return:
-			//doc_mgr_.pos_add(*current_page_, last.get_line(), last.get_line_offset());
-			//doc_mgr_.pos_add(*current_page_, iter.get_line(), iter.get_line_offset());
 			replace_and_locate_text(view);
 			return TRUE;
 

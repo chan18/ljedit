@@ -421,8 +421,8 @@ void puss_py_extend_destroy(PyExtend* self) {
 		Py_XDECREF(self->py_gobject);
 
 		while( PyGC_Collect() )
-			;	
-			
+			;
+
 		Py_Finalize();
 	}
 }

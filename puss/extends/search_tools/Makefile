@@ -1,4 +1,4 @@
-# makefile puss
+# makefile
 # 
 # usage :
 #     build debug version   : make
@@ -33,49 +33,22 @@ LIBS += `pkg-config --libs gtksourceview-2.0` \
 
 # project
 # 
-CXXFLAGS += -Iinclude
+CXXFLAGS += -I../../include
 
 SRCS = $(wildcard src/*.cpp)
 
 OBJS = $(SRCS:%.cpp=$(OBJPATH)/%.o)
 
-ifeq ($(PLATFORM), win32)
-	TARGET = bin/_puss.exe
+TARGET = ../../bin/extends/plugin_engine.ext
 
-	ifeq ($(BUILD), release)
-		LDFLAGS = -mwindows
-	endif
-
-else
-	LIBS += -ldl
-	TARGET = bin/puss
-
-endif
-
-ifeq ($(PLATFORM), win32)
-all : bin/puss.exe $(TARGET) puss_extends
-else
-all : $(TARGET) puss_extends
-endif
+all : $(TARGET)
 
 $(TARGET) : $(OBJS)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
-
-bin/puss.exe : win32_boot/main.c win32_boot/puss.rc win32_boot/puss.ico
-	windres -i win32_boot/puss.rc -J rc -o $(OBJPATH)/puss_res.o -O coff --include-dir=win32_boot
-	gcc -O3 -Wall -mwindows -o $@ $< $(OBJPATH)/puss_res.o
-
-EXTS = $(wildcard extends/*)
-
-puss_extends :
-	@for ext in $(EXTS); do make -C$$ext BUILD=$(BUILD); done
+	$(CXX) $(CXXFLAGS) -shared -o $@ $^ $(LIBS)
 
 clean :
-	rm -f bin/puss.exe
 	rm -f $(TARGET)
 	rm -rf $(OBJPATH)
-
-	@for ext in $(EXTS); do make -C$$ext clean BUILD=$(BUILD); done
 
 $(OBJPATH)/%.o : %.cpp
 	@mkdir -p $(dir $@)
