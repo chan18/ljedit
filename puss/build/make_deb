@@ -1,0 +1,21 @@
+#!/bin/sh
+
+if [ "`whoami`" = "root" ]
+then
+	echo "puss make deb"
+else
+	echo "ERROR : need root user!"
+	exit 1
+fi
+
+svn export ./deb  output
+svn export ../bin output/usr/share/puss
+cp -f ../bin/puss output/usr/share/puss/
+cp -rf ../bin/extends/*.ext output/usr/share/puss/extends/
+
+cd output
+dpkg -b . ../../puss-1.0-`date +%F`.deb
+
+cd ..
+rm -rf output
+

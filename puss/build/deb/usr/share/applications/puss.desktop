@@ -1,0 +1,12 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=ljedit
+GenericName=ljedit for c/c++
+Comment=SourceEditor for c/c++
+Exec=ljedit %U
+Terminal=false
+StartupNotify=true
+Type=Application
+MimeType=text/plain;
+Icon=accessories-text-editor
+Categories=GNOME;GTK;Utility;TextEditor;

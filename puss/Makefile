@@ -65,6 +65,18 @@ bin/puss.exe : win32_boot/main.c win32_boot/puss.rc win32_boot/puss.ico
 	windres -i win32_boot/puss.rc -J rc -o $(OBJPATH)/puss_res.o -O coff --include-dir=win32_boot
 	gcc -O3 -Wall -mwindows -o $@ $< $(OBJPATH)/puss_res.o
 
+deb :
+	@echo make .deb for linux
+	@cd build; ./make_deb
+
+zip :
+	rm -rf output
+	svn export ./bin output
+	cp -f ./bin/*.exe output
+	cp -rf ./bin/extends/*.ext output/extends/
+	cd output; tar jcf ../puss-`date +%F`.tar.bz2 *
+	rm -rf output
+
 EXTS = $(wildcard extends/*)
 
 puss_extends :
