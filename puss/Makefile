@@ -65,22 +65,17 @@ bin/puss.exe : win32_boot/main.c win32_boot/puss.rc win32_boot/puss.ico
 	windres -i win32_boot/puss.rc -J rc -o $(OBJPATH)/puss_res.o -O coff --include-dir=win32_boot
 	gcc -O3 -Wall -mwindows -o $@ $< $(OBJPATH)/puss_res.o
 
+EXTS = $(wildcard extends/*)
+
 puss_extends :
-	@cd extends/dndopen;		make BUILD=$(BUILD)
-	@cd extends/ljcs;			make BUILD=$(BUILD)
-	@cd extends/pyextend;		make BUILD=$(BUILD)
-	@cd extends/plugin_engine;	make BUILD=$(BUILD)
-	@cd extends/language_selector;	make BUILD=$(BUILD)
+	for ext in $(EXTS); do make -C$$ext BUILD=$(BUILD); done
 
 clean :
-	rm -f $(TARGET)
 	rm -f bin/puss.exe
-	rm -rf debug
-	rm -rf release
+	rm -f $(TARGET)
+	rm -rf $(OBJPATH)
 
-	@cd extends/ljcs;			make clean
-	@cd extends/pyextend;		make clean
-	@cd extends/plugin_engine;	make clean
+	@for ext in $(EXTS); do make -C$$ext clean BUILD=$(BUILD); done
 
 $(OBJPATH)/%.o : %.cpp
 	@mkdir -p $(dir $@)

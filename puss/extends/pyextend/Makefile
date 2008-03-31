@@ -75,8 +75,7 @@ $(TARDIR)/puss.py : src/puss.py
 
 clean :
 	rm -f $(TARGET)
-	rm -rf debug
-	rm -rf release
+	rm -rf $(OBJPATH)
 
 $(OBJPATH)/%.o : %.cpp
 	@mkdir -p $(dir $@)
