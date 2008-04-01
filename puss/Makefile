@@ -67,7 +67,7 @@ bin/puss.exe : win32_boot/main.c win32_boot/puss.rc win32_boot/puss.ico
 
 deb :
 	@echo make .deb for linux
-	@cd build; ./make_deb
+	@./make_deb
 
 zip :
 	rm -rf output
