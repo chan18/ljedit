@@ -91,7 +91,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy src\*.py $(SolutionDir)bin\extends\"
 			/>
 		</Configuration>
 		<Configuration
@@ -170,7 +169,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy src\*.py $(SolutionDir)bin\extends\"
 			/>
 		</Configuration>
 	</Configurations>
@@ -182,19 +180,11 @@
 			>
 		</File>
 		<File
-			RelativePath=".\src\puss.py"
-			>
-		</File>
-		<File
 			RelativePath=".\src\PyExtend.cpp"
 			>
 		</File>
 		<File
 			RelativePath=".\src\PyExtend.h"
-			>
-		</File>
-		<File
-			RelativePath=".\src\pyextend.py"
 			>
 		</File>
 	</Files>

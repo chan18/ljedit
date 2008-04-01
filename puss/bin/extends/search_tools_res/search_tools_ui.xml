@@ -7,18 +7,6 @@
       <column type="gchararray"/>
       <column type="gpointer"/>
     </columns>
-    <data>
-      <row>
-        <col id="0">test.cpp</col>
-        <col id="1">3</col>
-        <col id="2">vvvvvv</col>
-      </row>
-      <row>
-        <col id="0">vvvv.cpp</col>
-        <col id="1">100</col>
-        <col id="2">aaaaaaaaa</col>
-      </row>
-    </data>
   </object>
 
   <object class="GtkHBox" id="search_tools_panel">
@@ -76,14 +64,18 @@
         <property name="fill">True</property>
       </packing>
     </child>
-    <!--child>
-      <object class="GtkFrame" id="xx">
+    <child>
+      <object class="GtkVBox" id="search_right_panel">
+        <child>
+          <object class="GtkEntry" id="search_entry">
+          </object>
+        </child>
+        <child>
+          <object class="GtkEntry" id="search_xxxx">
+          </object>
+        </child>
       </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="fill">False</property>
-      </packing>
-    </child-->
+    </child>
   </object>
 </interface>
 

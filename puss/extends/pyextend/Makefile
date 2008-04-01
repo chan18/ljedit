@@ -56,22 +56,12 @@ SRCS = $(wildcard src/*.cpp)
 
 OBJS = $(SRCS:%.cpp=$(OBJPATH)/%.o)
 
-TARDIR = ../../bin/extends
+TARGET = ../../bin/extends/pyextend.ext
 
-TARGETS = $(TARDIR)/pyextend.ext \
-		  $(TARDIR)/pyextend.py  \
-		  $(TARDIR)/puss.py
+all : $(TARGET)
 
-all : $(TARGETS)
-
-$(TARDIR)/pyextend.ext : $(OBJS)
+$(TARGET) : $(OBJS)
 	$(CXX) $(CXXFLAGS) -shared -o $@ $^ $(LIBS)
-
-$(TARDIR)/pyextend.py : src/pyextend.py
-	cp -f $< $@
-
-$(TARDIR)/puss.py : src/puss.py
-	cp -f $< $@
 
 clean :
 	rm -f $(TARGET)

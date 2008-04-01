@@ -1,9 +1,9 @@
 Package: puss
-Version: 1.0.0-0ubuntu1
+Version: 1.0.0-0
 Section: devel
 Priority: optional
 Architecture: i386
-Depends: libgtksourceview-2.0 (>= 2.0), python2.5 (>= 2.5), python-gtk2 (>= 2.10.4-0ubuntu3)
+Depends: libgtksourceview2.0-0 (>= 2.0), python2.5 (>= 2.5), python-gtk2 (>= 2.12.0)
 Installed-Size: 512
 Maintainer: LJ Louis <louisliangjun@gmail.com>
 Description: SourceEditor for C/C++

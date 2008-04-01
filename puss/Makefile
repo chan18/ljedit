@@ -66,16 +66,18 @@ bin/puss.exe : win32_boot/main.c win32_boot/puss.rc win32_boot/puss.ico
 	gcc -O3 -Wall -mwindows -o $@ $< $(OBJPATH)/puss_res.o
 
 deb :
-	@echo make .deb for linux
 	@./make_deb
 
 zip :
-	rm -rf output
-	svn export ./bin output
-	cp -f ./bin/*.exe output
-	cp -rf ./bin/extends/*.ext output/extends/
-	cd output; tar jcf ../puss-`date +%F`.tar.bz2 *
-	rm -rf output
+	@rm -rf output
+	@svn export ./bin output
+	@if [ -f bin/_puss.exe ]; then cp -f bin/_puss.exe output/; fi
+	@if [ -f bin/puss.exe ]; then cp -f bin/puss.exe output/; fi
+	@if [ -f bin/puss ]; then cp -f bin/puss output/; fi
+	@cp -rf bin/extends/*.ext output/extends/
+	@echo tar jcf puss-1.0-`date +%F`.tar.bz2
+	@cd output; tar jcf ../puss-1.0-`date +%F`.tar.bz2 *
+	@rm -rf output
 
 EXTS = $(wildcard extends/*)
 

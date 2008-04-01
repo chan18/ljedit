@@ -3,6 +3,5 @@ set -e
 
 if [ -x "`which update-menus 2>/dev/null`" ]; then update-menus ; fi
 
-if [ -f /usr/bin/puss ]; then unlink /usr/bin/puss; fi
-
+if [ -h /usr/bin/puss ]; then unlink /usr/bin/puss; fi
 
