@@ -262,9 +262,8 @@ SIGNAL_CALLBACK void option_manager_cb_row_activated(GtkTreeView* tree_view, Gtk
 	if( !gtk_tree_model_get_iter(model, &iter, path) )
 		return;
 
-	GValue value = { G_TYPE_INVALID };
-	gtk_tree_model_get_value(model, &iter, 3, &value);
-	OptionNode* node = (OptionNode*)g_value_get_pointer(&value);
+	OptionNode* node = 0;
+	gtk_tree_model_get(model, &iter, 3, &node, -1);
 	if( !node )
 		return;
 

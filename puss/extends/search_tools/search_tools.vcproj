@@ -175,6 +175,14 @@
 	<References>
 	</References>
 	<Files>
+		<Filter
+			Name="res"
+			>
+			<File
+				RelativePath="..\..\bin\extends\search_tools_res\search_tools_ui.xml"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\src\module.cpp"
 			>

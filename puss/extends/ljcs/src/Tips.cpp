@@ -38,9 +38,8 @@ SIGNAL_CALLBACK gboolean tips_list_cb_query_tooltip( GtkTreeView* tree_view
 	GtkTreePath* path;
 	GtkTreeIter iter;
 	if( gtk_tree_view_get_tooltip_context(tree_view, &x, &y, keyboard_mode, &model, &path, &iter) ) {
-		GValue value = { G_TYPE_INVALID };
-		gtk_tree_model_get_value(model, &iter, 2, &value);
-		const cpp::Element* elem = (const cpp::Element*)g_value_get_pointer(&value);
+		cpp::Element* elem = 0;
+		gtk_tree_model_get(model, &iter, 2, &elem, -1);
 		if( elem ) {
 			gtk_tooltip_set_text(tooltip, elem->decl.c_str());
 			return TRUE;
@@ -125,12 +124,11 @@ gboolean init_tips(Tips* self, Puss* app, Environ* env, Icons* icons) {
 }
 
 gboolean decref_each_file(GtkTreeModel* model, GtkTreePath* path, GtkTreeIter* iter, Tips* self) {
-	GValue value = { G_TYPE_INVALID };
 	GtkTreeModel* mm = gtk_tree_view_get_model(self->list_view);
 	assert( mm==0 || mm==model );
 
-	gtk_tree_model_get_value(model, iter, 2, &value);
-	cpp::Element* elem = (cpp::Element*)g_value_get_pointer(&value);
+	cpp::Element* elem = 0;
+	gtk_tree_model_get(model, iter, 2, &elem, -1);
 	g_assert( elem );
 
 	self->env->file_decref(&(elem->file));
@@ -360,9 +358,8 @@ gboolean tips_locate_sub(Tips* self, gint x, gint y, const gchar* key) {
 		return FALSE;
 
 	do {
-		GValue value = { G_TYPE_INVALID };
-		gtk_tree_model_get_value(self->list_model, &iter, 2, &value);
-		cpp::Element* elem = (cpp::Element*)g_value_get_pointer(&value);
+		cpp::Element* elem = 0;
+		gtk_tree_model_get(self->list_model, &iter, 2, &elem, -1);
 		g_assert( elem );
 
 		if( elem->name.find(key)==0 ) {
@@ -383,11 +380,8 @@ cpp::Element* tips_list_get_selected(Tips* self) {
 
 	GtkTreeIter iter;
 	GtkTreeSelection* sel = gtk_tree_view_get_selection(self->list_view);
-	if( gtk_tree_selection_get_selected(sel, &self->list_model, &iter) ) {
-		GValue value = { G_TYPE_INVALID };
-		gtk_tree_model_get_value(self->list_model, &iter, 2, &value);
-		result = (cpp::Element*)g_value_get_pointer(&value);
-	}
+	if( gtk_tree_selection_get_selected(sel, &self->list_model, &iter) )
+		gtk_tree_model_get(self->list_model, &iter, 2, &result, -1);
 
 	return result;
 }
@@ -397,11 +391,8 @@ const gchar* tips_include_get_selected(Tips* self) {
 
 	GtkTreeIter iter;
 	GtkTreeSelection* sel = gtk_tree_view_get_selection(self->include_view);
-	if( gtk_tree_selection_get_selected(sel, &self->include_model, &iter) ) {
-		GValue value = { G_TYPE_INVALID };
-		gtk_tree_model_get_value(self->include_model, &iter, 0, &value);
-		result = g_value_get_string(&value);
-	}
+	if( gtk_tree_selection_get_selected(sel, &self->include_model, &iter) )
+		gtk_tree_model_get(self->include_model, &iter, 0, &result, -1);
 
 	return result;
 }

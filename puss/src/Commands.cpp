@@ -110,10 +110,8 @@ SIGNAL_CALLBACK void view_menu_bottom_panel( GtkAction* action ) {
 }
 
 SIGNAL_CALLBACK void view_menu_bottom_page_n( GtkRadioAction* action ) {
-	GValue value = { 0 };
-	g_value_init(&value, G_TYPE_INT);
-	g_object_get_property(G_OBJECT(action), "value", &value);
-	gint action_value = g_value_get_int(&value);
+	gint action_value = 0;
+	g_object_get(action, "value", &action_value, NULL);
 	gint page_num = gtk_radio_action_get_current_value(action);
 
 	if( page_num==action_value )

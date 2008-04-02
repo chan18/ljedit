@@ -67,14 +67,41 @@
     <child>
       <object class="GtkVBox" id="search_right_panel">
         <child>
-          <object class="GtkEntry" id="search_entry">
+          <object class="GtkHBox" id="">
+            <child>
+              <object class="GtkLabel" id="search_label">
+                <property name="label">search : </property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkEntry" id="search_entry">
+                <signal handler="search_tools_search" name="key-press-event"/>
+              </object>
+            </child>
           </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+          </packing>
         </child>
         <child>
-          <object class="GtkEntry" id="search_xxxx">
+          <object class="GtkFrame" id="search_options_frame">
+            <child type="label">
+              <object class="GtkLabel" id="search_options_label">
+                <property name="label">options</property>
+              </object>
+            </child>
           </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+          </packing>
         </child>
       </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">False</property>
+      </packing>
     </child>
   </object>
 </interface>

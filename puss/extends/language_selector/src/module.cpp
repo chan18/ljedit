@@ -154,5 +154,6 @@ PUSS_EXPORT void* puss_extend_create(Puss* app) {
 }
 
 PUSS_EXPORT void  puss_extend_destroy(void* self) {
+	puss_app = 0;
 }
 
