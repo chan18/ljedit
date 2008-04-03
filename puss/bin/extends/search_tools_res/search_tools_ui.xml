@@ -26,6 +26,7 @@
               <object class="GtkTreeView" id="search_result_view">
                 <property name="model">search_result_store</property>
                 <property name="headers-visible">False</property>
+                <signal handler="search_results_cb_row_activated" name="row-activated"/>
                 <child>
                   <object class="GtkTreeViewColumn" id="position_column">
                     <property name="title">position</property>
@@ -89,6 +90,42 @@
             <child type="label">
               <object class="GtkLabel" id="search_options_label">
                 <property name="label">options</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkVBox" id="search_option_range_vbox">
+                <child>
+                  <object class="GtkRadioButton" id="search_option_in_current_file">
+                    <property name="label">search in current file</property>
+                    <property name="can-focus">False</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkRadioButton" id="search_option_in_opened_files">
+                    <property name="group">search_option_in_current_file</property>
+                    <property name="label">search in opened files</property>
+                    <property name="can-focus">False</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkRadioButton" id="search_option_in_current_file_dir">
+                    <property name="group">search_option_in_current_file</property>
+                    <property name="label">search in current file dir</property>
+                    <property name="can-focus">False</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                  </packing>
+                </child>
               </object>
             </child>
           </object>
