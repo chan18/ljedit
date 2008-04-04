@@ -51,7 +51,12 @@ gboolean fill_language_section(gchar* key, GList* value, GString* gstr) {
 	return FALSE;
 }
 
+void destroy_language(gchar* lang, gpointer) {
+	g_free(lang);
+}
+
 gboolean destroy_language_section(gchar* key, GList* value, gpointer) {
+	g_list_foreach(value, (GFunc)&destroy_language, 0);
 	g_list_free(value);
 	return FALSE;
 }

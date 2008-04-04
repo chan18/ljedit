@@ -6,17 +6,73 @@
 #include <glib/gi18n.h>
 #include <gdk/gdkkeysyms.h>
 
-struct SearchTools {
-	Puss*			app;
+struct ResultNode {
+	const char*		filename;
+	gint			line;
+	gchar*			preview;
 
-	GtkEntry*		search_entry;
-	GtkTreeView*	result_view;
-	GtkListStore*	result_store;
+	ResultNode*		next;
+};
+
+struct FileResultNode {
+	gchar*			owner_filename;
+	ResultNode*		result_node_list;
+
+	FileResultNode*	next;
+};
+
+struct SearchTools {
+	Puss*				app;
+
+	FileResultNode*		result_list;
+	FileResultNode*		result_list_last;
+
+	GtkEntry*			search_entry;
+	GtkTreeView*		result_view;
+	GtkListStore*		result_store;
 
 	GtkToggleButton*	search_option_in_current_file;
 	GtkToggleButton*	search_option_in_opened_files;
 	GtkToggleButton*	search_option_in_current_file_dir;
 };
+
+void clear_search_results(SearchTools* self) {
+	gtk_list_store_clear(self->result_store);
+
+	while( self->result_list ) {
+		FileResultNode* rs = self->result_list;
+		self->result_list = rs->next;
+
+		while( rs->result_node_list ) {
+			ResultNode* p = rs->result_node_list;
+			rs->result_node_list = p->next;
+
+			g_free(p->preview);
+			g_free(p);
+		}
+
+		g_free(rs->owner_filename);
+		g_free(rs);
+	}
+
+	self->result_list = 0;
+	self->result_list_last = 0;
+}
+
+void fill_search_results_list(SearchTools* self) {
+	GtkTreeIter iter;
+	for(FileResultNode* rs = self->result_list; rs; rs = rs->next) {
+		for(ResultNode* p = rs->result_node_list; p; p = p->next) {
+			gtk_list_store_append(self->result_store, &iter);
+			gtk_list_store_set( self->result_store, &iter
+				, 0, p->filename
+				, 1, p->line
+				, 2, p->preview
+				, 3, p
+				, -1 );
+		}
+	}
+}
 
 void search_in_file_content( const gchar* filename
 							, gchar* content
@@ -26,8 +82,10 @@ void search_in_file_content( const gchar* filename
 {
 	g_assert( content );
 
+	ResultNode* last_node = 0;
+
 	gchar* end = content + len;
-	gsize line = 0;
+	gint line = -1;
 	gchar* ps = content;
 	gchar* pe = content;
 	while( ps < end ) {
@@ -38,26 +96,61 @@ void search_in_file_content( const gchar* filename
 
 		gchar* pos = g_strstr_len(ps, (gsize)(pe-ps), search_text);
 		if( pos ) {
-			GtkTreeIter iter;
-			gtk_list_store_append(self->result_store, &iter);
-			gtk_list_store_set(self->result_store, &iter, 0, g_strdup(filename), 1, line, 2, g_strndup(ps, (gsize)(pe-ps)), -1);	// TODO : not finish!!! memory-lack!! test only
+			ResultNode* node = g_new0(ResultNode, 1);
+			if( !node )
+				break;
+
+			if( last_node ) {
+				last_node->next = node;
+
+			} else {
+				FileResultNode* fnode = g_new0(FileResultNode, 1);
+				if( !fnode ) {
+					g_free(node);
+					break;
+				}
+
+				fnode->owner_filename = g_strdup(filename);
+
+				if( self->result_list ) {
+					g_assert( self->result_list_last );
+					self->result_list_last->next = fnode;
+				} else {
+					self->result_list = fnode;
+				}
+
+				fnode->result_node_list = node;
+				self->result_list_last = fnode;
+			}
+			last_node = node;
+
+			node->filename = self->result_list_last->owner_filename;
+			node->line = line;
+			node->preview = g_strndup(ps, (gsize)(pe-ps));
 		}
 
-		for( ps=pe; ps < end; ++ps )
-			if( *ps!='\r' && *ps!='\n' )
-				break;
+		if( (pe < end) && *pe=='\r' )
+			++pe;
+
+		if( (pe < end) && *pe=='\n' )
+			++pe;
+
+		ps = pe;
 	}
 }
 
 void search_in_doc(GtkTextBuffer* buf, const gchar* search_text, SearchTools* self) {
+	GString* url = self->app->doc_get_url(buf);
+	if( !url )
+		return;
+
 	GtkTextIter ps, pe;
 	gtk_text_buffer_get_start_iter(buf, &ps);
 	gtk_text_buffer_get_end_iter(buf, &pe);
 	gchar* content = gtk_text_buffer_get_text(buf, &ps, &pe, TRUE);
 	gsize len = g_utf8_strlen(content, -1);
 	if( content ) {
-		GString* url = self->app->doc_get_url(buf);
-		search_in_file_content( url ? url->str : 0
+		search_in_file_content( url->str
 			, content
 			, len
 			, search_text
@@ -142,7 +235,8 @@ SIGNAL_CALLBACK gboolean search_tools_search(GtkEntry* entry, GdkEventKey* event
 	{
 		const gchar* text = gtk_entry_get_text(entry);
 
-		gtk_list_store_clear(self->result_store);
+		gtk_tree_view_set_model(self->result_view, 0);
+		clear_search_results(self);
 
 		if( gtk_toggle_button_get_active(self->search_option_in_current_file) )
 			search_in_current_file(text, self);
@@ -153,7 +247,9 @@ SIGNAL_CALLBACK gboolean search_tools_search(GtkEntry* entry, GdkEventKey* event
 		else if( gtk_toggle_button_get_active(self->search_option_in_current_file_dir) )
 			search_in_current_file_dir(text, self);
 
-		return true;
+		fill_search_results_list(self);
+		gtk_tree_view_set_model(self->result_view, GTK_TREE_MODEL(self->result_store));
+		return TRUE;
 	}
 	return FALSE;
 }
@@ -163,16 +259,12 @@ SIGNAL_CALLBACK void search_results_cb_row_activated(GtkTreeView* tree_view, Gtk
 	if( !gtk_tree_model_get_iter(GTK_TREE_MODEL(self->result_store), &iter, path) )
 		return;
 
-	// TODO : use column 2!!! now, just test
-	// 
-
-	gchar* filename = 0;
-	gint line = 0;
-	gtk_tree_model_get(GTK_TREE_MODEL(self->result_store), &iter, 0, &filename, 1, &line, -1);
-	if( !filename )
+	ResultNode* p = 0;
+	gtk_tree_model_get(GTK_TREE_MODEL(self->result_store), &iter, 3, &p, -1);
+	if( !p )
 		return;
 
-	self->app->doc_open(filename, line, -1, FALSE);
+	self->app->doc_open(p->filename, p->line, -1, FALSE);
 }
 
 gboolean search_tools_active_search_entry(GtkWidget* widget, GdkEventFocus* event, SearchTools* self) {
@@ -231,12 +323,17 @@ PUSS_EXPORT void* puss_extend_create(Puss* app) {
 	if( self ) {
 		self->app = app;
 		search_tools_build_ui(self);
+
+		g_object_ref(self->result_store);
 	}
 
 	return self;
 }
 
-PUSS_EXPORT void  puss_extend_destroy(void* self) {
+PUSS_EXPORT void  puss_extend_destroy(void* ext) {
+	SearchTools* self = (SearchTools*)ext;
+	clear_search_results(self);
+	g_object_unref(self->result_store);
 	g_free(self);
 }
 
