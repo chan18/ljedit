@@ -19,6 +19,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "language_selector", "extend
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "search_tools", "extends\search_tools\search_tools.vcproj", "{44F813E0-12E8-4F44-8B7A-3EAB5CB9FEF3}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gtk_doc_helper", "extends\gtk_doc_helper\gtk_doc_helper.vcproj", "{44F803E1-1E28-34F4-1FAB-3DB9FE8B7AE4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -57,6 +59,10 @@ Global
 		{44F813E0-12E8-4F44-8B7A-3EAB5CB9FEF3}.Debug|Win32.Build.0 = Debug|Win32
 		{44F813E0-12E8-4F44-8B7A-3EAB5CB9FEF3}.Release|Win32.ActiveCfg = Release|Win32
 		{44F813E0-12E8-4F44-8B7A-3EAB5CB9FEF3}.Release|Win32.Build.0 = Release|Win32
+		{44F803E1-1E28-34F4-1FAB-3DB9FE8B7AE4}.Debug|Win32.ActiveCfg = Debug|Win32
+		{44F803E1-1E28-34F4-1FAB-3DB9FE8B7AE4}.Debug|Win32.Build.0 = Debug|Win32
+		{44F803E1-1E28-34F4-1FAB-3DB9FE8B7AE4}.Release|Win32.ActiveCfg = Release|Win32
+		{44F803E1-1E28-34F4-1FAB-3DB9FE8B7AE4}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -68,5 +74,6 @@ Global
 		{44F873E0-12E8-4F44-777A-2FAB5DB9AEE3} = {1FA2A3CA-86BD-4F54-8D1E-67A9EECC4182}
 		{44F803E1-1E28-44F4-2FAB-5DB9FE8B7AE3} = {1FA2A3CA-86BD-4F54-8D1E-67A9EECC4182}
 		{44F813E0-12E8-4F44-8B7A-3EAB5CB9FEF3} = {1FA2A3CA-86BD-4F54-8D1E-67A9EECC4182}
+		{44F803E1-1E28-34F4-1FAB-3DB9FE8B7AE4} = {1FA2A3CA-86BD-4F54-8D1E-67A9EECC4182}
 	EndGlobalSection
 EndGlobal
