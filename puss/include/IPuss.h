@@ -68,6 +68,7 @@ struct Puss {
 	void			(*send_focus_change)( GtkWidget* widget, gboolean in );
 	void			(*active_panel_page)( GtkNotebook* panel, gint page_num );
 	gboolean		(*load_file)(const gchar* filename, gchar** text, gsize* len, G_CONST_RETURN gchar** charset);
+	gchar*			(*format_filename)(const gchar* filename);
 
 	// option manager
 	const Option*	(*option_manager_find)(const gchar* group, const gchar* key);

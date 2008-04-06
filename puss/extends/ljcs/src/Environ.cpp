@@ -104,13 +104,10 @@ void Environ::set_include_paths(const StrVector& paths) {
 		StrVector::const_iterator it = paths.begin();
 		StrVector::const_iterator end = paths.end();
 		for( ; it!=end; ++it ) {
-			path = *it;
-
-			//assert( ljedit_ != 0 );
-			//ljedit().utils().format_filekey(path);
-
-			if( path.empty() )
-				continue;
+			assert( app_ );
+			gchar* str = app_->format_filename(it->c_str());
+			path = str;
+			g_free(str);
 
 			if( std::find(vec.begin(), vec.end(), path)==vec.end() )
 				vec.push_back(path);
@@ -128,8 +125,10 @@ void Environ::set_pre_parse_files(const StrVector& files) {
 		StrVector::const_iterator it = files.begin();
 		StrVector::const_iterator end = files.end();
 		for( ; it!=end; ++it ) {
-			file = *it;
-			//ljedit().utils().format_filekey(file);
+			assert( app_ );
+			gchar* str = app_->format_filename(it->c_str());
+			file = str;
+			g_free(str);
 
 			if( file.empty() )
 				continue;
@@ -164,15 +163,22 @@ cpp::File* Environ::find_parsed_in_include_path(const std::string& filename) {
 	StrVector::iterator end = include_paths_->end();
 	for( ; it!=end && retval==0; ++it ) {
 		filepath = *it + filename;
-		//ljedit().utils().format_filekey(filepath);
+
+		assert( app_ );
+		gchar* str = app_->format_filename(filepath.c_str());
+		filepath = str;
+		g_free(str);
+
 		retval = find_parsed(filepath);
 	}
 	return retval;
 }
 
 bool Environ::in_include_path(const std::string& path) {
-	std::string abspath = path;
-	//ljedit().utils().format_filekey(abspath);
+	assert( app_ );
+	gchar* str = app_->format_filename(path.c_str());
+	std::string abspath = str;
+	g_free(str);
 
 	{
 		RLocker locker(include_paths_);
@@ -304,7 +310,10 @@ bool Environ::pe_is_abspath(std::string& filepath) {
 }
 
 void Environ::pe_format_filekey(std::string& filename) {
-	//ljedit().utils().format_filekey(filename);
+	assert( app_ );
+	gchar* str = app_->format_filename(filename.c_str());
+	filename = str;
+	g_free(str);
 }
 
 void Environ::pe_get_path(std::string& path, const std::string& filename) {
@@ -314,10 +323,12 @@ void Environ::pe_get_path(std::string& path, const std::string& filename) {
 }
 
 void Environ::pe_build_filekey(std::string& filekey, const std::string& path, const std::string& name) {
-	gchar* str = g_build_filename(path.c_str(), name.c_str(), NULL);
-	// ljedit().utils().format_filekey(filekey);
-	filekey.assign(str);
+	assert( app_ );
+	gchar* fname = g_build_filename(path.c_str(), name.c_str(), NULL);
+	gchar* str = app_->format_filename(fname);
+	filekey = str;
 	g_free(str);
+	g_free(fname);
 }
 
 cpp::File* Environ::pe_find_parsed(const std::string& filekey) {

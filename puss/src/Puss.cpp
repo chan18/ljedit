@@ -63,6 +63,7 @@ void init_puss_c_api(Puss* api) {
 	api->send_focus_change = &puss_send_focus_change;
 	api->active_panel_page = &puss_active_panel_page;
 	api->load_file = &puss_load_file;
+	api->format_filename = &puss_format_filename;
 
 	// option manager
 	api->option_manager_find = &puss_option_manager_find;

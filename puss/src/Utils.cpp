@@ -140,3 +140,68 @@ gboolean puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST
 	return FALSE;
 }
 
+#ifdef G_OS_WIN32
+#include <windows.h>
+#endif
+
+gchar* puss_format_filename(const gchar* filename) {
+	g_assert( filename );
+
+	gchar* res = 0;
+
+#ifdef G_OS_WIN32
+	wchar_t* wfname = (wchar_t*)g_utf8_to_utf16(filename, -1, 0, 0, 0);
+	if( wfname ) {
+		wchar_t wbuf[32768];
+		gsize len = GetFullPathNameW(wfname, 32768, wbuf, 0);
+		g_free(wfname);
+
+		res = g_utf16_to_utf8((const gunichar2*)wbuf, len, 0, 0, 0);
+	}
+
+	if( !res )
+		res = g_strdup(filename);
+
+	g_assert( res );
+
+	for( gchar* p = res; *p; ++p )
+		*p = g_ascii_tolower(*p);
+
+#else
+	gboolean succeed = TRUE;
+
+	gchar** paths = g_strsplit(filename, "/", 0);
+	gchar* outs[256];
+	gchar** pt = outs;
+	for( gchar** p=paths; succeed && *p; ++p ) {
+		gchar* path = *p;
+		if( g_str_equal(*p, ".") ) {
+			// ignore ./
+
+		} else if( g_str_equal(*p, "..") ) {
+			if( pt==outs )
+				succeed = FALSE;
+			else
+				--pt;
+
+		} else {
+			*pt = *p;
+			++pt;
+		}
+	}
+
+	if( succeed ) {
+		*pt = NULL;
+		res = g_strjoinv("/", outs);
+
+	} else {
+		res = g_strdup(filename);
+	}
+
+	g_strfreev(paths);
+
+#endif
+
+	return res;
+}
+

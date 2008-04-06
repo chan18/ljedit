@@ -203,7 +203,8 @@ gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 	return page_num;
 }
 
-gint doc_open_file( const gchar* url, gint line, gint line_offset, gboolean show_message_if_open_failed ) {
+gint doc_open_file( const gchar* filename, gint line, gint line_offset, gboolean show_message_if_open_failed ) {
+	gchar* url = puss_format_filename(filename);
 	gint page_num = puss_doc_find_page_from_url(url);
 	if( page_num < 0 ) {
 		gchar* text = 0;
@@ -240,6 +241,7 @@ gint doc_open_file( const gchar* url, gint line, gint line_offset, gboolean show
 			gtk_widget_grab_focus(GTK_WIDGET(view));
 		}
 	}
+	g_free(url);
 
 	if( page_num < 0 ) {
 		if( show_message_if_open_failed ) {
@@ -248,7 +250,7 @@ gint doc_open_file( const gchar* url, gint line, gint line_offset, gboolean show
 				, GTK_MESSAGE_ERROR
 				, GTK_BUTTONS_OK
 				, _("Error loading file : %s")
-				, url );
+				, filename );
 			gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dlg), _("please select charset and retry!"));
 			gtk_dialog_run(GTK_DIALOG(dlg));
 			gtk_widget_destroy(dlg);

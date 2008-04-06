@@ -14,6 +14,8 @@ public:
 	Environ();
 	~Environ();
 
+	void set_app(Puss* app) { app_ = app; }
+
 public:
 	StrVector	get_include_paths()   { return include_paths_.copy(); }
 	StrVector	get_pre_parse_files() { return pre_parse_files_.copy(); }
@@ -58,7 +60,7 @@ private:	// IParserEnviron
 	virtual void		pe_on_parsed(cpp::File* file);
 
 private:
-	//Puss*					app_;
+	Puss*					app_;
 
 	RWLock<StrVector>		include_paths_;
 

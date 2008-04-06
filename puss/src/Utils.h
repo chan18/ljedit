@@ -15,5 +15,7 @@ void		puss_active_panel_page(GtkNotebook* panel, gint page_num);
 
 gboolean	puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST_RETURN gchar** charset);
 
+gchar*		puss_format_filename(const gchar* filename);
+
 #endif//PUSS_INC_UTILS_H
 
