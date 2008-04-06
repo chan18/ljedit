@@ -10,15 +10,20 @@
 #include <string.h>
 
 #ifdef G_OS_WIN32
-	#include <windows.h>
 
-	GModule* puss_g_module_open(const gchar  *file_name, GModuleFlags  flags) {
-		// do not show not find DLL dialog
-		UINT uOldErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
-		GModule* ret = g_module_open(file_name, flags);
-		SetErrorMode(uOldErrorMode);
-		return ret;
-	}
+	#ifdef _DEBUG
+		#define puss_g_module_open g_module_open
+	#else
+		#include <windows.h>
+
+		GModule* puss_g_module_open(const gchar  *file_name, GModuleFlags  flags) {
+			// do not show not find DLL dialog
+			UINT uOldErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
+			GModule* ret = g_module_open(file_name, flags);
+			SetErrorMode(uOldErrorMode);
+			return ret;
+		}
+	#endif
 
 #else
 	#define puss_g_module_open g_module_open

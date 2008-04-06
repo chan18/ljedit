@@ -5,14 +5,6 @@
 
 #include <glib/gi18n.h>
 
-#ifdef G_OS_WIN32
-	#include <windows.h>
-
-	void open_url(const gchar* link)
-		{ ShellExecuteA(HWND_DESKTOP, "open", "C:/Program Files/Mozilla Firefox 3 Beta 4/firefox",  link, NULL, SW_SHOWNORMAL); }
-
-#endif
-
 struct DocModuleNode {
 	gchar*		path;
 	GHashTable*	index;
@@ -25,10 +17,58 @@ void doc_module_node_free(DocModuleNode* node, gpointer) {
 
 struct GtkDocHelper {
 	Puss*		app;
-	GRegex*		re_dt; 
+	GRegex*		re_dt;
+
+	gchar*		browser;
 
 	GList*		modules;	// DocModuleNode list
 };
+
+#ifdef G_OS_WIN32
+	#include <windows.h>
+
+	gchar* auto_search_browser() {
+		HKEY hkRoot;
+		HKEY hSubKey;
+		CHAR ValueName[256];
+		DWORD dwType;
+		DWORD cbValueName = 256;
+		DWORD cbDataValue = 256;
+		BYTE  DataValue[256];
+
+		if( RegOpenKeyA(HKEY_CLASSES_ROOT, NULL, &hkRoot)==ERROR_SUCCESS ) {
+			if( RegOpenKeyExA(hkRoot, "htmlfile\\shell\\open\\command", 0, KEY_ALL_ACCESS, &hSubKey)==ERROR_SUCCESS ) {
+				RegEnumValueA(hSubKey, 0, ValueName, &cbValueName, NULL, &dwType, DataValue, &cbDataValue);
+				RegCloseKey(hSubKey);
+			}
+			RegCloseKey(hkRoot);
+		}
+
+		return g_strdup((gchar*)DataValue);
+	}
+
+	void open_url(GtkDocHelper* self, const gchar* link) {
+		if( !self->browser || self->browser[0]=='\0' )
+			self->browser = auto_search_browser();
+
+		gchar* cmd = g_strjoin(" ", self->browser, link, NULL);
+		WinExec(cmd, SW_SHOW);
+		g_free(cmd);
+
+		ShellExecuteA(HWND_DESKTOP, "open", self->browser, link, NULL, SW_SHOWNORMAL);
+	}
+
+#else
+	void open_url(GtkDocHelper* self, const gchar* link) {
+		if( !self->browser || self->browser[0]=='\0' )
+			self->browser = g_strdup("/usr/bin/firefox");
+
+		gchar* cmd = g_strjoin(" ", self->browser, link, NULL);
+		system(cmd);
+		g_free(cmd);
+	}
+
+#endif
 
 void parse_doc_module(GtkDocHelper* self, const gchar* path, const gchar* index_html_file) {
 	gchar* index_filename = g_build_filename(path, index_html_file, NULL);
@@ -81,9 +121,25 @@ void find_and_open_in_brower(GtkDocHelper* self, const gchar* key) {
 
 	if( tag.res_path ) {
 		gchar* url = g_build_filename("file:///", tag.res_path, tag.res_pos, NULL);
-		open_url(url);
+		open_url(self, url);
 		g_free(url);
 	}
+}
+
+void parse_web_browser_option(const Option* option, GtkDocHelper* self) {
+	g_free(self->browser);
+	self->browser = g_strdup(option->value);
+}
+
+void parse_gtk_doc_path_option(const Option* option, GtkDocHelper* self) {
+	gchar** items = g_strsplit_set(option->value, ",; \t\r\n", 0);
+	for( gchar** p=items; *p; ++p ) {
+		if( *p[0]=='\0' )
+			continue;
+
+		parse_doc_module(self, *p, "ix01.html");
+	}
+	g_strfreev(items);
 }
 
 PUSS_EXPORT void* puss_extend_create(Puss* app) {
@@ -92,12 +148,48 @@ PUSS_EXPORT void* puss_extend_create(Puss* app) {
 	self->app = app;
 	self->re_dt = g_regex_new("<dt>(.*), <a class=\"indexterm\" href=\"(.*)\">", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
 
-	//test
-	parse_doc_module(self, "d:/gtk/share/gtk-doc/html/gtk", "ix01.html");
-	parse_doc_module(self, "d:/gtk/share/gtk-doc/html/glib", "ix01.html");
-	parse_doc_module(self, "d:/gtk/share/gtk-doc/html/gdk", "ix01.html");
+	{
+		const Option* option = app->option_manager_option_reg( "gtk_doc_helper"
+			, "web_browser"
+#ifdef G_OS_WIN32
+			, "C:\\Program Files\\Internet Explorer\\IEXPLORE.EXE"
+#else
+			, "/usr/bin/firefox"
+#endif
+			, 0
+			, 0
+			, 0 );
 
+		app->option_manager_monitor_reg(option, (OptionChanged)&parse_web_browser_option, self);
+		parse_web_browser_option(option, self);
+	}
+
+	{
+		const Option* option = app->option_manager_option_reg( "gtk_doc_helper"
+			, "gtk_doc_paths"
+#ifdef G_OS_WIN32
+			, "c:/gtk/share/gtk-doc/html/glib\n"
+			  "c:/gtk/share/gtk-doc/html/gobject\n"
+			  "c:/gtk/share/gtk-doc/html/gdk\n"
+			  "c:/gtk/share/gtk-doc/html/gtk\n"
+#else
+			, "/usr/share/gtk-doc/html/glib\n"
+			  "/usr/share/gtk-doc/html/gobject\n"
+			  "/usr/share/gtk-doc/html/gdk\n"
+			  "/usr/share/gtk-doc/html/gtk\n"
+#endif
+			, 0
+			, 0
+			, 0 );
+
+		app->option_manager_monitor_reg(option, (OptionChanged)&parse_gtk_doc_path_option, self);
+		parse_gtk_doc_path_option(option, self);
+	}
+
+	//test
 	find_and_open_in_brower(self, "gtk_widget_show");
+	//find_and_open_in_brower(self, "g_object_unref");
+
 	return self;
 }
 
@@ -105,11 +197,12 @@ PUSS_EXPORT void  puss_extend_destroy(void* ext) {
 	if( ext ) {
 		GtkDocHelper* self = (GtkDocHelper*)ext;
 		g_regex_unref(self->re_dt);
+		g_free(self->browser);
 
 		g_list_foreach(self->modules, (GFunc)&doc_module_node_free, 0);
 		g_list_free(self->modules);
 
-		g_free(ext);
+		g_free(self);
 	}
 }
 
