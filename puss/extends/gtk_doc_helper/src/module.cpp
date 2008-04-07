@@ -61,6 +61,8 @@ struct GtkDocHelper {
 	}
 
 #else
+	#include <stdlib.h>
+
 	void open_url(GtkDocHelper* self, const gchar* link) {
 		if( !self->browser || self->browser[0]=='\0' )
 			self->browser = g_strdup("/usr/bin/firefox");
