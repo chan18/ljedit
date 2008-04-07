@@ -108,7 +108,7 @@ gboolean PreviewPage::create(Puss* app, Environ* env) {
 	const Option* option = app->option_manager_find("puss", "editor.font");
 	if( option ) {
 		parse_editor_font_option(option, this);
-		app->option_manager_monitor_reg(option, (OptionChanged)&parse_editor_font_option, this);
+		app->option_manager_monitor_reg(option, (OptionChanged)&parse_editor_font_option, this, 0);
 	}
 
 	// init search thread

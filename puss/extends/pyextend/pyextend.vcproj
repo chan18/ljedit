@@ -180,11 +180,19 @@
 			>
 		</File>
 		<File
+			RelativePath="..\..\bin\extends\puss.py"
+			>
+		</File>
+		<File
 			RelativePath=".\src\PyExtend.cpp"
 			>
 		</File>
 		<File
 			RelativePath=".\src\PyExtend.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\bin\extends\pyextend.py"
 			>
 		</File>
 	</Files>

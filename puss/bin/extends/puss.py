@@ -63,6 +63,9 @@ def active_panel_page(notebook, page):
 		raise TypeError("need gtk.Notebook")
 	return __puss.__active_panel_page(__puss.__app, notebook, page)
 
+def option_manager_find(group, key):								return __puss.__option_manager_find(group, key)
+def option_manager_option_reg(group, key, default_value, setter):	return __puss.__option_manager_option_reg(group, key, default_value, setter)
+def option_manager_monitor_reg(group, key, monitor):				return __puss.__option_manager_monitor_reg(group, key, monitor)
 
 def show_msgbox(message):
 	dlg = gtk.MessageDialog(parent=main_window, buttons=gtk.BUTTONS_YES_NO, message_format=repr(message))

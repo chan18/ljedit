@@ -115,7 +115,7 @@ gboolean init_tips(Tips* self, Puss* app, Environ* env, Icons* icons) {
 	const Option* option = app->option_manager_find("puss", "editor.font");
 	if( option ) {
 		tips_parse_editor_font_option(option, self);
-		app->option_manager_monitor_reg(option, (OptionChanged)&tips_parse_editor_font_option, self);
+		app->option_manager_monitor_reg(option, (OptionChanged)&tips_parse_editor_font_option, self, 0);
 	}
 
 	//gtk_widget_show(tip_window);
@@ -193,12 +193,11 @@ void fill_list_store(Tips* self, cpp::ElementSet& mset) {
 
 Tips* tips_create(Puss* app, Environ* env, Icons* icons) {
 	Tips* self = g_new0(Tips, 1);
-	if( self ) {
-		if( !init_tips(self, app, env, icons) ) {
-			g_free(self);
-			self = 0;
-		}
+	if( !init_tips(self, app, env, icons) ) {
+		g_free(self);
+		self = 0;
 
+	} else {
 		g_object_ref(self->list_model);
 		g_object_ref(self->include_model);
 		self->include_files = new StringSet();

@@ -271,7 +271,7 @@ PUSS_EXPORT void* puss_extend_create(Puss* app) {
 			, 0
 			, 0 );
 
-		app->option_manager_monitor_reg(option, (OptionChanged)&parse_web_browser_option, self);
+		app->option_manager_monitor_reg(option, (OptionChanged)&parse_web_browser_option, self, 0);
 		parse_web_browser_option(option, self);
 	}
 
@@ -293,7 +293,7 @@ PUSS_EXPORT void* puss_extend_create(Puss* app) {
 			, (gpointer)"text"
 			, 0 );
 
-		app->option_manager_monitor_reg(option, (OptionChanged)&parse_gtk_doc_path_option, self);
+		app->option_manager_monitor_reg(option, (OptionChanged)&parse_gtk_doc_path_option, self, 0);
 		parse_gtk_doc_path_option(option, self);
 	}
 

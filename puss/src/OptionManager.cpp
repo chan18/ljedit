@@ -11,6 +11,7 @@ struct OptionNotifer {
 	OptionNotifer*		next;
 	OptionChanged		fun;
 	gpointer			tag;
+	GFreeFunc			tag_free_fun;
 };
 
 struct OptionNode {
@@ -33,6 +34,8 @@ void option_node_free(OptionNode* node) {
 	while( node->notifer_list ) {
 		OptionNotifer* p = node->notifer_list;
 		node->notifer_list = p->next;
+		if( p->tag_free_fun )
+			(*(p->tag_free_fun))(p->tag);
 		g_free(p);
 	}
 
@@ -53,10 +56,6 @@ gboolean puss_option_manager_create() {
 	g_assert( !puss_app->option_manager );
 
 	puss_app->option_manager = g_new0(OptionManager, 1);
-	if( !puss_app->option_manager ) {
-		g_printerr("ERROR(option_manager) : new option manager failed!\n");
-		return FALSE;
-	}
 
 	OptionManager* self = puss_app->option_manager;
 	self->filepath = g_build_filename(g_get_user_config_dir(), ".puss_config", NULL);
@@ -160,27 +159,23 @@ const Option* puss_option_manager_option_reg( const gchar* group
 		return 0;
 
 	node = g_new0(OptionNode, 1);
-	if( node ) {
-		node->option.group = ptr_group;
-		node->option.key = g_strdup(key);
+	node->option.group = ptr_group;
+	node->option.key = g_strdup(key);
 
-		node->option.value = g_key_file_get_string(self->keyfile, group, key, 0);
-		if( default_value ) {
-			node->option.default_value = g_strdup(default_value);
-			if( !node->option.value )
-				node->option.value = g_strdup(default_value);
-		}
-
-		node->setter_fun = fun;
-		node->setter_tag = tag;
-		node->setter_tag_free_fun = tag_free_fun;
-		node->notifer_list = 0;
-
-		g_tree_insert(option_group, (gpointer)node->option.key, node);
-		return &node->option;
+	node->option.value = g_key_file_get_string(self->keyfile, group, key, 0);
+	if( default_value ) {
+		node->option.default_value = g_strdup(default_value);
+		if( !node->option.value )
+			node->option.value = g_strdup(default_value);
 	}
 
-	return 0;
+	node->setter_fun = fun;
+	node->setter_tag = tag;
+	node->setter_tag_free_fun = tag_free_fun;
+	node->notifer_list = 0;
+
+	g_tree_insert(option_group, (gpointer)node->option.key, node);
+	return &node->option;
 }
 
 const Option* puss_option_manager_find(const gchar* group, const gchar* key) {
@@ -195,18 +190,17 @@ const Option* puss_option_manager_find(const gchar* group, const gchar* key) {
 	return 0;
 }
 
-gboolean puss_option_manager_monitor_reg(const Option* option, OptionChanged fun, gpointer tag ) {
+gboolean puss_option_manager_monitor_reg(const Option* option, OptionChanged fun, gpointer tag, GFreeFunc tag_free_fun) {
 	if( !option )
 		return FALSE;
 
 	OptionNode* node = (OptionNode*)option;
 	OptionNotifer* notifer = g_new0(OptionNotifer, 1);
-	if( !notifer )
-		return FALSE;
 
 	notifer->next = node->notifer_list;
 	notifer->fun = fun;
 	notifer->tag = tag;
+	notifer->tag_free_fun = tag_free_fun;
 	node->notifer_list = notifer;
 	return TRUE;
 }

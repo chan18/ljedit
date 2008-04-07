@@ -49,7 +49,7 @@ void reg_gtk_theme_option() {
 	const Option* option = puss_option_manager_option_reg("puss", "theme", 0, 0, tag, &g_free);
 #endif
 
-	puss_option_manager_monitor_reg(option, &parse_puss_theme_option, 0);
+	puss_option_manager_monitor_reg(option, &parse_puss_theme_option, 0, 0);
 	parse_puss_theme_option(option, 0);
 }
 
@@ -82,7 +82,7 @@ void reg_source_editor_style_option() {
 		g_free(styles);
 
 		const Option* option = puss_option_manager_option_reg("puss", "editor.style", "puss", 0, tag, &g_free);
-		puss_option_manager_monitor_reg(option, &parse_puss_editor_style_option, 0);
+		puss_option_manager_monitor_reg(option, &parse_puss_editor_style_option, 0, 0);
 	}
 }
 
@@ -104,7 +104,7 @@ void reg_source_editor_font_option() {
 	const Option* option = 0;
 
 	option = puss_option_manager_option_reg("puss", "editor.font", "", 0, (gpointer)"font", 0);
-	puss_option_manager_monitor_reg(option, &parse_source_editor_font_option, 0);
+	puss_option_manager_monitor_reg(option, &parse_source_editor_font_option, 0, 0);
 }
 
 void puss_reg_global_options() {

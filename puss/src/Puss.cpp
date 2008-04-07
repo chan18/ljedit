@@ -144,10 +144,6 @@ gboolean puss_main_ui_create() {
 
 gboolean puss_create(const char* filepath) {
 	puss_app = g_new0(PussApp, 1);
-	if( !puss_app ) {
-		g_printerr("ERROR(puss) : new puss app failed!\n");
-		return FALSE;
-	}
 
 	puss_app->module_path = g_path_get_dirname(filepath);
 	init_puss_c_api((Puss*)puss_app);

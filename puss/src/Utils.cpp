@@ -20,13 +20,9 @@ void parse_charset_list_option(const Option* option, gpointer tag) {
 
 gboolean puss_utils_create() {
 	puss_app->utils = g_new0(Utils, 1);
-	if( !puss_app->utils ) {
-		g_printerr("ERROR(puss) : utils create failed!\n");
-		return FALSE;
-	}
 
 	const Option* option = puss_option_manager_option_reg("puss", "fileloader.charset_list", "GBK", 0, 0, 0);
-	puss_option_manager_monitor_reg(option, &parse_charset_list_option, 0);
+	puss_option_manager_monitor_reg(option, &parse_charset_list_option, 0, 0);
 	parse_charset_list_option(option, 0);
 
 	return TRUE;

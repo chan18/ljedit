@@ -23,7 +23,7 @@ const Option*	puss_option_manager_option_reg( const gchar* group
 					   , gpointer tag
 					   , GFreeFunc tag_free_fun );
 
-gboolean		puss_option_manager_monitor_reg(const Option* option, OptionChanged fun, gpointer tag);
+gboolean		puss_option_manager_monitor_reg(const Option* option, OptionChanged fun, gpointer tag, GFreeFunc tag_free_fun);
 
 void			puss_option_manager_active();
 

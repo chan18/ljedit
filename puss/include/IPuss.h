@@ -80,7 +80,7 @@ struct Puss {
 						, gpointer tag
 						, GFreeFunc tag_free_fun );
 
-	gboolean		(*option_manager_monitor_reg)(const Option* option, OptionChanged fun, gpointer tag);
+	gboolean		(*option_manager_monitor_reg)(const Option* option, OptionChanged fun, gpointer tag, GFreeFunc tag_free_fun);
 };
 
 #ifdef  __cplusplus

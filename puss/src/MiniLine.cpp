@@ -39,10 +39,6 @@ gboolean puss_mini_line_create() {
 	g_assert( !puss_app->mini_line );
 
 	puss_app->mini_line = g_new0(MiniLine, 1);
-	if( !puss_app->mini_line ) {
-		g_printerr("ERROR(mini_line) : new mini line failed!\n");
-		return FALSE;
-	}
 
 	puss_app->mini_line->window = GTK_WINDOW(gtk_builder_get_object(puss_app->builder, "mini_window"));
 	puss_app->mini_line->label = GTK_LABEL(gtk_builder_get_object(puss_app->builder, "mini_window_label"));

@@ -98,18 +98,12 @@ void search_in_file_content( const gchar* filename
 		gchar* pos = g_strstr_len(ps, (gsize)(pe-ps), search_text);
 		if( pos ) {
 			ResultNode* node = g_new0(ResultNode, 1);
-			if( !node )
-				break;
 
 			if( last_node ) {
 				last_node->next = node;
 
 			} else {
 				FileResultNode* fnode = g_new0(FileResultNode, 1);
-				if( !fnode ) {
-					g_free(node);
-					break;
-				}
 
 				fnode->owner_filename = g_strdup(filename);
 
@@ -322,12 +316,10 @@ void search_tools_build_ui(SearchTools* self) {
 
 PUSS_EXPORT void* puss_extend_create(Puss* app) {
 	SearchTools* self = g_new0(SearchTools, 1);
-	if( self ) {
-		self->app = app;
-		search_tools_build_ui(self);
+	self->app = app;
+	search_tools_build_ui(self);
 
-		g_object_ref(self->result_store);
-	}
+	g_object_ref(self->result_store);
 
 	return self;
 }

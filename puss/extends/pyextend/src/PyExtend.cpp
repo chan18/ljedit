@@ -266,6 +266,118 @@ PyObject* py_wrapper_active_panel_page(PyObject* self, PyObject* args) {
 	return Py_None;
 }
 
+// puss option manager
+
+void py_object_free_wrapper(PyObject* cb) {
+	Py_XDECREF(cb);
+}
+
+PyObject* py_wrapper_option_manager_find(PyObject* self, PyObject* args) {
+	Puss* app = 0;
+	const char* group = 0;
+	const char* key = 0;
+	if( !PyArg_ParseTuple(args, "O&zz:py_wrapper_option_manager_find", &app_convert, &app, &group, &key))
+		return 0;
+
+	const Option* option = app->option_manager_find(group, key);
+	if( !option ) {
+		Py_INCREF(Py_None);
+		return Py_None;
+	}
+
+	return Py_BuildValue("(zz)", option->value, option->default_value);
+}
+
+gboolean py_option_setter_wrapper(GtkWindow* parent, Option* option, PyObject* cb) {
+	g_assert( PyCallable_Check(cb) );
+
+	PyObject* res = PyObject_CallFunction(cb, "Ozzzz", pygobject_new(G_OBJECT(parent)), option->group, option->key, option->value, option->default_value);
+	if( !res ) {
+		PyErr_Print();
+		PyErr_Clear();
+		return FALSE;
+	}
+
+	gboolean retval = FALSE;
+	if( PyBool_Check(res) && res==Py_True )
+		retval = TRUE;
+
+	Py_DECREF(res);
+	return retval;
+}
+
+PyObject* py_wrapper_option_manager_option_reg(PyObject* self, PyObject* args) {
+	Puss* app = 0;
+	const char* group = 0;
+	const char* key = 0;
+	const char* default_value = 0;
+	PyObject* cb = 0;
+	if( !PyArg_ParseTuple(args, "O&zzzN:py_wrapper_option_manager_option_reg", &app_convert, &app, &group, &key, &default_value, &cb))
+		return 0;
+
+	const Option* option = 0;
+
+	if( !cb ) {
+		option = app->option_manager_option_reg(group, key, default_value, 0, 0, 0);
+
+	} else {
+		if( PyCallable_Check(cb) ) {
+			Py_INCREF(cb);
+			option = app->option_manager_option_reg(group, key, default_value, (OptionSetter)&py_option_setter_wrapper, cb, (GFreeFunc)&py_object_free_wrapper);
+
+		} else if( PyString_Check(cb) ) {
+			gchar* tag = g_strdup(PyString_AS_STRING(cb));
+			option = app->option_manager_option_reg(group, key, default_value, 0, tag, &g_free);
+			if( !option )
+				g_free(tag);
+		}
+	}
+
+	if( !option ) {
+		PyErr_SetString(PyExc_TypeError, "setter must None, Str or Function");
+		return 0;
+	}
+
+	return Py_BuildValue("(zz)", option->value, option->default_value);
+}
+
+
+void py_option_changed_wrapper(const Option* option, PyObject* cb) {
+	g_assert( PyCallable_Check(cb) );
+
+	PyObject* res = PyObject_CallFunction(cb, "zzz", option->group, option->key, option->value);
+	if( !res ) {
+		PyErr_Print();
+		PyErr_Clear();
+	}
+
+	Py_XDECREF(res);
+}
+
+PyObject* py_wrapper_option_manager_monitor_reg(PyObject* self, PyObject* args) {
+	Puss* app = 0;
+	const char* group = 0;
+	const char* key = 0;
+	PyObject* cb = 0;
+	if( !PyArg_ParseTuple(args, "O&zzN:py_wrapper_option_manager_monitor_reg", &app_convert, &app, &group, &key, &cb))
+		return 0;
+
+	if( !cb || !PyCallable_Check(cb) ) {
+		PyErr_SetString(PyExc_TypeError, "arg(monitor) not callable!");
+		return 0;
+	}
+
+	const Option* option = app->option_manager_find(group, key);
+	if( !app->option_manager_monitor_reg(option, (OptionChanged)&py_option_changed_wrapper, cb, (GFreeFunc)&py_object_free_wrapper) ) {
+		PyErr_SetString(PyExc_Exception, "reg option monitor error, not find option!");
+		return 0;
+	}
+
+	Py_INCREF(cb);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 PyMethodDef puss_methods[] =
 	{ { "__get_puss_ui_builder", &py_wrapper_get_puss_ui_builder, METH_VARARGS, NULL }
 	, { "__get_puss_ui_object_by_id", &py_wrapper_get_puss_ui_object_by_id, METH_VARARGS, NULL }
@@ -289,6 +401,10 @@ PyMethodDef puss_methods[] =
 
 	, { "__send_focus_change", &py_wrapper_send_focus_change, METH_VARARGS, NULL }
 	, { "__active_panel_page", &py_wrapper_active_panel_page, METH_VARARGS, NULL }
+
+	, { "__option_manager_find", &py_wrapper_option_manager_find, METH_VARARGS, NULL }
+	, { "__option_manager_option_reg", &py_wrapper_option_manager_option_reg, METH_VARARGS, NULL }
+	, { "__option_manager_monitor_reg", &py_wrapper_option_manager_monitor_reg, METH_VARARGS, NULL }
 
 	, { NULL, NULL, 0, NULL } };
 
