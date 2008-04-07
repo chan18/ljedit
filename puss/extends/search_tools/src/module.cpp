@@ -9,6 +9,7 @@
 struct ResultNode {
 	const char*		filename;
 	gint			line;
+	gint			offset;
 	gchar*			preview;
 
 	ResultNode*		next;
@@ -126,6 +127,7 @@ void search_in_file_content( const gchar* filename
 
 			node->filename = self->result_list_last->owner_filename;
 			node->line = line;
+			node->offset = (gint)(pos - ps);
 			node->preview = g_strndup(ps, (gsize)(pe-ps));
 		}
 
@@ -264,7 +266,7 @@ SIGNAL_CALLBACK void search_results_cb_row_activated(GtkTreeView* tree_view, Gtk
 	if( !p )
 		return;
 
-	self->app->doc_open(p->filename, p->line, -1, FALSE);
+	self->app->doc_open(p->filename, p->line, p->offset, FALSE);
 }
 
 gboolean search_tools_active_search_entry(GtkWidget* widget, GdkEventFocus* event, SearchTools* self) {

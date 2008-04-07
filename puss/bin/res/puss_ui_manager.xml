@@ -342,6 +342,9 @@
         <separator/>
         <placeholder name="main_toolbar_view_place">
         </placeholder>
+        <separator/>
+        <placeholder name="main_toolbar_tool_place">
+        </placeholder>
       </toolbar>
     </ui>
 

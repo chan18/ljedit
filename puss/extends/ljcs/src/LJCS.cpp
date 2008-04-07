@@ -171,16 +171,15 @@ void LJCS::do_button_release_event(GtkTextView* view, GtkTextBuffer* buf, GdkEve
 	if( !file )
 		return;
 
-    char ch = (char)gtk_text_iter_get_char(&it);
-    if( isalnum(ch)==0 && ch!='_' )
+	gunichar ch = gtk_text_iter_get_char(&it);
+    if( !g_unichar_isalnum(ch) && ch!='_' )
 		return;
 
 	// find key end position
 	while( gtk_text_iter_forward_char(&it) ) {
-        ch = (char)gtk_text_iter_get_char(&it);
-        if( ch > 0 && (::isalnum(ch) || ch=='_') )
-            continue;
-        break;
+        ch = gtk_text_iter_get_char(&it);
+        if( !g_unichar_isalnum(ch) && ch!='_' )
+            break;
     }
 
 	// find keys

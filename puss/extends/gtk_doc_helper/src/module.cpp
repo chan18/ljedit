@@ -27,6 +27,7 @@ struct GtkDocHelper {
 #ifdef G_OS_WIN32
 	#include <windows.h>
 
+	/*
 	gchar* auto_search_browser() {
 		HKEY hkRoot;
 		HKEY hSubKey;
@@ -46,16 +47,17 @@ struct GtkDocHelper {
 
 		return g_strdup((gchar*)DataValue);
 	}
+	*/
 
 	void open_url(GtkDocHelper* self, const gchar* link) {
-		if( !self->browser || self->browser[0]=='\0' )
-			self->browser = auto_search_browser();
+		//if( !self->browser || self->browser[0]=='\0' )
+		//	self->browser = auto_search_browser();
 
 		gchar* cmd = g_strjoin(" ", self->browser, link, NULL);
 		WinExec(cmd, SW_SHOW);
 		g_free(cmd);
 
-		ShellExecuteA(HWND_DESKTOP, "open", self->browser, link, NULL, SW_SHOWNORMAL);
+		//ShellExecuteA(HWND_DESKTOP, "open", self->browser, link, NULL, SW_SHOWNORMAL);
 	}
 
 #else
@@ -116,6 +118,18 @@ void __find_and_open_in_brower(DocModuleNode* node, _FindTag* tag) {
 }
 
 void find_and_open_in_brower(GtkDocHelper* self, const gchar* key) {
+	if( !self->modules ) {
+		GtkWidget* dlg = gtk_message_dialog_new( puss_get_main_window(self->app)
+			, GTK_DIALOG_MODAL
+			, GTK_MESSAGE_INFO
+			, GTK_BUTTONS_OK
+			, _("Not find gtk-doc html files.") );
+		gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dlg), _("please setup\n   option : (gtk_doc_helper.gtk_doc_paths)\n   in [menu]->[tools]->[options]\n  and retry!"));
+		gtk_dialog_run(GTK_DIALOG(dlg));
+		gtk_widget_destroy(dlg);
+		return;
+	}
+
 	_FindTag tag = { self, key, 0, 0 };
 	g_list_foreach(self->modules, (GFunc)&__find_and_open_in_brower, &tag);
 
@@ -123,6 +137,16 @@ void find_and_open_in_brower(GtkDocHelper* self, const gchar* key) {
 		gchar* url = g_build_filename("file:///", tag.res_path, tag.res_pos, NULL);
 		open_url(self, url);
 		g_free(url);
+
+	} else {
+		GtkWidget* dlg = gtk_message_dialog_new( puss_get_main_window(self->app)
+			, GTK_DIALOG_MODAL
+			, GTK_MESSAGE_INFO
+			, GTK_BUTTONS_OK
+			, _("Not find symbol(%s) in gtk-doc.")
+			, key );
+		gtk_dialog_run(GTK_DIALOG(dlg));
+		gtk_widget_destroy(dlg);
 	}
 }
 
@@ -142,6 +166,91 @@ void parse_gtk_doc_path_option(const Option* option, GtkDocHelper* self) {
 	g_strfreev(items);
 }
 
+void search_gtk_doc_symbol_active(GtkAction* action, GtkDocHelper* self) {
+	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(self->app));
+	if( page_num < 0 )
+		return;
+
+	GtkTextBuffer* buf = self->app->doc_get_buffer_from_page_num(page_num);
+	if( !buf )
+		return;
+
+	// get current word
+	GtkTextIter ps;
+	gtk_text_buffer_get_iter_at_mark(buf, &ps, gtk_text_buffer_get_insert(buf));
+	if( gtk_text_iter_is_end(&ps) )
+		return;
+
+	gunichar ch = gtk_text_iter_get_char(&ps);
+	if( !g_unichar_isalnum(ch) && ch!='_' )
+		return;
+
+	GtkTextIter pe = ps;
+
+	// find key start position
+	while( gtk_text_iter_backward_char(&ps) ) {
+		gunichar ch = gtk_text_iter_get_char(&ps);
+		if( !g_unichar_isalnum(ch) && ch!='_' ) {
+			gtk_text_iter_forward_char(&ps);
+			break;
+		}
+	}
+
+	// find key end position
+	while( gtk_text_iter_forward_char(&pe) ) {
+		gunichar ch = gtk_text_iter_get_char(&pe);
+		if( !g_unichar_isalnum(ch) && ch!='_' )
+			break;
+    }
+
+	if( gtk_text_iter_equal(&ps, &pe) )
+		return;
+
+	gchar* keyword = gtk_text_iter_get_text(&ps, &pe);
+	if( keyword ) {
+		find_and_open_in_brower(self, keyword);
+		g_free(keyword);
+	}
+}
+
+void create_ui(GtkDocHelper* self) {
+	GtkAction* search_gtk_doc_symbol_action = gtk_action_new("search_gtk_doc_symbol_action", _("search gtk symbol"), _("search current symbol in gtk-doc html files and show gtk-doc helper."), GTK_STOCK_FIND);
+	g_signal_connect(search_gtk_doc_symbol_action, "activate", G_CALLBACK(&search_gtk_doc_symbol_active), self);
+
+	GtkActionGroup* main_action_group = GTK_ACTION_GROUP(gtk_builder_get_object(self->app->get_ui_builder(), "main_action_group"));
+	gtk_action_group_add_action_with_accel(main_action_group, search_gtk_doc_symbol_action, "F1");
+
+	const gchar* ui_info =
+		"<ui>\n"
+		"  <menubar name='main_menubar'>\n"
+		"     <menu action='tool_menu'>\n"
+		"      <placeholder name='tool_menu_extend_place'>\n"
+		"        <menuitem action='search_gtk_doc_symbol_action'/>\n"
+		"      </placeholder>\n"
+		"    </menu>\n"
+		"  </menubar>\n"
+		"\n"
+		"  <toolbar name='main_toolbar'>\n"
+		"    <placeholder name='main_toolbar_tool_place'>\n"
+		"      <toolitem action='search_gtk_doc_symbol_action'/>\n"
+		"    </placeholder>\n"
+        "  </toolbar>\n"
+		"</ui>\n"
+		;
+
+	GtkUIManager* ui_mgr = GTK_UI_MANAGER(gtk_builder_get_object(self->app->get_ui_builder(), "main_ui_manager"));
+
+	GError* err = 0;
+	gtk_ui_manager_add_ui_from_string(ui_mgr, ui_info, -1, &err);
+
+	if( err ) {
+		g_printerr("ERROR(gtk_doc_helper) : %s", err->message);
+		g_error_free(err);
+	}
+
+	gtk_ui_manager_ensure_update(ui_mgr);
+}
+
 PUSS_EXPORT void* puss_extend_create(Puss* app) {
 	GtkDocHelper* self = g_new0(GtkDocHelper, 1);
 
@@ -152,7 +261,7 @@ PUSS_EXPORT void* puss_extend_create(Puss* app) {
 		const Option* option = app->option_manager_option_reg( "gtk_doc_helper"
 			, "web_browser"
 #ifdef G_OS_WIN32
-			, "C:\\Program Files\\Internet Explorer\\IEXPLORE.EXE"
+			, "C:\\Program Files\\Mozilla Firefox\\firefox.exe"
 #else
 			, "/usr/bin/firefox"
 #endif
@@ -179,16 +288,15 @@ PUSS_EXPORT void* puss_extend_create(Puss* app) {
 			  "/usr/share/gtk-doc/html/gtk\n"
 #endif
 			, 0
-			, 0
+			, (gpointer)"text"
 			, 0 );
 
 		app->option_manager_monitor_reg(option, (OptionChanged)&parse_gtk_doc_path_option, self);
 		parse_gtk_doc_path_option(option, self);
 	}
 
-	//test
-	find_and_open_in_brower(self, "gtk_widget_show");
-	//find_and_open_in_brower(self, "g_object_unref");
+	// UI
+	create_ui(self);
 
 	return self;
 }
