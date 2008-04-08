@@ -309,8 +309,6 @@ void search_tools_build_ui(SearchTools* self) {
 	gtk_widget_show_all(panel);
 	GtkNotebook* bottom = puss_get_bottom_panel(self->app);
 	gtk_notebook_append_page(bottom, panel, gtk_label_new(_("Search")));
-	gtk_notebook_set_tab_reorderable(bottom, panel, TRUE);
-	gtk_notebook_set_tab_detachable(bottom, panel, TRUE);
 
 	g_signal_connect(panel, "focus-in-event",G_CALLBACK(&search_tools_active_search_entry), self);
 

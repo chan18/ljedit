@@ -101,9 +101,7 @@ gboolean PreviewPage::create(Puss* app, Environ* env) {
 
 	gtk_widget_show_all(self_panel_);
 	GtkNotebook* bottom = puss_get_bottom_panel(app_);
-	gtk_notebook_insert_page(bottom, self_panel_, gtk_label_new(_("Preview")), 0);
-	gtk_notebook_set_tab_reorderable(bottom, self_panel_, TRUE);
-	gtk_notebook_set_tab_detachable(bottom, self_panel_, TRUE);
+	gtk_notebook_append_page(bottom, self_panel_, gtk_label_new(_("Preview")));
 
 	gtk_builder_connect_signals(builder, this);
 	g_object_unref(G_OBJECT(builder));

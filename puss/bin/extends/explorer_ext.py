@@ -288,8 +288,6 @@ try:
 		explorer.show_all()
 		puss.main_window.left_panel.insert_page(explorer, gtk.Label('Explorer'), 0)
 		puss.main_window.doc_panel.connect('switch-page', on_switch_page)
-		puss.main_window.left_panel.set_tab_reorderable(explorer, True)
-		puss.main_window.left_panel.set_tab_detachable(explorer, True)
 
 	def deactive():
 		pass

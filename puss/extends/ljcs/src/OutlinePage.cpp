@@ -47,8 +47,6 @@ public:
 
 		GtkNotebook* right = puss_get_right_panel(app_);
 		gtk_notebook_append_page(right, self_panel, gtk_label_new(_("Outline")));
-		gtk_notebook_set_tab_reorderable(right, self_panel, TRUE);
-		gtk_notebook_set_tab_detachable(right, self_panel, TRUE);
 
 		gtk_builder_connect_signals(builder, this);
 		g_object_unref(G_OBJECT(builder));

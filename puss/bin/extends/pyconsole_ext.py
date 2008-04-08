@@ -332,8 +332,6 @@ def active():
 
 	puss.main_window.bottom_panel.append_page(pyconsole, gtk.Label('Python Console'))
 	pyconsole.connect('focus_in_event', lambda *args : pyconsole.view.grab_focus())
-	puss.main_window.bottom_panel.set_tab_reorderable(pyconsole, True)
-	puss.main_window.bottom_panel.set_tab_detachable(pyconsole, True)
 
 def deactive():
 	pass
