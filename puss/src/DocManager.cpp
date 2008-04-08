@@ -178,6 +178,7 @@ gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 	g_signal_connect(buf, "modified-changed", G_CALLBACK(&doc_reset_page_label), label);
 
 	tab = gtk_event_box_new();
+	gtk_event_box_set_visible_window(GTK_EVENT_BOX(tab), FALSE);
 	gtk_container_add(GTK_CONTAINER(tab), GTK_WIDGET(label));
 	g_object_set_data(G_OBJECT(tab), "puss-doc-label", label);
 
@@ -190,6 +191,8 @@ gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 	g_object_set_data(G_OBJECT(page), "puss-doc-view", view);
 
 	page_num = gtk_notebook_append_page(puss_app->doc_panel, page, tab);
+	gtk_notebook_set_tab_reorderable(puss_app->doc_panel, page, TRUE);
+
 	g_signal_connect(tab, "button-release-event", G_CALLBACK(&doc_cb_button_release_on_label), 0);
 
 	if( active_page ) {
@@ -595,10 +598,7 @@ gboolean puss_doc_close_all() {
 	GtkNotebook* doc_panel = puss_app->doc_panel;
 	while( gtk_notebook_get_n_pages(doc_panel) ) {
 		GtkTextBuffer* buf = puss_doc_get_buffer_from_page_num(0);
-		if( !buf )
-			continue;
-
-		if( gtk_text_buffer_get_modified(buf) ) {
+		if( buf && gtk_text_buffer_get_modified(buf) ) {
 			if( need_prompt ) {
 				GString* url = puss_doc_get_url(buf);
 

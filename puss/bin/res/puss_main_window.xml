@@ -11,14 +11,14 @@
        <child>
          <object class="GtkMenuBar" constructor="main_ui_manager" id="main_menubar"/>
          <packing>
-           <property name="expand">False</property>
+           <property name="expand">false</property>
          </packing>
        </child>
 
        <child>
          <object class="GtkToolbar" constructor="main_ui_manager" id="main_toolbar"/>
          <packing>
-           <property name="expand">False</property>
+           <property name="expand">false</property>
            <property name="position">1</property>
          </packing>
        </child>
@@ -27,12 +27,13 @@
          <object class="GtkHPaned" id="hpaned1">
            <child>
              <object class="GtkNotebook" id="left_panel">
-               <property name="scrollable">True</property>
+               <property name="scrollable">true</property>
+               <property name="group_id">1</property>
                <property name="tab_pos">GTK_POS_BOTTOM</property>
              </object>
              <packing>
-               <property name="resize">False</property>
-               <property name="shrink">True</property>
+               <property name="resize">false</property>
+               <property name="shrink">true</property>
              </packing>
            </child>
            <child>
@@ -41,43 +42,45 @@
                  <object class="GtkHPaned" id="hpaned2">
                    <child>
                      <object class="GtkNotebook" id="doc_panel">
-                       <property name="scrollable">True</property>
+                       <property name="scrollable">true</property>
                      </object>
                      <packing>
-                       <property name="resize">True</property>
-                       <property name="shrink">True</property>
+                       <property name="resize">true</property>
+                       <property name="shrink">true</property>
                      </packing>
                    </child>
                    <child>
                      <object class="GtkNotebook" id="right_panel">
-                       <property name="scrollable">True</property>
+                       <property name="scrollable">true</property>
+                       <property name="group_id">1</property>
                        <property name="tab_pos">GTK_POS_BOTTOM</property>
                      </object>
                      <packing>
-                       <property name="resize">False</property>
-                       <property name="shrink">True</property>
+                       <property name="resize">false</property>
+                       <property name="shrink">true</property>
                      </packing>
                    </child>
                  </object>
                  <packing>
-                   <property name="resize">True</property>
-                   <property name="shrink">True</property>
+                   <property name="resize">true</property>
+                   <property name="shrink">true</property>
                  </packing>
                </child>
                <child>
                  <object class="GtkNotebook" id="bottom_panel">
-                   <property name="scrollable">True</property>
+                   <property name="scrollable">true</property>
+                   <property name="group_id">1</property>
                    <property name="tab_pos">GTK_POS_BOTTOM</property>
                  </object>
                  <packing>
-                   <property name="resize">False</property>
-                   <property name="shrink">True</property>
+                   <property name="resize">false</property>
+                   <property name="shrink">true</property>
                  </packing>
                </child>
              </object>
              <packing>
-               <property name="resize">True</property>
-               <property name="shrink">True</property>
+               <property name="resize">true</property>
+               <property name="shrink">true</property>
              </packing>
            </child>
          </object>
@@ -90,7 +93,7 @@
            <property name="spacing">2</property>
          </object>
          <packing>
-           <property name="expand">False</property>
+           <property name="expand">false</property>
            <property name="position">3</property>
          </packing>
        </child>

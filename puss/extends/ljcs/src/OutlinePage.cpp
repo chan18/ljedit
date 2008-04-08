@@ -44,7 +44,11 @@ public:
 
 		GtkWidget*	self_panel = GTK_WIDGET(gtk_builder_get_object(builder, "outline_panel"));
 		gtk_widget_show_all(self_panel);
-		gtk_notebook_append_page(puss_get_right_panel(app_), self_panel, gtk_label_new(_("Outline")));
+
+		GtkNotebook* right = puss_get_right_panel(app_);
+		gtk_notebook_append_page(right, self_panel, gtk_label_new(_("Outline")));
+		gtk_notebook_set_tab_reorderable(right, self_panel, TRUE);
+		gtk_notebook_set_tab_detachable(right, self_panel, TRUE);
 
 		gtk_builder_connect_signals(builder, this);
 		g_object_unref(G_OBJECT(builder));

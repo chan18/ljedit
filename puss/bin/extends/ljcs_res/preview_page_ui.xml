@@ -12,8 +12,8 @@
             <property name="relief">GTK_RELIEF_HALF</property>
           </object>
           <packing>
-            <property name="expand">False</property>
-            <property name="fill">False</property>
+            <property name="expand">false</property>
+            <property name="fill">false</property>
           </packing>
         </child>
         <child>
@@ -27,8 +27,8 @@
                     <property name="icon-size">1</property>
                   </object>
                   <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">False</property>
+                    <property name="expand">false</property>
+                    <property name="fill">false</property>
                   </packing>
                 </child>
                 <child>
@@ -36,22 +36,22 @@
                     <property name="ellipsize">PANGO_ELLIPSIZE_MIDDLE</property>
                   </object>
                   <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
+                    <property name="expand">true</property>
+                    <property name="fill">true</property>
                   </packing>
                 </child>
               </object>
             </child>
           </object>
           <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
+            <property name="expand">true</property>
+            <property name="fill">true</property>
           </packing>
         </child>
       </object>
       <packing>
-        <property name="expand">False</property>
-        <property name="fill">False</property>
+        <property name="expand">false</property>
+        <property name="fill">false</property>
       </packing>
     </child>
     <child>
@@ -60,16 +60,16 @@
         <property name="vscrollbar_policy">automatic</property>
         <child>
           <object class="GtkSourceView" id="preview_view">
-            <property name="editable">False</property>
+            <property name="editable">false</property>
             <property name="tab-width">4</property>
-            <property name="show-line-numbers">True</property>
-            <property name="highlight-current-line">True</property>
+            <property name="show-line-numbers">true</property>
+            <property name="highlight-current-line">true</property>
           </object>
         </child>
       </object>
       <packing>
-        <property name="expand">True</property>
-        <property name="fill">True</property>
+        <property name="expand">true</property>
+        <property name="fill">true</property>
       </packing>
     </child>
   </object>

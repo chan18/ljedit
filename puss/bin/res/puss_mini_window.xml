@@ -2,7 +2,7 @@
 <interface>
   <object class="GtkWindow" id="mini_window">
     <property name="type">GTK_WINDOW_POPUP</property>
-    <property name="modal">True</property>
+    <property name="modal">true</property>
     <property name="opacity">0.95</property>
     <signal handler="puss_mini_line_focus_out_event" name="focus-out-event"/>
     <signal handler="mini_line_cb_button_press_event" name="button-press-event"/>
@@ -16,7 +16,7 @@
               <object class="GtkLabel" id="mini_window_label">
               </object>
               <packing>
-                <property name="expand">False</property>
+                <property name="expand">false</property>
               </packing>
             </child>
             <child>
@@ -25,7 +25,7 @@
                 <signal handler="mini_line_cb_key_press_event" name="key-press-event"/>
               </object>
               <packing>
-                <property name="expand">True</property>
+                <property name="expand">true</property>
               </packing>
             </child>
           </object>

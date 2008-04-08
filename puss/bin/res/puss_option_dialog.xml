@@ -24,8 +24,8 @@
             <child>
               <object class="GtkTreeView" id="option_treeview">
                 <property name="model">option_store</property>
-                <!--property name="enable-tree-lines">True</property-->
-                <property name="headers-visible">True</property>
+                <!--property name="enable-tree-lines">true</property-->
+                <property name="headers-visible">true</property>
                 <signal handler="option_manager_cb_row_activated" name="row-activated"/>
                 <child>
                   <object class="GtkTreeViewColumn" id="key_column">

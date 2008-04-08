@@ -143,21 +143,21 @@
         </child>
         <child>
           <object class="GtkToggleAction" id="view_menu_left_panel">
-            <property name="active">True</property>
+            <property name="active">true</property>
             <property name="label" translatable="yes">LeftPanel</property>
             <signal handler="view_menu_left_panel" name="activate"/>
           </object>
         </child>
         <child>
           <object class="GtkToggleAction" id="view_menu_right_panel">
-            <property name="active">True</property>
+            <property name="active">true</property>
             <property name="label" translatable="yes">RightPanel</property>
             <signal handler="view_menu_right_panel" name="activate"/>
           </object>
         </child>
         <child>
           <object class="GtkToggleAction" id="view_menu_bottom_panel">
-            <property name="active">True</property>
+            <property name="active">true</property>
             <property name="label" translatable="yes">BottomPanel</property>
             <signal handler="view_menu_bottom_panel" name="activate"/>
           </object>
@@ -170,7 +170,7 @@
         <child>
           <object class="GtkRadioAction" id="view_menu_bottom_page_1">
             <property name="value">1</property>
-            <property name="active">True</property>
+            <property name="active">true</property>
             <property name="label" translatable="yes">Bottom Page 1</property>
             <signal handler="view_menu_bottom_page_n" name="activate"/>
           </object>

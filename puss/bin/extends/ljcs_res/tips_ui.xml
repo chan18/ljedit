@@ -17,8 +17,8 @@
 
   <object class="GtkWindow" id="include_window">
     <property name="type">GTK_WINDOW_POPUP</property>
-    <property name="resizable">False</property>
-    <property name="accept_focus">True</property>
+    <property name="resizable">false</property>
+    <property name="accept_focus">true</property>
     <property name="height-request">200</property>
     <property name="height-request">150</property>
     <property name="opacity">0.95</property>
@@ -33,7 +33,7 @@
             <child>
               <object class="GtkTreeView" id="include_view">
                 <property name="model">include_store</property>
-                <property name="headers-visible">False</property>
+                <property name="headers-visible">false</property>
                 <child>
                   <object class="GtkTreeViewColumn" id="include_column">
                     <property name="title">Name</property>
@@ -55,8 +55,8 @@
 
   <object class="GtkWindow" id="list_window">
     <property name="type">GTK_WINDOW_POPUP</property>
-    <property name="resizable">False</property>
-    <property name="accept_focus">True</property>
+    <property name="resizable">false</property>
+    <property name="accept_focus">true</property>
     <property name="height-request">200</property>
     <property name="height-request">150</property>
     <property name="opacity">0.95</property>
@@ -71,8 +71,8 @@
             <child>
               <object class="GtkTreeView" id="list_view">
                 <property name="model">list_store</property>
-                <property name="headers-visible">False</property>
-                <property name="has-tooltip">True</property>
+                <property name="headers-visible">false</property>
+                <property name="has-tooltip">true</property>
                 <signal handler="tips_list_cb_query_tooltip" name="query-tooltip"/>
                 <child>
                   <object class="GtkTreeViewColumn" id="list_column">
@@ -100,8 +100,8 @@
 
   <object class="GtkWindow" id="decl_window">
     <property name="type">GTK_WINDOW_POPUP</property>
-    <property name="resizable">False</property>
-    <property name="accept_focus">True</property>
+    <property name="resizable">false</property>
+    <property name="accept_focus">true</property>
     <property name="height-request">200</property>
     <property name="height-request">150</property>
     <property name="opacity">0.95</property>
@@ -115,7 +115,7 @@
             <property name="vscrollbar_policy">automatic</property>
             <child>
               <object class="GtkSourceView" id="decl_view">
-                <property name="editable">False</property>
+                <property name="editable">false</property>
                 <property name="tab-width">4</property>
               </object>
             </child>

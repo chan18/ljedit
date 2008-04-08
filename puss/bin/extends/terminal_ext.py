@@ -185,6 +185,8 @@ try:
 
 		puss.main_window.bottom_panel.append_page(terminal, gtk.Label('Terminal'))
 		terminal.connect('focus_in_event', lambda *args : terminal._vte.grab_focus())
+		puss.main_window.bottom_panel.set_tab_reorderable(terminal, True)
+		puss.main_window.bottom_panel.set_tab_detachable(terminal, True)
 
 	def deactive():
 		pass
