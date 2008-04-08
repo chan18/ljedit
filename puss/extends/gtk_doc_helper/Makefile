@@ -17,10 +17,10 @@ ifeq ($(BUILD), release)
 	OBJPATH = release
 endif
 
-# gtk
+# gtk & gtksourceview(for libintl.h on win32)
 # 
-CXXFLAGS += `pkg-config --cflags gtk+-2.0`
-LIBS += `pkg-config --libs gtk+-2.0`
+CXXFLAGS += `pkg-config --cflags gtksourceview-2.0`
+LIBS += `pkg-config --libs gtksourceview-2.0`
 
 # project
 # 
