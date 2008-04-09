@@ -184,7 +184,7 @@ void search_gtk_doc_symbol_active(GtkAction* action, GtkDocHelper* self) {
 		return;
 
 	gunichar ch = gtk_text_iter_get_char(&ps);
-	if( !g_unichar_isalnum(ch) && ch!='_' )
+	if( !g_unichar_isalnum(ch) && ch!='_' && ch!='-' )
 		return;
 
 	GtkTextIter pe = ps;
@@ -192,7 +192,7 @@ void search_gtk_doc_symbol_active(GtkAction* action, GtkDocHelper* self) {
 	// find key start position
 	while( gtk_text_iter_backward_char(&ps) ) {
 		gunichar ch = gtk_text_iter_get_char(&ps);
-		if( !g_unichar_isalnum(ch) && ch!='_' ) {
+		if( !g_unichar_isalnum(ch) && ch!='_' && ch!='-' ) {
 			gtk_text_iter_forward_char(&ps);
 			break;
 		}
@@ -201,7 +201,7 @@ void search_gtk_doc_symbol_active(GtkAction* action, GtkDocHelper* self) {
 	// find key end position
 	while( gtk_text_iter_forward_char(&pe) ) {
 		gunichar ch = gtk_text_iter_get_char(&pe);
-		if( !g_unichar_isalnum(ch) && ch!='_' )
+		if( !g_unichar_isalnum(ch) && ch!='_' && ch!='-' )
 			break;
     }
 
