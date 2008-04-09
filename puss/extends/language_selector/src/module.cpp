@@ -3,10 +3,14 @@
 
 #include "IPuss.h"
 
-#include <glib/gi18n.h>
-
 #include <gtksourceview/gtksourcelanguagemanager.h>
 #include <gtksourceview/gtksourcebuffer.h>
+
+#include <libintl.h>
+
+#define TEXT_DOMAIN "puss_ext_language_selector"
+
+#define _(str) dgettext(TEXT_DOMAIN, str)
 
 //------------------------------------------------------------------------------
 // Language Menu Tool Button
@@ -62,6 +66,9 @@ gboolean destroy_language_section(gchar* key, GList* value, gpointer) {
 }
 
 PUSS_EXPORT void* puss_extend_create(Puss* app) {
+	bindtextdomain(TEXT_DOMAIN, app->get_locale_path());
+	bind_textdomain_codeset(TEXT_DOMAIN, "UTF-8");
+
 	puss_app = app;
 
 	GtkActionGroup* action_group = gtk_action_group_new("puss_language_selector_action_group");

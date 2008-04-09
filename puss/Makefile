@@ -89,6 +89,7 @@ clean :
 
 	@for ext in $(EXTS); do make -C$$ext clean BUILD=$(BUILD); done
 
+
 $(OBJPATH)/%.o : %.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(GTKINCS) -o $@ -c $<

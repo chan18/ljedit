@@ -3,8 +3,6 @@
 
 #include "MiniLineModules.h"
 
-
-#include <glib/gi18n.h>
 #include <gdk/gdkkeysyms.h>
 #include <gtksourceview/gtksourceiter.h>
 #include <gtksourceview/gtksourcebuffer.h>

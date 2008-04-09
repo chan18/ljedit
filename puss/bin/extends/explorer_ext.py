@@ -5,6 +5,15 @@ import pygtk
 pygtk.require('2.0')
 import gobject, gtk
 
+import gettext
+
+TEXT_DOMAIN = 'puss_py_ext_explorer'
+
+_ = lambda s : gettext.dgettext(TEXT_DOMAIN, s)
+
+gettext.bindtextdomain(TEXT_DOMAIN, os.path.join(os.path.dirname(__file__), '../locale'))
+gettext.bind_textdomain_codeset(TEXT_DOMAIN, 'UTF-8')
+
 def get_win32_drivers():
 	drivers = []
 	if sys.platform=='win32':
@@ -194,7 +203,7 @@ class FileExplorer(gtk.VBox):
 	def make_root_model(self):
 		model = gtk.TreeStore(str, str, str, str)   # display, path, [file, dir, dir-expanded, name]
 		if sys.platform=='win32':
-			iter = model.append(None, ['my computer', u'', 'win32root', ''])
+			iter = model.append(None, [_('my computer'), u'', 'win32root', ''])
 		else:
 			iter = model.append(None, ['/', u'/', 'dir', ''])
 		fill_subs(model, iter)
@@ -286,7 +295,7 @@ try:
 
 	def active():
 		explorer.show_all()
-		puss.main_window.left_panel.insert_page(explorer, gtk.Label(puss.gettext('Explorer')), 0)
+		puss.main_window.left_panel.insert_page(explorer, gtk.Label(_('Explorer')), 0)
 		puss.main_window.doc_panel.connect('switch-page', on_switch_page)
 
 	def deactive():

@@ -3,7 +3,6 @@
 
 #include "MiniLine.h"
 
-#include <glib/gi18n.h>
 #include <memory.h>
 #include <stdlib.h>
 

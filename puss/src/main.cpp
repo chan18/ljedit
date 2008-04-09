@@ -3,10 +3,10 @@
 #include <libintl.h>
 #include <gtk/gtk.h>
 
-#include <glib/gi18n.h>
 #include <string.h>
 
 #include "Puss.h"
+#include "Utils.h"
 
 #ifdef G_OS_WIN32
 	#include <Windows.h>

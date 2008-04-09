@@ -3,12 +3,14 @@
 
 #include "IPuss.h"
 
-#include <glib/gi18n.h>
 #include <gmodule.h>
 
 #include "LJCS.h"
 
 PUSS_EXPORT void* puss_extend_create(Puss* app) {
+	bindtextdomain(TEXT_DOMAIN, app->get_locale_path());
+	bind_textdomain_codeset(TEXT_DOMAIN, "UTF-8");
+
 	LJCS* self = new LJCS;
 	if( self ) {
 		if( !self->create(app) ) {

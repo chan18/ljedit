@@ -3,8 +3,6 @@
 
 #include "Tips.h"
 
-#include <glib/gi18n.h>
-
 #include "LJCS.h"
 #include "IPuss.h"
 

@@ -3,13 +3,10 @@
 
 #include "Icons.h"
 
-#include <glib/gi18n.h>
-
 #include <glib.h>
 
 #include "ljcs/ds.h"
-#include "IPuss.h"
-
+#include "LJCS.h"
 
 GdkPixbuf* load_icon(const gchar* app_path, const gchar* name) {
 	gchar* filepath = g_build_filename(app_path, "extends", "ljcs_res", name, NULL);

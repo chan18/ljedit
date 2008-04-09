@@ -3,8 +3,14 @@
 
 #include "IPuss.h"
 
-#include <glib/gi18n.h>
 #include <gdk/gdkkeysyms.h>
+
+#include <libintl.h>
+
+#define TEXT_DOMAIN "puss_ext_search_tools"
+
+#define _(str) dgettext(TEXT_DOMAIN, str)
+
 
 struct ResultNode {
 	const char*		filename;
@@ -272,6 +278,7 @@ void search_tools_build_ui(SearchTools* self) {
 	GtkBuilder* builder = gtk_builder_new();
 	if( !builder )
 		return;
+	gtk_builder_set_translation_domain(builder, TEXT_DOMAIN);
 
 	gchar* filepath = g_build_filename(self->app->get_module_path(), "extends", "search_tools_res", "search_tools_ui.xml", NULL);
 	if( !filepath ) {
@@ -317,6 +324,9 @@ void search_tools_build_ui(SearchTools* self) {
 }
 
 PUSS_EXPORT void* puss_extend_create(Puss* app) {
+	bindtextdomain(TEXT_DOMAIN, app->get_locale_path());
+	bind_textdomain_codeset(TEXT_DOMAIN, "UTF-8");
+
 	SearchTools* self = g_new0(SearchTools, 1);
 	self->app = app;
 	search_tools_build_ui(self);

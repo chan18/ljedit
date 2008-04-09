@@ -17,5 +17,15 @@ gboolean	puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST
 
 gchar*		puss_format_filename(const gchar* filename);
 
+#include <libintl.h>
+
+#define TEXT_DOMAIN "puss"
+
+#ifdef _
+#error "puss need _ as i18n macro!"
+#endif
+
+#define _(str) dgettext(TEXT_DOMAIN, str)
+
 #endif//PUSS_INC_UTILS_H
 

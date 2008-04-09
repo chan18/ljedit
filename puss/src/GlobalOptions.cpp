@@ -2,7 +2,6 @@
 
 #include "GlobalOptions.h"
 
-#include <glib/gi18n.h>
 #include <gtksourceview/gtksourcebuffer.h>
 #include <gtksourceview/gtksourcestyleschememanager.h>
 

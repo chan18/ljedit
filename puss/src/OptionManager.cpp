@@ -3,9 +3,8 @@
 
 #include "OptionManager.h"
 
-#include <glib/gi18n.h>
-
 #include "Puss.h"
+#include "Utils.h"
 
 struct OptionNotifer {
 	OptionNotifer*		next;

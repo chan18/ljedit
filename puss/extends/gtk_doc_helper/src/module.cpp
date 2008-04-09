@@ -3,7 +3,12 @@
 
 #include "IPuss.h"
 
-#include <glib/gi18n.h>
+#include <libintl.h>
+
+#define TEXT_DOMAIN "puss_ext_gtk_doc_helper"
+
+#define _(str) dgettext(TEXT_DOMAIN, str)
+
 
 struct DocModuleNode {
 	gchar*		path;
@@ -254,6 +259,9 @@ void create_ui(GtkDocHelper* self) {
 }
 
 PUSS_EXPORT void* puss_extend_create(Puss* app) {
+	bindtextdomain(TEXT_DOMAIN, app->get_locale_path());
+	bind_textdomain_codeset(TEXT_DOMAIN, "UTF-8");
+
 	GtkDocHelper* self = g_new0(GtkDocHelper, 1);
 
 	self->app = app;

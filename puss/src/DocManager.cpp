@@ -7,8 +7,6 @@
 #include <windows.h>
 #endif
 
-#include <glib/gi18n.h>
-
 #include <gtksourceview/gtksourceview.h>
 #include <gtksourceview/gtksourceiter.h>
 #include <gtksourceview/gtksourcestyleschememanager.h>

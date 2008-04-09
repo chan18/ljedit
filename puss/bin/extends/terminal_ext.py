@@ -25,14 +25,15 @@ import gtk
 import gobject
 import vte
 import gconf
-import gettext
 import os
+import gettext
 
-try:
-    gettext.bindtextdomain(GETTEXT_PACKAGE, GP_LOCALEDIR)
-    _ = lambda s: gettext.dgettext(GETTEXT_PACKAGE, s);
-except:
-    _ = lambda s: s
+TEXT_DOMAIN = 'puss_py_ext_terminal'
+
+_ = lambda s : gettext.dgettext(TEXT_DOMAIN, s)
+
+gettext.bindtextdomain(TEXT_DOMAIN, os.path.join(os.path.dirname(__file__), '../locale'))
+gettext.bind_textdomain_codeset(TEXT_DOMAIN, 'UTF-8')
 
 class Terminal(gtk.HBox):
     GCONF_PROFILE_DIR = "/apps/gnome-terminal/profiles/Default"
@@ -183,7 +184,7 @@ try:
 	def active():
 		terminal.show_all()
 
-		puss.main_window.bottom_panel.append_page(terminal, gtk.Label(puss.gettext('Terminal')))
+		puss.main_window.bottom_panel.append_page(terminal, gtk.Label(_('Terminal')))
 		terminal.connect('focus_in_event', lambda *args : terminal._vte.grab_focus())
 
 	def deactive():

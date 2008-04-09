@@ -3,7 +3,6 @@
 
 #include "PreviewPage.h"
 
-#include <glib/gi18n.h>
 #include <sstream>
 
 #include "LJCS.h"

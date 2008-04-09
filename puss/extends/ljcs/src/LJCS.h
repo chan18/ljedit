@@ -4,6 +4,12 @@
 #ifndef PUSS_EXTEND_INC_LJCS_H
 #define PUSS_EXTEND_INC_LJCS_H
 
+#include <libintl.h>
+
+#define TEXT_DOMAIN "puss_ext_ljcs"
+
+#define _(str) dgettext(TEXT_DOMAIN, str)
+
 #include "IPuss.h"
 #include "Environ.h"
 #include "Icons.h"

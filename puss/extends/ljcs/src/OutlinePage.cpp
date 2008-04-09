@@ -3,8 +3,6 @@
 
 #include "OutlinePage.h"
 
-#include <glib/gi18n.h>
-
 #include "LJCS.h"
 
 // TODO : use struct replace class

@@ -31,18 +31,18 @@ import traceback
 import gobject
 import gtk
 import pango
+import os
+import gettext
 
 __all__ = ('PythonConsole', 'OutFile')
 
-try:
-	import gettext
-	import puss
 
-	gettext.bindtextdomain('pyconsole_ext', puss.locale_path)
-	gettext.textdomain('pyconsole_ext')
-	_ = lambda s: gettext.dgettext('pyconsole_ext', s);
-except:
-	_ = lambda s: s
+TEXT_DOMAIN = 'puss_py_ext_pyconsole'
+
+_ = lambda s : gettext.dgettext(TEXT_DOMAIN, s)
+
+gettext.bindtextdomain(TEXT_DOMAIN, os.path.join(os.path.dirname(__file__), '../locale'))
+gettext.bind_textdomain_codeset(TEXT_DOMAIN, 'UTF-8')
 
 def encode_to_utf8(text, TRY_CODES = ['ascii', 'utf8', 'mbcs']):
 	succeed = False
@@ -340,7 +340,7 @@ def active():
 	pyconsole.eval('print "copy this plugin from gedit!" ', False)
 	pyconsole.show_all()
 
-	puss.main_window.bottom_panel.append_page(pyconsole, gtk.Label(puss.gettext('Python Console')))
+	puss.main_window.bottom_panel.append_page(pyconsole, gtk.Label(_('Python Console')))
 	pyconsole.connect('focus_in_event', lambda *args : pyconsole.view.grab_focus())
 
 def deactive():

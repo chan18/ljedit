@@ -2,7 +2,6 @@
 
 #include "Puss.h"
 
-#include <glib/gi18n.h>
 #include <memory.h>
 #include <stdlib.h>
 
@@ -102,6 +101,7 @@ gboolean puss_load_ui_files() {
 		g_printerr("ERROR(puss) : gtk_builder_new failed!\n");
 		return FALSE;
 	}
+	gtk_builder_set_translation_domain(puss_app->builder, TEXT_DOMAIN);
 
 	if( !( puss_load_ui("puss_ui_manager.xml")
 		&& puss_load_ui("puss_main_window.xml")
@@ -297,10 +297,10 @@ void puss_locale_init() {
 	gtk_set_locale();
 
 	puss_app->locale_path = g_build_filename(puss_app->module_path, "locale", NULL);
-	bindtextdomain("puss", puss_app->locale_path);
 
-	bind_textdomain_codeset("puss", "UTF-8");
-	textdomain("puss");
+	bindtextdomain(TEXT_DOMAIN, puss_app->locale_path);
+	bind_textdomain_codeset(TEXT_DOMAIN, "UTF-8");
+	//textdomain(TEXT_DOMAIN);
 }
 
 gboolean puss_create(const gchar* filepath) {
@@ -357,7 +357,6 @@ void puss_run() {
 
 	gtk_widget_show( GTK_WIDGET(puss_app->main_window) );
 
-	//g_print(_("test locale\n"));
 	gtk_main();
 }
 

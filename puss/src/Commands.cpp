@@ -2,8 +2,6 @@
 
 #include "Commands.h"
 
-#include <glib/gi18n.h>
-
 #include "Puss.h"
 #include "Utils.h"
 #include "DocManager.h"

@@ -4,7 +4,6 @@
 #include "ExtendEngine.h"
 
 #include <glib.h>
-#include <glib/gi18n.h>
 #include <gmodule.h>
 #include <memory.h>
 #include <string.h>
@@ -31,6 +30,7 @@
 #endif
 
 #include "Puss.h"
+#include "Utils.h"
 
 struct Extend {
 	GModule*	module;
