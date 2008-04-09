@@ -39,7 +39,7 @@ SRCS = $(wildcard src/*.cpp)
 
 OBJS = $(SRCS:%.cpp=$(OBJPATH)/%.o)
 
-TARGET = ../../bin/extends/plugin_engine.ext
+TARGET = ../../bin/extends/search_tools.ext
 
 all : $(TARGET)
 
