@@ -32,6 +32,7 @@ typedef void		(*OptionChanged)(const Option* option, gpointer tag);
 struct Puss {
 	// app
 	const gchar*	(*get_module_path)();
+	const gchar*	(*get_locale_path)();
 
 	// UI
 	GtkBuilder*		(*get_ui_builder)();

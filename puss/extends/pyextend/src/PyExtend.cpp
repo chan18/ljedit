@@ -16,8 +16,22 @@
 	#include <Python.h>
 #endif
 
+
+#include <glib/gi18n.h>
 #include <pygobject.h>
 #include <pygtk/pygtk.h>
+
+//----------------------------------------------------------------
+
+PyObject* py_wrapper_gettext(PyObject* self, PyObject* args) {
+	const char* text = 0;
+	if( !PyArg_ParseTuple(args, "z:py_wrapper_gettext", &text))
+		return 0;
+
+	return Py_BuildValue("z", _(text));
+}
+
+//----------------------------------------------------------------
 
 int app_convert(PyObject* py_obj, Puss** papp) {
 	if( !PyCObject_Check(py_obj) ) {
@@ -379,7 +393,8 @@ PyObject* py_wrapper_option_manager_monitor_reg(PyObject* self, PyObject* args) 
 }
 
 PyMethodDef puss_methods[] =
-	{ { "__get_puss_ui_builder", &py_wrapper_get_puss_ui_builder, METH_VARARGS, NULL }
+	{ { "__gettext", &py_wrapper_gettext, METH_VARARGS, NULL }
+	, { "__get_puss_ui_builder", &py_wrapper_get_puss_ui_builder, METH_VARARGS, NULL }
 	, { "__get_puss_ui_object_by_id", &py_wrapper_get_puss_ui_object_by_id, METH_VARARGS, NULL }
 
 	, { "__doc_get_url", &py_wrapper_doc_get_url, METH_VARARGS, NULL }

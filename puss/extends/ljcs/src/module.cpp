@@ -3,13 +3,12 @@
 
 #include "IPuss.h"
 
+#include <glib/gi18n.h>
 #include <gmodule.h>
 
 #include "LJCS.h"
 
 PUSS_EXPORT void* puss_extend_create(Puss* app) {
-	//g_print("* ljcs extends create\n");
-
 	LJCS* self = new LJCS;
 	if( self ) {
 		if( !self->create(app) ) {
@@ -22,7 +21,5 @@ PUSS_EXPORT void* puss_extend_create(Puss* app) {
 
 PUSS_EXPORT void  puss_extend_destroy(void* self) {
 	delete (LJCS*)self;
-
-	//g_print("* ljcs extends destroy\n");
 }
 

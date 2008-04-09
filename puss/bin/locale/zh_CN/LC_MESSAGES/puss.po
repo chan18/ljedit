@@ -1,0 +1,257 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# LJ <louisliangjun@gmail.com>, 2008.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2008-04-09 20:32+0800\n"
+"PO-Revision-Date: 2008-04-09 20:32+0800\n"
+"Last-Translator: LJ <louisliangjun@gmail.com>\n"
+"Language-Team: Chinese <louisliangjun@gmail.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/DocManager.cpp:106 src/DocManager.cpp:351 src/DocManager.cpp:610
+msgid "Untitled"
+msgstr "无标题"
+
+#: src/DocManager.cpp:255
+#, c-format
+msgid "Error loading file : %s"
+msgstr "错误 - 加载文件 : %s"
+
+#: src/DocManager.cpp:257
+msgid "please select charset and retry!"
+msgstr "请选择字符集并重试!"
+
+#: src/DocManager.cpp:390
+msgid "file modified, save it?"
+msgstr "文件已修改，是否保存?"
+
+#: src/DocManager.cpp:613
+msgid "yes to all"
+msgstr "保存全部"
+
+#: src/DocManager.cpp:614
+msgid "no to all"
+msgstr "放弃全部"
+
+#: src/ExtendEngine.cpp:48
+#, c-format
+msgid "ERROR  : load extend(%s) failed!\n"
+msgstr "错误 : 加载扩展(%s)失败!\n"
+
+#: src/ExtendEngine.cpp:49
+#, c-format
+msgid "REASON : %s\n"
+msgstr "原因 : %s\n"
+
+#: src/ExtendEngine.cpp:58
+#, c-format
+msgid "ERROR  : not find puss_extend_create() in extend(%s)!\n"
+msgstr "错误  : 在扩展模块(%s)中没有找到puss_extend_create()函数!\n"
+
+#: src/main.cpp:29
+msgid "ERROR : can not find puss in $PATH\n"
+msgstr "错误 : 在系统$PATH路径中找不到puss\n"
+
+#: src/main.cpp:48
+msgid "ERROR : can not find puss directory!\n"
+msgstr "错误 : 找不到puss目录!\n"
+
+#: src/main.cpp:49
+msgid "        can not use indirect search path in $PATH!\n"
+msgstr "        不能在$PATH中使用puss的相对路径!\n"
+
+#: src/MiniLineModules.cpp:163
+msgid "goto : "
+msgstr "跳至 : "
+
+#: src/MiniLineModules.cpp:253
+msgid "find : "
+msgstr "查找 : "
+
+#: src/MiniLineModules.cpp:365
+msgid "replace : "
+msgstr "替换 : "
+
+#: src/OptionManager.cpp:327
+msgid "font selecting..."
+msgstr "字体选择"
+
+#: src/OptionManager.cpp:362
+msgid "option setting..."
+msgstr "属性设置"
+
+### res/puss_ui_manager.xml
+###
+
+msgid "_File"
+msgstr "文件(_F)"
+
+msgid "_Edit"
+msgstr "编辑(_E)"
+
+msgid "_View"
+msgstr "视图(_V)"
+
+msgid "_Tools"
+msgstr "工具(_T)"
+
+msgid "_Help"
+msgstr "帮忙(_H)"
+
+msgid "Save All"
+msgstr "保存全部"
+
+msgid "Close All"
+msgstr "关闭全部"
+
+msgid "LeftPanel"
+msgstr "左边面板"
+
+msgid "RightPanel"
+msgstr "右边面板"
+
+msgid "BottomPanel"
+msgstr "底部面板"
+
+msgid "BottomPages"
+msgstr "底部页面"
+
+msgid "Bottom Page 1"
+msgstr "页面 1"
+
+msgid "Bottom Page 2"
+msgstr "页面 2"
+
+msgid "Bottom Page 3"
+msgstr "页面 3"
+
+msgid "Bottom Page 4"
+msgstr "页面 4"
+
+msgid "Bottom Page 5"
+msgstr "页面 5"
+
+msgid "Bottom Page 6"
+msgstr "页面 6"
+
+msgid "Bottom Page 7"
+msgstr "页面 7"
+
+msgid "Bottom Page 8"
+msgstr "页面 8"
+
+msgid "Bottom Page 9"
+msgstr "页面 9"
+
+### res/puss_main_window.xml
+###
+
+msgid "Puss - source editor"
+msgstr "Puss - 源代码编辑器"
+
+msgid "key"
+msgstr "选项"
+
+msgid "value"
+msgstr "值"
+
+msgid "close"
+msgstr "关闭"
+
+### gtk-doc-helper
+# 
+msgid "search gtk symbol"
+msgstr "gtk搜索"
+
+msgid "search current symbol in gtk-doc html files and show gtk-doc helper."
+msgstr "在gtk-doc html文档中搜索当前符号."
+
+msgid "Not find gtk-doc html files."
+msgstr "没有找到gtk-doc html文件."
+
+msgid "please setup\n   option : (gtk_doc_helper.gtk_doc_paths)\n   in [menu]->[tools]->[options]\n  and retry!"
+msgstr "请先在[首选项]中设置\n   选项:(gtk_doc_helper.gtk_doc_paths) 并重试!"
+
+msgid "Not find symbol(%s) in gtk-doc."
+msgstr "在gtk-doc中找不到符号(%s)."
+
+### explorer_ext
+#
+
+msgid "Explorer"
+msgstr "文件浏览器"
+
+### language_selector
+#
+
+msgid "Language"
+msgstr "源码语言"
+
+msgid "select high-light source language, default use c++"
+msgstr "选择高亮源码语言，默认使用c++语言"
+
+### ljcs
+#
+
+#: src/Icons.cpp:19
+#, c-format
+msgid "* ERROR : ljcs load icon(%s) failed!\n"
+msgstr "* 错误(ljcs) : 加载图标(%s)失败!\n"
+
+#: src/OutlinePage.cpp:49
+msgid "Outline"
+msgstr "大纲"
+
+#: src/PreviewPage.cpp:104
+msgid "Preview"
+msgstr "源码预览"
+
+
+### pyconsole
+#
+
+msgid "Python Console"
+msgstr "Python控制台"
+
+### search-tools
+#
+
+#: src/module.cpp:311
+msgid "Search"
+msgstr "搜索"
+
+### search_tools_res/search_tools_ui.xml
+###
+msgid "search resulsts:"
+msgstr "搜索结果:"
+
+msgid "position"
+msgstr "位置"
+
+msgid "preview"
+msgstr "预览"
+
+msgid "search : "
+msgstr "搜索 : "
+
+msgid "options"
+msgstr "选项"
+
+msgid "search in current file"
+msgstr "在当前文件中搜索"
+
+msgid "search in opened files"
+msgstr "在所有打开的文件中搜索"
+
+msgid "search in current file dir"
+msgstr "在当前文件所在目录中搜索"
+
+

@@ -34,6 +34,16 @@ import pango
 
 __all__ = ('PythonConsole', 'OutFile')
 
+try:
+	import gettext
+	import puss
+
+	gettext.bindtextdomain('pyconsole_ext', puss.locale_path)
+	gettext.textdomain('pyconsole_ext')
+	_ = lambda s: gettext.dgettext('pyconsole_ext', s);
+except:
+	_ = lambda s: s
+
 def encode_to_utf8(text, TRY_CODES = ['ascii', 'utf8', 'mbcs']):
 	succeed = False
 	for code in TRY_CODES:
@@ -330,7 +340,7 @@ def active():
 	pyconsole.eval('print "copy this plugin from gedit!" ', False)
 	pyconsole.show_all()
 
-	puss.main_window.bottom_panel.append_page(pyconsole, gtk.Label('Python Console'))
+	puss.main_window.bottom_panel.append_page(pyconsole, gtk.Label(puss.gettext('Python Console')))
 	pyconsole.connect('focus_in_event', lambda *args : pyconsole.view.grab_focus())
 
 def deactive():

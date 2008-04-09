@@ -8,10 +8,6 @@
 
 #include "Puss.h"
 
-#define PACKAGE		"puss"
-#define LOCALEDIR	"locale"
-
-
 #ifdef G_OS_WIN32
 	#include <Windows.h>
 
@@ -56,13 +52,8 @@
 
 #endif
 
-
 int main(int argc, char* argv[]) {
 	g_thread_init(NULL);
-
-	gtk_set_locale();
-	bindtextdomain(PACKAGE, LOCALEDIR);
-	textdomain(PACKAGE);
 
 	gtk_init(&argc, &argv);
 

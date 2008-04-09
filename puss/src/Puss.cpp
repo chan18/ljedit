@@ -20,6 +20,10 @@ const gchar* puss_get_module_path() {
 	return puss_app->module_path;
 }
 
+const gchar* puss_get_locale_path() {
+	return puss_app->locale_path;
+}
+
 GtkBuilder* puss_get_ui_builder() {
 	return puss_app->builder;
 }
@@ -27,6 +31,7 @@ GtkBuilder* puss_get_ui_builder() {
 void init_puss_c_api(Puss* api) {
 	// app
 	api->get_module_path = &puss_get_module_path;
+	api->get_locale_path = &puss_get_locale_path;
 
 	// UI
 	api->get_ui_builder = &puss_get_ui_builder;
@@ -96,7 +101,7 @@ gboolean puss_load_ui_files() {
 	if( !puss_app->builder ) {
 		g_printerr("ERROR(puss) : gtk_builder_new failed!\n");
 		return FALSE;
-	};
+	}
 
 	if( !( puss_load_ui("puss_ui_manager.xml")
 		&& puss_load_ui("puss_main_window.xml")
@@ -288,10 +293,23 @@ void puss_pages_reorder_save() {
 
 }
 
-gboolean puss_create(const char* filepath) {
+void puss_locale_init() {
+	gtk_set_locale();
+
+	puss_app->locale_path = g_build_filename(puss_app->module_path, "locale", NULL);
+	bindtextdomain("puss", puss_app->locale_path);
+
+	bind_textdomain_codeset("puss", "UTF-8");
+	textdomain("puss");
+}
+
+gboolean puss_create(const gchar* filepath) {
 	puss_app = g_new0(PussApp, 1);
 
 	puss_app->module_path = g_path_get_dirname(filepath);
+
+	puss_locale_init();
+
 	init_puss_c_api((Puss*)puss_app);
 
 	if( !puss_option_manager_create() ) {

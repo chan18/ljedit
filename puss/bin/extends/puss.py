@@ -3,6 +3,8 @@
 import __puss
 import gtk
 
+gettext = __puss.__gettext
+
 #builder = __puss.__get_puss_ui_builder(__puss.__app)
 #print builder
 #print dir(builder)

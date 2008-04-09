@@ -17,6 +17,7 @@ struct PussApp {
 
 	GtkBuilder*		builder;
 	gchar*			module_path;
+	gchar*			locale_path;
 
 	// get pointer from "builder"
 	// 
@@ -37,7 +38,7 @@ struct PussApp {
 
 extern		PussApp*	puss_app;
 
-gboolean	puss_create(const char* filepath);
+gboolean	puss_create(const gchar* filepath);
 void		puss_destroy();
 
 void		puss_run();

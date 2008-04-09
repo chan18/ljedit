@@ -15,7 +15,7 @@
       <object class="GtkFrame" id="search_result_frame">
         <child type="label">
           <object class="GtkLabel" id="search_result_label">
-            <property name="label">search resulsts:</property>
+            <property name="label" translatable="yes">search resulsts:</property>
           </object>
         </child>
         <child>
@@ -29,7 +29,7 @@
                 <signal handler="search_results_cb_row_activated" name="row-activated"/>
                 <child>
                   <object class="GtkTreeViewColumn" id="position_column">
-                    <property name="title">position</property>
+                    <property name="title" translatable="yes">position</property>
                     <child>
                       <object class="GtkCellRendererText" id="filename_cell_render"/>
                       <attributes>
@@ -46,7 +46,7 @@
                 </child>
                 <child>
                   <object class="GtkTreeViewColumn" id="preview_column">
-                    <property name="title">preview</property>
+                    <property name="title" translatable="yes">preview</property>
                     <child>
                       <object class="GtkCellRendererText" id="preview_cell_renderer"/>
                       <attributes>
@@ -71,7 +71,7 @@
           <object class="GtkHBox" id="">
             <child>
               <object class="GtkLabel" id="search_label">
-                <property name="label">search : </property>
+                <property name="label" translatable="yes">search : </property>
               </object>
             </child>
             <child>
@@ -89,14 +89,14 @@
           <object class="GtkFrame" id="search_options_frame">
             <child type="label">
               <object class="GtkLabel" id="search_options_label">
-                <property name="label">options</property>
+                <property name="label" translatable="yes">options</property>
               </object>
             </child>
             <child>
               <object class="GtkVBox" id="search_option_range_vbox">
                 <child>
                   <object class="GtkRadioButton" id="search_option_in_current_file">
-                    <property name="label">search in current file</property>
+                    <property name="label" translatable="yes">search in current file</property>
                     <property name="can-focus">false</property>
                   </object>
                   <packing>
@@ -107,7 +107,7 @@
                 <child>
                   <object class="GtkRadioButton" id="search_option_in_opened_files">
                     <property name="group">search_option_in_current_file</property>
-                    <property name="label">search in opened files</property>
+                    <property name="label" translatable="yes">search in opened files</property>
                     <property name="can-focus">false</property>
                   </object>
                   <packing>
@@ -118,7 +118,7 @@
                 <child>
                   <object class="GtkRadioButton" id="search_option_in_current_file_dir">
                     <property name="group">search_option_in_current_file</property>
-                    <property name="label">search in current file dir</property>
+                    <property name="label" translatable="yes">search in current file dir</property>
                     <property name="can-focus">false</property>
                   </object>
                   <packing>

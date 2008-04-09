@@ -4,11 +4,9 @@
 #     build debug version   : make
 #     build release version : make BUILD=release
 # 
-# locale :
+# locale example :
 #	xgettext -k_ -o puss.po src/*
-#	cp puss.po puss.zh_CN.po
-#	vi puss.zh_CN.po	# !!!not modify CHARSET to any-charset such as UTF-8
-#	msgfmt -o bin/locale/zh_CN/LC_MESSAGES/puss.mo poss.zh_CN.po
+#	msgfmt -o bin/locale/zh_CN/LC_MESSAGES/puss.mo poss.po
 # 
 
 ifeq ($(OS), Windows_NT)

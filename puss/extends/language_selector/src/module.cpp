@@ -103,7 +103,7 @@ PUSS_EXPORT void* puss_extend_create(Puss* app) {
 		GTK_ACTION( g_object_new(tool_menu_action_get_type ()
 			, "name", "language_selector_open"
 			, "label", _("Language")
-			, "tooltip", _("select c++ language high-light")
+			, "tooltip", _("select high-light source language, default use c++")
 			, "stock-id", GTK_STOCK_SELECT_COLOR
 			, NULL) );
 	g_signal_connect(language_selector_open_action, "activate", G_CALLBACK(&pls_lang_active), gtk_source_language_manager_get_language(lm, "cpp"));

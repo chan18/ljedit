@@ -29,7 +29,7 @@
                 <signal handler="option_manager_cb_row_activated" name="row-activated"/>
                 <child>
                   <object class="GtkTreeViewColumn" id="key_column">
-                    <property name="title">key</property>
+                    <property name="title" translatable="yes">key</property>
                     <child>
                       <object class="GtkCellRendererText" id="key_cell_renderer"/>
                       <attributes>
@@ -40,7 +40,7 @@
                 </child>
                 <child>
                   <object class="GtkTreeViewColumn" id="value_column">
-                    <property name="title">value</property>
+                    <property name="title" translatable="yes">value</property>
                     <child>
                       <object class="GtkCellRendererText" id="value_cell_renderer"/>
                       <attributes>
@@ -58,7 +58,7 @@
           <object class="GtkHButtonBox" id="hbuttonbox">
             <child>
               <object class="GtkButton" id="close_button">
-                <property name="label">close</property>
+                <property name="label" translatable="yes">close</property>
               </object>
             </child>
           </object>
