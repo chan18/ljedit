@@ -251,6 +251,8 @@ SIGNAL_CALLBACK gboolean search_tools_search(GtkEntry* entry, GdkEventKey* event
 
 		fill_search_results_list(self);
 		gtk_tree_view_set_model(self->result_view, GTK_TREE_MODEL(self->result_store));
+		gtk_tree_view_columns_autosize(self->result_view);
+
 		return TRUE;
 	}
 	return FALSE;
