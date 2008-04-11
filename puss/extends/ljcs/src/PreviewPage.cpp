@@ -128,9 +128,11 @@ void PreviewPage::destroy() {
 }
 
 void PreviewPage::preview(const gchar* key, const gchar* key_text, cpp::File& file, size_t line) {
-	GtkNotebook* bottom_panel = puss_get_bottom_panel(app_);
-	gint page_num = gtk_notebook_get_current_page(bottom_panel);
-	if( page_num >= 0 && self_panel_==gtk_notebook_get_nth_page(bottom_panel, page_num) ) {
+	// TODO : need puss support!!!
+
+	//GtkNotebook* bottom_panel = puss_get_bottom_panel(app_);
+	//gint page_num = gtk_notebook_get_current_page(bottom_panel);
+	//if( page_num >= 0 && self_panel_==gtk_notebook_get_nth_page(bottom_panel, page_num) ) {
 		Locker locker(search_content_);
 		
 		search_content_->key = key;
@@ -141,7 +143,7 @@ void PreviewPage::preview(const gchar* key, const gchar* key_text, cpp::File& fi
 		env_->file_incref(search_content_->file);
 
 		search_run_sem_.signal();
-	}
+	//}
 }
 
 void PreviewPage::search_thread() {
