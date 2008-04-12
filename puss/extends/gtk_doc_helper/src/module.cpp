@@ -72,7 +72,8 @@ struct GtkDocHelper {
 		if( !self->browser || self->browser[0]=='\0' )
 			self->browser = g_strdup("/usr/bin/firefox");
 
-		gchar* cmd = g_strjoin(" ", self->browser, link, NULL);
+		gchar* cmd = g_strdup_printf("%s %s &", self->browser, link);
+		//gchar* cmd = g_strjoin(" ", self->browser, link, NULL);
 		system(cmd);
 		g_free(cmd);
 	}
