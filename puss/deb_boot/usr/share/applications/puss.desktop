@@ -10,4 +10,4 @@ StartupNotify=true
 Type=Application
 MimeType=text/plain;
 Icon=/usr/share/puss/res/puss.png
-Categories=GNOME;GTK;Utility;TextEditor;
+Categories=GNOME;GTK;Development;TextEditor;
