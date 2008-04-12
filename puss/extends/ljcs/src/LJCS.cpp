@@ -200,7 +200,7 @@ void LJCS::do_button_release_event(GtkTextView* view, GtkTextBuffer* buf, GdkEve
 
 			cpp::Element* elem = find_best_matched_element(mset.elems());
 			if( elem )
-				app->doc_open(elem->file.filename.c_str(), int(elem->sline - 1), -1, FALSE);
+				app->doc_open(elem->file.filename.c_str(), int(elem->sline - 1), 0, FALSE);
 		}
 
 

@@ -1,12 +1,13 @@
 [Desktop Entry]
 Encoding=UTF-8
-Name=ljedit
-GenericName=ljedit for c/c++
-Comment=SourceEditor for c/c++
-Exec=ljedit %U
+Name=Puss Source Editor
+Name[zh_CN]=Puss 源代码编辑器
+Comment=Source Editor for c/c++
+Comment=C/C++ 源代码编辑器
+Exec=puss %U
 Terminal=false
 StartupNotify=true
 Type=Application
 MimeType=text/plain;
-Icon=accessories-text-editor
+Icon=/usr/share/puss/res/puss.png
 Categories=GNOME;GTK;Utility;TextEditor;
