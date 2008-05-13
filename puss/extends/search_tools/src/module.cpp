@@ -272,6 +272,21 @@ SIGNAL_CALLBACK void search_results_cb_row_activated(GtkTreeView* tree_view, Gtk
 }
 
 gboolean search_tools_active_search_entry(GtkWidget* widget, GdkEventFocus* event, SearchTools* self) {
+	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(self->app));
+	if( page_num >= 0 ) {
+		GtkTextBuffer* buf = self->app->doc_get_buffer_from_page_num(page_num);
+		if( buf ) {
+			GtkTextIter ps, pe;
+			if( gtk_text_buffer_get_selection_bounds(buf, &ps, &pe) ) {
+				gchar* text = gtk_text_iter_get_text(&ps, &pe);
+				if( text ) {
+					gtk_entry_set_text(self->search_entry, text);
+					g_free(text);
+				}
+			}
+		}
+	}
+
 	gtk_widget_grab_focus(GTK_WIDGET(self->search_entry));
 	return TRUE;
 }

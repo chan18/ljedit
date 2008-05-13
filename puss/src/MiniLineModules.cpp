@@ -57,7 +57,7 @@ gboolean move_cursor_to_pos(GtkTextView* view, gint line, gint offset) {
 		gtk_text_iter_forward_to_line_end(&iter);
 
 	gtk_text_buffer_place_cursor(buf, &iter);
-	gtk_text_view_scroll_to_iter(view, &iter, FALSE, FALSE, 0.25, 0.25);
+	gtk_text_view_scroll_to_iter(view, &iter, 0.0, TRUE, 1.0, 0.25);
 	return TRUE;
 }
 
@@ -123,7 +123,7 @@ void find_and_locate_text(GtkTextView* view, const gchar* text, gboolean is_forw
 	if( res ) {
 		gtk_widget_modify_base(GTK_WIDGET(puss_app->mini_line->entry), GTK_STATE_NORMAL, NULL);
 		gtk_text_buffer_select_range(gtk_text_view_get_buffer(view), &ps, &pe);
-		gtk_text_view_scroll_to_iter(view, &ps, FALSE, FALSE, 0.25, 0.25);
+		gtk_text_view_scroll_to_iter(view, &ps, 0.0, TRUE, 1.0, 0.25);
 	} else {
 		gtk_widget_modify_base(GTK_WIDGET(puss_app->mini_line->entry), GTK_STATE_NORMAL, &FAILED_COLOR);
 	}

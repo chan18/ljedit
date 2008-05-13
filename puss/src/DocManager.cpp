@@ -30,7 +30,7 @@ gboolean doc_scroll_to_pos( GtkTextView* view ) {
 	GtkTextBuffer* buf = gtk_text_view_get_buffer(view);
 	GtkTextMark* mark = gtk_text_buffer_get_mark(buf, scroll_mark_name);
 	if( mark ) {
-		gtk_text_view_scroll_to_mark(view, mark, 0.25, TRUE, 0.25, 0.25);
+		gtk_text_view_scroll_to_mark(view, mark, 0.0, TRUE, 1.0, 0.25);
 		gtk_text_buffer_delete_mark(buf, mark);
 	}
     return FALSE;

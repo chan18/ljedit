@@ -197,7 +197,7 @@ class FileExplorer(gtk.VBox):
 			self.treeview.get_selection().select_iter(it)
 			path = model.get_path(it)
 			self.treeview.expand_to_path(path)
-			self.treeview.scroll_to_cell(path)
+			#self.treeview.scroll_to_cell(path, None, True, 0.5, 0.0)
 			gobject.idle_add(self.treeview.scroll_to_cell, path)
 		
 	def make_root_model(self):

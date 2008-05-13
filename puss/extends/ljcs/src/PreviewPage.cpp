@@ -277,7 +277,7 @@ void PreviewPage::do_scroll_to_define_line() {
 		gtk_text_buffer_get_iter_at_line(buffer, &iter, (gint)(elem->sline - 1));
 		if( !gtk_text_iter_is_end(&iter) ) {
 			gtk_text_buffer_place_cursor(buffer, &iter);
-			gtk_text_view_scroll_to_iter(preview_view_, &iter, 0.25, TRUE, 0.25, 0.25);
+			gtk_text_view_scroll_to_iter(preview_view_, &iter, 0.0, TRUE, 1.0, 0.25);
 		}
 	}
 }
