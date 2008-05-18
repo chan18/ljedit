@@ -1,15 +1,39 @@
 // cps_others.c
 // 
 
-#include "cps.h"
+#include "cps_utils.h"
 
 
-void cps_extern_scope(Block* block, GList* scope) {
+gboolean cps_extern_scope(Block* block, GList* scope) {
+	return TRUE;
 }
 
-void cps_block(Block* block, GList* scope) {
+gboolean cps_block(Block* block, GList* scope) {
+	return TRUE;
 }
 
-void cps_impl_block(Block* block, GList* scope) {
+gboolean cps_impl_block(Block* block, GList* scope) {
+	return TRUE;
 }
+
+gboolean cps_label(Block* block, GList* scope) {
+	return TRUE;
+}
+
+gboolean cps_fun_or_var(Block* block, GList* scope) {
+	return TRUE;
+}
+
+gboolean cps_breakout_block(Block* block, GList* scope) {
+	return TRUE;
+}
+
+gboolean cps_skip_block(Block* block, GList* scope) {
+	return TRUE;
+}
+
+gboolean cps_class_or_var(Block* block, GList* scope) {
+	return TRUE;
+}
+
 

@@ -1,15 +1,18 @@
 // cps_fun.c
 // 
 
-#include "cps.h"
+#include "cps_utils.h"
 
 
-void cps_fun(Block* block, GList* scope) {
+gboolean cps_fun(Block* block, GList* scope) {
+	return TRUE;
 }
 
-void cps_operator(Block* block, GList* scope) {
+gboolean cps_operator(Block* block, GList* scope) {
+	return TRUE;
 }
 
-void cps_destruct(Block* block, GList* scope) {
+gboolean cps_destruct(Block* block, GList* scope) {
+	return TRUE;
 }
 

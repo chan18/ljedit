@@ -1,11 +1,13 @@
 // cps_template.c
 // 
 
-#include "cps.h"
+#include "cps_utils.h"
 
-void cps_template(Block* block, GList* scope) {
+gboolean cps_template(Block* block, GList* scope) {
+	return TRUE;
 }
 
-void cps_extern_template(Block* block, GList* scope) {
+gboolean cps_extern_template(Block* block, GList* scope) {
+	return TRUE;
 }
 

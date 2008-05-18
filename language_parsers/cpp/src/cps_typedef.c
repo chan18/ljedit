@@ -1,8 +1,9 @@
 // cps_typedef.c
 // 
 
-#include "cps.h"
+#include "cps_utils.h"
 
-void cps_typedef(Block* block, GList* scope) {
+gboolean cps_typedef(Block* block, GList* scope) {
+	return TRUE;
 }
 

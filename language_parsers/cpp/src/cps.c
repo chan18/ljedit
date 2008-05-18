@@ -44,15 +44,9 @@ static MLToken* spliter_next_token(BlockSpliter* spliter, gboolean skip_comment)
 	return spliter->tokens + spliter->pos;
 }
 
-void cps_label(Block* block, GList* scope) {}
-void cps_fun_or_var(Block* block, GList* scope) {}
-void cps_breakout_block(Block* block, GList* scope) {}
-void cps_skip_block(Block* block, GList* scope) {}
-void cps_class_or_var(Block* block, GList* scope) {}
-
 static gboolean spliter_skip_pair_round_brackets(BlockSpliter* spliter) {
 	MLToken* token;
-	int layer = 1;
+	gint layer = 1;
 	while( layer > 0 ) {
 		if( (token = spliter_next_token(spliter, TRUE))==0 )
 			return FALSE;
@@ -134,6 +128,29 @@ void spliter_final(BlockSpliter* spliter) {
 		spliter->lexer = 0;
 	}
 }
+
+// cps
+// 
+gboolean cps_var(Block* block, GList* scope);
+gboolean cps_fun(Block* block, GList* scope);
+gboolean cps_using(Block* block, GList* scope);
+gboolean cps_namespace(Block* block, GList* scope);
+gboolean cps_typedef(Block* block, GList* scope);
+gboolean cps_template(Block* block, GList* scope);
+gboolean cps_destruct(Block* block, GList* scope);
+gboolean cps_operator(Block* block, GList* scope);
+gboolean cps_extern_template(Block* block, GList* scope);
+gboolean cps_extern_scope(Block* block, GList* scope);
+gboolean cps_class(Block* block, GList* scope);
+gboolean cps_enum(Block* block, GList* scope);
+gboolean cps_block(Block* block, GList* scope);
+gboolean cps_impl_block(Block* block, GList* scope);
+gboolean cps_label(Block* block, GList* scope);
+gboolean cps_fun_or_var(Block* block, GList* scope);
+gboolean cps_breakout_block(Block* block, GList* scope);
+gboolean cps_skip_block(Block* block, GList* scope);
+gboolean cps_class_or_var(Block* block, GList* scope);
+
 
 TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 	MLToken* token;

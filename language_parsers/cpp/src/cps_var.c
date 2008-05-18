@@ -1,8 +1,9 @@
 // cps_var.c
 // 
 
-#include "cps.h"
+#include "cps_utils.h"
 
-void cps_var(Block* block, GList* scope) {
+gboolean cps_var(Block* block, GList* scope) {
+	return TRUE;
 }
 

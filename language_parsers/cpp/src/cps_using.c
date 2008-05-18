@@ -1,8 +1,9 @@
 // cps_using.c
 // 
 
-#include "cps.h"
+#include "cps_utils.h"
 
-void cps_using(Block* block, GList* scope) {
+gboolean cps_using(Block* block, GList* scope) {
+	return TRUE;
 }
 

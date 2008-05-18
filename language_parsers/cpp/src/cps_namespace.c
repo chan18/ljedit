@@ -1,8 +1,9 @@
 // cps_namespace.c
 // 
 
-#include "cps.h"
+#include "cps_utils.h"
 
-void cps_namespace(Block* block, GList* scope) {
+gboolean cps_namespace(Block* block, GList* scope) {
+	return TRUE;
 }
 
