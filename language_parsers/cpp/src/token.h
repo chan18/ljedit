@@ -14,6 +14,9 @@ enum TokenType { TK_EOF = 256
 	, TK_CHAR
 	, TK_ID
 	, TK_STRING
+	, KW__BOOL
+	, KW__COMPLEX
+	, KW__IMAGINARY
 	, KW_ASM
 	, KW_AUTO
 	, KW_BOOL
@@ -53,6 +56,7 @@ enum TokenType { TK_EOF = 256
 	, KW_PUBLIC
 	, KW_REGISTER
 	, KW_REINTERPRET_CAST
+	, KW_RESTRICT
 	, KW_RETURN
 	, KW_SHORT
 	, KW_SIGNED

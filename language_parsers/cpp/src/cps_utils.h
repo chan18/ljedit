@@ -32,24 +32,11 @@ MLToken* skip_pair_brace_bracket(MLToken* ps, MLToken* pe);
 //  std::list<int>::iterator
 //      => [std, list, iterator]
 //
-TinyStr* parse_ns(Block* block);
-
-/*
-void parse_datatype(BlockLexer& lexer, std::string& ns, int& dt);
-
-void parse_ptr_ref(BlockLexer& lexer, int& dt);
-
-void parse_id(BlockLexer& lexer, std::string& ns);
-
-void parse_value(BlockLexer& lexer);
-
-void parse_scope(BlockLexer& lexer, Scope& scope, Element* parent=0);
-
-void parse_skip_block(BlockLexer& lexer, Scope& scope);
-
-void parse_impl_scope(BlockLexer& lexer, Scope& scope);
-
-*/
+MLToken* parse_ns(MLToken* ps, MLToken* pe, TinyStr** out);
+MLToken* parse_datatype(MLToken* ps, MLToken* pe, TinyStr** out, gint* dt);
+MLToken* parse_ptr_ref(MLToken* ps, MLToken* pe, gint* dt);
+MLToken* parse_id(MLToken* ps, MLToken* pe, TinyStr** out);
+MLToken* parse_value(MLToken* ps, MLToken* pe);
 
 #endif//PUSS_CPP_CPS_UTILS_H
 

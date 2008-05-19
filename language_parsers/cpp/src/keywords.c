@@ -11,7 +11,10 @@ typedef struct {
 } KeywordItem;
 
 static KeywordItem keyword_items[] = {
-	  { "asm",        3, KW_ASM }
+	  { "_Bool",      5, KW__BOOL }
+	, { "_Complex",   8, KW__COMPLEX }
+	, { "_Imaginary", 10, KW__IMAGINARY }
+	, { "asm",        3, KW_ASM }
 	, { "auto",       4, KW_AUTO }
 	, { "bool",       4, KW_BOOL }
 	, { "break",      5, KW_BREAK }
@@ -50,6 +53,7 @@ static KeywordItem keyword_items[] = {
 	, { "public",     6, KW_PUBLIC }
 	, { "register",   8, KW_REGISTER }
 	, { "reinterpret_cast", 16, KW_REINTERPRET_CAST }
+	, { "restrict",   8, KW_RESTRICT }
 	, { "return",     6, KW_RETURN }
 	, { "short",      5, KW_SHORT }
 	, { "signed",     6, KW_SIGNED }
