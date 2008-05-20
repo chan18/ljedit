@@ -3,12 +3,9 @@
 
 #include "cps_utils.h"
 
-
-//inline bool is_id_char(char ch) { return ch > 0 && (isalnum(ch) || ch=='_'); }
-
 #define MAX_RESULT_LENGTH (16*1024)
 
-TinyStr* block_meger_tokens(Block* block) {
+TinyStr* block_meger_tokens(MLToken* ps, MLToken* pe, TinyStr* init) {
 	gchar buf[MAX_RESULT_LENGTH];
 	gchar* p = buf;
 	gchar* end = buf + MAX_RESULT_LENGTH;
@@ -17,10 +14,14 @@ TinyStr* block_meger_tokens(Block* block) {
 	gchar first;
 	gchar last;
 
-	MLToken* ps = block->tokens;
-	MLToken* pe = ps + block->count;
+	if( init ) {
+		if( init->len >= MAX_RESULT_LENGTH )
+			return 0;
 
-	p = buf;
+		memcpy(buf, init->buf, init->len);
+		p += init->len;
+	}
+
 	last = '\0';
 	for( ; ps < pe; ++ps ) {
 		need_space = FALSE;
@@ -38,13 +39,13 @@ TinyStr* block_meger_tokens(Block* block) {
 			need_space = TRUE;
 
 		if( need_space ) {
-			if( p < end )
-				break;
+			if( p >= end )
+				return 0;
 			*p++ = ' ';
 		}
 
-		if( ps->len < (gsize)(end - p) )
-			break;
+		if( (p + ps->len) >= end )
+			return 0;
 		memcpy(p, ps->buf, ps->len);
 		p += ps->len;
 		last = ps->buf[ps->len - 1];
@@ -53,31 +54,10 @@ TinyStr* block_meger_tokens(Block* block) {
 	return tiny_str_new(buf, (p - buf));
 }
 
-#define trace_error(reason) \
-	g_printerr( "ParseError(%s:%d)\n" \
-				"	Function : %s\n" \
-				"	Reason   : %s\n" \
-				, __FILE__ \
-				, __LINE__ \
-				, __FUNCTION__ \
-				, reason ) \
-
-#define return_error(reason, retval) \
-	trace_error(reason); \
-	return retval \
-
-#define return_if_error(cond, retval) \
-	if( cond ) { \
-		return_error(#cond, retval); \
-	} \
-
-#define return_null_if_error(cond) return_if_error(cond, 0)
-
 MLToken* skip_pair_round_brackets(MLToken* ps, MLToken* pe) {
 	gint layer = 1;
 	while( layer ) {
-		if( ps >= pe )
-			return 0;
+		err_return_null_if_not( ps < pe );
 
 		switch( ps->type ) {
 		case '(':	++layer;	break;
@@ -93,14 +73,13 @@ MLToken* skip_pair_round_brackets(MLToken* ps, MLToken* pe) {
 MLToken* skip_pair_angle_bracket(MLToken* ps, MLToken* pe) {
 	gint layer = 1;
 	while( layer ) {
-		if( ps >= pe )
-			return 0;
+		err_return_null_if_not( ps < pe );
 
 		switch( ps->type ) {
 		case '<':	++layer;	break;
 		case '>':	--layer;	break;
 		case '(':
-			ps = skip_pair_round_brackets(ps+1, pe);
+			err_return_null_if( (ps = skip_pair_round_brackets(ps+1, pe))==0 );
 			continue;
 		}
 
@@ -113,14 +92,13 @@ MLToken* skip_pair_angle_bracket(MLToken* ps, MLToken* pe) {
 MLToken* skip_pair_square_bracket(MLToken* ps, MLToken* pe) {
  	gint layer = 1;
 	while( layer ) {
-		if( ps >= pe )
-			return 0;
+		err_return_null_if_not( ps < pe );
 
 		switch( ps->type ) {
 		case '[':	++layer;	break;
 		case ']':	--layer;	break;
 		case '(':
-			ps = skip_pair_round_brackets(ps+1, pe);
+			err_return_null_if( (ps = skip_pair_round_brackets(ps+1, pe))==0 );
 			continue;
 		}
 
@@ -147,64 +125,63 @@ MLToken* skip_pair_brace_bracket(MLToken* ps, MLToken* pe) {
 	return ps;
 }
 
-MLToken* parse_ns(MLToken* ps, MLToken* pe, TinyStr** out) {
+MLToken* parse_ns(MLToken* ps, MLToken* pe, TinyStr** ns) {
 	gchar buf[MAX_RESULT_LENGTH];
 	gchar* p = buf;
 	gchar* end = buf + MAX_RESULT_LENGTH;
 
-	return_null_if_error( ps==pe );
+	err_return_null_if_not( ps < pe );
 	if( ps->type==SG_DBL_COLON ) {
 		*p++ = '.';
 		++ps;
 	}
 
 	for(;;) {
-		return_null_if_error( ps==pe );
+		err_return_null_if_not( ps < pe );
 
 		if( ps->type=='~' ) {
 			++ps;
-			return_null_if_error( ps==pe || ps->type!=TK_ID );
-			return_null_if_error( (p + (ps-1)->len + ps->len) >= end);
+			err_return_null_if_not( (ps<pe) && ps->type==TK_ID );
+			err_return_null_if_not( (p + (ps-1)->len + ps->len) < end );
 			memcpy(p, (ps-1)->buf, (ps-1)->len);
 			memcpy(p, ps->buf, ps->len);
 			p += ((ps-1)->len + ps->len);
 
 		} else if( ps->type==KW_OPERATOR ) {
-			return_null_if_error( (p + ps->len) >= end );
+			err_return_null_if_not( (p + ps->len) < end );
 			memcpy(p, ps->buf, ps->len);
 			p += ps->len;
 
 			++ps;
-			return_null_if_error( ps==pe );
+			err_return_null_if_not( ps < pe );
 			if( ps->type=='(' ) {
 				++ps;
-				return_null_if_error( ps==pe || ps->type!=')' );
-				return_null_if_error( (p + 2) >= end );
+				err_return_null_if_not( (ps<pe) && ps->type==')' );
+				err_return_null_if_not( (p + 2) < end );
 				p[0] = '(';
 				p[1] = ')';
 				p += 2;
 
 			} else if( ps->type=='[' ) {
 				++ps;
-				return_null_if_error( ps==pe || ps->type!=']' );
-				return_null_if_error( (p + 2) >= end );
+				err_return_null_if_not( (ps<pe) && ps->type==']' );
+				err_return_null_if_not( (p + 2) < end );
 				p[0] = '[';
 				p[1] = ']';
 				p += 2;
 
 			} else {
-				if( ps->len > 0 && g_ascii_isalpha(ps->buf[0]) && p < end ) {
+				if( ps->len > 0 && g_ascii_isalpha(ps->buf[0]) && p < end )
 					*p++ = ' ';
-				}
 
-				return_null_if_error( (p + ps->len) >= end );
+				err_return_null_if_not( (p + ps->len) < end );
 				memcpy(p, ps->buf, ps->len);
 				p += ps->len;
 			}
 
 			if( (ps->type==KW_NEW || ps->type==KW_DELETE) && ((ps+1)<pe && (ps+1)->type=='[') ) {
 				++ps;
-				return_null_if_error( (p + 2) >= end );
+				err_return_null_if_not( (p + 2) < end );
 				p[0] = '[';
 				p[1] = ']';
 				p += 2;
@@ -213,27 +190,26 @@ MLToken* parse_ns(MLToken* ps, MLToken* pe, TinyStr** out) {
 		} else {
 			if( ps->type==KW_TEMPLATE ) {
 				++ps;
-				return_null_if_error( ps==pe );
+				err_return_null_if_not( ps < pe );
 			}
 
-
-			return_null_if_error( ps->type!=TK_ID );
-			return_null_if_error( (p + ps->len) >= end );
+			err_return_null_if_not( ps->type==TK_ID );
+			err_return_null_if_not( (p + ps->len) < end );
 			memcpy(p, ps->buf, ps->len);
 			p += ps->len;
 		}
 
 		++ps;
-		return_null_if_error( ps==pe );
+		err_return_null_if_not( ps < pe );
 		if( ps->type=='<' ) {
 			ps = skip_pair_angle_bracket(ps+1, pe);
-			return_null_if_error( !ps );
+			err_return_null_if_not( ps );
 		}
 
 		if( ps->type==SG_DBL_COLON ) {
 			++ps;
-			return_null_if_error( ps==pe );
-			return_null_if_error( p >= end );
+			err_return_null_if_not( ps < pe );
+			err_return_null_if_not( p < end );
 			*p++ = '.';
 			continue;
 		}
@@ -241,11 +217,11 @@ MLToken* parse_ns(MLToken* ps, MLToken* pe, TinyStr** out) {
 		break;
 	}
 
-	*out = tiny_str_new(buf, (p - buf));
+	*ns = tiny_str_new(buf, (p - buf));
 	return ps;
 }
 
-MLToken* parse_datatype(MLToken* ps, MLToken* pe, TinyStr** out, gint* dt) {
+MLToken* parse_datatype(MLToken* ps, MLToken* pe, TinyStr** ns, gint* dt) {
 	gboolean is_std = FALSE;
 
 	*dt = KD_UNK;
@@ -271,15 +247,15 @@ MLToken* parse_datatype(MLToken* ps, MLToken* pe, TinyStr** out, gint* dt) {
 				is_std = TRUE;
 				break;
 				
-			} else if( is_std || *out ) {
+			} else if( is_std || *ns ) {
 				return ps;
 			}
 			// not use break;
 
 		case SG_DBL_COLON:
-			ps = parse_ns(ps, pe, out);
+			ps = parse_ns(ps, pe, ns);
 			if( !ps )
-				trace_error("parse ns error when parse datatype!");
+				err_trace("parse ns error when parse datatype!");
 			return ps;
 
 		case KW_CLASS:		case KW_STRUCT:		case KW_UNION:
@@ -288,26 +264,26 @@ MLToken* parse_datatype(MLToken* ps, MLToken* pe, TinyStr** out, gint* dt) {
 				return ps;
 
 			*dt = ps->type;
-			if( *out )
+			if( *ns )
 				return ps;
 
 			if( (ps+1)<pe && (ps+1)->type==TK_ID ) {
-				ps = parse_ns(ps, pe, out);
+				ps = parse_ns(ps, pe, ns);
 				if( !ps )
-					trace_error("parse ns error when parse datatype!");
+					err_trace("parse ns error when parse datatype!");
 				return ps;
 			}
 			break;
 
 		default:
-			return_null_if_error( ps->type!=KW_TEMPLATE );
+			err_return_null_if( ps->type==KW_TEMPLATE );
 			return ps;
 		}
 
 		++ps;
 	}
 
-	return_error("eof error", 0);
+	err_return("eof error", 0);
 }
 
 MLToken* parse_ptr_ref(MLToken* ps, MLToken* pe, gint* dt) {
@@ -331,13 +307,16 @@ MLToken* parse_ptr_ref(MLToken* ps, MLToken* pe, gint* dt) {
 		++ps;
 	}
 
-	return_error("eof error", 0);
+	err_return("eof error", 0);
 }
 
-MLToken* parse_id(MLToken* ps, MLToken* pe, TinyStr** out) {
-	ps = parse_ns(ps, pe, out);
-	if( !ps )
-		trace_error("parse ns error when parse id!");
+MLToken* parse_id(MLToken* ps, MLToken* pe, TinyStr** ns, MLToken** name_token) {
+	ps = parse_ns(ps, pe, ns);
+	if( ps ) {
+		*name_token = (ps - 1);
+	} else {
+		err_trace("parse ns error when parse id!");
+	}
 	return ps;
 }
 
@@ -349,7 +328,7 @@ MLToken* parse_value(MLToken* ps, MLToken* pe) {
 			break;
 
 		++ps;
-		return_null_if_error( ps==pe );
+		err_return_null_if_not( ps < pe );
 
 		switch( type ) {
 		case '(':	ps = skip_pair_round_brackets(ps, pe);	break;
@@ -360,7 +339,7 @@ MLToken* parse_value(MLToken* ps, MLToken* pe) {
 	}
 
 	if( !ps )
-		trace_error("Error when parse value!");
+		err_trace("Error when parse value!");
 
 	return ps;
 }

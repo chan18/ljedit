@@ -4,7 +4,7 @@
 #include "ds.h"
 
 
-TinyStr* tiny_str_new(gchar* buf, gsize len) {
+TinyStr* tiny_str_new(gchar* buf, gshort len) {
 	TinyStr* res = (TinyStr*)g_new(gchar, (sizeof(TinyStr) + len));
 	res->len = len;
 	memcpy(res->buf, buf, len);

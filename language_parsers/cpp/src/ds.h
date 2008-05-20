@@ -30,11 +30,11 @@ typedef struct _CppElem    CppElem;
 typedef struct _CppFile    CppFile;
 
 typedef struct {
-	gsize	len;
+	gshort	len;
 	gchar	buf[1];
 } TinyStr;
 
-TinyStr* tiny_str_new(gchar* buf, gsize len);
+TinyStr* tiny_str_new(gchar* buf, gshort len);
 gboolean tiny_str_equal(const TinyStr* a, const TinyStr* b);
 
 typedef struct {
@@ -128,18 +128,18 @@ struct _CppElem {
 	TinyStr*	decl;
 
 	union {
-		CppKeyword		keyword;
-		CppMacroDefine	macro_define;
-		CppMacroUndef	macro_undef;
-		CppMacroInclude	macro_include;
-		CppVar			cpp_var;
-		CppFun			cpp_fun;
-		CppNamespace	cpp_namespace;
-		CppClass		cpp_class;
-		CppEnumItem		cpp_enum_item;
-		CppEnum			cpp_enum;
-		CppUsing		cpp_using;
-		CppTypedef		cpp_typedef;
+		CppKeyword		v_keyword;
+		CppMacroDefine	v_define;
+		CppMacroUndef	v_undef;
+		CppMacroInclude	v_include;
+		CppVar			v_var;
+		CppFun			v_fun;
+		CppNamespace	v_namespace;
+		CppClass		v_class;
+		CppEnumItem		v_enum_item;
+		CppEnum			v_enum;
+		CppUsing		v_using;
+		CppTypedef		v_typedef;
 	};
 };
 

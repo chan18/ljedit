@@ -163,8 +163,8 @@ static void __test_spliter(CppParser* env, gchar* buf, gsize len) {
 	spliter_init_with_text(&spliter, env, buf, len, 1);
 
 	while( (fn = spliter_next_block(&spliter, &block)) != 0 ) {
-		//__dump_block(&block);
-		//fn(&block, 0);
+		__dump_block(&block);
+		fn(&block, 0);
 	}
 
 	spliter_final(&spliter);

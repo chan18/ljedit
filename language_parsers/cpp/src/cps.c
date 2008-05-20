@@ -6,6 +6,12 @@
 #include <string.h>
 #include "keywords.h"
 
+// !!! if define USE_COMMENT_TOKEN, comments token will in block tokens, all cps_xxx.c need rewrite
+// 
+// !!! use COMMENT_TOKEN can parse var/fun/class comment, but cps_xxx need do more things on it
+// 
+// 
+//#define USE_COMMENT_TOKEN
 
 static MLToken* spliter_next_token(BlockSpliter* spliter, gboolean skip_comment) {
 	MLToken* token;
@@ -19,7 +25,17 @@ static MLToken* spliter_next_token(BlockSpliter* spliter, gboolean skip_comment)
 			}
 
 			token = spliter->tokens + spliter->end;
+
+#ifdef USE_COMMENT_TOKEN
 			cpp_macro_lexer_next(spliter->lexer, token, &(spliter->env->macro_environ), spliter->env);
+#else
+			for(;;) {
+				cpp_macro_lexer_next(spliter->lexer, token, &(spliter->env->macro_environ), spliter->env);
+				if( token->type==TK_BLOCK_COMMENT || token->type==TK_LINE_COMMENT )
+					continue;
+				break;
+			}
+#endif
 			g_assert( token->type != TK_MACRO );
 
 			if( token->type==TK_EOF )
@@ -27,10 +43,10 @@ static MLToken* spliter_next_token(BlockSpliter* spliter, gboolean skip_comment)
 
 			++(spliter->end);
 
-			if( skip_comment && (token->type==TK_LINE_COMMENT || token->type==TK_BLOCK_COMMENT) )
-				++(spliter->pos);
-			else if( token->type==TK_ID )
+			if( token->type==TK_ID )
 				cpp_keywords_check(token, spliter->env->keywords_table);
+			else if( skip_comment && (token->type==TK_LINE_COMMENT || token->type==TK_BLOCK_COMMENT) )
+				++(spliter->pos);
 		}
 
 	} else {
