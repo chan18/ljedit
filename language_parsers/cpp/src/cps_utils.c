@@ -20,9 +20,11 @@ TinyStr* block_meger_tokens(MLToken* ps, MLToken* pe, TinyStr* init) {
 
 		memcpy(buf, init->buf, init->len);
 		p += init->len;
+		last = init->buf[init->len - 1];
+	} else {
+		last = '\0';
 	}
 
-	last = '\0';
 	for( ; ps < pe; ++ps ) {
 		need_space = FALSE;
 		first = ps->buf[0];
@@ -48,7 +50,14 @@ TinyStr* block_meger_tokens(MLToken* ps, MLToken* pe, TinyStr* init) {
 			return 0;
 		memcpy(p, ps->buf, ps->len);
 		p += ps->len;
-		last = ps->buf[ps->len - 1];
+
+		if( ps->type==KW_USING ) {
+			if( p >= end )
+				return 0;
+			*p++ = ' ';
+		}
+
+		last = *(p-1);
 	}
 
 	return tiny_str_new(buf, (p - buf));
@@ -312,11 +321,10 @@ MLToken* parse_ptr_ref(MLToken* ps, MLToken* pe, gint* dt) {
 
 MLToken* parse_id(MLToken* ps, MLToken* pe, TinyStr** ns, MLToken** name_token) {
 	ps = parse_ns(ps, pe, ns);
-	if( ps ) {
+	if( ps )
 		*name_token = (ps - 1);
-	} else {
+	else
 		err_trace("parse ns error when parse id!");
-	}
 	return ps;
 }
 

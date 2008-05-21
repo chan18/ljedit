@@ -35,6 +35,7 @@ typedef struct {
 } TinyStr;
 
 TinyStr* tiny_str_new(gchar* buf, gshort len);
+#define  tiny_str_clone(str) tiny_str_new((str)->buf, (str)->len);
 gboolean tiny_str_equal(const TinyStr* a, const TinyStr* b);
 
 typedef struct {
@@ -142,6 +143,8 @@ struct _CppElem {
 		CppTypedef		v_typedef;
 	};
 };
+
+void cpp_elem_clear(CppElem* elem);
 
 struct _CppFile {
 	TinyStr*	filename;

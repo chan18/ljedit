@@ -41,8 +41,8 @@
 
 #define err_goto_if_not(cond, label)  err_goto_if(!(cond), label)
 
-#define err_goto_error_if(cond)       err_goto_if(cond, __cps_error__)
-#define err_goto_error_if_not(cond)   err_goto_error_if(!(cond))
+#define err_goto_finish_if(cond)       err_goto_if(cond, __cps_finish__)
+#define err_goto_finish_if_not(cond)   err_goto_finish_if(!(cond))
 
 enum Kind { KD_CLASS = KW_CLASS
 	, KD_STRUCT = KW_STRUCT
