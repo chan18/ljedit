@@ -13,7 +13,6 @@
 
 typedef struct {
 	gint		policy;
-	CppParser*	env;
 	CppLexer*	lexer;
 	MLToken*	tokens;
 	gint		cap;
@@ -22,6 +21,7 @@ typedef struct {
 } BlockSpliter;
 
 typedef struct {
+	CppParser*	env;
 	MLToken*	tokens;
 	gsize		count;
 	gint		style;
@@ -29,8 +29,8 @@ typedef struct {
 
 typedef gboolean (*TParseFn)(Block* block, GList* scope);
 
-void spliter_init_with_text(BlockSpliter* spliter, CppParser* env, gchar* buf, gsize len, gint start_line);
-void spliter_init_with_tokens(BlockSpliter* spliter, CppParser* env, MLToken* tokens, gint count);
+void spliter_init_with_text(BlockSpliter* spliter, gchar* buf, gsize len, gint start_line);
+void spliter_init_with_tokens(BlockSpliter* spliter, MLToken* tokens, gint count);
 void spliter_final(BlockSpliter* spliter);
 TParseFn spliter_next_block(BlockSpliter* spliter, Block* block);
 

@@ -13,7 +13,7 @@
 // 
 //#define USE_COMMENT_TOKEN
 
-static MLToken* spliter_next_token(BlockSpliter* spliter, gboolean skip_comment) {
+static MLToken* spliter_next_token(BlockSpliter* spliter, CppParser* env, gboolean skip_comment) {
 	MLToken* token;
 	g_assert( spliter->pos < spliter->end );
 
@@ -27,10 +27,10 @@ static MLToken* spliter_next_token(BlockSpliter* spliter, gboolean skip_comment)
 			token = spliter->tokens + spliter->end;
 
 #ifdef USE_COMMENT_TOKEN
-			cpp_macro_lexer_next(spliter->lexer, token, &(spliter->env->macro_environ), spliter->env);
+			cpp_macro_lexer_next(spliter->lexer, token, &(env->macro_environ), env);
 #else
 			for(;;) {
-				cpp_macro_lexer_next(spliter->lexer, token, &(spliter->env->macro_environ), spliter->env);
+				cpp_macro_lexer_next(spliter->lexer, token, &(env->macro_environ), env);
 				if( token->type==TK_BLOCK_COMMENT || token->type==TK_LINE_COMMENT )
 					continue;
 				break;
@@ -44,7 +44,7 @@ static MLToken* spliter_next_token(BlockSpliter* spliter, gboolean skip_comment)
 			++(spliter->end);
 
 			if( token->type==TK_ID )
-				cpp_keywords_check(token, spliter->env->keywords_table);
+				cpp_keywords_check(token, env->keywords_table);
 			else if( skip_comment && (token->type==TK_LINE_COMMENT || token->type==TK_BLOCK_COMMENT) )
 				++(spliter->pos);
 		}
@@ -60,11 +60,11 @@ static MLToken* spliter_next_token(BlockSpliter* spliter, gboolean skip_comment)
 	return spliter->tokens + spliter->pos;
 }
 
-static gboolean spliter_skip_pair_round_brackets(BlockSpliter* spliter) {
+static gboolean spliter_skip_pair_round_brackets(BlockSpliter* spliter, CppParser* env) {
 	MLToken* token;
 	gint layer = 1;
 	while( layer > 0 ) {
-		if( (token = spliter_next_token(spliter, TRUE))==0 )
+		if( (token = spliter_next_token(spliter, env, TRUE))==0 )
 			return FALSE;
 
 		switch( token->type ) {
@@ -85,11 +85,11 @@ static gboolean spliter_skip_pair_round_brackets(BlockSpliter* spliter) {
 	return TRUE;
 }
 
-static gboolean spliter_skip_pair_angle_bracket(BlockSpliter* spliter) {
+static gboolean spliter_skip_pair_angle_bracket(BlockSpliter* spliter, CppParser* env) {
 	MLToken* token;
  	gint layer = 1;
  	while( layer > 0 ) {
-		if( (token = spliter_next_token(spliter, TRUE))==0 )
+		if( (token = spliter_next_token(spliter, env, TRUE))==0 )
 			return FALSE;
 
 		switch( token->type ) {
@@ -100,7 +100,7 @@ static gboolean spliter_skip_pair_angle_bracket(BlockSpliter* spliter) {
 			--layer;
 			break;
 		case '(':
-			spliter_skip_pair_round_brackets(spliter);
+			spliter_skip_pair_round_brackets(spliter, env);
 			break;
 		case '{':
 		case '}':
@@ -113,9 +113,8 @@ static gboolean spliter_skip_pair_angle_bracket(BlockSpliter* spliter) {
 	return TRUE;
 }
 
-void spliter_init_with_text(BlockSpliter* spliter, CppParser* env, gchar* buf, gsize len, gint start_line) {
+void spliter_init_with_text(BlockSpliter* spliter, gchar* buf, gsize len, gint start_line) {
 	spliter->policy = SPLITER_POLICY_USE_TEXT;
-	spliter->env = env;
 	spliter->tokens = 0;
 	spliter->cap = 0;
 	spliter->end = 0;
@@ -124,9 +123,8 @@ void spliter_init_with_text(BlockSpliter* spliter, CppParser* env, gchar* buf, g
 	cpp_lexer_init(spliter->lexer, buf, len, start_line);
 }
 
-void spliter_init_with_tokens(BlockSpliter* spliter, CppParser* env, MLToken* tokens, gint count) {
+void spliter_init_with_tokens(BlockSpliter* spliter, MLToken* tokens, gint count) {
 	spliter->policy = SPLITER_POLICY_USE_TOKENS;
-	spliter->env = env;
 	spliter->lexer = 0;
 	spliter->tokens = tokens;
 	spliter->cap = count;
@@ -182,7 +180,7 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 	spliter->pos = -1;
 
 	while( fn==0 ) {
-		if( (token = spliter_next_token(spliter, TRUE))==0 )
+		if( (token = spliter_next_token(spliter, block->env, TRUE))==0 )
 			return 0;
 
 		switch( token->type ) {
@@ -199,7 +197,7 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 				fn = cps_skip_block;
 			break;
 		case '<':
-			if( !spliter_skip_pair_angle_bracket(spliter) )
+			if( !spliter_skip_pair_angle_bracket(spliter, block->env) )
 				fn = cps_skip_block;
 			break;
 		case KW_EXPLICIT:	fn = cps_fun;			stop_with_blance = TRUE;	break;
@@ -208,17 +206,17 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 		case KW_NAMESPACE:	fn = &cps_namespace;	stop_with_blance = TRUE;	break;
 		case KW_TEMPLATE:
 			use_template = TRUE;
-			if( (token = spliter_next_token(spliter, TRUE))==0 )
+			if( (token = spliter_next_token(spliter, block->env, TRUE))==0 )
 				return 0;
 			else if( token->type != '>' )
 				fn = cps_skip_block;
-			else if( !spliter_skip_pair_angle_bracket(spliter) )
+			else if( !spliter_skip_pair_angle_bracket(spliter, block->env) )
 				fn = cps_skip_block;
 			break;
 		case KW_OPERATOR:	fn = use_template ? cps_template : cps_operator;	stop_with_blance = TRUE;	break;
 		case KW_EXTERN:
 			{
-				if( (token = spliter_next_token(spliter, TRUE))==0 )
+				if( (token = spliter_next_token(spliter, block->env, TRUE))==0 )
 					return 0;
 
 				switch( token->type ) {
@@ -226,7 +224,7 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 					fn = cps_extern_template;
 					break;
 				case TK_STRING:
-					if( (token = spliter_next_token(spliter, TRUE))==0 )
+					if( (token = spliter_next_token(spliter, block->env, TRUE))==0 )
 						return 0;
 
 					if( token->type=='{' ) {
@@ -243,7 +241,7 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 			{
 				gsize mark = spliter->pos;
 				while( fn==0 ) {
-					if( (token = spliter_next_token(spliter, TRUE))==0 )
+					if( (token = spliter_next_token(spliter, block->env, TRUE))==0 )
 						return 0;
 
 					switch( token->type ) {
@@ -299,7 +297,7 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 			} else if( token->type==';' ) {
 				if( layer==0 ) {
 					layer = token->line;
-					if( (token = spliter_next_token(spliter, FALSE))==0 )
+					if( (token = spliter_next_token(spliter, block->env, FALSE))==0 )
 						break;
 					if( token->type==TK_BLOCK_COMMENT || token->type==TK_LINE_COMMENT )
 						if( token->line==layer )
@@ -309,7 +307,7 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 				}
 			}
 
-			if( (token = spliter_next_token(spliter, TRUE))==0 )
+			if( (token = spliter_next_token(spliter, block->env, TRUE))==0 )
 				break;
 		}
 	}

@@ -83,15 +83,15 @@ typedef struct {
 #define CPP_NC_SCOPE \
 
 typedef struct {
-	GList*		impl;
+	GList*		scope;
 } CppNCScope;
 
 typedef struct {
-	CppNCScope	scope;
+	CppNCScope	__parent;
 } CppNamespace;
 
 typedef struct {
-	CppNCScope	scope;
+	CppNCScope	__parent;
 
 	gchar		class_type;
 	TinyStr*	nskey;
@@ -104,7 +104,7 @@ typedef struct {
 } CppEnumItem;
 
 typedef struct {
-	CppNCScope	scope;
+	CppNCScope	__parent;
 
 	TinyStr*	nskey;
 } CppEnum;
@@ -135,6 +135,7 @@ struct _CppElem {
 		CppMacroInclude	v_include;
 		CppVar			v_var;
 		CppFun			v_fun;
+		CppNCScope		v_ncscope;
 		CppNamespace	v_namespace;
 		CppClass		v_class;
 		CppEnumItem		v_enum_item;
