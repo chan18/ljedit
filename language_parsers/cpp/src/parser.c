@@ -156,11 +156,11 @@ static void __dump_block(Block* block) {
 }
 
 static void __test_spliter(CppParser* env, gchar* buf, gsize len) {
-	Block block;
+	Block block = { env };
 	TParseFn fn;
 	BlockSpliter spliter;
 
-	spliter_init_with_text(&spliter, env, buf, len, 1);
+	spliter_init_with_text(&spliter, buf, len, 1);
 
 	while( (fn = spliter_next_block(&spliter, &block)) != 0 ) {
 		__dump_block(&block);
