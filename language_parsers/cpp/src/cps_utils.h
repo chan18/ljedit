@@ -77,5 +77,7 @@ MLToken* parse_ptr_ref(MLToken* ps, MLToken* pe, gint* dt);
 MLToken* parse_id(MLToken* ps, MLToken* pe, TinyStr** ns, MLToken** name_token);
 MLToken* parse_value(MLToken* ps, MLToken* pe);
 
+void parse_scope(Block* block, GList* scope);
+
 #endif//PUSS_CPP_CPS_UTILS_H
 

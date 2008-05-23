@@ -321,10 +321,13 @@ MLToken* parse_ptr_ref(MLToken* ps, MLToken* pe, gint* dt) {
 
 MLToken* parse_id(MLToken* ps, MLToken* pe, TinyStr** ns, MLToken** name_token) {
 	ps = parse_ns(ps, pe, ns);
-	if( ps )
-		*name_token = (ps - 1);
-	else
+	if( ps ) {
+		if( name_token )
+			*name_token = (ps - 1);
+	} else {
 		err_trace("parse ns error when parse id!");
+	}
+
 	return ps;
 }
 
@@ -352,3 +355,14 @@ MLToken* parse_value(MLToken* ps, MLToken* pe) {
 	return ps;
 }
 
+void parse_scope(Block* block, GList* scope) {
+	TParseFn fn;
+	BlockSpliter spliter;
+
+	spliter_init_with_tokens(&spliter, block->env, block->tokens, block->count);
+
+	while( (fn = spliter_next_block(&spliter, &block)) != 0 )
+		fn(&block, 0);
+
+	spliter_final(&spliter);
+}
