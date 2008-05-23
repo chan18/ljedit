@@ -174,3 +174,4 @@ void cpp_parser_test(CppParser* env, gchar* buf, gsize len) {
 	//__test_lexer(env, buf, len);
 	__test_spliter(env, buf, len);
 }
+

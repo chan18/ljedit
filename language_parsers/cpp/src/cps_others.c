@@ -36,4 +36,3 @@ gboolean cps_class_or_var(Block* block, GList* scope) {
 	return TRUE;
 }
 
-
