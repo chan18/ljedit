@@ -3,7 +3,7 @@
 
 #include "cps_utils.h"
 
-gboolean cps_class(Block* block, GList* scope) {
+gboolean cps_class(Block* block, CppElem* parent) {
 	CppElem* elem = 0;
 	TinyStr* nskey = 0;
 	MLToken* name = 0;

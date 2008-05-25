@@ -148,10 +148,10 @@ struct _CppElem {
 void cpp_elem_clear(CppElem* elem);
 
 struct _CppFile {
+	int			ref_count;
 	TinyStr*	filename;
 	time_t		datetime;
-	GList*		elems;
-	int			ref_count;
+	CppElem		root_scope;
 };
 
 #endif//PUSS_CPP_DS_H

@@ -3,7 +3,7 @@
 
 #include "cps_utils.h"
 
-gboolean cps_var(Block* block, GList* scope) {
+gboolean cps_var(Block* block, CppElem* parent) {
 	gboolean retval = FALSE;
 	gboolean need_parse_next = TRUE;
 	CppElem* elem = 0;

@@ -27,7 +27,7 @@ typedef struct {
 	gint		style;
 } Block;
 
-typedef gboolean (*TParseFn)(Block* block, GList* scope);
+typedef gboolean (*TParseFn)(Block* block, CppElem* parent);
 
 void spliter_init_with_text(BlockSpliter* spliter, gchar* buf, gsize len, gint start_line);
 void spliter_init_with_tokens(BlockSpliter* spliter, MLToken* tokens, gint count);

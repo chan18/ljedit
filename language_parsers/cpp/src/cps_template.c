@@ -27,7 +27,7 @@ MLToken* parse_template_arg_value(MLToken* ps, MLToken* pe) {
 
 #define TEMPLATE_ARGS_MAX 128
 
-gboolean cps_template(Block* block, GList* scope) {
+gboolean cps_template(Block* block, CppElem* parent) {
 	Template* tmpl;
 	gint i;
 	gint targc = 0;
@@ -93,7 +93,7 @@ gboolean cps_template(Block* block, GList* scope) {
 			g_free(targv[i].name);
 			g_free(targv[i].value);
 		}
-		return cps_template(&subblock, scope);
+		return cps_template(&subblock, parent);
 	}
 
 	// TODO : use template parse next
@@ -110,7 +110,7 @@ __cps_finish__:
 	return TRUE;
 }
 
-gboolean cps_extern_template(Block* block, GList* scope) {
+gboolean cps_extern_template(Block* block, CppElem* parent) {
 	// ignore
 
 	return TRUE;

@@ -4,15 +4,15 @@
 #include "cps_utils.h"
 
 
-gboolean cps_fun(Block* block, GList* scope) {
+gboolean cps_fun(Block* block, CppElem* parent) {
 	return TRUE;
 }
 
-gboolean cps_operator(Block* block, GList* scope) {
+gboolean cps_operator(Block* block, CppElem* parent) {
 	return TRUE;
 }
 
-gboolean cps_destruct(Block* block, GList* scope) {
+gboolean cps_destruct(Block* block, CppElem* parent) {
 	return TRUE;
 }
 

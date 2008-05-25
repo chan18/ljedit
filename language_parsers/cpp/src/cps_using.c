@@ -3,7 +3,7 @@
 
 #include "cps_utils.h"
 
-gboolean cps_using(Block* block, GList* scope) {
+gboolean cps_using(Block* block, CppElem* parent) {
 	gboolean isns = FALSE;
 	TinyStr* nskey = 0;
 	MLToken* name;

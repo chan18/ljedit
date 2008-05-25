@@ -3,7 +3,7 @@
 
 #include "cps_utils.h"
 
-gboolean cps_namespace(Block* block, GList* scope) {
+gboolean cps_namespace(Block* block, CppElem* parent) {
 	return TRUE;
 }
 

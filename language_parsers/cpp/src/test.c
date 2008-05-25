@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
 		GTimer* timer;
 		gdouble used;
 
-		#define n 500
+		#define n 5000
 		timer = g_timer_new();
 		for(i=0; i<n; ++i)
 			cpp_parser_test(&env, buf, len);

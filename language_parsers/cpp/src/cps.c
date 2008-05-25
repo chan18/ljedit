@@ -145,25 +145,25 @@ void spliter_final(BlockSpliter* spliter) {
 
 // cps
 // 
-gboolean cps_var(Block* block, GList* scope);
-gboolean cps_fun(Block* block, GList* scope);
-gboolean cps_using(Block* block, GList* scope);
-gboolean cps_namespace(Block* block, GList* scope);
-gboolean cps_typedef(Block* block, GList* scope);
-gboolean cps_template(Block* block, GList* scope);
-gboolean cps_destruct(Block* block, GList* scope);
-gboolean cps_operator(Block* block, GList* scope);
-gboolean cps_extern_template(Block* block, GList* scope);
-gboolean cps_extern_scope(Block* block, GList* scope);
-gboolean cps_class(Block* block, GList* scope);
-gboolean cps_enum(Block* block, GList* scope);
-gboolean cps_block(Block* block, GList* scope);
-gboolean cps_impl_block(Block* block, GList* scope);
-gboolean cps_label(Block* block, GList* scope);
-gboolean cps_fun_or_var(Block* block, GList* scope);
-gboolean cps_breakout_block(Block* block, GList* scope);
-gboolean cps_skip_block(Block* block, GList* scope);
-gboolean cps_class_or_var(Block* block, GList* scope);
+gboolean cps_var(Block* block, CppElem* parent);
+gboolean cps_fun(Block* block, CppElem* parent);
+gboolean cps_using(Block* block, CppElem* parent);
+gboolean cps_namespace(Block* block, CppElem* parent);
+gboolean cps_typedef(Block* block, CppElem* parent);
+gboolean cps_template(Block* block, CppElem* parent);
+gboolean cps_destruct(Block* block, CppElem* parent);
+gboolean cps_operator(Block* block, CppElem* parent);
+gboolean cps_extern_template(Block* block, CppElem* parent);
+gboolean cps_extern_scope(Block* block, CppElem* parent);
+gboolean cps_class(Block* block, CppElem* parent);
+gboolean cps_enum(Block* block, CppElem* parent);
+gboolean cps_block(Block* block, CppElem* parent);
+gboolean cps_impl_block(Block* block, CppElem* parent);
+gboolean cps_label(Block* block, CppElem* parent);
+gboolean cps_fun_or_var(Block* block, CppElem* parent);
+gboolean cps_breakout_block(Block* block, CppElem* parent);
+gboolean cps_skip_block(Block* block, CppElem* parent);
+gboolean cps_class_or_var(Block* block, CppElem* parent);
 
 
 TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {

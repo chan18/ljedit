@@ -355,7 +355,7 @@ MLToken* parse_value(MLToken* ps, MLToken* pe) {
 	return ps;
 }
 
-void parse_scope(Block* block, GList* scope) {
+void parse_scope(Block* block, CppElem* parent) {
 	TParseFn fn;
 	BlockSpliter spliter;
 
