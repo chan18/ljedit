@@ -67,7 +67,7 @@ __cps_finish__:
 
 static gboolean cps_complex_typedef(Block* block, CppElem* parent) {
 	// typedef struct { ... } T, *PT;
-	TinyStr* typekey;
+	TinyStr* str;
 	MLToken* name;
 	CppElem* elem = 0;
 	CppElem tpscope;
@@ -75,7 +75,7 @@ static gboolean cps_complex_typedef(Block* block, CppElem* parent) {
 
 	MLToken* ps = block->tokens;
 	MLToken* pe = ps + block->count;
-	err_goto_finish_if_not( (ps < pe) && ps->type==KW_TYPEDEF );
+	err_return_false_if_not( (ps < pe) && ps->type==KW_TYPEDEF );
 	++ps;
 
 	memset( &tpscope, 0, sizeof(tpscope) );
@@ -101,21 +101,36 @@ static gboolean cps_complex_typedef(Block* block, CppElem* parent) {
 		node->data = 0;
 		err_goto_finish_if( elem->type != CPP_ET_VAR );
 
-		/*
-		// TODO :
+		str = elem->v_var.typekey;
+		g_free(elem->v_var.nskey);
+		
 		elem->type = CPP_ET_TYPEDEF;
+		elem->v_typedef.typekey = str;
 
-		Typedef* p = create_element<Typedef>(lexer, var.name);
-		p->typekey.swap(var.typekey);
-		p->decl = "typedef ";
-		p->decl.append(var.decl);
+		str = elem->decl;
+		elem->decl = tiny_str_new(0, 8 + str->len);
+		memcpy(elem->decl->buf, "typedef ", 8);
+		memcpy(elem->decl->buf + 8, str->buf, str->len);
+		g_free(str);
 
-		scope_insert(scope, p);
-		*/
+		//scope_insert(scope, p);
+		{
+			cpp_elem_clear(elem);
+			g_free(elem);
+		}
 	}
 
 __cps_finish__:
-	g_free(typekey);
+	node = tpscope.v_ncscope.scope;
+	for( ; node; node = g_list_next(node) ) {
+		elem = (CppElem*)(node->data);
+		if( !elem )
+			continue;
+
+		cpp_elem_clear(elem);
+		g_free(elem);
+	}
+
 	return TRUE;
 }
 

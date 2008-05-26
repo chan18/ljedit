@@ -651,7 +651,19 @@ gboolean puss_doc_close_all() {
 	return TRUE;
 }
 
+gboolean doc_mtime_check(gpointer tag) {
+	GtkTextBuffer* buf = doc_get_current_buffer();
+	if( buf ) {
+		GString* url = puss_doc_get_url(buf);
+		if( url ) {
+			// TODO : check mtime
+		}
+	}
+	return TRUE;
+}
+
 gboolean puss_doc_manager_create() {
+	g_timeout_add(3000, (GSourceFunc)doc_mtime_check, 0);
 	return TRUE;
 }
 

@@ -7,7 +7,8 @@
 TinyStr* tiny_str_new(gchar* buf, gshort len) {
 	TinyStr* res = (TinyStr*)g_new(gchar, (sizeof(TinyStr) + len));
 	res->len = len;
-	memcpy(res->buf, buf, len);
+	if( buf )
+		memcpy(res->buf, buf, len);
 	res->buf[len] = '\0';
 	return res;
 }
