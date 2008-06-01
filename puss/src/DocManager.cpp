@@ -1,6 +1,9 @@
 // DocManager.cpp
 // 
 
+// TODO : use gio!!!!
+// 
+
 #include "DocManager.h"
 
 #ifdef G_OS_WIN32
@@ -10,6 +13,9 @@
 #include <gtksourceview/gtksourceview.h>
 #include <gtksourceview/gtksourceiter.h>
 #include <gtksourceview/gtksourcestyleschememanager.h>
+
+#include <gio/gio.h>
+
 #include <string.h>
 
 #include "Puss.h"
@@ -20,6 +26,22 @@
 
 void __free_g_string( GString* gstr ) {
 	g_string_free(gstr, TRUE);
+} 
+
+gboolean doc_file_get_mtime(gchar* url, GTimeVal* val) {
+	gboolean result = FALSE;
+	GFile* file = g_file_new_for_path(url);
+	if( file ) {
+		GFileInfo* info = g_file_query_info(file, G_FILE_ATTRIBUTE_STANDARD_TYPE","G_FILE_ATTRIBUTE_TIME_MODIFIED","G_FILE_ATTRIBUTE_TIME_MODIFIED_USEC, G_FILE_QUERY_INFO_NONE, 0, 0);
+		if( info ) {
+			g_file_info_get_modification_time(info, val);
+			result = TRUE;
+			g_object_unref(info);
+		}
+		g_object_unref(file);
+	}
+
+	return result;
 }
 
 gboolean doc_close_page( gint page_num );
@@ -225,6 +247,11 @@ gint doc_open_file( const gchar* filename, gint line, gint line_offset, gboolean
 			puss_doc_set_url(GTK_TEXT_BUFFER(buf), url);
 			puss_doc_set_charset(GTK_TEXT_BUFFER(buf), charset);
 
+			// save mtime
+			GTimeVal mtime;
+			if( doc_file_get_mtime(url, &mtime) )
+				g_object_set_data_full(G_OBJECT(buf), "__mtime__", g_memdup(&mtime, sizeof(mtime)), g_free);
+
 			// select highlight language
 			gtk_source_buffer_set_language(buf, puss_glob_get_language_by_filename(url));
 
@@ -296,6 +323,14 @@ gboolean doc_save_file( GtkTextBuffer* buf, GError** err ) {
 		return FALSE;
 
 	gtk_text_buffer_set_modified(buf, FALSE);
+
+	GTimeVal mtime;
+	if( doc_file_get_mtime(url->str, &mtime) ) {
+		GTimeVal* ptr = (GTimeVal*)g_object_get_data(G_OBJECT(buf), "__mtime__");
+		if( ptr )
+			*ptr = mtime;
+	}
+
 	return TRUE;
 }
 
@@ -652,18 +687,69 @@ gboolean puss_doc_close_all() {
 }
 
 gboolean doc_mtime_check(gpointer tag) {
+	if( !gtk_window_is_active(puss_app->main_window) )
+		return TRUE;
+
 	GtkTextBuffer* buf = doc_get_current_buffer();
-	if( buf ) {
-		GString* url = puss_doc_get_url(buf);
-		if( url ) {
-			// TODO : check mtime
+	if( !buf )
+		return TRUE;
+
+	GString* url = puss_doc_get_url(buf);
+	if( !url )
+		return TRUE;
+
+	GTimeVal mtime_new;
+	if( !doc_file_get_mtime(url->str, &mtime_new) )
+		return TRUE;
+
+	GTimeVal* mtime_old = (GTimeVal*)g_object_get_data(G_OBJECT(buf), "__mtime__");
+	if( !mtime_old )
+		return TRUE;
+
+	if( mtime_old->tv_sec==mtime_new.tv_sec && mtime_old->tv_usec==mtime_new.tv_usec)
+		return TRUE;
+
+	*mtime_old = mtime_new;
+
+	// query if use new file!
+	{
+		GtkWidget* dlg = gtk_message_dialog_new( puss_app->main_window
+			, GTK_DIALOG_MODAL
+			, GTK_MESSAGE_QUESTION
+			, GTK_BUTTONS_YES_NO
+			, "file modified outside, reload it?" );
+
+		gtk_dialog_set_default_response(GTK_DIALOG(dlg), GTK_RESPONSE_YES);
+
+		gint res = gtk_dialog_run(GTK_DIALOG(dlg));
+		gtk_widget_destroy(dlg);
+
+		if( res!=GTK_RESPONSE_YES )
+			return TRUE;
+	}
+
+	{
+		gchar* text = 0;
+		gsize len = 0;
+		const gchar* charset = 0;
+
+		if( puss_load_file(url->str, &text, &len, &charset) ) {
+			gtk_source_buffer_begin_not_undoable_action(GTK_SOURCE_BUFFER(buf));
+			gtk_text_buffer_set_text(buf, text, len);
+			gtk_source_buffer_end_not_undoable_action(GTK_SOURCE_BUFFER(buf));
+			gtk_text_buffer_set_modified(buf, FALSE);
+			g_free(text);
+
+			// save charset
+			puss_doc_set_charset(GTK_TEXT_BUFFER(buf), charset);
 		}
 	}
+
 	return TRUE;
 }
 
 gboolean puss_doc_manager_create() {
-	g_timeout_add(3000, (GSourceFunc)doc_mtime_check, 0);
+	g_timeout_add(2000, (GSourceFunc)doc_mtime_check, 0);
 	return TRUE;
 }
 
