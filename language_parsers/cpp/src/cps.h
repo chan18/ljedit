@@ -8,6 +8,10 @@
 #define BLOCK_STYLE_LINE	0
 #define BLOCK_STYLE_BLOCK	1
 
+#define BLOCK_SCOPE_PUBLIC		0
+#define BLOCK_SCOPE_PROTECTED	1
+#define BLOCK_SCOPE_PRIVATE		2
+
 #define SPLITER_POLICY_USE_TEXT		0
 #define SPLITER_POLICY_USE_TOKENS	1
 
@@ -25,6 +29,7 @@ typedef struct {
 	MLToken*	tokens;
 	gsize		count;
 	gint		style;
+	gint		scope;
 } Block;
 
 typedef gboolean (*TParseFn)(Block* block, CppElem* parent);

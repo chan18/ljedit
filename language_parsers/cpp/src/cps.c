@@ -165,6 +165,56 @@ gboolean cps_breakout_block(Block* block, CppElem* parent);
 gboolean cps_skip_block(Block* block, CppElem* parent);
 gboolean cps_class_or_var(Block* block, CppElem* parent);
 
+gboolean cps_fun_or_var(Block* block, CppElem* parent) {
+	if( block->style==BLOCK_STYLE_BLOCK )
+		return cps_fun(block, parent);
+
+	// TODO :
+	/*
+	Scope tmp;
+	try {
+		parse_function(lexer, tmp);
+		scope_insert_elems(scope, tmp.elems);
+		tmp.elems.clear();
+
+	} catch(ParseError&) {
+		parse_trace("ingore parse_function, use parse_var!");
+#ifdef SHOW_PARSE_DEBUG_INFOS
+	std::cerr << "    FilePos  : " << lexer.block().filename() << ':' << lexer.block().start_line() << std::endl;
+	std::cerr << "    ";	lexer.block().dump(std::cerr) << std::endl;
+#endif
+		lexer.reset();
+		parse_var(lexer, scope);
+	}
+	return TRUE;
+	*/
+	return cps_fun(block, parent);
+}
+
+gboolean cps_class_or_var(Block* block, CppElem* parent) {
+	/*
+	Scope tmp;
+	try {
+		parse_class(lexer, tmp);
+		scope_insert_elems(scope, tmp.elems);
+		tmp.elems.clear();
+
+	} catch(ParseError&) {
+		parse_trace("ingore parse_class, use parse_var!");
+#ifdef SHOW_PARSE_DEBUG_INFOS
+		std::cerr << "    FilePos  : " << lexer.block().filename() << ':' << lexer.block().start_line() << std::endl;
+		std::cerr << "    ";	lexer.block().dump(std::cerr) << std::endl;
+#endif
+		lexer.reset();
+		parse_var(lexer, scope);
+	}
+	*/
+	return TRUE;
+}
+
+// break-out sign
+// 
+gboolean CPS_BREAK_OUT_BLOCK(Block* block, CppElem* parent) { return TRUE; }
 
 TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 	MLToken* token;
@@ -188,7 +238,7 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 		case '=':	fn = cps_var;				break;
 		case '~':	fn = cps_destruct;			stop_with_blance = TRUE;	break;
 		case '{':	fn = cps_block;				stop_with_blance = TRUE;	break;
-		case '}':	fn = cps_breakout_block;	stop_with_blance = TRUE;	break;
+		case '}':	fn = CPS_BREAK_OUT_BLOCK;	stop_with_blance = TRUE;	break;
 		case '(':	fn = use_template ? &cps_template : cps_fun_or_var;	stop_with_blance = TRUE;	break;
 		case ':':
 			if( spliter->pos==1 )
@@ -317,5 +367,24 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 	block->count = spliter->pos;
 
 	return fn;
+}
+
+void parse_scope(Block* block, CppElem* parent) {
+	TParseFn fn;
+	BlockSpliter spliter;
+
+	spliter_init_with_tokens(&spliter, block->tokens, block->count);
+
+	while( (fn = spliter_next_block(&spliter, block)) != 0 ) {
+		if( fn==CPS_BREAK_OUT_BLOCK )
+			break;
+
+		(*fn)(block, 0);
+	}
+
+	spliter_final(&spliter);
+}
+
+void parse_impl_scope(Block* block, CppElem* parent) {
 }
 

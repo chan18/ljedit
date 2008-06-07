@@ -355,15 +355,3 @@ MLToken* parse_value(MLToken* ps, MLToken* pe) {
 	return ps;
 }
 
-void parse_scope(Block* block, CppElem* parent) {
-	TParseFn fn;
-	BlockSpliter spliter;
-
-	spliter_init_with_tokens(&spliter, block->tokens, block->count);
-
-	while( (fn = spliter_next_block(&spliter, block)) != 0 )
-		(*fn)(block, 0);
-
-	spliter_final(&spliter);
-}
-

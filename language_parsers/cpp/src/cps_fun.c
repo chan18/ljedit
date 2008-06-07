@@ -1,6 +1,11 @@
 // cps_fun.c
 // 
 
+// TODO : not finished!!!! moreeeeeeeeeeeeeee bugsssssss!!!
+// 
+
+
+
 #include "cps_utils.h"
 
 
@@ -115,9 +120,9 @@ __cps_finish__:
 	return retval;
 }
 
-static gboolean parse_function_common(Block* block, CppElem* parent, TinyStr* typekey, TinyStr* nskey, MLToken* name) {
-	MLToken* ps = block->tokens;
-	MLToken* pe = ps + block->count;
+static gboolean parse_function_common(Block* block, CppElem* parent, MLToken* start, TinyStr* typekey, TinyStr* nskey, MLToken* name) {
+	MLToken* ps = start;
+	MLToken* pe = block->tokens + block->count;
 	CppElem* elem = g_new0(CppElem, 1);
 	elem->type = CPP_ET_FUN;
 	elem->v_fun.typekey = typekey;
@@ -165,14 +170,112 @@ __cps_finish__:
 }
 
 gboolean cps_fun(Block* block, CppElem* parent) {
-	return TRUE;
+	MLToken* ps = block->tokens;
+	MLToken* pe = ps + block->count;
+	TinyStr* typekey = 0;
+	gint dt = KD_UNK;
+	gint prdt = KD_UNK;
+	TinyStr* nskey = 0;
+	MLToken* name;
+
+	err_return_false_if( (ps = parse_function_prefix(ps, pe))==0 );
+
+	err_return_false_if( (ps = parse_datatype(ps, pe, &typekey, &dt))==0 );
+
+	prdt = dt;
+	err_return_false_if( (ps = parse_ptr_ref(ps, pe, &prdt))==0 );
+
+	err_return_false_if_not( ps < pe );
+	if( ps->type=='(' ) {
+		// try parse function pointer
+		MLToken* fptrypos = ps;
+		err_return_false_if_not( (++ps) < pe );
+
+		while( ps->type==TK_ID ) {
+			err_return_false_if_not( (++ps) < pe );
+			if( ps->type=='<' )
+				err_return_false_if( (ps = skip_pair_angle_bracket(ps+1, pe))==0 );
+
+			err_return_false_if_not( ps < pe );
+			if( ps->type!=SG_DBL_COLON ) {
+				ps = fptrypos;
+				break;
+			}
+		}
+
+		if( ps->type=='*' && ((ps+1) < pe) && ((ps+1)->type==TK_ID) ) {
+			// function pointer
+			name = ++ps;
+
+			++ps;
+			err_return_false_if_not( (ps < pe) && (ps->type==')') );
+			++ps;
+	
+		} else {
+			// no return type function
+			err_return_false_if( typekey==0 || typekey->len==0 );
+
+			if( parent->type==CPP_ET_CLASS ) {
+				name = ps;
+
+			} else {
+				name = ps;
+				// TODO :
+				/*
+				size_t pos = ns.find('.');
+				if( pos==ns.npos )
+					throw_parse_error("Error when parse_function!");
+
+				name = ns.substr(pos+1);
+				ns.erase(pos);
+				*/
+			}
+
+			/*
+			if( name==ns ) {
+				// constructor
+
+			} else if( ns.size()==(name.size() + 1) && ns[0]=='~' && ns.compare(1, ns.size()-1, name)==0 ) {
+				// destructor
+
+			} else {
+				throw_parse_error("Error when parse_function!");
+			}
+			*/
+
+			ps = fptrypos;
+		}
+
+	} else {
+		// normal function
+		err_return_false_if( (ps = parse_id(ps, pe, &nskey, &name))==0 );
+	}
+
+	return parse_function_common(block, parent, ps, typekey, nskey, name);
 }
 
 gboolean cps_operator(Block* block, CppElem* parent) {
+	if( !cps_fun(block, parent) ) {
+		err_trace("parse operator function failed!");
+		return FALSE;
+	}
 	return TRUE;
 }
 
 gboolean cps_destruct(Block* block, CppElem* parent) {
+	MLToken* ps = block->tokens;
+	MLToken* pe = ps + block->count;
+	TinyStr* nskey = 0;
+	MLToken* name;
+
+	err_return_false_if( (ps = parse_function_prefix(ps, pe))==0 );
+
+	err_return_false_if( (ps = parse_id(ps, pe, &nskey, &name))==0 );
+
+	if( !parse_function_common(block, parent, ps, 0, nskey, name) ) {
+		err_trace("parse destruct function failed!");
+		return FALSE;
+	}
 	return TRUE;
 }
 
