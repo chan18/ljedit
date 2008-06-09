@@ -138,6 +138,13 @@ void doc_reset_page_label(GtkTextBuffer* buf, GtkLabel* label) {
 	g_free(text);
 }
 
+gboolean doc_cb_button_release_on_view(GtkWidget* widget, GdkEventButton *event) {
+	if( event->button==1 )
+		puss_pos_locate_add_current_pos();
+
+	return FALSE;
+}
+
 gboolean doc_cb_button_release_on_label(GtkWidget* widget, GdkEventButton *event) {
 	if( event->button==2 ) {
 		gint count = gtk_notebook_get_n_pages(puss_app->doc_panel);
@@ -176,6 +183,9 @@ gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 	gtk_source_view_set_show_right_margin(view, TRUE);
 	gtk_source_view_set_tab_width(view, 4);
 
+	gtk_text_view_set_left_margin(GTK_TEXT_VIEW(view), 3);
+	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(view), GTK_WRAP_NONE);
+
 	const Option* font_option = puss_option_manager_find("puss", "editor.font");
 	if( font_option && font_option->value) {
 		PangoFontDescription* desc = pango_font_description_from_string(font_option->value);
@@ -196,6 +206,8 @@ gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 	label = GTK_LABEL(gtk_label_new(0));
 	doc_reset_page_label(GTK_TEXT_BUFFER(buf), label);
 	g_signal_connect(buf, "modified-changed", G_CALLBACK(&doc_reset_page_label), label);
+
+	g_signal_connect(view, "button-release-event", G_CALLBACK(&doc_cb_button_release_on_view), 0);
 
 	tab = gtk_event_box_new();
 	gtk_event_box_set_visible_window(GTK_EVENT_BOX(tab), FALSE);
