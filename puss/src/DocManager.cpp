@@ -28,13 +28,16 @@ void __free_g_string( GString* gstr ) {
 	g_string_free(gstr, TRUE);
 } 
 
-gboolean doc_file_get_mtime(gchar* url, GTimeVal* val) {
+gboolean doc_file_get_mtime(gchar* url, GTimeVal* val, goffset* sz) {
 	gboolean result = FALSE;
 	GFile* file = g_file_new_for_path(url);
 	if( file ) {
-		GFileInfo* info = g_file_query_info(file, G_FILE_ATTRIBUTE_STANDARD_TYPE","G_FILE_ATTRIBUTE_TIME_MODIFIED","G_FILE_ATTRIBUTE_TIME_MODIFIED_USEC, G_FILE_QUERY_INFO_NONE, 0, 0);
+		GFileInfo* info = g_file_query_info(file
+			, G_FILE_ATTRIBUTE_STANDARD_TYPE","G_FILE_ATTRIBUTE_STANDARD_SIZE","G_FILE_ATTRIBUTE_TIME_MODIFIED","G_FILE_ATTRIBUTE_TIME_MODIFIED_USEC
+			, G_FILE_QUERY_INFO_NONE, 0, 0);
 		if( info ) {
 			g_file_info_get_modification_time(info, val);
+			*sz = g_file_info_get_size(info);
 			result = TRUE;
 			g_object_unref(info);
 		}
@@ -261,8 +264,11 @@ gint doc_open_file( const gchar* filename, gint line, gint line_offset, gboolean
 
 			// save mtime
 			GTimeVal mtime;
-			if( doc_file_get_mtime(url, &mtime) )
+			goffset  sz;
+			if( doc_file_get_mtime(url, &mtime, &sz) ) {
 				g_object_set_data_full(G_OBJECT(buf), "__mtime__", g_memdup(&mtime, sizeof(mtime)), g_free);
+				g_object_set_data_full(G_OBJECT(buf), "__size__", g_memdup(&sz, sizeof(sz)), g_free);
+			}
 
 			// select highlight language
 			gtk_source_buffer_set_language(buf, puss_glob_get_language_by_filename(url));
@@ -337,10 +343,19 @@ gboolean doc_save_file( GtkTextBuffer* buf, GError** err ) {
 	gtk_text_buffer_set_modified(buf, FALSE);
 
 	GTimeVal mtime;
-	if( doc_file_get_mtime(url->str, &mtime) ) {
-		GTimeVal* ptr = (GTimeVal*)g_object_get_data(G_OBJECT(buf), "__mtime__");
-		if( ptr )
-			*ptr = mtime;
+	goffset  sz;
+	if( doc_file_get_mtime(url->str, &mtime, &sz) ) {
+		GTimeVal* mtime_ptr = (GTimeVal*)g_object_get_data(G_OBJECT(buf), "__mtime__");
+		if( mtime_ptr )
+			*mtime_ptr = mtime;
+		else
+			g_object_set_data_full(G_OBJECT(buf), "__mtime__", g_memdup(&mtime, sizeof(mtime)), g_free);
+
+		goffset* sz_ptr = (goffset*)g_object_get_data(G_OBJECT(buf), "__size__");
+		if( sz_ptr )
+			*sz_ptr = sz;
+		else
+			g_object_set_data_full(G_OBJECT(buf), "__size__", g_memdup(&sz, sizeof(sz)), g_free);
 	}
 
 	return TRUE;
@@ -711,17 +726,20 @@ gboolean doc_mtime_check(gpointer tag) {
 		return TRUE;
 
 	GTimeVal mtime_new;
-	if( !doc_file_get_mtime(url->str, &mtime_new) )
+	goffset sz_new;
+	if( !doc_file_get_mtime(url->str, &mtime_new, &sz_new) )
 		return TRUE;
 
 	GTimeVal* mtime_old = (GTimeVal*)g_object_get_data(G_OBJECT(buf), "__mtime__");
-	if( !mtime_old )
+	goffset* sz_old = (goffset*)g_object_get_data(G_OBJECT(buf), "__size__");
+	if( !mtime_old || !sz_new )
 		return TRUE;
 
-	if( mtime_old->tv_sec==mtime_new.tv_sec && mtime_old->tv_usec==mtime_new.tv_usec)
+	if( mtime_old->tv_sec==mtime_new.tv_sec && mtime_old->tv_usec==mtime_new.tv_usec && *sz_old==sz_new )
 		return TRUE;
 
 	*mtime_old = mtime_new;
+	*sz_old = sz_new;
 
 	// query if use new file!
 	{
@@ -761,7 +779,7 @@ gboolean doc_mtime_check(gpointer tag) {
 }
 
 gboolean puss_doc_manager_create() {
-	g_timeout_add(2000, (GSourceFunc)doc_mtime_check, 0);
+	g_timeout_add(1000, (GSourceFunc)doc_mtime_check, 0);
 	return TRUE;
 }
 

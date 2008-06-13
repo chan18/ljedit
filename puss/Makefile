@@ -27,6 +27,7 @@ CXXFLAGS += `pkg-config --cflags gtksourceview-2.0`
 
 LIBS += `pkg-config --libs gtksourceview-2.0` \
 		`pkg-config --libs gmodule-2.0` \
+		`pkg-config --libs gio-2.0` \
 		`pkg-config --libs gthread-2.0`
 
 # project
