@@ -39,7 +39,7 @@
 		err_goto(#cond, label); \
 	}
 
-#define err_goto_if_not(cond, label)  err_goto_if(!(cond), label)
+#define err_goto_if_not(cond, label)   err_goto_if(!(cond), label)
 
 #define err_goto_finish_if(cond)       err_goto_if(cond, __cps_finish__)
 #define err_goto_finish_if_not(cond)   err_goto_finish_if(!(cond))
@@ -76,9 +76,6 @@ MLToken* parse_datatype(MLToken* ps, MLToken* pe, TinyStr** ns, gint* dt);
 MLToken* parse_ptr_ref(MLToken* ps, MLToken* pe, gint* dt);
 MLToken* parse_id(MLToken* ps, MLToken* pe, TinyStr** ns, MLToken** name_token);
 MLToken* parse_value(MLToken* ps, MLToken* pe);
-
-void parse_scope(Block* block, CppElem* parent);
-void parse_impl_scope(Block* block, CppElem* parent);
 
 #endif//PUSS_CPP_CPS_UTILS_H
 

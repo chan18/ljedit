@@ -7,6 +7,40 @@
 #include "cps.h"
 
 
+static void __dump_block(Block* block) {
+	gchar ch;
+	gsize i;
+	MLToken* token;
+	for( i=0; i<block->count; ++i ) {
+		token = block->tokens + i;
+
+		switch( token->type ) {
+		case TK_LINE_COMMENT:
+		case TK_BLOCK_COMMENT:
+		case '{':
+		case '}':
+			//g_print("\n");
+			break;
+		}
+
+		ch = token->buf[token->len];
+		token->buf[token->len] = '\0';
+		g_print("%s ", token->buf);
+		token->buf[token->len] = ch;
+
+		switch( token->type ) {
+		case TK_LINE_COMMENT:
+		case TK_BLOCK_COMMENT:
+		case '{':
+		case '}':
+		case ';':
+			//g_print("\n");
+			break;
+		}
+	}
+	g_print("\n--------------------------------------------------------\n");
+}
+
 static inline void mlstr_cpy(MLStr* dst, MLStr* src) {
 	if( src->buf ) {
 		gchar ch = src->buf[src->len];
@@ -88,93 +122,30 @@ void cpp_parser_final(CppParser* env) {
 	cpp_keywords_table_free(env->keywords_table);
 }
 
-CppFile* cpp_parser_parse(CppParser* env, gchar* buf, gsize len) {
-	return 0;
-}
-
-
-static void __test_lexer(CppParser* env, gchar* buf, gsize len) {
-	gchar ch;
-	gint count;
-
-	MLToken token;
-	CppLexer lexer;
-
-	count = 0;
-	cpp_lexer_init(&lexer, buf, len, 1);
-	for(;;) {
-		++count;
-		//cpp_lexer_next(&lexer, &token);
-		cpp_macro_lexer_next(&lexer, &token, &(env->macro_environ), env);
-		if( token.type==TK_EOF ) {
-			//g_print("token number : %d\n", count);
-			break;
-		} else if( token.type==TK_ID ) {
-			cpp_keywords_check(&token, env->keywords_table);
-		}
-
-		ch = token.buf[token.len];
-		token.buf[token.len] = '\0';
-		g_print("%d - %s\n", token.type, token.buf);
-		token.buf[token.len] = ch;
-	}
-	cpp_lexer_final(&lexer);
-}
-
-static void __dump_block(Block* block) {
-	gchar ch;
-	gsize i;
-	MLToken* token;
-	for( i=0; i<block->count; ++i ) {
-		token = block->tokens + i;
-
-		switch( token->type ) {
-		case TK_LINE_COMMENT:
-		case TK_BLOCK_COMMENT:
-		case '{':
-		case '}':
-			//g_print("\n");
-			break;
-		}
-
-		ch = token->buf[token->len];
-		token->buf[token->len] = '\0';
-		g_print("%s ", token->buf);
-		token->buf[token->len] = ch;
-
-		switch( token->type ) {
-		case TK_LINE_COMMENT:
-		case TK_BLOCK_COMMENT:
-		case '{':
-		case '}':
-		case ';':
-			//g_print("\n");
-			break;
-		}
-	}
-	g_print("\n--------------------------------------------------------\n");
-}
-
-static void __test_spliter(CppParser* env, gchar* buf, gsize len) {
+CppFile* cpp_parser_parse(CppParser* env, gchar* filename_buf, gsize filename_len, gchar* buf, gsize len) {
 	CppFile* file;
-	Block block = { env };
+	Block block;
 	TParseFn fn;
 	BlockSpliter spliter;
 
 	file = g_new0(CppFile, 1);
+	file->ref_count = 1;
+	file->filename = tiny_str_new(filename_buf, filename_len);
+	file->root_scope.type = CPP_ET_NCSCOPE;
+	file->root_scope.file = file;
+
 	spliter_init_with_text(&spliter, buf, len, 1);
 
+	memset(&block, 0, sizeof(block));
+	block.env = env;
+
 	while( (fn = spliter_next_block(&spliter, &block)) != 0 ) {
-		__dump_block(&block);
+		// __dump_block(&block);
 		fn(&block, &(file->root_scope));
 	}
 
 	spliter_final(&spliter);
-	g_free(file);
-}
 
-void cpp_parser_test(CppParser* env, gchar* buf, gsize len) {
-	//__test_lexer(env, buf, len);
-	__test_spliter(env, buf, len);
+	return file;
 }
 

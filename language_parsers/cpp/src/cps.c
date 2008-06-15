@@ -166,49 +166,16 @@ gboolean cps_skip_block(Block* block, CppElem* parent);
 gboolean cps_class_or_var(Block* block, CppElem* parent);
 
 gboolean cps_fun_or_var(Block* block, CppElem* parent) {
-	if( block->style==BLOCK_STYLE_BLOCK )
-		return cps_fun(block, parent);
+	if( !cps_fun(block, parent) )
+		return cps_var(block, parent);
 
-	// TODO :
-	/*
-	Scope tmp;
-	try {
-		parse_function(lexer, tmp);
-		scope_insert_elems(scope, tmp.elems);
-		tmp.elems.clear();
-
-	} catch(ParseError&) {
-		parse_trace("ingore parse_function, use parse_var!");
-#ifdef SHOW_PARSE_DEBUG_INFOS
-	std::cerr << "    FilePos  : " << lexer.block().filename() << ':' << lexer.block().start_line() << std::endl;
-	std::cerr << "    ";	lexer.block().dump(std::cerr) << std::endl;
-#endif
-		lexer.reset();
-		parse_var(lexer, scope);
-	}
 	return TRUE;
-	*/
-	return cps_fun(block, parent);
 }
 
 gboolean cps_class_or_var(Block* block, CppElem* parent) {
-	/*
-	Scope tmp;
-	try {
-		parse_class(lexer, tmp);
-		scope_insert_elems(scope, tmp.elems);
-		tmp.elems.clear();
+	if( !cps_class(block, parent) )
+		return cps_var(block, parent);
 
-	} catch(ParseError&) {
-		parse_trace("ingore parse_class, use parse_var!");
-#ifdef SHOW_PARSE_DEBUG_INFOS
-		std::cerr << "    FilePos  : " << lexer.block().filename() << ':' << lexer.block().start_line() << std::endl;
-		std::cerr << "    ";	lexer.block().dump(std::cerr) << std::endl;
-#endif
-		lexer.reset();
-		parse_var(lexer, scope);
-	}
-	*/
 	return TRUE;
 }
 
@@ -222,10 +189,17 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 	gboolean use_template = FALSE;
 	gboolean stop_with_blance = FALSE;
 
-	if( spliter->policy==SPLITER_POLICY_USE_TEXT ) {
+	switch( spliter->policy ) {
+	case SPLITER_POLICY_USE_TEXT:
 		spliter->end -= spliter->pos;
 		g_memmove( spliter->tokens, spliter->tokens + spliter->pos, sizeof(MLToken) * spliter->end);
-	}
+		break;
+
+	default:
+		g_assert( spliter->policy==SPLITER_POLICY_USE_TOKENS );
+		spliter->tokens += spliter->pos;
+		spliter->end -= spliter->pos;
+	} 
 
 	spliter->pos = -1;
 
@@ -330,7 +304,7 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 
 	block->style = BLOCK_STYLE_LINE;
 
-	if( fn && (fn != cps_label) ) {
+	if( fn && (fn != cps_label) && (fn!=CPS_BREAK_OUT_BLOCK) ) {
 		gint layer = 0;
 		token = spliter->tokens + spliter->pos;
 		for(;;) {
@@ -369,20 +343,32 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 	return fn;
 }
 
-void parse_scope(Block* block, CppElem* parent) {
+MLToken* parse_scope(CppParser*	env, MLToken* tokens, gsize count, CppElem* parent, gboolean use_block_end) {
+	MLToken* retval = 0;
 	TParseFn fn;
 	BlockSpliter spliter;
+	Block block;
 
-	spliter_init_with_tokens(&spliter, block->tokens, block->count);
+	memset(&block, 0, sizeof(block));
+	block.env = env;
 
-	while( (fn = spliter_next_block(&spliter, block)) != 0 ) {
-		if( fn==CPS_BREAK_OUT_BLOCK )
-			break;
+	spliter_init_with_tokens(&spliter, tokens, count);
 
-		(*fn)(block, 0);
+	while( (fn = spliter_next_block(&spliter, &block)) != 0 ) {
+		if( fn==CPS_BREAK_OUT_BLOCK ) {
+			if( use_block_end ) {
+				retval = block.tokens;
+				break;
+			} else {
+				continue;
+			}
+		}
+
+		(*fn)(&block, 0);
 	}
 
 	spliter_final(&spliter);
+	return retval;
 }
 
 void parse_impl_scope(Block* block, CppElem* parent) {

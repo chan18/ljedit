@@ -39,5 +39,8 @@ void spliter_init_with_tokens(BlockSpliter* spliter, MLToken* tokens, gint count
 void spliter_final(BlockSpliter* spliter);
 TParseFn spliter_next_block(BlockSpliter* spliter, Block* block);
 
+MLToken* parse_scope(CppParser*	env, MLToken* tokens, gsize count, CppElem* parent, gboolean use_block_end);
+void parse_impl_scope(Block* block, CppElem* parent);
+
 #endif//PUSS_CPP_CPS_H
 

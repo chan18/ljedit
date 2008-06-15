@@ -3,6 +3,8 @@
 
 #include "cps_utils.h"
 
+gboolean cps_fun(Block* block, CppElem* parent);
+
 static gboolean cps_normal_typedef(Block* block, CppElem* parent) {
 	TinyStr* typekey;
 	gint dt = KD_UNK;
@@ -53,10 +55,31 @@ static gboolean cps_normal_typedef(Block* block, CppElem* parent) {
 		break;
 
 	default:
-		// TODO : 
 		// typedef (*TFn)(...);
 		// typedef (T::*TFn)(...);
 		err_goto_finish_if( ps->type!='(' );
+		{
+			CppElem tpscope;
+			memset(&tpscope, 0, sizeof(tpscope));
+			tpscope.type = CPP_ET_NCSCOPE;
+			tpscope.file = parent->file;
+
+			--(block->count);
+			++(block->tokens);
+			if( cps_fun(block, &tpscope) ) {
+				if( tpscope.v_ncscope.scope ) {
+					elem = tpscope.v_ncscope.scope->data;
+					tpscope.v_ncscope.scope->data = 0;
+					if( elem && elem->type==CPP_ET_FUN) {
+						TinyStr* str = elem->decl;
+						elem->decl = tiny_str_new("typedef ", 8 + str->len);
+						memcpy(elem->decl->buf + 8, str->buf, str->len);
+						g_free(str);
+					}
+				}
+			}
+			cpp_elem_clear(&tpscope);
+		}
 		break;
 	}
 
@@ -82,7 +105,7 @@ static gboolean cps_complex_typedef(Block* block, CppElem* parent) {
 	tpscope.file = parent->file;
 	tpscope.type = CPP_ET_NCSCOPE;
 
-	parse_scope(block, &tpscope);
+	err_goto_finish_if( (ps = parse_scope(block->env, ps, (pe - ps), &tpscope, TRUE))==0 );
 	node = tpscope.v_ncscope.scope;
 	err_goto_finish_if( node==0 );
 

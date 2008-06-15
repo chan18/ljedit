@@ -9,6 +9,7 @@ int main(int argc, char* argv[]) {
 	gchar* buf;
 	gsize len;
 	gint i;
+	CppFile* file;
 
 	cpp_parser_init(&env, TRUE);
 
@@ -19,8 +20,11 @@ int main(int argc, char* argv[]) {
 
 		#define n 5000
 		timer = g_timer_new();
-		for(i=0; i<n; ++i)
-			cpp_parser_test(&env, buf, len);
+		for(i=0; i<n; ++i) {
+			file = cpp_parser_parse(&env, "tee.cpp", 7, buf, len);
+			cpp_file_clear(file);
+			g_free(file);
+		}
 		used = g_timer_elapsed(timer, NULL);
 		g_timer_destroy(timer);
 

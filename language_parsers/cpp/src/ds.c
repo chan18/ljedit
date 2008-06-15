@@ -19,7 +19,15 @@ gboolean tiny_str_equal(const TinyStr* a, const TinyStr* b) {
 		: FALSE;
 }
 
+static void cpp_elem_free(CppElem* elem, gpointer tag) {
+	cpp_elem_clear(elem);
+	g_free(elem);
+}
+
 void cpp_elem_clear(CppElem* elem) {
+	if( !elem )
+		return;
+
 	g_free(elem->name);
 	g_free(elem->decl);
 
@@ -42,6 +50,9 @@ void cpp_elem_clear(CppElem* elem) {
 		//g_free(elem->v_fun.fun_template);
 		//g_free(elem->v_fun.impl);
 		break;
+	case CPP_ET_NCSCOPE:
+		g_list_foreach(elem->v_ncscope.scope, (GFunc)cpp_elem_free, 0);
+		break;
 	case CPP_ET_ENUMITEM:
 	case CPP_ET_ENUM:
 	case CPP_ET_CLASS:
@@ -50,5 +61,13 @@ void cpp_elem_clear(CppElem* elem) {
 	case CPP_ET_TYPEDEF:
 		break;
 	}
+}
+
+void cpp_file_clear(CppFile* file) {
+	if( !file )
+		return;
+
+	g_free(file->filename);
+	cpp_elem_clear(&(file->root_scope));
 }
 

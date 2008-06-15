@@ -87,14 +87,22 @@ gboolean cps_class(Block* block, CppElem* parent) {
 		err_goto_finish_if( ps->type!='{' );
 		++ps;
 
-		// TODO : 
-		//parse_scope(lexer, p->scope, p);
+		err_goto_finish_if( (ps = parse_scope(block->env, ps, (pe - ps), elem, TRUE))==0 );
+		g_assert( (ps < pe) && ps->type=='}' );
 
-		err_goto_finish_if_not( (ps < pe) && ps->type=='}' );
-		++ps;
+		if( ((ps+1) < pe) && (ps+1)->type!=';' ) {
+			Block var_block = { block->env, ps, (pe - ps), BLOCK_STYLE_LINE, block->scope };
+			MLToken type_token = *ps;
 
-		//TODO :
-		//parse_var_define(ps, pe, scope, ..., class_type);
+			ps->type = TK_ID;
+			ps->buf = elem->name->buf;
+			ps->len = elem->name->len;
+			ps->line = (ps+1)->line;
+
+			cps_var(&var_block, parent);
+			
+			*ps = type_token;
+		}
 	}
 
 __cps_finish__:

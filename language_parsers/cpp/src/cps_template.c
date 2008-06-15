@@ -96,9 +96,8 @@ gboolean cps_template(Block* block, CppElem* parent) {
 		return cps_template(&subblock, parent);
 	}
 
-	// TODO : use template parse next
-	//parse_scope(lexer, scope);
-	//return TRUE;
+	parse_scope(block->env, ps, (pe - ps), parent, TRUE);
+	return TRUE;
 
 __cps_finish__:
 	for( i=0; i<targc; ++i ) {

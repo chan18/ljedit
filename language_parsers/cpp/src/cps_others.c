@@ -13,18 +13,14 @@ gboolean cps_block(Block* block, CppElem* parent) {
 		++ps;
 	++ps;
 
-	if( ps < pe ) {
-		block->tokens = ps;
-		block->count = pe - ps;
-		parse_scope(block, parent);
-	}
+	if( ps < pe )
+		parse_scope(block->env, ps, (pe - ps), parent, FALSE);
 
 	return TRUE;
 }
 
 gboolean cps_extern_scope(Block* block, CppElem* parent) {
-	parse_scope(block, parent);
-	return TRUE;
+	return cps_block(block, parent);
 }
 
 gboolean cps_impl_block(Block* block, CppElem* parent) {

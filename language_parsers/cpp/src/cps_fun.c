@@ -35,8 +35,8 @@ static MLToken* parse_function_prefix(MLToken* ps, MLToken* pe) {
 static MLToken* parse_function_args(MLToken* ps, MLToken* pe, CppElem* fun, gboolean need_save_args) {
 	MLToken* retval = 0;
 	MLToken* decl_start;
-	TinyStr* typekey = 0;
-	gint dt = 0;
+	TinyStr* typekey;
+	gint dt;
 	TinyStr* nskey = 0;
 	MLToken* name = 0;
 
@@ -50,6 +50,7 @@ static MLToken* parse_function_args(MLToken* ps, MLToken* pe, CppElem* fun, gboo
 		}
 
 		decl_start = ps;
+		typekey = 0;
 		dt = KD_UNK;
 		err_goto_finish_if( (ps = parse_datatype(ps, pe, &typekey, &dt))==0 );
 		err_goto_finish_if( (ps = parse_ptr_ref(ps, pe, &dt))==0 );
@@ -114,6 +115,11 @@ static MLToken* parse_function_args(MLToken* ps, MLToken* pe, CppElem* fun, gboo
 		}
 	}
 
+	if( (ps < pe) && (ps->type==')') )
+		retval = ps + 1;
+	else
+		retval = 0;
+
 __cps_finish__:
 	g_free(typekey);
 	g_free(nskey);
@@ -139,9 +145,6 @@ static gboolean parse_function_common(Block* block, CppElem* parent, MLToken* st
 	err_goto_finish_if_not( (ps < pe) && ps->type=='(' );
 
 	err_goto_finish_if( (ps = parse_function_args(ps+1, pe, elem, block->style==BLOCK_STYLE_BLOCK))==0 );
-
-	err_goto_finish_if_not( (ps < pe) && ps->type==')' );
-	++ps;
 
 	while( (ps < pe) && ps->type!=';' && ps->type!=':' && ps->type!='{' )
 		++ps;
@@ -219,16 +222,11 @@ gboolean cps_fun(Block* block, CppElem* parent) {
 				name = ps;
 
 			} else {
+				err_return_false_if_not( (gsize)(nskey->len) > ps->len );
+				err_return_false_if_not( nskey->buf[nskey->len - (ps->len + 1)]=='.' );
+				nskey->len -= (ps->len + 1);
+				nskey->buf[nskey->len] = '\0';
 				name = ps;
-				// TODO :
-				/*
-				size_t pos = ns.find('.');
-				if( pos==ns.npos )
-					throw_parse_error("Error when parse_function!");
-
-				name = ns.substr(pos+1);
-				ns.erase(pos);
-				*/
 			}
 
 			/*

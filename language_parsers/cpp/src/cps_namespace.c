@@ -36,10 +36,7 @@ gboolean cps_namespace(Block* block, CppElem* parent) {
 	++ps;
 	err_return_false_if_not( ps < pe );
 
-	block->tokens = ps;
-	block->count = pe - ps;
-
-	parse_scope(block, parent);
+	parse_scope(block->env, ps, (pe - ps), parent, FALSE);
 	return TRUE;
 }
 

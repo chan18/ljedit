@@ -11,14 +11,15 @@ typedef struct {
 	GHashTable*		rmacros_table;
 	gboolean		enable_macro_replace;
 	gpointer		keywords_table;
+
+	void			(*pe_file_incref)(CppFile* file);
+	void			(*pe_file_decref)(CppFile* file);
 } CppParser;
 
 void cpp_parser_init(CppParser* env, gboolean enable_macro_replace);
 void cpp_parser_final(CppParser* env);
 
-void cpp_parser_test(CppParser* env, gchar* buf, gsize len);
-
-CppFile* cpp_parser_parse(CppParser* env, gchar* buf, gsize len);
+CppFile* cpp_parser_parse(CppParser* env, gchar* filename_buf, gsize filename_len, gchar* buf, gsize len);
 
 #endif//PUSS_CPP_PARSER_H
 

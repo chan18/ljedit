@@ -154,5 +154,7 @@ struct _CppFile {
 	CppElem		root_scope;
 };
 
+void cpp_file_clear(CppFile* file);
+
 #endif//PUSS_CPP_DS_H
 
