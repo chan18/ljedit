@@ -514,12 +514,19 @@ void unload_python_extends(PyExtend* self) {
 	}
 }
 
+static gboolean fix_python_pending_call(gpointer tag) {
+	PyErr_CheckSignals();
+	return TRUE;
+}
+
 PyExtend* puss_py_extend_create(Puss* app) {
 	PyExtend* self = g_try_new0(PyExtend, 1);
 	if( self ) {
 		self->app = app;
 
 		Py_Initialize();
+
+		g_timeout_add(100, fix_python_pending_call, 0);
 
 		if( init_pygtk_library(self) && init_puss_module(self) )
 			load_python_extends(self);
