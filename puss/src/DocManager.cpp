@@ -670,10 +670,10 @@ gboolean puss_doc_close_all() {
 					, url ? url->str : _("Untitled") );
 
 				gtk_dialog_add_buttons( GTK_DIALOG(dlg)
-					, _("yes to all"), GTK_RESPONSE_ACCEPT
-					, _("no to all"), GTK_RESPONSE_CANCEL
-					, GTK_STOCK_YES, GTK_RESPONSE_YES
-					, GTK_STOCK_NO, GTK_RESPONSE_NO
+					, _("yes to all"), 1
+					, _("no to all"), 2
+					, GTK_STOCK_YES, 3
+					, GTK_STOCK_NO, 4
 					, NULL );
 
 				gtk_dialog_set_default_response(GTK_DIALOG(dlg), GTK_RESPONSE_ACCEPT);
@@ -682,18 +682,18 @@ gboolean puss_doc_close_all() {
 				gtk_widget_destroy(dlg);
 
 				switch( res ) {
-				case GTK_RESPONSE_APPLY:
+				case 1:
 					need_prompt = FALSE;
 					save_file_sign = TRUE;
 					break;
-				case GTK_RESPONSE_CANCEL:
+				case 2:
 					need_prompt = FALSE;
 					save_file_sign = FALSE;
 					break;
-				case GTK_RESPONSE_YES:
+				case 3:
 					save_file_sign = TRUE;
 					break;
-				case GTK_RESPONSE_NO:
+				case 4:
 					save_file_sign = FALSE;
 					break;
 				default:
