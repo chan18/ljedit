@@ -7,6 +7,7 @@
 
 #include "Puss.h"
 #include "Utils.h"
+#include "DocManager.h"
 
 #ifdef G_OS_WIN32
 	#include <Windows.h>
@@ -28,7 +29,7 @@
 
 		if( !g_path_is_absolute(filepath) ) {
 			gchar* pwd = g_get_current_dir();
-			gchar* prj =  g_build_filename(pwd, filepath, NULL);
+			gchar* prj = g_build_filename(pwd, filepath, NULL);
 			g_free(pwd);
 			g_free(filepath);
 			filepath = prj;
@@ -60,6 +61,25 @@ int main(int argc, char* argv[]) {
 	gchar* filepath = find_module_filepath(argv[0]);
 	gboolean res = puss_create(filepath);
 	g_free(filepath);
+
+	if( argc==2 ) {
+		if( !g_path_is_absolute(argv[1]) ) {
+			gchar* pwd = g_get_current_dir();
+			filepath = g_build_filename(pwd, argv[1], NULL);
+			g_free(pwd);
+
+			if( g_file_test(filepath, G_FILE_TEST_EXISTS) )
+				puss_doc_open(filepath, -1, -1, TRUE);
+
+			g_free(filepath);
+
+		} else {
+			filepath = argv[1];
+
+			if( g_file_test(filepath, G_FILE_TEST_EXISTS) )
+				puss_doc_open(filepath, -1, -1, TRUE);
+		}
+	}
 
 	if( res ) {
 		puss_run();

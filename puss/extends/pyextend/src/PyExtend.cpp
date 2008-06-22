@@ -509,13 +509,27 @@ void unload_python_extends(PyExtend* self) {
 		Py_DECREF(res);
 		
 	} else {
-		PyErr_Print();
+		//PyErr_Print();
 		PyErr_Clear();
 	}
 }
 
-static gboolean fix_python_pending_call(gpointer tag) {
-	PyErr_CheckSignals();
+// [Python-Dev] Signals, threads, blocking C functions
+// CTRL+c signal bug
+// 
+static gboolean python_do_pending_calls(gpointer data) {
+	gboolean quit = FALSE;
+
+	pyg_block_threads();
+	if( PyErr_CheckSignals() == -1 ) {
+		PyErr_SetNone(PyExc_KeyboardInterrupt);
+		quit = TRUE;
+	}
+	pyg_unblock_threads();
+
+	if (quit && gtk_main_level() > 0)
+		gtk_main_quit();
+
 	return TRUE;
 }
 
@@ -526,7 +540,7 @@ PyExtend* puss_py_extend_create(Puss* app) {
 
 		Py_Initialize();
 
-		g_timeout_add(100, fix_python_pending_call, 0);
+		g_timeout_add(100, python_do_pending_calls, 0);
 
 		if( init_pygtk_library(self) && init_puss_module(self) )
 			load_python_extends(self);
