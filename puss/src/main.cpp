@@ -53,6 +53,23 @@
 
 #endif
 
+void open_arg1_file(const char* argv1) {
+	gssize len = (gssize)strlen(argv1);
+	gchar* filepath = g_locale_to_utf8(argv1, len, NULL, NULL, NULL);
+	if( !g_path_is_absolute(filepath) ) {
+		gchar* pwd = g_get_current_dir();
+		gchar* tmp = g_build_filename(pwd, filepath, NULL);
+		g_free(pwd);
+		g_free(filepath);
+		filepath = tmp;
+	}
+
+	if( g_file_test(filepath, G_FILE_TEST_EXISTS) )
+		puss_doc_open(filepath, -1, -1, TRUE);
+
+	g_free(filepath);
+}
+
 int main(int argc, char* argv[]) {
 	g_thread_init(NULL);
 
@@ -62,24 +79,8 @@ int main(int argc, char* argv[]) {
 	gboolean res = puss_create(filepath);
 	g_free(filepath);
 
-	if( argc==2 ) {
-		if( !g_path_is_absolute(argv[1]) ) {
-			gchar* pwd = g_get_current_dir();
-			filepath = g_build_filename(pwd, argv[1], NULL);
-			g_free(pwd);
-
-			if( g_file_test(filepath, G_FILE_TEST_EXISTS) )
-				puss_doc_open(filepath, -1, -1, TRUE);
-
-			g_free(filepath);
-
-		} else {
-			filepath = argv[1];
-
-			if( g_file_test(filepath, G_FILE_TEST_EXISTS) )
-				puss_doc_open(filepath, -1, -1, TRUE);
-		}
-	}
+	if( argc==2 )
+		open_arg1_file(argv[1]);
 
 	if( res ) {
 		puss_run();

@@ -764,6 +764,8 @@ gboolean doc_mtime_check(gpointer tag) {
 		const gchar* charset = 0;
 
 		if( puss_load_file(url->str, &text, &len, &charset) ) {
+			puss_pos_locate_add_current_pos();
+
 			gtk_source_buffer_begin_not_undoable_action(GTK_SOURCE_BUFFER(buf));
 			gtk_text_buffer_set_text(buf, text, len);
 			gtk_source_buffer_end_not_undoable_action(GTK_SOURCE_BUFFER(buf));
@@ -772,6 +774,8 @@ gboolean doc_mtime_check(gpointer tag) {
 
 			// save charset
 			puss_doc_set_charset(GTK_TEXT_BUFFER(buf), charset);
+
+			puss_pos_locate_current();
 		}
 	}
 
