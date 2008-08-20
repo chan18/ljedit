@@ -28,7 +28,13 @@ void __free_g_string( GString* gstr ) {
 	g_string_free(gstr, TRUE);
 } 
 
-gboolean doc_file_get_mtime(gchar* url, GTimeVal* val, goffset* sz) {
+typedef struct {
+	GTimeVal mtime;
+	goffset  size;
+	gboolean need_check;
+} ModifyInfo;
+
+gboolean doc_file_get_mtime(gchar* url, ModifyInfo* mi) {
 	gboolean result = FALSE;
 	GFile* file = g_file_new_for_path(url);
 	if( file ) {
@@ -36,14 +42,15 @@ gboolean doc_file_get_mtime(gchar* url, GTimeVal* val, goffset* sz) {
 			, G_FILE_ATTRIBUTE_STANDARD_TYPE","G_FILE_ATTRIBUTE_STANDARD_SIZE","G_FILE_ATTRIBUTE_TIME_MODIFIED","G_FILE_ATTRIBUTE_TIME_MODIFIED_USEC
 			, G_FILE_QUERY_INFO_NONE, 0, 0);
 		if( info ) {
-			g_file_info_get_modification_time(info, val);
-			*sz = g_file_info_get_size(info);
+			g_file_info_get_modification_time(info, &(mi->mtime));
+			mi->size = g_file_info_get_size(info);
 			result = TRUE;
 			g_object_unref(info);
 		}
 		g_object_unref(file);
 	}
 
+	mi->need_check = TRUE;
 	return result;
 }
 
@@ -262,12 +269,11 @@ gint doc_open_file( const gchar* filename, gint line, gint line_offset, gboolean
 			puss_doc_set_url(GTK_TEXT_BUFFER(buf), url);
 			puss_doc_set_charset(GTK_TEXT_BUFFER(buf), charset);
 
-			// save mtime
-			GTimeVal mtime;
-			goffset  sz;
-			if( doc_file_get_mtime(url, &mtime, &sz) ) {
-				g_object_set_data_full(G_OBJECT(buf), "__mtime__", g_memdup(&mtime, sizeof(mtime)), g_free);
-				g_object_set_data_full(G_OBJECT(buf), "__size__", g_memdup(&sz, sizeof(sz)), g_free);
+			// save modify info
+			ModifyInfo mi;
+			mi.need_check = TRUE;
+			if( doc_file_get_mtime(url, &mi) ) {
+				g_object_set_data_full(G_OBJECT(buf), "__mi__", g_memdup(&mi, sizeof(mi)), g_free);
 			}
 
 			// select highlight language
@@ -310,6 +316,21 @@ gint doc_open_file( const gchar* filename, gint line, gint line_offset, gboolean
 	return page_num;
 }
 
+/*
+gboolean doc_save_file_safe( GtkTextBuffer* buf, GError** err ) {
+	ModifyInfo mi;
+	const GString* url = puss_doc_get_url(buf);
+	gboolean modified = doc_file_get_mtime(url->str, &mi);
+
+	if( modified ) {
+		// TODO : ask user if need save as... because of file modified outside!!!
+		// BUG : if file modified when check modified finished, then file will be replaced!!!
+	}
+
+	return doc_save_file(buf, err);
+}
+*/
+
 gboolean doc_save_file( GtkTextBuffer* buf, GError** err ) {
 	gunichar ch;
 	GIOStatus status;
@@ -342,20 +363,13 @@ gboolean doc_save_file( GtkTextBuffer* buf, GError** err ) {
 
 	gtk_text_buffer_set_modified(buf, FALSE);
 
-	GTimeVal mtime;
-	goffset  sz;
-	if( doc_file_get_mtime(url->str, &mtime, &sz) ) {
-		GTimeVal* mtime_ptr = (GTimeVal*)g_object_get_data(G_OBJECT(buf), "__mtime__");
-		if( mtime_ptr )
-			*mtime_ptr = mtime;
+	ModifyInfo mi;
+	if( doc_file_get_mtime(url->str, &mi) ) {
+		ModifyInfo* mi_ptr = (ModifyInfo*)g_object_get_data(G_OBJECT(buf), "__mi__");
+		if( mi_ptr )
+			*mi_ptr = mi;
 		else
-			g_object_set_data_full(G_OBJECT(buf), "__mtime__", g_memdup(&mtime, sizeof(mtime)), g_free);
-
-		goffset* sz_ptr = (goffset*)g_object_get_data(G_OBJECT(buf), "__size__");
-		if( sz_ptr )
-			*sz_ptr = sz;
-		else
-			g_object_set_data_full(G_OBJECT(buf), "__size__", g_memdup(&sz, sizeof(sz)), g_free);
+			g_object_set_data_full(G_OBJECT(buf), "__mi__", g_memdup(&mi, sizeof(mi)), g_free);
 	}
 
 	return TRUE;
@@ -666,7 +680,7 @@ gboolean puss_doc_close_all() {
 					, GTK_DIALOG_MODAL
 					, GTK_MESSAGE_QUESTION
 					, GTK_BUTTONS_NONE
-					, "file modified, save it?\n\n%s\n"
+					, _("file modified, save it?\n\n%s\n")
 					, url ? url->str : _("Untitled") );
 
 				gtk_dialog_add_buttons( GTK_DIALOG(dlg)
@@ -725,21 +739,23 @@ gboolean doc_mtime_check(gpointer tag) {
 	if( !url )
 		return TRUE;
 
-	GTimeVal mtime_new;
-	goffset sz_new;
-	if( !doc_file_get_mtime(url->str, &mtime_new, &sz_new) )
+	ModifyInfo* mi_old = (ModifyInfo*)g_object_get_data(G_OBJECT(buf), "__mi__");
+	if( !mi_old )
 		return TRUE;
 
-	GTimeVal* mtime_old = (GTimeVal*)g_object_get_data(G_OBJECT(buf), "__mtime__");
-	goffset* sz_old = (goffset*)g_object_get_data(G_OBJECT(buf), "__size__");
-	if( !mtime_old || !sz_new )
+	if( !mi_old->need_check )
 		return TRUE;
 
-	if( mtime_old->tv_sec==mtime_new.tv_sec && mtime_old->tv_usec==mtime_new.tv_usec && *sz_old==sz_new )
+	ModifyInfo mi_new;
+	if( !doc_file_get_mtime(url->str, &mi_new) )
 		return TRUE;
 
-	*mtime_old = mtime_new;
-	*sz_old = sz_new;
+	if( mi_old->mtime.tv_sec==mi_new.mtime.tv_sec
+		&& mi_old->mtime.tv_usec==mi_new.mtime.tv_usec
+		&& mi_old->size==mi_new.size )
+	{
+		return TRUE;
+	}
 
 	// query if use new file!
 	{
@@ -747,15 +763,20 @@ gboolean doc_mtime_check(gpointer tag) {
 			, GTK_DIALOG_MODAL
 			, GTK_MESSAGE_QUESTION
 			, GTK_BUTTONS_YES_NO
-			, "file modified outside, reload it?" );
+			, _("file modified outside, reload it?") );
 
 		gtk_dialog_set_default_response(GTK_DIALOG(dlg), GTK_RESPONSE_YES);
 
 		gint res = gtk_dialog_run(GTK_DIALOG(dlg));
 		gtk_widget_destroy(dlg);
 
-		if( res!=GTK_RESPONSE_YES )
+		if( res==GTK_RESPONSE_YES ) {
+			*mi_old = mi_new;
+
+		} else {
+			mi_old->need_check = FALSE;
 			return TRUE;
+		}
 	}
 
 	{
