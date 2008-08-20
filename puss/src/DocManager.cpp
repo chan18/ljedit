@@ -762,19 +762,30 @@ gboolean doc_mtime_check(gpointer tag) {
 		GtkWidget* dlg = gtk_message_dialog_new( puss_app->main_window
 			, GTK_DIALOG_MODAL
 			, GTK_MESSAGE_QUESTION
-			, GTK_BUTTONS_YES_NO
+			, GTK_BUTTONS_NONE
 			, _("file modified outside, reload it?") );
+
+		gtk_dialog_add_buttons( GTK_DIALOG(dlg)
+			, GTK_STOCK_YES, GTK_RESPONSE_YES
+			, GTK_STOCK_NO, GTK_RESPONSE_NO
+			, _("no and not tip"), GTK_RESPONSE_CANCEL
+			, NULL );
 
 		gtk_dialog_set_default_response(GTK_DIALOG(dlg), GTK_RESPONSE_YES);
 
 		gint res = gtk_dialog_run(GTK_DIALOG(dlg));
 		gtk_widget_destroy(dlg);
 
-		if( res==GTK_RESPONSE_YES ) {
+		switch( res ) {
+		case GTK_RESPONSE_YES:
 			*mi_old = mi_new;
+			break;
 
-		} else {
+		case GTK_RESPONSE_CANCEL:
 			mi_old->need_check = FALSE;
+			return TRUE;
+
+		default:
 			return TRUE;
 		}
 	}
