@@ -768,7 +768,7 @@ gboolean doc_mtime_check(gpointer tag) {
 		gtk_dialog_add_buttons( GTK_DIALOG(dlg)
 			, GTK_STOCK_YES, GTK_RESPONSE_YES
 			, GTK_STOCK_NO, GTK_RESPONSE_NO
-			, _("no and not tip"), GTK_RESPONSE_CANCEL
+			, _("not tip this"), GTK_RESPONSE_CANCEL
 			, NULL );
 
 		gtk_dialog_set_default_response(GTK_DIALOG(dlg), GTK_RESPONSE_YES);
@@ -780,6 +780,10 @@ gboolean doc_mtime_check(gpointer tag) {
 		case GTK_RESPONSE_YES:
 			*mi_old = mi_new;
 			break;
+
+		case GTK_RESPONSE_NO:
+			*mi_old = mi_new;
+			return TRUE;
 
 		case GTK_RESPONSE_CANCEL:
 			mi_old->need_check = FALSE;
