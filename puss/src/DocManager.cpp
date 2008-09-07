@@ -173,6 +173,20 @@ gboolean doc_cb_button_release_on_label(GtkWidget* widget, GdkEventButton *event
 	return FALSE;
 }
 
+void doc_cb_move_focus(GtkWidget* widget, GtkDirectionType dir) {
+	GtkSourceView* view = GTK_SOURCE_VIEW(widget);
+	g_signal_stop_emission_by_name(widget, "move-focus");
+
+	switch( dir ) {
+	case GTK_DIR_TAB_FORWARD:
+		gtk_notebook_next_page(puss_app->doc_panel);
+		break;
+	case GTK_DIR_TAB_BACKWARD:
+		gtk_notebook_prev_page(puss_app->doc_panel);
+		break;
+	}
+}
+
 gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 	gint page_num;
 	GtkSourceView* view;
@@ -195,6 +209,8 @@ gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 
 	gtk_text_view_set_left_margin(GTK_TEXT_VIEW(view), 3);
 	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(view), GTK_WRAP_NONE);
+
+	g_signal_connect(view, "move-focus", G_CALLBACK(&doc_cb_move_focus), 0);
 
 	const Option* font_option = puss_option_manager_find("puss", "editor.font");
 	if( font_option && font_option->value) {
