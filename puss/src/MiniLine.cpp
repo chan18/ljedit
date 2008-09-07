@@ -92,6 +92,11 @@ void puss_mini_line_active( MiniLineCallback* cb ) {
 	gtk_window_move(puss_app->mini_line->window, x, y);
 	gtk_widget_show(GTK_WIDGET(puss_app->mini_line->window));
 
+	// copy from gtktextview.c
+	// 
+	//view->need_im_reset = TRUE;
+	gtk_im_context_focus_out( view->im_context );
+
 	// keep cursor both in mini_line_entry & text_view
 	// 
 	//puss_send_focus_change(GTK_WIDGET(view), FALSE);
