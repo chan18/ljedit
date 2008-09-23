@@ -136,6 +136,8 @@ void puss_pos_locate_add(gint page_num, gint line, gint offset) {
 		node = list->head;
 		list->head = node->next;
 		list->head->prev = 0;
+
+		g_object_weak_unref(G_OBJECT(node->page), (GWeakNotify)&page_delete_notify, node);
 	}
 
 	node->page = page;
