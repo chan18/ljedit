@@ -8,7 +8,7 @@
 #include "Puss.h"
 #include "DocManager.h"
 
-#define POS_NODE_MAX 128
+#define POS_NODE_MAX 256
 
 struct PosNode;
 struct PosList;
@@ -71,6 +71,8 @@ void puss_pos_locate_destroy() {
 
 void page_delete_notify(PosNode* node, GObject* where_the_object_was) {
 	PosList* list = puss_app->pos_list;
+
+	g_assert(node && G_OBJECT(node->page)==where_the_object_was);
 
 	g_assert(__debug_pos_list_check_node(node));
 

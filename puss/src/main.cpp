@@ -71,6 +71,11 @@ void open_arg1_file(const char* argv1) {
 }
 
 int main(int argc, char* argv[]) {
+	// !!!GtkBuild error when use this on win32
+	// 
+	//g_mem_set_vtable(glib_mem_profiler_table);
+	//g_atexit(g_mem_profile);
+
 	g_thread_init(NULL);
 
 	gtk_init(&argc, &argv);
