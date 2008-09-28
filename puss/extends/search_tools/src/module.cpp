@@ -233,7 +233,7 @@ void search_in_current_file_dir(const gchar* search_text, SearchTools* self) {
 }
 
 SIGNAL_CALLBACK gboolean search_tools_search(GtkEntry* entry, GdkEventKey* event, SearchTools* self) {
-	if( event->keyval==GDK_Return )
+	if( event->keyval==GDK_Return || event->keyval==GDK_KP_Enter )
 	{
 		const gchar* text = gtk_entry_get_text(entry);
 
