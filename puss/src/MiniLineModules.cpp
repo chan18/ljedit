@@ -158,7 +158,7 @@ gboolean GOTO_cb_active(gpointer tag) {
 		gchar text[64] = { 0 };
 		g_snprintf( text, 64, "%d", (self->last_line + 1) );
 
-		gtk_label_set_text(puss_app->mini_line->label, _("goto : "));
+		gtk_image_set_from_stock(puss_app->mini_line->image, GTK_STOCK_JUMP_TO, GTK_ICON_SIZE_SMALL_TOOLBAR);
 		gtk_entry_set_text(puss_app->mini_line->entry, text);
 		gtk_entry_select_region(puss_app->mini_line->entry, 0, -1);
 
@@ -248,7 +248,7 @@ gboolean FIND_cb_active(gpointer tag) {
 
 	gtk_widget_modify_base(GTK_WIDGET(puss_app->mini_line->entry), GTK_STATE_NORMAL, NULL);
 
-	gtk_label_set_text(puss_app->mini_line->label, _("find : "));
+	gtk_image_set_from_stock(puss_app->mini_line->image, GTK_STOCK_FIND, GTK_ICON_SIZE_SMALL_TOOLBAR);
 
 	GtkTextIter ps, pe;
 	if( gtk_text_buffer_get_selection_bounds(buf, &ps, &pe) ) {
@@ -360,7 +360,7 @@ gboolean REPLACE_cb_active(gpointer tag) {
 
 	gtk_widget_modify_base(GTK_WIDGET(puss_app->mini_line->entry), GTK_STATE_NORMAL, NULL);
 
-	gtk_label_set_text(puss_app->mini_line->label, _("replace : "));
+	gtk_image_set_from_stock(puss_app->mini_line->image, GTK_STOCK_FIND_AND_REPLACE, GTK_ICON_SIZE_SMALL_TOOLBAR);
 
 	gchar* text = 0;
 	gint sel_ps = 0;

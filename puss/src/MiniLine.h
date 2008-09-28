@@ -9,8 +9,8 @@
 struct MiniLineCallback;
 
 struct MiniLine {
-	GtkWindow*			window;
-	GtkLabel*			label;
+	GtkWidget*			window;
+	GtkImage*			image;
 	GtkEntry*			entry;
 
 	gulong				signal_id_changed;

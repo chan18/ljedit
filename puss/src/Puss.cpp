@@ -104,8 +104,7 @@ gboolean puss_load_ui_files() {
 	gtk_builder_set_translation_domain(puss_app->builder, TEXT_DOMAIN);
 
 	if( !( puss_load_ui("puss_ui_manager.xml")
-		&& puss_load_ui("puss_main_window.xml")
-		&& puss_load_ui("puss_mini_window.xml") ) )
+		&& puss_load_ui("puss_main_window.xml") ) )
 	{
 		return FALSE;
 	}

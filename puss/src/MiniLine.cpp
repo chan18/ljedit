@@ -24,11 +24,6 @@ SIGNAL_CALLBACK gboolean mini_line_cb_key_press_event( GtkWidget* widget, GdkEve
 		: FALSE;
 }
 
-SIGNAL_CALLBACK gboolean puss_mini_line_focus_out_event( GtkWidget* widget, GdkEventFocus* event ) {
-	puss_mini_line_deactive();
-	return FALSE;
-}
-
 SIGNAL_CALLBACK gboolean mini_line_cb_button_press_event( GtkWidget* widget, GdkEventButton* event ) {
 	puss_mini_line_deactive();
 	return FALSE;
@@ -39,12 +34,12 @@ gboolean puss_mini_line_create() {
 
 	puss_app->mini_line = g_new0(MiniLine, 1);
 
-	puss_app->mini_line->window = GTK_WINDOW(gtk_builder_get_object(puss_app->builder, "mini_window"));
-	puss_app->mini_line->label = GTK_LABEL(gtk_builder_get_object(puss_app->builder, "mini_window_label"));
-	puss_app->mini_line->entry = GTK_ENTRY(gtk_builder_get_object(puss_app->builder, "mini_window_entry"));
+	puss_app->mini_line->window = GTK_WIDGET(gtk_builder_get_object(puss_app->builder, "mini_bar_window"));
+	puss_app->mini_line->image = GTK_IMAGE(gtk_builder_get_object(puss_app->builder, "mini_bar_image"));
+	puss_app->mini_line->entry = GTK_ENTRY(gtk_builder_get_object(puss_app->builder, "mini_bar_entry"));
+	gtk_widget_hide(puss_app->mini_line->window);
 
-	if( !( puss_app->mini_line->window
-		&& puss_app->mini_line->label
+	if( !( puss_app->mini_line->image
 		&& puss_app->mini_line->entry ) )
 	{
 		return FALSE;
@@ -53,15 +48,10 @@ gboolean puss_mini_line_create() {
 	puss_app->mini_line->signal_id_changed   = g_signal_handler_find(puss_app->mini_line->entry, (GSignalMatchType)(G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA), 0, 0, 0, (gpointer)&mini_line_cb_changed, 0);
 	puss_app->mini_line->signal_id_key_press = g_signal_handler_find(puss_app->mini_line->entry, (GSignalMatchType)(G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA), 0, 0, 0, (gpointer)&mini_line_cb_key_press_event, 0);
 
-	gtk_widget_show_all( gtk_bin_get_child(GTK_BIN(puss_app->mini_line->window)) );
-
 	return TRUE;
 }
 
 void puss_mini_line_destroy() {
-	if( puss_app->mini_line->window )
-		gtk_widget_destroy(GTK_WIDGET(puss_app->mini_line->window));
-
 	g_free(puss_app->mini_line);
 	puss_app->mini_line = 0;
 }
@@ -80,28 +70,10 @@ void puss_mini_line_active( MiniLineCallback* cb ) {
 	if( GTK_WIDGET(view)!=actived )
 		gtk_widget_grab_focus(GTK_WIDGET(view));
 
-	GdkWindow* gdk_window = gtk_text_view_get_window(view, GTK_TEXT_WINDOW_TEXT);
-	if( !gdk_window )
-		return;
-
-	gint x = 0, y = 0;
-	gdk_window_get_origin(gdk_window, &x, &y);
-	if( x > 16 )	x -= 16;
-	if( y > 32 )	y -= 32;
-
-	gtk_window_move(puss_app->mini_line->window, x, y);
-	gtk_widget_show(GTK_WIDGET(puss_app->mini_line->window));
-
-	// copy from gtktextview.c
-	// 
-	//view->need_im_reset = TRUE;
+	gtk_widget_show(puss_app->mini_line->window);
 	gtk_im_context_focus_out( view->im_context );
 
-	// keep cursor both in mini_line_entry & text_view
-	// 
-	//puss_send_focus_change(GTK_WIDGET(view), FALSE);
-	puss_send_focus_change(GTK_WIDGET(puss_app->mini_line->entry), TRUE);
-	//gtk_widget_grab_focus(GTK_WIDGET(puss_app->mini_line->entry));
+	gtk_widget_grab_focus(GTK_WIDGET(puss_app->mini_line->entry));
 
 	g_signal_handler_block(G_OBJECT(puss_app->mini_line->entry), puss_app->mini_line->signal_id_changed);
 	gboolean res = puss_app->mini_line->cb->cb_active(puss_app->mini_line->cb->tag);
@@ -114,10 +86,8 @@ void puss_mini_line_deactive() {
 	gint page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
 	GtkTextView* view = puss_doc_get_view_from_page_num(page_num);
 
-	gtk_widget_hide(GTK_WIDGET(puss_app->mini_line->window));
+	gtk_widget_hide(puss_app->mini_line->window);
 
-	puss_send_focus_change(GTK_WIDGET(puss_app->mini_line->entry), FALSE);
-	puss_send_focus_change(GTK_WIDGET(view), TRUE);
 	gtk_widget_grab_focus(GTK_WIDGET(view));
 }
 
