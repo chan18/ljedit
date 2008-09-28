@@ -18,6 +18,11 @@ SIGNAL_CALLBACK void mini_line_cb_changed( GtkEditable* editable ) {
 	}
 }
 
+SIGNAL_CALLBACK gboolean mini_line_cb_focus_out_event( GtkWidget* widget, GdkEventFocus* event ) {
+	gtk_widget_hide(puss_app->mini_line->window);
+	return FALSE;
+}
+
 SIGNAL_CALLBACK gboolean mini_line_cb_key_press_event( GtkWidget* widget, GdkEventKey* event ) {
 	return puss_app->mini_line->cb
 		? puss_app->mini_line->cb->cb_key_press(event, puss_app->mini_line->cb->tag)

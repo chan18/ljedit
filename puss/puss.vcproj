@@ -333,10 +333,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\bin\res\puss_mini_window.xml"
-					>
-				</File>
-				<File
 					RelativePath=".\bin\res\puss_option_dialog.xml"
 					>
 				</File>
