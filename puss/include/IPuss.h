@@ -111,8 +111,8 @@ inline GtkNotebook*		puss_get_right_panel(Puss* app)					{ return GTK_NOTEBOOK(p
 inline GtkNotebook*		puss_get_bottom_panel(Puss* app)				{ return GTK_NOTEBOOK(puss_get_ui_object(app, "bottom_panel")); }
 inline GtkStatusbar*	puss_get_statusbar(Puss* app)					{ return GTK_STATUSBAR(puss_get_ui_object(app, "statusbar")); }
 
-inline GtkLabel*		puss_get_mini_window_label(Puss* app)			{ return GTK_LABEL(puss_get_ui_object(app, "mini_window_label")); }
-inline GtkEntry*		puss_get_mini_window_entry(Puss* app)			{ return GTK_ENTRY(puss_get_ui_object(app, "mini_window_entry")); }
+inline GtkImage*		puss_get_mini_window_image(Puss* app)			{ return GTK_IMAGE(puss_get_ui_object(app, "mini_bar_image")); }
+inline GtkEntry*		puss_get_mini_window_entry(Puss* app)			{ return GTK_ENTRY(puss_get_ui_object(app, "mini_bar_entry")); }
 
 #endif//PUSS_INC_IPUSS_H
 
