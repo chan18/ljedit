@@ -39,7 +39,7 @@ static gboolean cps_normal_typedef(Block* block, CppElem* parent) {
 			while( (ps < pe) && ps->type=='[' )
 				err_goto_finish_if( (ps = skip_pair_square_bracket(ps + 1, pe))==0 );
 
-			elem = g_new(CppElem, 1);
+			elem = cpp_elem_new();
 			elem->name = tiny_str_new(ps->buf, ps->len);
 			elem->v_typedef.typekey = typekey;
 			elem->decl = block_meger_tokens(block->tokens, ps, 0);
@@ -47,10 +47,7 @@ static gboolean cps_normal_typedef(Block* block, CppElem* parent) {
 			typekey = 0;
 			
 			//scope_insert(scope, p);
-			{
-				cpp_elem_clear(elem);
-				g_free(elem);
-			}
+			cpp_elem_free(elem);
 		}
 		break;
 
@@ -74,7 +71,7 @@ static gboolean cps_normal_typedef(Block* block, CppElem* parent) {
 						TinyStr* str = elem->decl;
 						elem->decl = tiny_str_new("typedef ", 8 + str->len);
 						memcpy(elem->decl->buf + 8, str->buf, str->len);
-						g_free(str);
+						tiny_str_free(str);
 					}
 				}
 			}
@@ -84,7 +81,7 @@ static gboolean cps_normal_typedef(Block* block, CppElem* parent) {
 	}
 
 __cps_finish__:
-	g_free(typekey);
+	tiny_str_free(typekey);
 	return TRUE;
 }
 
@@ -113,10 +110,7 @@ static gboolean cps_complex_typedef(Block* block, CppElem* parent) {
 	node->data = 0;
 	err_goto_finish_if( elem->type!=CPP_ET_CLASS && elem->type!=CPP_ET_ENUM );
 	// scope_insert(scope, elem);
-	{
-		cpp_elem_clear(elem);
-		g_free(elem);
-	}
+	cpp_elem_free(elem);
 
 	node = g_list_next(node);
 	for( ; node; node = g_list_next(node) ) {
@@ -125,7 +119,7 @@ static gboolean cps_complex_typedef(Block* block, CppElem* parent) {
 		err_goto_finish_if( elem->type != CPP_ET_VAR );
 
 		str = elem->v_var.typekey;
-		g_free(elem->v_var.nskey);
+		tiny_str_free(elem->v_var.nskey);
 		
 		elem->type = CPP_ET_TYPEDEF;
 		elem->v_typedef.typekey = str;
@@ -134,13 +128,10 @@ static gboolean cps_complex_typedef(Block* block, CppElem* parent) {
 		elem->decl = tiny_str_new(0, 8 + str->len);
 		memcpy(elem->decl->buf, "typedef ", 8);
 		memcpy(elem->decl->buf + 8, str->buf, str->len);
-		g_free(str);
+		tiny_str_free(str);
 
 		//scope_insert(scope, p);
-		{
-			cpp_elem_clear(elem);
-			g_free(elem);
-		}
+		cpp_elem_free(elem);
 	}
 
 __cps_finish__:
@@ -150,8 +141,7 @@ __cps_finish__:
 		if( !elem )
 			continue;
 
-		cpp_elem_clear(elem);
-		g_free(elem);
+		cpp_elem_free(elem);
 	}
 
 	return TRUE;

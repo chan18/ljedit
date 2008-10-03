@@ -32,7 +32,7 @@ gboolean cps_var(Block* block, CppElem* parent) {
 		err_goto_finish_if( (ps = parse_ptr_ref(ps, pe, &prdt))==0 );
 		err_goto_finish_if( (ps = parse_id(ps, pe, &nskey, &name))==0 );
 
-		elem = g_new0(CppElem, 1);
+		elem = cpp_elem_new();
 		elem->type = CPP_ET_VAR;
 		if( name->len==nskey->len ){
 			elem->name = nskey;
@@ -61,28 +61,21 @@ gboolean cps_var(Block* block, CppElem* parent) {
 		if( (ps < pe) && ps->type==',' ) {	// int a, b = 5, c;
 			++ps;
 			if( elem->v_var.typekey )
-				typekey = tiny_str_clone(elem->v_var.typekey);
+				typekey = tiny_str_copy(elem->v_var.typekey);
 			need_parse_next = TRUE;
 		}
 
 		//scope_insert(scope, p);
-		{
-			cpp_elem_clear(elem);
-			g_free(elem);
-		}
-
+		cpp_elem_free(elem);
 		elem = 0;
 	}
 
 __cps_finish__:
-	if( elem ) {
-		cpp_elem_clear(elem);
-		g_free(elem);
-	}
+	cpp_elem_free(elem);
 
-	g_free(typekey);
-	g_free(nskey);
-	g_free(dtdecl);
+	tiny_str_free(typekey);
+	tiny_str_free(nskey);
+	tiny_str_free(dtdecl);
 	return retval;
 }
 

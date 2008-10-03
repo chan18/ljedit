@@ -43,22 +43,21 @@ static void __dump_block(Block* block) {
 
 static inline void mlstr_cpy(MLStr* dst, MLStr* src) {
 	if( src->buf ) {
-		gchar ch = src->buf[src->len];
-		src->buf[src->len] = '\0';
-		dst->buf = g_strdup(src->buf);
-		src->buf[src->len] = ch;
+		dst->buf = g_slice_alloc(src->len + 1);
 		dst->len = src->len;
+		memcpy(dst->buf, src->buf, dst->len);
+		dst->buf[dst->len] = '\0';
 	}
 }
 
 static RMacro* rmacro_new(MLStr* name, gint argc, MLStr* argv, MLStr* value) {
-	RMacro* macro = g_new0(RMacro, 1);
+	RMacro* macro = g_slice_new0(RMacro);
 	mlstr_cpy( &(macro->name), name );
 
 	macro->argc = argc;
 	if( argc > 0 ) {
 		gint i;
-		macro->argv = g_new(MLStr, argc);
+		macro->argv = g_slice_alloc(sizeof(MLStr) * argc);
 		for( i=0; i<argc; ++i )
 			mlstr_cpy(macro->argv + i, argv + i);
 	}
@@ -70,16 +69,16 @@ static RMacro* rmacro_new(MLStr* name, gint argc, MLStr* argv, MLStr* value) {
 
 static void rmacro_free(RMacro* macro) {
 	if( macro ) {
-		g_free(macro->name.buf);
+		g_slice_free1(macro->name.len + 1, macro->name.buf);
 		if( macro->argv ) {
 			gint i;
 			for( i=0; i<macro->argc; ++i )
-				g_free((macro->argv + i)->buf);
-			g_free(macro->argv);
+				g_slice_free1((macro->argv + i)->len + 1, (macro->argv + i)->buf);
+			g_slice_free1(sizeof(MLStr) * macro->argc, macro->argv);
 		}
-		g_free(macro->value.buf);
+		g_slice_free1(macro->value.len + 1, macro->value.buf);
 
-		g_free(macro);
+		g_slice_free(RMacro, macro);
 	}
 }
 
@@ -135,7 +134,6 @@ CppFile* cpp_parser_parse(CppParser* env, gchar* filename_buf, gsize filename_le
 	file->root_scope.file = file;
 
 	spliter_init_with_text(&spliter, buf, len, 1);
-
 	memset(&block, 0, sizeof(block));
 	block.env = env;
 

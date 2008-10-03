@@ -31,7 +31,7 @@ gboolean cps_class(Block* block, CppElem* parent) {
 	if( ps->type==TK_ID )
 		err_goto_finish_if( (ps = parse_id(ps, pe, &nskey, &name))==0 );
 
-	elem = g_new0(CppElem, 1);
+	elem = cpp_elem_new();
 	if( name ) {
 		if( name->len==nskey->len ) {
 			elem->name = nskey;
@@ -49,6 +49,7 @@ gboolean cps_class(Block* block, CppElem* parent) {
 	elem->decl = block_meger_tokens(block->tokens, ps, 0);
 
 	//scope_insert(scope, p);
+	cpp_elem_free(elem);
 
 	err_goto_finish_if_not( ps < pe );
 
@@ -75,7 +76,7 @@ gboolean cps_class(Block* block, CppElem* parent) {
 			// TODO :
 			// elem->v_class.inhers.push_back(nskey);
 			{
-				g_free(nskey);
+				tiny_str_free(nskey);
 				nskey = 0;
 			}
 
@@ -106,7 +107,7 @@ gboolean cps_class(Block* block, CppElem* parent) {
 	}
 
 __cps_finish__:
-	g_free(nskey);
+	tiny_str_free(nskey);
 	return TRUE;
 }
 

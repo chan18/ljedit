@@ -16,21 +16,20 @@ static void ml_str_join(MLStr* out, MLStr* array, gint count) {
 	if( len==0 )
 		return;
 
-	if( out->len )
-		len = out->len + len + 1;
+	len = (out->buf) ? (out->len + len) : (len - 1);
 
-	p = g_new(gchar, len);
+	p = g_slice_alloc(len + 1);
 	if( out->buf ) {
 		memcpy(p, out->buf, out->len);
-		g_free(out->buf);
+		g_slice_free1(out->len + 1, out->buf);
 		out->buf = p;
 		p += out->len;
-		out->len = len - 1;
+		out->len = len;
 		i = 0;
 
 	} else {
 		out->buf = p;
-		out->len = len - 1;
+		out->len = len;
 		memcpy(p, array[0].buf, array[0].len);
 		p += array[0].len;
 		i = 1;
@@ -392,7 +391,7 @@ static gboolean macro_replace(MacroEnviron* env, RMacro* macro, CppLexer* lexer,
 
 		for( i=0; i<argc; ++i)
 			if( argv[i].is_owner )
-				g_free(argv[i].str.buf);
+				g_slice_free1(argv[i].str.len + 1, argv[i].str.buf);
 
 		return res;
  

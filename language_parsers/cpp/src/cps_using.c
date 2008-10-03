@@ -22,7 +22,7 @@ gboolean cps_using(Block* block, CppElem* parent) {
 
 	err_goto_finish_if( (ps = parse_id(ps, pe, &nskey, &name))==0 );
 
-	elem = g_new0(CppElem, 1);
+	elem = cpp_elem_new();
 	elem->type = CPP_ET_USING;
 	elem->name = tiny_str_new(name->buf, name->len);
 	elem->decl = block_meger_tokens(block->tokens, ps, 0);
@@ -31,14 +31,11 @@ gboolean cps_using(Block* block, CppElem* parent) {
 	nskey = 0;
 
 	//scope_insert(scope, p);
-	{
-		cpp_elem_clear(elem);
-		g_free(elem);
-	}
+	cpp_elem_free(elem);
 	return TRUE;
 
 __cps_finish__:
-	g_free(nskey);
+	tiny_str_free(nskey);
 	return FALSE;
 }
 

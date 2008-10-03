@@ -89,9 +89,9 @@ gboolean cps_template(Block* block, CppElem* parent) {
 	if( ps->type==KW_TEMPLATE ) {
 		Block subblock = { block->env, ps, (pe - ps), block->style };
 		for( i=0; i<targc; ++i ) {
-			g_free(targv[i].type);
-			g_free(targv[i].name);
-			g_free(targv[i].value);
+			tiny_str_free(targv[i].type);
+			tiny_str_free(targv[i].name);
+			tiny_str_free(targv[i].value);
 		}
 		return cps_template(&subblock, parent);
 	}
@@ -101,9 +101,9 @@ gboolean cps_template(Block* block, CppElem* parent) {
 
 __cps_finish__:
 	for( i=0; i<targc; ++i ) {
-		g_free(targv[i].type);
-		g_free(targv[i].name);
-		g_free(targv[i].value);
+		tiny_str_free(targv[i].type);
+		tiny_str_free(targv[i].name);
+		tiny_str_free(targv[i].value);
 	}
 
 	return TRUE;

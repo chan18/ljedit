@@ -21,10 +21,10 @@ static void ml_str_merge(MLStr* out, MLStr* array, gint count) {
 	if( len==0 )
 		return;
 
-	p = g_new(gchar, out->len + len + 1 );
+	p = g_slice_alloc(out->len + len + 1 );
 	if( out->buf ) {
 		memcpy(p, out->buf, out->len);
-		g_free(out->buf);
+		g_slice_free1(out->len + 1, out->buf);
 	}
 	out->buf = p;
 	p += out->len;
@@ -48,9 +48,9 @@ void cpp_lexer_frame_push(CppLexer* lexer, MLStr* str, gboolean need_copy_str, g
 		//       if find str in hash_table, not need create new node
 		//
 
-		node = g_new0(MLStrNode, 1);
+		node = g_slice_new0(MLStrNode);
 		if( need_copy_str ) {
-			node->str.buf = g_new(gchar, str->len + 1);
+			node->str.buf = g_slice_alloc(str->len + 1);
 			memcpy(node->str.buf, str->buf, str->len);
 			node->str.buf[str->len] = '\0';
 		} else {
@@ -70,7 +70,7 @@ void cpp_lexer_frame_push(CppLexer* lexer, MLStr* str, gboolean need_copy_str, g
 
 	} else {
 		if( !need_copy_str )
-			g_free(str->buf);
+			g_slice_free1(str->len + 1, str->buf);
 	}
 }
 
@@ -91,8 +91,8 @@ void cpp_lexer_final(CppLexer* lexer) {
 	while( lexer->keeps ) {
 		node = lexer->keeps;
 		lexer->keeps = node->next;
-		g_free(node->str.buf);
-		g_free(node);
+		g_slice_free1(node->str.len + 1, node->str.buf);
+		g_slice_free(MLStrNode, node);
 	}
 
 	lexer->top = -1;

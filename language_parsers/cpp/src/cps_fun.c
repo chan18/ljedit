@@ -89,8 +89,13 @@ static MLToken* parse_function_args(MLToken* ps, MLToken* pe, CppElem* fun, gboo
 			meger_tokens(lexer, start_pos, lexer.pos(), p->decl);
 			scope_insert(fun.impl, p);
 			*/
-			g_free(typekey);
-			g_free(nskey);
+			tiny_str_free(typekey);
+			tiny_str_free(nskey);
+			typekey = 0;
+			nskey = 0;
+		} else {
+			tiny_str_free(typekey);
+			tiny_str_free(nskey);
 			typekey = 0;
 			nskey = 0;
 		}
@@ -121,15 +126,15 @@ static MLToken* parse_function_args(MLToken* ps, MLToken* pe, CppElem* fun, gboo
 		retval = 0;
 
 __cps_finish__:
-	g_free(typekey);
-	g_free(nskey);
+	tiny_str_free(typekey);
+	tiny_str_free(nskey);
 	return retval;
 }
 
 static gboolean parse_function_common(Block* block, CppElem* parent, MLToken* start, TinyStr* typekey, TinyStr* nskey, MLToken* name) {
 	MLToken* ps = start;
 	MLToken* pe = block->tokens + block->count;
-	CppElem* elem = g_new0(CppElem, 1);
+	CppElem* elem = cpp_elem_new();
 	elem->type = CPP_ET_FUN;
 	elem->v_fun.typekey = typekey;
 	typekey = 0;
@@ -152,10 +157,7 @@ static gboolean parse_function_common(Block* block, CppElem* parent, MLToken* st
 	elem->decl = block_meger_tokens(block->tokens, ps, 0);
 
 	//scope_insert(scope, ptr.release());
-	{
-		cpp_elem_clear(elem);
-		g_free(elem);
-	}
+	cpp_elem_free(elem);
 
 	if( block->style==BLOCK_STYLE_BLOCK ) {
 		while( (ps < pe) && ps->type!='{' )
@@ -167,8 +169,8 @@ static gboolean parse_function_common(Block* block, CppElem* parent, MLToken* st
 	return TRUE;
 
 __cps_finish__:
-	g_free(typekey);
-	g_free(nskey);
+	tiny_str_free(typekey);
+	tiny_str_free(nskey);
 	return FALSE;
 }
 

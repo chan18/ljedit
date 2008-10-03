@@ -24,7 +24,7 @@ gboolean cps_namespace(Block* block, CppElem* parent) {
 		++ps;
 		err_return_false_if_not( (ps < pe) && ps->type=='{' );
 
-		elem = g_new0(CppElem, 1);
+		elem = cpp_elem_new();
 		elem->name = tiny_str_new(name->buf, name->len);
 		elem->decl = tiny_str_new(0, 10 + name->len);
 		memcpy(elem->decl->buf, "namesapce ", 10);

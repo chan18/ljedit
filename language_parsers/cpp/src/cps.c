@@ -15,13 +15,20 @@
 
 static MLToken* spliter_next_token(BlockSpliter* spliter, CppParser* env, gboolean skip_comment) {
 	MLToken* token;
+	gsize count;
 	g_assert( spliter->pos < spliter->end );
 
 	if( spliter->policy==SPLITER_POLICY_USE_TEXT ) {
 		while( (spliter->pos + 1)==spliter->end ) {
 			if( spliter->end >= spliter->cap ) {
-				spliter->cap = spliter->cap ? spliter->cap * 2 : 32;
-				spliter->tokens = g_renew(MLToken, spliter->tokens, spliter->cap);
+				count = spliter->cap ? spliter->cap * 2 : 32;
+				token = g_slice_alloc(sizeof(MLToken) * count);
+				if( spliter->cap ) {
+					memcpy(token, spliter->tokens, sizeof(MLToken)*spliter->cap);
+					g_slice_free1(sizeof(MLToken)*spliter->cap, spliter->tokens);
+				}
+				spliter->cap = count;
+				spliter->tokens = token;
 			}
 
 			token = spliter->tokens + spliter->end;
@@ -119,7 +126,7 @@ void spliter_init_with_text(BlockSpliter* spliter, gchar* buf, gsize len, gint s
 	spliter->cap = 0;
 	spliter->end = 0;
 	spliter->pos = 0;
-	spliter->lexer = g_new(CppLexer, 1);
+	spliter->lexer = g_slice_new(CppLexer);
 	cpp_lexer_init(spliter->lexer, buf, len, start_line);
 }
 
@@ -134,9 +141,9 @@ void spliter_init_with_tokens(BlockSpliter* spliter, MLToken* tokens, gint count
 
 void spliter_final(BlockSpliter* spliter) {
 	if( spliter->policy==SPLITER_POLICY_USE_TEXT ) {
-		g_free(spliter->tokens);
 		cpp_lexer_final(spliter->lexer);
-		g_free(spliter->lexer);
+		g_slice_free(CppLexer, spliter->lexer);
+		g_slice_free1(sizeof(MLToken)*spliter->cap, spliter->tokens);
 		spliter->tokens = 0;
 		spliter->cap = 0;
 		spliter->lexer = 0;
