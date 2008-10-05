@@ -5,9 +5,9 @@
 #include "Puss.h"
 #include "OptionManager.h"
 
-struct Utils {
+typedef struct _Utils {
 	gchar** charset_list;
-};
+} Utils;
 
 void parse_charset_list_option(const Option* option, gpointer tag) {
 	Utils* self = puss_app->utils;
@@ -19,9 +19,11 @@ void parse_charset_list_option(const Option* option, gpointer tag) {
 }
 
 gboolean puss_utils_create() {
+	const Option* option;
+
 	puss_app->utils = g_new0(Utils, 1);
 
-	const Option* option = puss_option_manager_option_reg("puss", "fileloader.charset_list", "GBK", 0, 0, 0);
+	option = puss_option_manager_option_reg("puss", "fileloader.charset_list", "GBK", 0, 0, 0);
 	puss_option_manager_monitor_reg(option, &parse_charset_list_option, 0, 0);
 	parse_charset_list_option(option, 0);
 
@@ -88,8 +90,11 @@ gboolean load_convert_text(gchar** text, gsize* len, const gchar* charset, GErro
 }
 
 gboolean puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST_RETURN gchar** charset) {
+	gchar** cs;
+	const gchar* locale = 0;
 	gchar* sbuf = 0;
 	gsize  slen = 0;
+	Utils* self = puss_app->utils;
 
 	g_return_val_if_fail(filename && text && len , FALSE);
 	g_return_val_if_fail(*filename, FALSE);
@@ -105,9 +110,8 @@ gboolean puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST
 		return TRUE;
 	}
 
-	Utils* self = puss_app->utils;
 	if( self->charset_list ) {
-		for( gchar** cs=self->charset_list; *cs; ++cs ) {
+		for( cs=self->charset_list; *cs; ++cs ) {
 			if( (*cs)[0]=='\0' )
 				continue;
 
@@ -121,7 +125,6 @@ gboolean puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST
 		}
 	}
 
-	const gchar* locale = 0;
 	if( !g_get_charset(&locale) ) {		// get locale charset, and not UTF-8
 		if( load_convert_text(&sbuf, &slen, locale, 0) ) {
 			if( charset )
@@ -141,15 +144,15 @@ gboolean puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST
 #endif
 
 gchar* puss_format_filename(const gchar* filename) {
-	g_assert( filename );
-
 	gchar* res = 0;
 
 #ifdef G_OS_WIN32
+	wchar_t wbuf[32768];
+	gsize len;
+	gchar* p;
 	wchar_t* wfname = (wchar_t*)g_utf8_to_utf16(filename, -1, 0, 0, 0);
 	if( wfname ) {
-		wchar_t wbuf[32768];
-		gsize len = GetFullPathNameW(wfname, 32768, wbuf, 0);
+		len = GetFullPathNameW(wfname, 32768, wbuf, 0);
 		g_free(wfname);
 
 		res = g_utf16_to_utf8((const gunichar2*)wbuf, len, 0, 0, 0);
@@ -160,17 +163,18 @@ gchar* puss_format_filename(const gchar* filename) {
 
 	g_assert( res );
 
-	for( gchar* p = res; *p; ++p )
+	for( p = res; *p; ++p )
 		*p = g_ascii_tolower(*p);
 
 #else
 	gboolean succeed = TRUE;
-
-	gchar** paths = g_strsplit(filename, "/", 0);
+	gchar** p;
+	gchar* path;
 	gchar* outs[256];
 	gchar** pt = outs;
-	for( gchar** p=paths; succeed && *p; ++p ) {
-		gchar* path = *p;
+	gchar** paths = g_strsplit(filename, "/", 0);
+	for( p=paths; succeed && *p; ++p ) {
+		path = *p;
 		if( g_str_equal(*p, ".") ) {
 			// ignore ./
 

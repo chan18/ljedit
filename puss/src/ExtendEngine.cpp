@@ -32,13 +32,14 @@
 #include "Puss.h"
 #include "Utils.h"
 
-struct Extend {
+typedef struct _Extend {
 	GModule*	module;
 	void*		handle;
 	Extend*		next;
-};
+} Extend;
 
 Extend* extend_load(const gchar* filepath) {
+	void* (*create_fun)(Puss* app);
 	Extend* extend = g_try_new0(Extend, 1);
 	if( !extend )
 		return 0;
@@ -49,7 +50,6 @@ Extend* extend_load(const gchar* filepath) {
 		g_printerr(_("REASON : %s\n"), g_module_error());
 
 	} else {
-		void* (*create_fun)(Puss* app);
 		g_module_symbol( extend->module
 						, "puss_extend_create"
 						, (gpointer*)&create_fun );
@@ -71,9 +71,9 @@ Extend* extend_load(const gchar* filepath) {
 }
 
 void extend_unload(Extend* extend) {
+	void (*destroy_fun)(void* handle);
 	if( extend ) {
 		if( extend->module ) {
-			void (*destroy_fun)(void* handle);
 			g_module_symbol(extend->module, "puss_extend_destroy", (gpointer*)&destroy_fun);
 
 			if( destroy_fun )
@@ -87,30 +87,35 @@ void extend_unload(Extend* extend) {
 }
 
 gboolean puss_extend_engine_create() {
+	gchar* extends_dir;
+	GDir* dir;
+	Extend* extend;
+	const gchar* filename;
+	size_t len;
+	gchar* filepath;
+	const gchar* match_str = ".ext";
+	size_t match_len = strlen(match_str);
+
+
 	if( !g_module_supported() )
 		return TRUE;
 
-	gchar* extends_dir = g_build_filename(puss_app->module_path, "extends", NULL);
+	extends_dir = g_build_filename(puss_app->module_path, "extends", NULL);
 	if( !extends_dir )
 		return TRUE;
 
-	GDir* dir = g_dir_open(extends_dir, 0, NULL);
+	dir = g_dir_open(extends_dir, 0, NULL);
 	if( dir ) {
-		Extend* extend = 0;
-
-		const gchar* match_str = ".ext";
-		size_t match_len = strlen(match_str);
-
 		for(;;) { 
-			const gchar* filename = g_dir_read_name(dir);
+			filename = g_dir_read_name(dir);
 			if( !filename )
 				break;
 
-			size_t len = strlen(filename);
+			len = strlen(filename);
 			if( len < match_len || strcmp(filename+len-match_len, match_str)!=0 )
 				continue;
 
-			gchar* filepath = g_build_filename(extends_dir, filename, NULL);
+			filepath = g_build_filename(extends_dir, filename, NULL);
 			extend = extend_load(filepath);
 			g_free(filepath);
 
@@ -129,11 +134,12 @@ gboolean puss_extend_engine_create() {
 }
 
 void puss_extend_engine_destroy() {
+	Extend* t;
 	Extend* p = puss_app->extends_list;
 	puss_app->extends_list = 0;
 
 	while( p ) {
-		Extend* t = p;
+		t = p;
 		p = p->next;
 
 		extend_unload(t);

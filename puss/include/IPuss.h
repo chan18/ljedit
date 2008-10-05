@@ -7,29 +7,29 @@
 #include <gtk/gtk.h>
 
 // mini line
-struct MiniLineCallback {
+typedef struct _MiniLineCallback {
 	gpointer		 tag;
 
 	gboolean 		(*cb_active)( gpointer tag );
 	gboolean 		(*cb_key_press)( GdkEventKey* event, gpointer tag );
 	void     		(*cb_changed)( gpointer tag );
-};
+} MiniLineCallback;
 
 // option manager
-struct Option {
+typedef struct _Option {
 	const gchar*	group;
 	const gchar*	key;
 
 	gchar*			value;
 
 	gchar*			default_value;
-};
+} Option;
 
 typedef gboolean	(*OptionSetter)(GtkWindow* parent, Option* option, gpointer tag);
 typedef void		(*OptionChanged)(const Option* option, gpointer tag);
 
 // main
-struct Puss {
+typedef struct {
 	// app
 	const gchar*	(*get_module_path)();
 	const gchar*	(*get_locale_path)();
@@ -82,7 +82,7 @@ struct Puss {
 						, GFreeFunc tag_free_fun );
 
 	gboolean		(*option_manager_monitor_reg)(const Option* option, OptionChanged fun, gpointer tag, GFreeFunc tag_free_fun);
-};
+} Puss;
 
 #ifdef  __cplusplus
 #	define __EXTERN_C extern "C"

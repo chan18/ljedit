@@ -10,10 +10,9 @@
 
 #define POS_NODE_MAX 256
 
-struct PosNode;
-struct PosList;
+typedef struct _PosNode PosNode;
 
-struct PosNode {
+struct _PosNode {
 	PosNode*		prev;
 	PosNode*		next;
 
@@ -22,7 +21,7 @@ struct PosNode {
 	gint			offset;
 };
 
-struct PosList {
+typedef struct _PosList {
 	PosNode*		head;
 	PosNode*		tail;
 	PosNode*		current;
@@ -30,12 +29,12 @@ struct PosList {
 	PosNode*		free_list;
 
 	PosNode			pool[POS_NODE_MAX];
-};
+} PosList;
 
 gboolean __debug_pos_list_check() {
-	PosList* list = puss_app->pos_list;
-	size_t count = 0;
 	PosNode* p;
+	size_t count = 0;
+	PosList* list = puss_app->pos_list;
 	for( p = list->head; p && count <= POS_NODE_MAX; p = p->next )
 		++count;
 	for( p = list->free_list; p && count <= POS_NODE_MAX; p = p->next )
@@ -51,10 +50,12 @@ gboolean __debug_pos_list_check_node(PosNode* node) {
 }
 
 gboolean puss_pos_locate_create() {
+	PosNode* pool;
+	gint i;
 	puss_app->pos_list = g_new0(PosList, 1);
 
-	PosNode* pool = puss_app->pos_list->pool;
-	for( int i=0; i<POS_NODE_MAX-1; ++i )
+	pool = puss_app->pos_list->pool;
+	for( i=0; i<POS_NODE_MAX-1; ++i )
 		pool[i].next = &pool[i+1];
 
 	puss_app->pos_list->free_list = &pool[0];
@@ -100,15 +101,17 @@ void page_delete_notify(PosNode* node, GObject* where_the_object_was) {
 }
 
 void puss_pos_locate_add(gint page_num, gint line, gint offset) {
+	GtkWidget* page;
+	PosList* list;
+	PosNode* node = 0;
 	if( page_num < 0 || line < 0 )
 		return;
 
-	GtkWidget* page = gtk_notebook_get_nth_page(puss_app->doc_panel, page_num);
+	page = gtk_notebook_get_nth_page(puss_app->doc_panel, page_num);
 	if( !page )
 		return;
 
-	PosNode* node = 0;
-	PosList* list = puss_app->pos_list;
+	list = puss_app->pos_list;
 	if( list->current ) {
 		// if in same as current pos (modify offset only)
 		if( list->current->page==page && list->current->line==line ) {
@@ -168,29 +171,36 @@ void puss_pos_locate_add(gint page_num, gint line, gint offset) {
 }
 
 void puss_pos_locate_add_current_pos() {
-	gint page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
+	GtkTextIter iter;
+	gint line;
+	gint offset;
+	gint page_num;
+	GtkWidget* page;
+	GtkTextBuffer* buf;
+
+	page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
 	if( page_num < 0 )
 		return;
 
-	GtkWidget* page = gtk_notebook_get_nth_page(puss_app->doc_panel, page_num);
-	GtkTextBuffer* buf = puss_doc_get_buffer_from_page(page);
+	page = gtk_notebook_get_nth_page(puss_app->doc_panel, page_num);
+	buf = puss_doc_get_buffer_from_page(page);
 	if( !buf )
 		return;
 
-	GtkTextIter iter;
 	gtk_text_buffer_get_iter_at_mark(buf, &iter, gtk_text_buffer_get_insert(buf));
-	gint line = gtk_text_iter_get_line(&iter);
-	gint offset = gtk_text_iter_get_line_offset(&iter);
+	line = gtk_text_iter_get_line(&iter);
+	offset = gtk_text_iter_get_line_offset(&iter);
 
 	puss_pos_locate_add(page_num, line, offset);
 }
 
 void puss_pos_locate_current() {
+	gint page_num;
 	PosList* list = puss_app->pos_list;
 	if( !list->current )
 		return;
 
-	gint page_num = gtk_notebook_page_num(puss_app->doc_panel, list->current->page);
+	page_num = gtk_notebook_page_num(puss_app->doc_panel, list->current->page);
 	if( page_num < 0 )
 		return;
 

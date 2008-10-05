@@ -6,14 +6,16 @@
 #include "Puss.h"
 #include "Utils.h"
 
-struct OptionNotifer {
-	OptionNotifer*		next;
-	OptionChanged		fun;
-	gpointer			tag;
-	GFreeFunc			tag_free_fun;
+typedef struct _OptionNotifer OptionNotifer;
+
+struct _OptionNotifer {
+	OptionNotifer*	next;
+	OptionChanged	fun;
+	gpointer		tag;
+	GFreeFunc		tag_free_fun;
 };
 
-struct OptionNode {
+typedef struct _OptionNode {
 	Option			option;
 
 	OptionSetter	setter_fun;
@@ -21,9 +23,11 @@ struct OptionNode {
 	GFreeFunc		setter_tag_free_fun;
 
 	OptionNotifer*	notifer_list;
-};
+} OptionNode;
 
 void option_node_free(OptionNode* node) {
+	OptionNotifer* p;
+
 	g_free(node->option.value);
 	g_free(node->option.default_value);
 
@@ -31,7 +35,7 @@ void option_node_free(OptionNode* node) {
 		(*node->setter_tag_free_fun)(node->setter_tag);
 
 	while( node->notifer_list ) {
-		OptionNotifer* p = node->notifer_list;
+		p = node->notifer_list;
 		node->notifer_list = p->next;
 		if( p->tag_free_fun )
 			(*(p->tag_free_fun))(p->tag);
@@ -41,22 +45,24 @@ void option_node_free(OptionNode* node) {
 	g_free(node);
 }
 
-struct OptionManager {
+typedef struct _OptionManager {
 	gchar*		filepath;
 	GKeyFile*	keyfile;
 	gboolean	modified;
 
 	GTree*		option_groups;	// group, GTree(key, OptionNode)
-};
+} OptionManager;
 
 gint compare_data_func_wrapper(gpointer a, gpointer b, GCompareFunc cmp) { return (*cmp)(a, b); }
 
 gboolean puss_option_manager_create() {
+	OptionManager* self;
+
 	g_assert( !puss_app->option_manager );
 
-	puss_app->option_manager = g_new0(OptionManager, 1);
+	self = g_new0(OptionManager, 1);
+	puss_app->option_manager = self;
 
-	OptionManager* self = puss_app->option_manager;
 	self->filepath = g_build_filename(g_get_user_config_dir(), ".puss_config", NULL);
 	if( !self->filepath ) {
 		g_printerr("ERROR(option_manager) : build filename failed!\n");
@@ -96,6 +102,7 @@ void puss_option_manager_destroy() {
 }
 
 gboolean option_manager_notify_option_changed(OptionNode* node) {
+	OptionNotifer* p;
 	OptionManager* self = puss_app->option_manager;
 
 	//gchar* old = g_key_file_get_string(self->keyfile, node->option.group, node->option.key, 0);
@@ -105,7 +112,7 @@ gboolean option_manager_notify_option_changed(OptionNode* node) {
 	g_key_file_set_string(self->keyfile, node->option.group, node->option.key, node->option.value);
 	self->modified = TRUE;
 
-	for( OptionNotifer* p = node->notifer_list; p; p = p->next ) {
+	for( p = node->notifer_list; p; p = p->next ) {
 		g_assert( p->fun );
 
 		//p->fun(&node->option, old, p->tag);
@@ -140,6 +147,7 @@ const Option* puss_option_manager_option_reg( const gchar* group
 		, gpointer tag
 		, GFreeFunc tag_free_fun )
 {
+	OptionNode* node;
 	OptionManager* self = puss_app->option_manager;
 
 	gchar* ptr_group = 0;
@@ -153,7 +161,7 @@ const Option* puss_option_manager_option_reg( const gchar* group
 		g_tree_insert(self->option_groups, ptr_group, option_group);
 	}
 
-	OptionNode* node = (OptionNode*)g_tree_lookup(option_group, key);
+	node = (OptionNode*)g_tree_lookup(option_group, key);
 	if( node )
 		return 0;
 
@@ -178,10 +186,11 @@ const Option* puss_option_manager_option_reg( const gchar* group
 }
 
 const Option* puss_option_manager_find(const gchar* group, const gchar* key) {
+	OptionNode* node;
 	OptionManager* self = puss_app->option_manager;
 	GTree* option_group = (GTree*)g_tree_lookup(self->option_groups, group);
 	if( option_group ) {
-		OptionNode* node = (OptionNode*)g_tree_lookup(option_group, key);
+		node = (OptionNode*)g_tree_lookup(option_group, key);
 		if( node )
 			return &node->option;
 	}
@@ -190,11 +199,14 @@ const Option* puss_option_manager_find(const gchar* group, const gchar* key) {
 }
 
 gboolean puss_option_manager_monitor_reg(const Option* option, OptionChanged fun, gpointer tag, GFreeFunc tag_free_fun) {
+	OptionNode* node;
+	OptionNotifer* notifer;
+
 	if( !option )
 		return FALSE;
 
-	OptionNode* node = (OptionNode*)option;
-	OptionNotifer* notifer = g_new0(OptionNotifer, 1);
+	node = (OptionNode*)option;
+	notifer = g_new0(OptionNotifer, 1);
 
 	notifer->next = node->notifer_list;
 	notifer->fun = fun;
@@ -204,10 +216,10 @@ gboolean puss_option_manager_monitor_reg(const Option* option, OptionChanged fun
 	return TRUE;
 }
 
-struct ParentTreePosition {
+typedef struct _ParentTreePosition {
 	GtkTreeStore*	store;
 	GtkTreeIter*	parent;
-};
+} ParentTreePosition;
 
 gboolean fill_option_keys(gchar* key, OptionNode* value, ParentTreePosition* pos) {
 	GtkTreeIter iter;
@@ -224,6 +236,8 @@ gboolean fill_option_keys(gchar* key, OptionNode* value, ParentTreePosition* pos
 
 gboolean fill_option_groups(gchar* group, GTree* options, GtkTreeStore* store) {
 	GtkTreeIter iter;
+	ParentTreePosition pos;
+
 	gtk_tree_store_append(store, &iter, NULL);
 	gtk_tree_store_set( store, &iter
 		, 0, group
@@ -232,7 +246,8 @@ gboolean fill_option_groups(gchar* group, GTree* options, GtkTreeStore* store) {
 		, 3, NULL
 		, -1 );
 
-	ParentTreePosition pos = { store, &iter };
+	pos.store = store;
+	pos.parent = &iter;
 
 	g_tree_foreach(options, (GTraverseFunc)&fill_option_keys, &pos);
 
@@ -248,19 +263,20 @@ void fill_options(GtkTreeStore* store) {
 gboolean default_option_setter(GtkWindow* parent, Option* option, gpointer tag);
 
 SIGNAL_CALLBACK void option_manager_cb_row_activated(GtkTreeView* tree_view, GtkTreePath* path, GtkTreeViewColumn* col, GtkWindow* parent) {
+	GtkTreeIter iter;
+	OptionSetter setter;
+	OptionNode* node = 0;
 	//OptionManager* self = puss_app->option_manager;
 	GtkTreeModel* model = gtk_tree_view_get_model(tree_view);
 
-	GtkTreeIter iter;
 	if( !gtk_tree_model_get_iter(model, &iter, path) )
 		return;
 
-	OptionNode* node = 0;
 	gtk_tree_model_get(model, &iter, 3, &node, -1);
 	if( !node )
 		return;
 
-	OptionSetter setter = node->setter_fun ? node->setter_fun : &default_option_setter;
+	setter = node->setter_fun ? node->setter_fun : &default_option_setter;
 	if( (*setter)(parent, &node->option, node->setter_tag) ) {
 		option_manager_notify_option_changed(node);
 
@@ -271,21 +287,26 @@ SIGNAL_CALLBACK void option_manager_cb_row_activated(GtkTreeView* tree_view, Gtk
 }
 
 void puss_option_manager_active() {
+	gchar* filepath;
+	GtkBuilder* builder;
+	GtkWidget* dlg;
+	GtkTreeStore* store;
+	GtkTreeView* view;
+	GError* err = 0;
 	OptionManager* self = puss_app->option_manager;
 
 	// create UI
-	GtkBuilder* builder = gtk_builder_new();
+	builder = gtk_builder_new();
 	if( !builder )
 		return;
 
-	gchar* filepath = g_build_filename(puss_app->module_path, "res", "puss_option_dialog.xml", NULL);
+	filepath = g_build_filename(puss_app->module_path, "res", "puss_option_dialog.xml", NULL);
 	if( !filepath ) {
 		g_printerr("ERROR(puss) : build config manager ui filepath failed!\n");
 		g_object_unref(G_OBJECT(builder));
 		return;
 	}
 
-	GError* err = 0;
 	gtk_builder_add_from_file(builder, filepath, &err);
 	g_free(filepath);
 
@@ -296,9 +317,9 @@ void puss_option_manager_active() {
 		return;
 	}
 
-	GtkWidget* dlg = GTK_WIDGET(gtk_builder_get_object(builder, "puss_option_dialog"));
-	GtkTreeStore* store = GTK_TREE_STORE(gtk_builder_get_object(builder, "option_store"));
-	GtkTreeView* view = GTK_TREE_VIEW(gtk_builder_get_object(builder, "option_treeview"));
+	dlg = GTK_WIDGET(gtk_builder_get_object(builder, "puss_option_dialog"));
+	store = GTK_TREE_STORE(gtk_builder_get_object(builder, "option_store"));
+	view = GTK_TREE_VIEW(gtk_builder_get_object(builder, "option_treeview"));
 	gtk_widget_show_all(GTK_DIALOG(dlg)->vbox);
 	gtk_builder_connect_signals(builder, GTK_WINDOW(dlg));
 	g_object_unref(G_OBJECT(builder));
@@ -323,16 +344,18 @@ void puss_option_manager_active() {
 const gint RESPONSE_USE_DEFFAULT_VALUE = 100;
 
 gboolean default_font_option_setter(GtkWindow* parent, Option* option) {
+	gint res;
+	gchar* value;
 	GtkWidget* dlg = gtk_font_selection_dialog_new( _("font selecting...") );
 	if( option->value )
 		gtk_font_selection_dialog_set_font_name(GTK_FONT_SELECTION_DIALOG(dlg), option->value);
 	gtk_dialog_add_button(GTK_DIALOG(dlg), GTK_STOCK_REVERT_TO_SAVED, RESPONSE_USE_DEFFAULT_VALUE);
 	gtk_window_set_transient_for(GTK_WINDOW(dlg), parent);
 
-	gint res = gtk_dialog_run( GTK_DIALOG(dlg) );
+	res = gtk_dialog_run( GTK_DIALOG(dlg) );
 
 	if( res==GTK_RESPONSE_OK ) {
-		gchar* value = gtk_font_selection_dialog_get_font_name(GTK_FONT_SELECTION_DIALOG(dlg));
+		value = gtk_font_selection_dialog_get_font_name(GTK_FONT_SELECTION_DIALOG(dlg));
 		if( value && option->value && g_str_equal(value, option->value) ) {
 			g_free(value);
 			res = GTK_RESPONSE_CANCEL;
@@ -358,6 +381,9 @@ gboolean default_font_option_setter(GtkWindow* parent, Option* option) {
 }
 
 GtkDialog* __create_default_option_setter_dialog(GtkWindow* parent, Option* option, GtkWidget* setter) {
+	GtkWidget* label;
+	GtkWidget* hbox;
+	GtkWidget* frame;
 	GtkWidget* dlg = gtk_dialog_new_with_buttons( _("option setting...")
 		, parent
 		, GTK_DIALOG_MODAL
@@ -366,13 +392,13 @@ GtkDialog* __create_default_option_setter_dialog(GtkWindow* parent, Option* opti
 		, GTK_STOCK_REVERT_TO_SAVED, RESPONSE_USE_DEFFAULT_VALUE
 		, NULL );
 
-	GtkWidget* label = gtk_label_new(option->key);
+	label = gtk_label_new(option->key);
 
-	GtkWidget* hbox = gtk_hbox_new(FALSE, 3);
+	hbox = gtk_hbox_new(FALSE, 3);
 	gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(hbox), setter, TRUE, TRUE, 0);
 
-	GtkWidget* frame = gtk_frame_new(option->group);
+	frame = gtk_frame_new(option->group);
 	gtk_container_add(GTK_CONTAINER(frame), hbox);
 
 	gtk_box_pack_start( GTK_BOX(GTK_DIALOG(dlg)->vbox), frame, TRUE, TRUE, 0);
@@ -391,21 +417,25 @@ gboolean __revert_to_default_option(Option* option) {
 }
 
 gboolean default_text_option_setter(GtkWindow* parent, Option* option) {
+	gint res;
+	gchar* value;
+	GtkTextIter ps, pe;
+	GtkDialog* dlg;
+	GtkTextBuffer* buf;
 	GtkWidget* view = gtk_text_view_new();
 	gtk_text_view_set_pixels_below_lines(GTK_TEXT_VIEW(view), 3);
 
-	GtkTextBuffer* buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
+	buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
 	gtk_text_buffer_set_text(buf, option->value, -1);
 
-	GtkDialog* dlg = __create_default_option_setter_dialog(parent, option, view);
+	dlg = __create_default_option_setter_dialog(parent, option, view);
 
-	gint res = gtk_dialog_run(dlg);
+	res = gtk_dialog_run(dlg);
 
 	if( res==GTK_RESPONSE_OK ) {
-		GtkTextIter ps, pe;
 		gtk_text_buffer_get_start_iter(buf, &ps);
 		gtk_text_buffer_get_end_iter(buf, &pe);
-		gchar* value = gtk_text_buffer_get_text(buf, &ps, &pe, TRUE);
+		value = gtk_text_buffer_get_text(buf, &ps, &pe, TRUE);
 		if( value && option->value && g_str_equal(value, option->value) ) {
 			g_free(value);
 			res = GTK_RESPONSE_CANCEL;
@@ -425,12 +455,17 @@ gboolean default_text_option_setter(GtkWindow* parent, Option* option) {
 }
 
 gboolean default_enum_option_setter(GtkWindow* parent, Option* option, const gchar* elems) {
+	gchar** items;
+	gchar** p;
+	gint res;
+	GtkDialog* dlg;
+	gchar* value;
+	gint i = 0;
+	gint index = -1;
 	GtkWidget* combo = gtk_combo_box_new_text();
 
-	gint index = -1;
-	gchar** items = g_strsplit_set(elems, ",; \t", 0);
-	gint i = 0;
-	for( gchar** p=items; *p; ++p ) {
+	items = g_strsplit_set(elems, ",; \t", 0);
+	for( p=items; *p; ++p ) {
 		if( *p[0] ) {
 			gtk_combo_box_append_text(GTK_COMBO_BOX(combo), *p);
 			if( index < 0 && option->value ) {
@@ -445,12 +480,12 @@ gboolean default_enum_option_setter(GtkWindow* parent, Option* option, const gch
 	if( option->value )
 		gtk_combo_box_set_active(GTK_COMBO_BOX(combo), index);
 
-	GtkDialog* dlg = __create_default_option_setter_dialog(parent, option, combo);
+	dlg = __create_default_option_setter_dialog(parent, option, combo);
 
-	gint res = gtk_dialog_run(dlg);
+	res = gtk_dialog_run(dlg);
 
 	if( res==GTK_RESPONSE_OK ) {
-		gchar* value = gtk_combo_box_get_active_text(GTK_COMBO_BOX(combo));
+		value = gtk_combo_box_get_active_text(GTK_COMBO_BOX(combo));
 		if( value && option->value && g_str_equal(value, option->value) ) {
 			g_free(value);
 			res = GTK_RESPONSE_CANCEL;
@@ -470,16 +505,20 @@ gboolean default_enum_option_setter(GtkWindow* parent, Option* option, const gch
 }
 
 gboolean default_string_option_setter(GtkWindow* parent, Option* option) {
+	gint res;
+	GtkDialog* dlg;
+	const gchar* value;
+
 	GtkWidget* entry = gtk_entry_new();
 	if( option->value )
 		gtk_entry_set_text(GTK_ENTRY(entry), option->value);
 
-	GtkDialog* dlg = __create_default_option_setter_dialog(parent, option, entry);
+	dlg = __create_default_option_setter_dialog(parent, option, entry);
 
-	gint res = gtk_dialog_run(dlg);
+	res = gtk_dialog_run(dlg);
 
 	if( res==GTK_RESPONSE_OK ) {
-		const gchar* value = gtk_entry_get_text(GTK_ENTRY(entry));
+		value = gtk_entry_get_text(GTK_ENTRY(entry));
 		if( value && option->value && g_str_equal(value, option->value) ) {
 			res = GTK_RESPONSE_CANCEL;
 		} else {

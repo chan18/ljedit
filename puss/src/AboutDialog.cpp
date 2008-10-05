@@ -1,4 +1,4 @@
-// AboutDialog.cpp
+// AboutDialog.c
 // 
 
 #include "AboutDialog.h"

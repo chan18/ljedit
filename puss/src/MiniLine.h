@@ -6,9 +6,9 @@
 
 #include <gtk/gtk.h>
 
-struct MiniLineCallback;
+typedef struct _MiniLineCallback MiniLineCallback;
 
-struct MiniLine {
+typedef struct _MiniLine {
 	GtkWidget*			window;
 	GtkImage*			image;
 	GtkEntry*			entry;
@@ -17,7 +17,7 @@ struct MiniLine {
 	gulong				signal_id_key_press;
 
 	MiniLineCallback*	cb;
-};
+} MiniLine;
 
 gboolean	puss_mini_line_create();
 void		puss_mini_line_destroy();

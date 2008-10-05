@@ -4,7 +4,7 @@
 #ifndef PUSS_INC_MINILINE_MODULES_H
 #define PUSS_INC_MINILINE_MODULES_H
 
-struct MiniLineCallback;
+typedef struct _MiniLineCallback MiniLineCallback;
 
 MiniLineCallback*	puss_mini_line_GOTO_get_callback();
 

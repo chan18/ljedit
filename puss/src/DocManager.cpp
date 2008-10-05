@@ -69,18 +69,22 @@ gboolean doc_scroll_to_pos( GtkTextView* view ) {
 }
 
 void doc_locate_page_line( gint page_num, gint line, gint offset ) {
+	GtkTextView* view;
+	GtkTextBuffer* buf;
+	GtkTextMark* mark;
+	GtkTextIter iter;
+
 	if( line <  0 )
 		return;
 
-	GtkTextView* view = puss_doc_get_view_from_page_num(page_num);
+	view = puss_doc_get_view_from_page_num(page_num);
 	if( !view )
 		return;
 
-	GtkTextBuffer* buf = gtk_text_view_get_buffer(view);
+	buf = gtk_text_view_get_buffer(view);
 	if( !buf )
 		return;
 
-	GtkTextIter iter;
 	if( line >= gtk_text_buffer_get_line_count(buf) ) {
 		gtk_text_buffer_get_end_iter(buf, &iter);
 
@@ -100,7 +104,7 @@ void doc_locate_page_line( gint page_num, gint line, gint offset ) {
 
 	gtk_text_buffer_place_cursor(buf, &iter);
 
-	GtkTextMark* mark = gtk_text_buffer_get_mark(buf, scroll_mark_name);
+	mark = gtk_text_buffer_get_mark(buf, scroll_mark_name);
 	if( mark )
 		gtk_text_buffer_move_mark(buf, mark, &iter);
 	else
@@ -156,9 +160,12 @@ gboolean doc_cb_button_release_on_view(GtkWidget* widget, GdkEventButton *event)
 }
 
 gboolean doc_cb_button_release_on_label(GtkWidget* widget, GdkEventButton *event) {
+	gint i;
+	gint count;
+
 	if( event->button==2 ) {
-		gint count = gtk_notebook_get_n_pages(puss_app->doc_panel);
-		for( gint i=0; i < count; ++i ) {
+		count = gtk_notebook_get_n_pages(puss_app->doc_panel);
+		for( i=0; i < count; ++i ) {
 			GtkWidget* page = gtk_notebook_get_nth_page(puss_app->doc_panel, i);
 			GtkWidget* label = gtk_notebook_get_tab_label(puss_app->doc_panel, page);
 			if( widget==label ) {
@@ -194,6 +201,8 @@ gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 	GtkWidget* tab;
 	GtkWidget* page;
 	GtkTextIter iter;
+	const Option* font_option;
+	const Option* style_option;
 
 	gtk_source_buffer_set_highlight_matching_brackets(buf, TRUE);
 
@@ -212,7 +221,7 @@ gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 
 	g_signal_connect(view, "move-focus", G_CALLBACK(&doc_cb_move_focus), 0);
 
-	const Option* font_option = puss_option_manager_find("puss", "editor.font");
+	font_option = puss_option_manager_find("puss", "editor.font");
 	if( font_option && font_option->value) {
 		PangoFontDescription* desc = pango_font_description_from_string(font_option->value);
 		if( desc ) {
@@ -221,7 +230,7 @@ gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 		}
 	}
 
-	const Option* style_option = puss_option_manager_find("puss", "editor.style");
+	style_option = puss_option_manager_find("puss", "editor.style");
 	if( style_option ) {
 		GtkSourceStyleSchemeManager* ssm = gtk_source_style_scheme_manager_get_default();
 		GtkSourceStyleScheme* style = gtk_source_style_scheme_manager_get_scheme(ssm, style_option->value);
@@ -265,8 +274,11 @@ gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 }
 
 gint doc_open_file( const gchar* filename, gint line, gint line_offset, gboolean show_message_if_open_failed ) {
+	ModifyInfo mi;
+	GtkTextView* view;
 	gchar* url = puss_format_filename(filename);
 	gint page_num = puss_doc_find_page_from_url(url);
+
 	if( page_num < 0 ) {
 		gchar* text = 0;
 		gsize len = 0;
@@ -286,7 +298,6 @@ gint doc_open_file( const gchar* filename, gint line, gint line_offset, gboolean
 			puss_doc_set_charset(GTK_TEXT_BUFFER(buf), charset);
 
 			// save modify info
-			ModifyInfo mi;
 			mi.need_check = TRUE;
 			if( doc_file_get_mtime(url, &mi) ) {
 				g_object_set_data_full(G_OBJECT(buf), "__mi__", g_memdup(&mi, sizeof(mi)), g_free);
@@ -303,7 +314,7 @@ gint doc_open_file( const gchar* filename, gint line, gint line_offset, gboolean
 		}
 
 	} else {
-		GtkTextView* view = puss_doc_get_view_from_page_num(page_num);
+		view = puss_doc_get_view_from_page_num(page_num);
 		if( view ) {
 			gtk_notebook_set_current_page(puss_app->doc_panel, page_num);
 			gtk_widget_grab_focus(GTK_WIDGET(view));
@@ -351,6 +362,7 @@ gboolean doc_save_file( GtkTextBuffer* buf, GError** err ) {
 	gunichar ch;
 	GIOStatus status;
 	GtkTextIter iter;
+	ModifyInfo mi;
 
 	const GString* url = puss_doc_get_url(buf);
 	const GString* charset = puss_doc_get_charset(buf);
@@ -379,7 +391,6 @@ gboolean doc_save_file( GtkTextBuffer* buf, GError** err ) {
 
 	gtk_text_buffer_set_modified(buf, FALSE);
 
-	ModifyInfo mi;
 	if( doc_file_get_mtime(url->str, &mi) ) {
 		ModifyInfo* mi_ptr = (ModifyInfo*)g_object_get_data(G_OBJECT(buf), "__mi__");
 		if( mi_ptr )
@@ -400,11 +411,17 @@ gboolean doc_save_page( gint page_num, gboolean is_save_as ) {
 	GtkTextBuffer* buf;
 	GString* url;
 	gboolean result;
+	GtkWidget* page;
+	GtkWidget* dlg;
+	GtkWidget* tab;
+	GtkLabel* label;
+	gint res;
+
 
 	if( page_num < 0 )
 		return TRUE;
 
-	GtkWidget* page = gtk_notebook_get_nth_page(puss_app->doc_panel, page_num);
+	page = gtk_notebook_get_nth_page(puss_app->doc_panel, page_num);
 
 	buf = puss_doc_get_buffer_from_page(page);
 	if( !buf )
@@ -420,9 +437,6 @@ gboolean doc_save_page( gint page_num, gboolean is_save_as ) {
 		is_save_as = TRUE;
 
 	if( is_save_as ) {
-		GtkWidget* dlg;
-		gint res;
-
 		dlg = gtk_file_chooser_dialog_new( "Save File"
 			, puss_app->main_window
 			, GTK_FILE_CHOOSER_ACTION_SAVE
@@ -450,8 +464,8 @@ gboolean doc_save_page( gint page_num, gboolean is_save_as ) {
 				puss_doc_set_url(buf, filename);
 			g_free (filename);
 
-			GtkWidget* tab = gtk_notebook_get_tab_label(puss_app->doc_panel, page);
-			GtkLabel* label = (GtkLabel*)g_object_get_data(G_OBJECT(tab), "puss-doc-label");
+			tab = gtk_notebook_get_tab_label(puss_app->doc_panel, page);
+			label = (GtkLabel*)g_object_get_data(G_OBJECT(tab), "puss-doc-label");
 			doc_reset_page_label(buf, label);
 		}
 
@@ -468,11 +482,11 @@ gboolean doc_save_page( gint page_num, gboolean is_save_as ) {
 }
 
 gboolean doc_close_page( gint page_num ) {
+	gint res;
+	GtkWidget* dlg;
 	GtkTextBuffer* buf = puss_doc_get_buffer_from_page_num(page_num);
-	if( buf && gtk_text_buffer_get_modified(buf) ) {
-		gint res;
-		GtkWidget* dlg;
 
+	if( buf && gtk_text_buffer_get_modified(buf) ) {
 		dlg = gtk_message_dialog_new( puss_app->main_window
 			, GTK_DIALOG_MODAL
 			, GTK_MESSAGE_QUESTION
@@ -522,14 +536,14 @@ void puss_doc_replace_all( GtkTextBuffer* buf
 		, const gchar* replace_text
 		, gint flags )
 {
-	GtkTextIter iter;
+	gint replace_text_len;
+	GtkTextIter iter, ps, pe;
 	gtk_text_buffer_get_start_iter(buf, &iter);
 
 	gtk_text_buffer_begin_user_action(buf);
 	{
-		gint replace_text_len = (gint)strlen(replace_text);
+		replace_text_len = (gint)strlen(replace_text);
 
-		GtkTextIter ps, pe;
 		while( gtk_source_iter_forward_search(&iter
 				, find_text
 				, (GtkSourceSearchFlags)flags
@@ -593,15 +607,21 @@ gint puss_doc_find_page_from_url( const gchar* url ) {
 }
 
 void puss_doc_new() {
+	gint page_num;
 	GtkSourceBuffer* buf = gtk_source_buffer_new(0);
 	puss_doc_set_charset(GTK_TEXT_BUFFER(buf), "UTF-8");
 
 	puss_pos_locate_add_current_pos();
-	gint page_num = doc_open_page(buf, TRUE);
+	page_num = doc_open_page(buf, TRUE);
 	puss_pos_locate_add(page_num, 0, 0);
 }
 
 gboolean puss_doc_open( const gchar* url, gint line, gint line_offset, gboolean show_message_if_open_failed ) {
+	gint res;
+	GtkWidget* dlg;
+	GtkTextBuffer* buffer;
+	const GString* gstr;
+	gchar* filename;
 	gint page_num = -1;
 	puss_pos_locate_add_current_pos();
 
@@ -611,8 +631,7 @@ gboolean puss_doc_open( const gchar* url, gint line, gint line_offset, gboolean 
 			return FALSE;
 
 	} else {
-		gint res;
-		GtkWidget* dlg = gtk_file_chooser_dialog_new( "Open File"
+		dlg = gtk_file_chooser_dialog_new( "Open File"
 			, puss_app->main_window
 			, GTK_FILE_CHOOSER_ACTION_OPEN
 			, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL
@@ -622,19 +641,19 @@ gboolean puss_doc_open( const gchar* url, gint line, gint line_offset, gboolean 
 		gtk_dialog_set_default_response(GTK_DIALOG(dlg), GTK_RESPONSE_ACCEPT);
 		gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(dlg), TRUE);
 
-		GtkTextBuffer* buffer = doc_get_current_buffer();
+		buffer = doc_get_current_buffer();
 		if( buffer ) {
-			const GString* gstr = puss_doc_get_url(buffer);
+			gstr = puss_doc_get_url(buffer);
 			if( gstr ) {
-				gchar* folder = g_path_get_dirname(gstr->str);
-				gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dlg), folder);
-				g_free(folder);
+				filename = g_path_get_dirname(gstr->str);
+				gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dlg), filename);
+				g_free(filename);
 			}
 		}
 
 		res = gtk_dialog_run(GTK_DIALOG(dlg));
 		if( res == GTK_RESPONSE_ACCEPT ) {
-			gchar* filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dlg));
+			filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dlg));
 			page_num = doc_open_file(filename, line, line_offset, show_message_if_open_failed);
 			line = -1;
 			g_free(filename);
@@ -675,24 +694,29 @@ gboolean puss_doc_close_current() {
 }
 
 void puss_doc_save_all() {
+	gint i;
 	gint num = gtk_notebook_get_n_pages(puss_app->doc_panel);
-	for( gint i=0; i<num; ++i )
+	for( i=0; i<num; ++i )
 		doc_save_page(i, FALSE);
 }
 
 gboolean puss_doc_close_all() {
+	GtkWidget* dlg;
+	GtkTextBuffer* buf;
+	GString* url;
+	gint res;
+
 	gboolean need_prompt = TRUE;
 	gboolean save_file_sign = FALSE;
-
 	GtkWindow* main_window = puss_app->main_window;
 	GtkNotebook* doc_panel = puss_app->doc_panel;
 	while( gtk_notebook_get_n_pages(doc_panel) ) {
-		GtkTextBuffer* buf = puss_doc_get_buffer_from_page_num(0);
+		buf = puss_doc_get_buffer_from_page_num(0);
 		if( buf && gtk_text_buffer_get_modified(buf) ) {
 			if( need_prompt ) {
-				GString* url = puss_doc_get_url(buf);
+				url = puss_doc_get_url(buf);
 
-				GtkWidget* dlg = gtk_message_dialog_new( main_window
+				dlg = gtk_message_dialog_new( main_window
 					, GTK_DIALOG_MODAL
 					, GTK_MESSAGE_QUESTION
 					, GTK_BUTTONS_NONE
@@ -708,7 +732,7 @@ gboolean puss_doc_close_all() {
 
 				gtk_dialog_set_default_response(GTK_DIALOG(dlg), GTK_RESPONSE_ACCEPT);
 
-				gint res = gtk_dialog_run(GTK_DIALOG(dlg));
+				res = gtk_dialog_run(GTK_DIALOG(dlg));
 				gtk_widget_destroy(dlg);
 
 				switch( res ) {
@@ -744,25 +768,34 @@ gboolean puss_doc_close_all() {
 }
 
 gboolean doc_mtime_check(gpointer tag) {
+	GtkTextBuffer* buf;
+	GString* url;
+	ModifyInfo* mi_old;
+	ModifyInfo mi_new;
+	GtkWidget* dlg;
+	gint res;
+	gchar* text = 0;
+	gsize len = 0;
+	const gchar* charset = 0;
+
 	if( !gtk_window_is_active(puss_app->main_window) )
 		return TRUE;
 
-	GtkTextBuffer* buf = doc_get_current_buffer();
+	buf = doc_get_current_buffer();
 	if( !buf )
 		return TRUE;
 
-	GString* url = puss_doc_get_url(buf);
+	url = puss_doc_get_url(buf);
 	if( !url )
 		return TRUE;
 
-	ModifyInfo* mi_old = (ModifyInfo*)g_object_get_data(G_OBJECT(buf), "__mi__");
+	mi_old = (ModifyInfo*)g_object_get_data(G_OBJECT(buf), "__mi__");
 	if( !mi_old )
 		return TRUE;
 
 	if( !mi_old->need_check )
 		return TRUE;
 
-	ModifyInfo mi_new;
 	if( !doc_file_get_mtime(url->str, &mi_new) )
 		return TRUE;
 
@@ -775,7 +808,7 @@ gboolean doc_mtime_check(gpointer tag) {
 
 	// query if use new file!
 	{
-		GtkWidget* dlg = gtk_message_dialog_new( puss_app->main_window
+		dlg = gtk_message_dialog_new( puss_app->main_window
 			, GTK_DIALOG_MODAL
 			, GTK_MESSAGE_QUESTION
 			, GTK_BUTTONS_NONE
@@ -789,7 +822,7 @@ gboolean doc_mtime_check(gpointer tag) {
 
 		gtk_dialog_set_default_response(GTK_DIALOG(dlg), GTK_RESPONSE_YES);
 
-		gint res = gtk_dialog_run(GTK_DIALOG(dlg));
+		res = gtk_dialog_run(GTK_DIALOG(dlg));
 		gtk_widget_destroy(dlg);
 
 		switch( res ) {
@@ -811,10 +844,6 @@ gboolean doc_mtime_check(gpointer tag) {
 	}
 
 	{
-		gchar* text = 0;
-		gsize len = 0;
-		const gchar* charset = 0;
-
 		if( puss_load_file(url->str, &text, &len, &charset) ) {
 			puss_pos_locate_add_current_pos();
 

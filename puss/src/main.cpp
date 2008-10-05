@@ -20,6 +20,9 @@
 
 #else
 	gchar* find_module_filepath(const char* argv0) {
+		gchar* pwd;
+		gchar* prj;
+		gchar* realpath;
 		gchar* filepath = g_find_program_in_path(argv0);
 
 		if( !filepath ) {
@@ -28,15 +31,15 @@
 		}
 
 		if( !g_path_is_absolute(filepath) ) {
-			gchar* pwd = g_get_current_dir();
-			gchar* prj = g_build_filename(pwd, filepath, NULL);
+			pwd = g_get_current_dir();
+			prj = g_build_filename(pwd, filepath, NULL);
 			g_free(pwd);
 			g_free(filepath);
 			filepath = prj;
 		}
 
 		if( g_file_test(filepath, G_FILE_TEST_IS_SYMLINK) ) {
-			gchar* realpath = g_file_read_link(filepath, 0);
+			realpath = g_file_read_link(filepath, 0);
 			g_free(filepath);
 			filepath = realpath;
 		}
@@ -54,11 +57,13 @@
 #endif
 
 void open_arg1_file(const char* argv1) {
+	gchar* pwd;
+	gchar* tmp;
 	gssize len = (gssize)strlen(argv1);
 	gchar* filepath = g_locale_to_utf8(argv1, len, NULL, NULL, NULL);
 	if( !g_path_is_absolute(filepath) ) {
-		gchar* pwd = g_get_current_dir();
-		gchar* tmp = g_build_filename(pwd, filepath, NULL);
+		pwd = g_get_current_dir();
+		tmp = g_build_filename(pwd, filepath, NULL);
 		g_free(pwd);
 		g_free(filepath);
 		filepath = tmp;
@@ -71,6 +76,9 @@ void open_arg1_file(const char* argv1) {
 }
 
 int main(int argc, char* argv[]) {
+	gchar* filepath;
+	gboolean res;
+
 	// !!!GtkBuild error when use this on win32
 	// 
 	//g_mem_set_vtable(glib_mem_profiler_table);
@@ -80,8 +88,8 @@ int main(int argc, char* argv[]) {
 
 	gtk_init(&argc, &argv);
 
-	gchar* filepath = find_module_filepath(argv[0]);
-	gboolean res = puss_create(filepath);
+	filepath = find_module_filepath(argv[0]);
+	res = puss_create(filepath);
 	g_free(filepath);
 
 	if( argc==2 )

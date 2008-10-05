@@ -1,4 +1,4 @@
-// Commands.cpp
+// Commands.c
 
 #include "Commands.h"
 
@@ -109,8 +109,10 @@ SIGNAL_CALLBACK void view_menu_bottom_panel( GtkAction* action ) {
 
 SIGNAL_CALLBACK void view_menu_bottom_page_n( GtkRadioAction* action ) {
 	gint action_value = 0;
+	gint page_num = 0;
+
 	g_object_get(action, "value", &action_value, NULL);
-	gint page_num = gtk_radio_action_get_current_value(action);
+	page_num = gtk_radio_action_get_current_value(action);
 
 	if( page_num==action_value )
 		puss_active_panel_page(puss_app->bottom_panel, (page_num - 1));

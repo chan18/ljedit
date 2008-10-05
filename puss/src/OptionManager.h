@@ -6,7 +6,7 @@
 
 #include <gtk/gtk.h>
 
-struct Option;
+typedef struct _Option  Option;
 
 typedef gboolean	(*OptionSetter)(GtkWindow* parent, Option* option, gpointer tag);
 typedef void		(*OptionChanged)(const Option* option, /*const gchar* old,*/ gpointer tag);

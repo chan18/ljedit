@@ -6,13 +6,13 @@
 
 #include "IPuss.h"
 
-struct MiniLine;
-struct PosList;
-struct Extend;
-struct Utils;
-struct OptionManager;
+typedef struct _MiniLine       MiniLine;
+typedef struct _PosList        PosList;
+typedef struct _Extend         Extend;
+typedef struct _Utils          Utils;
+typedef struct _OptionManager  OptionManager;
 
-struct PussApp {
+typedef struct {
 	Puss			parent;
 
 	GtkBuilder*		builder;
@@ -34,7 +34,7 @@ struct PussApp {
 	Extend*			extends_list;
 	Utils*			utils;
 	OptionManager*	option_manager;
-};
+} PussApp;
 
 extern		PussApp*	puss_app;
 

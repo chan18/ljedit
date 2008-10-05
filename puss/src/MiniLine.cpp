@@ -62,16 +62,21 @@ void puss_mini_line_destroy() {
 }
 
 void puss_mini_line_active( MiniLineCallback* cb ) {
+	gboolean res;
+	gint page_num;
+	GtkTextView* view;
+	GtkWidget* actived;
+
 	puss_app->mini_line->cb = cb;
 	if( !cb )
 		return;
 
-	gint page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
+	page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
 	if( page_num < 0 )
 		return;
 
-	GtkTextView* view = puss_doc_get_view_from_page_num(page_num);
-	GtkWidget* actived = gtk_window_get_focus(puss_app->main_window);
+	view = puss_doc_get_view_from_page_num(page_num);
+	actived = gtk_window_get_focus(puss_app->main_window);
 	if( GTK_WIDGET(view)!=actived )
 		gtk_widget_grab_focus(GTK_WIDGET(view));
 
@@ -81,7 +86,7 @@ void puss_mini_line_active( MiniLineCallback* cb ) {
 	gtk_widget_grab_focus(GTK_WIDGET(puss_app->mini_line->entry));
 
 	g_signal_handler_block(G_OBJECT(puss_app->mini_line->entry), puss_app->mini_line->signal_id_changed);
-	gboolean res = puss_app->mini_line->cb->cb_active(puss_app->mini_line->cb->tag);
+	res = puss_app->mini_line->cb->cb_active(puss_app->mini_line->cb->tag);
 	g_signal_handler_unblock(G_OBJECT(puss_app->mini_line->entry), puss_app->mini_line->signal_id_changed);
 	if( !res )
 		puss_mini_line_deactive();

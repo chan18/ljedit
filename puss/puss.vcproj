@@ -192,7 +192,7 @@
 			Name="src"
 			>
 			<File
-				RelativePath=".\src\AboutDialog.cpp"
+				RelativePath=".\src\AboutDialog.c"
 				>
 			</File>
 			<File
@@ -200,7 +200,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\Commands.cpp"
+				RelativePath=".\src\Commands.c"
 				>
 			</File>
 			<File
@@ -208,7 +208,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\DocManager.cpp"
+				RelativePath=".\src\DocManager.c"
 				>
 			</File>
 			<File
@@ -216,7 +216,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\ExtendEngine.cpp"
+				RelativePath=".\src\ExtendEngine.c"
 				>
 			</File>
 			<File
@@ -224,7 +224,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\GlobalOptions.cpp"
+				RelativePath=".\src\GlobalOptions.c"
 				>
 			</File>
 			<File
@@ -232,7 +232,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\GlobMatch.cpp"
+				RelativePath=".\src\GlobMatch.c"
 				>
 			</File>
 			<File
@@ -240,7 +240,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\main.cpp"
+				RelativePath=".\src\main.c"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -262,7 +262,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\src\MiniLine.cpp"
+				RelativePath=".\src\MiniLine.c"
 				>
 			</File>
 			<File
@@ -270,7 +270,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\MiniLineModules.cpp"
+				RelativePath=".\src\MiniLineModules.c"
 				>
 			</File>
 			<File
@@ -278,7 +278,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\OptionManager.cpp"
+				RelativePath=".\src\OptionManager.c"
 				>
 			</File>
 			<File
@@ -286,7 +286,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\PosLocate.cpp"
+				RelativePath=".\src\PosLocate.c"
 				>
 			</File>
 			<File
@@ -294,7 +294,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\Puss.cpp"
+				RelativePath=".\src\Puss.c"
 				>
 			</File>
 			<File
@@ -302,7 +302,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\Utils.cpp"
+				RelativePath=".\src\Utils.c"
 				>
 			</File>
 			<File

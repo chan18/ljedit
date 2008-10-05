@@ -76,13 +76,13 @@ void init_puss_c_api(Puss* api) {
 }
 
 gboolean puss_load_ui(const gchar* filename ) {
+	GError* err = 0;
 	gchar* filepath = g_build_filename(puss_app->module_path, "res", filename, NULL);
 	if( !filepath ) {
 		g_printerr("ERROR(puss) : build ui filepath failed!\n");
 		return FALSE;
 	}
 
-	GError* err = 0;
 	gtk_builder_add_from_file(puss_app->builder, filepath, &err);
 	g_free(filepath);
 
@@ -115,6 +115,8 @@ gboolean puss_load_ui_files() {
 }
 
 gboolean puss_main_ui_create() {
+	gchar* icon_file;
+
 	puss_app->main_window	= GTK_WINDOW(gtk_builder_get_object(puss_app->builder, "main_window"));
 	puss_app->ui_manager	= GTK_UI_MANAGER(gtk_builder_get_object(puss_app->builder, "main_ui_manager"));
 	puss_app->doc_panel		= GTK_NOTEBOOK(gtk_builder_get_object(puss_app->builder, "doc_panel"));
@@ -135,7 +137,7 @@ gboolean puss_main_ui_create() {
 	}
 
 	// set icon
-	gchar* icon_file = g_build_filename(puss_app->module_path, "res", "puss.png", NULL);
+	icon_file = g_build_filename(puss_app->module_path, "res", "puss.png", NULL);
 	gtk_window_set_icon_from_file(puss_app->main_window, icon_file, 0);
 	g_free(icon_file);
 
@@ -144,7 +146,9 @@ gboolean puss_main_ui_create() {
 	return TRUE;
 }
 
-struct PageNode {
+typedef struct _PageNode PageNode;
+
+struct _PageNode {
 	const gchar*	id;
 	GtkWidget*		page;
 	GtkWidget*		tab;
@@ -154,13 +158,16 @@ struct PageNode {
 };
 
 void puss_pop_all_pages(const gchar* nb_id, PageNode** pages) {
+	gint i;
+	gint count;
+	PageNode* node;
 	GtkNotebook* nb	= GTK_NOTEBOOK(gtk_builder_get_object(puss_app->builder, nb_id));
 	if( !nb )
 		return;
 
-	gint count = gtk_notebook_get_n_pages(nb);
-	for( gint i=0; i<count; ++i ) {
-		PageNode* node = g_new0(PageNode, 1);
+	count = gtk_notebook_get_n_pages(nb);
+	for( i=0; i<count; ++i ) {
+		node = g_new0(PageNode, 1);
 		node->page = gtk_notebook_get_nth_page(nb, 0);
 		node->tab  = gtk_notebook_get_tab_label(nb, node->page);
 		g_object_ref(node->page);
@@ -176,15 +183,19 @@ void puss_pop_all_pages(const gchar* nb_id, PageNode** pages) {
 }
 
 void puss_nb_pages_set_order(GKeyFile* keyfile, const gchar* nb_id, PageNode** pages) {
+	gchar** ids;
+	gsize len = 0;
+	gsize i;
+	PageNode* p;
+	PageNode* last;
 	GtkNotebook* nb	= GTK_NOTEBOOK(gtk_builder_get_object(puss_app->builder, nb_id));
 	if( !nb )
 		return;
 
-	gsize len = 0;
-	gchar** ids = g_key_file_get_string_list(keyfile, "puss", nb_id, &len, 0);
-	for(gsize i=len; i>0; --i ) {
-		PageNode* last = 0;
-		for( PageNode* p = *pages; p; p=p->next ) {
+	ids= g_key_file_get_string_list(keyfile, "puss", nb_id, &len, 0);
+	for(i=len; i>0; --i ) {
+		last = 0;
+		for( p = *pages; p; p=p->next ) {
 			if( g_str_equal(p->id, ids[i-1]) ) {
 				p->parent = nb;
 				if( last )
@@ -204,8 +215,10 @@ void puss_nb_pages_set_order(GKeyFile* keyfile, const gchar* nb_id, PageNode** p
 }
 
 void puss_push_all_pages(PageNode* pages) {
+	PageNode* p;
+
 	while( pages ) {
-		PageNode* p = pages;
+		p = pages;
 		pages = p->next;
 
 		gtk_notebook_append_page(p->parent, p->page, p->tab);
@@ -219,13 +232,16 @@ void puss_push_all_pages(PageNode* pages) {
 }
 
 void puss_pages_reorder_load() {
+	GKeyFile* keyfile;
+	gchar* filepath;
 	PageNode* pages = 0;
+
 	puss_pop_all_pages("left_panel", &pages);
 	puss_pop_all_pages("right_panel", &pages);
 	puss_pop_all_pages("bottom_panel", &pages);
 
-	GKeyFile* keyfile = g_key_file_new();
-	gchar* filepath = g_build_filename(g_get_user_config_dir(), ".puss_session", NULL);
+	keyfile = g_key_file_new();
+	filepath = g_build_filename(g_get_user_config_dir(), ".puss_session", NULL);
 	if( g_key_file_load_from_file(keyfile, filepath, G_KEY_FILE_NONE, 0) ) {
 		puss_nb_pages_set_order(keyfile, "left_panel", &pages);
 		puss_nb_pages_set_order(keyfile, "right_panel", &pages);
@@ -247,18 +263,23 @@ void puss_pages_reorder_load() {
 }
 
 void puss_nb_pages_get_order(GKeyFile* keyfile, const gchar* nb_id) {
+	gint i;
+	gint count;
+	const gchar** ids;
+	GtkWidget* page;
+	GtkWidget* tab;
 	GtkNotebook* nb	= GTK_NOTEBOOK(gtk_builder_get_object(puss_app->builder, nb_id));
 	if( !nb )
 		return;
 
-	gint count = gtk_notebook_get_n_pages(nb);
+	count = gtk_notebook_get_n_pages(nb);
 	if( count==0 )
 		return;
 
-	const gchar** ids = g_new0(const gchar*, count);
-	for( gint i=0; i<count; ++i ) {
-		GtkWidget* page = gtk_notebook_get_nth_page(nb, i);
-		GtkWidget* tab  = gtk_notebook_get_tab_label(nb, page);
+	ids = g_new0(gchar*, count);
+	for( i=0; i<count; ++i ) {
+		page = gtk_notebook_get_nth_page(nb, i);
+		tab  = gtk_notebook_get_tab_label(nb, page);
 		if( GTK_IS_LABEL(tab) )
 			ids[i] = gtk_label_get_text(GTK_LABEL(tab));
 		else
@@ -269,22 +290,24 @@ void puss_nb_pages_get_order(GKeyFile* keyfile, const gchar* nb_id) {
 }
 
 void puss_pages_reorder_save() {
+	GError* err = 0;
+	gsize length = 0;
+	gchar* content;
+	gchar* filepath;
 	GKeyFile* keyfile = g_key_file_new();
 
 	puss_nb_pages_get_order(keyfile, "left_panel");
 	puss_nb_pages_get_order(keyfile, "right_panel");
 	puss_nb_pages_get_order(keyfile, "bottom_panel");
 
-	GError* err = 0;
-	gsize length = 0;
-	gchar* content = g_key_file_to_data(keyfile, &length, &err);
+	content = g_key_file_to_data(keyfile, &length, &err);
 	if( !content ) {
 		g_printerr("ERROR(g_key_file_to_data) : %s\n", err->message);
 		return;
 	}
 	g_key_file_free(keyfile);
 
-	gchar* filepath = g_build_filename(g_get_user_config_dir(), ".puss_session", NULL);
+	filepath = g_build_filename(g_get_user_config_dir(), ".puss_session", NULL);
 	if( !g_file_set_contents(filepath, content, length, &err) )
 		g_printerr("ERROR(g_file_set_contents) : %s\n", err->message);
 	g_free(content);
