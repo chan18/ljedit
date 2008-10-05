@@ -1,4 +1,4 @@
-// MiniLineModules.cpp
+// MiniLineModules.c
 // 
 
 #include "MiniLineModules.h"
@@ -415,7 +415,7 @@ void REPLACE_cb_changed(gpointer tag) {
 	gint page_num;
 	GtkTextView* view;
 
-	MiniLineREPLACE* self = (MiniLineREPLACE*)tag;
+	//MiniLineREPLACE* self = (MiniLineREPLACE*)tag;
 
 	page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
 	view = puss_doc_get_view_from_page_num(page_num);

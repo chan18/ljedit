@@ -1,4 +1,4 @@
-// DocManager.cpp
+// DocManager.c
 // 
 
 // TODO : use gio!!!!
@@ -181,7 +181,7 @@ gboolean doc_cb_button_release_on_label(GtkWidget* widget, GdkEventButton *event
 }
 
 void doc_cb_move_focus(GtkWidget* widget, GtkDirectionType dir) {
-	GtkSourceView* view = GTK_SOURCE_VIEW(widget);
+	//GtkSourceView* view = GTK_SOURCE_VIEW(widget);
 	g_signal_stop_emission_by_name(widget, "move-focus");
 
 	switch( dir ) {
@@ -190,6 +190,8 @@ void doc_cb_move_focus(GtkWidget* widget, GtkDirectionType dir) {
 		break;
 	case GTK_DIR_TAB_BACKWARD:
 		gtk_notebook_prev_page(puss_app->doc_panel);
+		break;
+	default:
 		break;
 	}
 }

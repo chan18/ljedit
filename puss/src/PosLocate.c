@@ -1,4 +1,4 @@
-// PosLocate.cpp
+// PosLocate.c
 // 
 
 #include "PosLocate.h"
@@ -21,7 +21,7 @@ struct _PosNode {
 	gint			offset;
 };
 
-typedef struct _PosList {
+struct _PosList {
 	PosNode*		head;
 	PosNode*		tail;
 	PosNode*		current;
@@ -29,7 +29,7 @@ typedef struct _PosList {
 	PosNode*		free_list;
 
 	PosNode			pool[POS_NODE_MAX];
-} PosList;
+};
 
 gboolean __debug_pos_list_check() {
 	PosNode* p;

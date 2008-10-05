@@ -1,13 +1,13 @@
-// Utils.cpp
+// Utils.c
 //
 
 #include "Utils.h"
 #include "Puss.h"
 #include "OptionManager.h"
 
-typedef struct _Utils {
+struct _Utils {
 	gchar** charset_list;
-} Utils;
+};
 
 void parse_charset_list_option(const Option* option, gpointer tag) {
 	Utils* self = puss_app->utils;

@@ -4,7 +4,7 @@
 #ifndef PUSS_EXTEND_INC_PYEXTEND_H
 #define PUSS_EXTEND_INC_PYEXTEND_H
 
-struct Puss;
+typedef struct _Puss Puss;
 struct PyExtend;
 
 PyExtend* puss_py_extend_create(Puss* app);

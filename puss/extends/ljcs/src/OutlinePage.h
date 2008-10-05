@@ -12,7 +12,7 @@ namespace cpp {
 
 class Environ;
 class Icons;
-struct Puss;
+typedef struct _Puss Puss;
 
 class OutlinePage;
 

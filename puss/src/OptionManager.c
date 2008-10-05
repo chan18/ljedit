@@ -1,4 +1,4 @@
-// OptionManager.cpp
+// OptionManager.c
 //
 
 #include "OptionManager.h"
@@ -45,13 +45,13 @@ void option_node_free(OptionNode* node) {
 	g_free(node);
 }
 
-typedef struct _OptionManager {
+struct _OptionManager {
 	gchar*		filepath;
 	GKeyFile*	keyfile;
 	gboolean	modified;
 
 	GTree*		option_groups;	// group, GTree(key, OptionNode)
-} OptionManager;
+};
 
 gint compare_data_func_wrapper(gpointer a, gpointer b, GCompareFunc cmp) { return (*cmp)(a, b); }
 

@@ -6,7 +6,7 @@
 
 #include <gdk/gdkpixbuf.h>
 
-struct Puss;
+typedef struct _Puss Puss;
 
 namespace cpp {
 	class Element;

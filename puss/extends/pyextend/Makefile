@@ -48,7 +48,7 @@ CXXFLAGS += -I../../include
 
 SRCS = $(wildcard src/*.cpp)
 
-OBJS = $(SRCS:%.cpp=$(OBJPATH)/%.o)
+OBJS = $(SRCS:src/%.cpp=$(OBJPATH)/%.o)
 
 TARGET = ../../bin/extends/pyextend.ext
 
@@ -61,15 +61,15 @@ clean :
 	rm -f $(TARGET)
 	rm -rf $(OBJPATH)
 
-$(OBJPATH)/%.o : %.cpp
+$(OBJPATH)/%.o : src/%.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(GTKINCS) -o $@ -c $<
 
-$(OBJPATH)/%.d : %.cpp
+$(OBJPATH)/%.d : src/%.cpp
 	@echo $(CXX) -MM -o $@ -c $<
 	@rm -f $@
 	@mkdir -p $(dir $@)
 	@$(CXX) $(CXXFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
 
--include $(SRCS:%.cpp=$(OBJPATH)/%.d)
+-include $(SRCS:src/%.cpp=$(OBJPATH)/%.d)
 

@@ -1,4 +1,4 @@
-// MiniLine.cpp
+// MiniLine.c
 // 
 
 #include "MiniLine.h"

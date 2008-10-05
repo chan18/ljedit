@@ -1,4 +1,4 @@
-// Puss.cpp
+// Puss.c
 
 #include "Puss.h"
 
@@ -276,7 +276,7 @@ void puss_nb_pages_get_order(GKeyFile* keyfile, const gchar* nb_id) {
 	if( count==0 )
 		return;
 
-	ids = g_new0(gchar*, count);
+	ids = g_new0(const gchar*, count);
 	for( i=0; i<count; ++i ) {
 		page = gtk_notebook_get_nth_page(nb, i);
 		tab  = gtk_notebook_get_tab_label(nb, page);

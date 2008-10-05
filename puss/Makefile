@@ -13,17 +13,18 @@ ifeq ($(OS), Windows_NT)
 	PLATFORM = win32
 endif
 
-CXXFLAGS = -g -Wall
+CC = gcc
+CFLAGS = -g -Wall
 OBJPATH = debug
 
 ifeq ($(BUILD), release)
-	CXXFLAGS = -O3 -Wall
+	CFLAGS = -O3 -Wall
 	OBJPATH = release
 endif
 
 # gtk & gtksourceview & gthread
 # 
-CXXFLAGS += `pkg-config --cflags gtksourceview-2.0`
+CFLAGS += `pkg-config --cflags gtksourceview-2.0`
 
 LIBS += `pkg-config --libs gtksourceview-2.0` \
 		`pkg-config --libs gmodule-2.0` \
@@ -32,11 +33,11 @@ LIBS += `pkg-config --libs gtksourceview-2.0` \
 
 # project
 # 
-CXXFLAGS += -Iinclude
+CFLAGS += -Iinclude
 
-SRCS = $(wildcard src/*.cpp)
+SRCS = $(wildcard src/*.c)
 
-OBJS = $(SRCS:%.cpp=$(OBJPATH)/%.o)
+OBJS = $(SRCS:src/%.c=$(OBJPATH)/%.o)
 
 ifeq ($(PLATFORM), win32)
 	TARGET = bin/_puss.exe
@@ -58,11 +59,11 @@ all : $(TARGET) puss_extends
 endif
 
 $(TARGET) : $(OBJS)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 bin/puss.exe : win32_boot/main.c win32_boot/puss.rc win32_boot/puss.ico
 	windres -i win32_boot/puss.rc -J rc -o $(OBJPATH)/puss_res.o -O coff --include-dir=win32_boot
-	gcc -O3 -Wall -mwindows -o $@ $< $(OBJPATH)/puss_res.o
+	$(CC) -O3 -Wall -mwindows -o $@ $< $(OBJPATH)/puss_res.o
 
 deb :
 	@./make_deb
@@ -91,15 +92,15 @@ clean :
 	@for ext in $(EXTS); do make -C$$ext clean BUILD=$(BUILD); done
 
 
-$(OBJPATH)/%.o : %.cpp
+$(OBJPATH)/%.o : src/%.c
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) $(GTKINCS) -o $@ -c $<
+	$(CC) $(CFLAGS) $(GTKINCS) -o $@ -c $<
 
-$(OBJPATH)/%.d : %.cpp
-	@echo $(CXX) -MM -o $@ -c $<
+$(OBJPATH)/%.d : src/%.c
+	@echo $(CC) -MM -o $@ -c $<
 	@rm -f $@
 	@mkdir -p $(dir $@)
-	@$(CXX) $(CXXFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
+	@$(CC) $(CFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
 
--include $(SRCS:%.cpp=$(OBJPATH)/%.d)
+-include $(SRCS:src/%.c=$(OBJPATH)/%.d)
 

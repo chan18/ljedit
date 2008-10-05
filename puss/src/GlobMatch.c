@@ -1,4 +1,4 @@
-// GlobMatch.cpp
+// GlobMatch.c
 //
 
 #include "GlobMatch.h"

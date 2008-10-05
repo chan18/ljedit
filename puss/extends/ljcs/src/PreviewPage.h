@@ -11,7 +11,7 @@ namespace cpp {
 }
 
 class Environ;
-struct Puss;
+typedef struct _Puss Puss;
 
 class PreviewPage;
 

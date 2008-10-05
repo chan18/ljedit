@@ -1,4 +1,4 @@
-// ExtendEngine.cpp
+// ExtendEngine.c
 //
 
 #include "ExtendEngine.h"
@@ -32,11 +32,11 @@
 #include "Puss.h"
 #include "Utils.h"
 
-typedef struct _Extend {
+struct _Extend {
 	GModule*	module;
 	void*		handle;
 	Extend*		next;
-} Extend;
+};
 
 Extend* extend_load(const gchar* filepath) {
 	void* (*create_fun)(Puss* app);

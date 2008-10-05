@@ -12,7 +12,9 @@ typedef struct _Extend         Extend;
 typedef struct _Utils          Utils;
 typedef struct _OptionManager  OptionManager;
 
-typedef struct {
+typedef struct _PussApp        PussApp;
+
+struct _PussApp {
 	Puss			parent;
 
 	GtkBuilder*		builder;
@@ -34,7 +36,7 @@ typedef struct {
 	Extend*			extends_list;
 	Utils*			utils;
 	OptionManager*	option_manager;
-} PussApp;
+};
 
 extern		PussApp*	puss_app;
 

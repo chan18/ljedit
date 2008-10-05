@@ -4,11 +4,9 @@
 #ifndef PUSS_INC_MINILINE_H
 #define PUSS_INC_MINILINE_H
 
-#include <gtk/gtk.h>
+#include "IPuss.h"
 
-typedef struct _MiniLineCallback MiniLineCallback;
-
-typedef struct _MiniLine {
+struct _MiniLine {
 	GtkWidget*			window;
 	GtkImage*			image;
 	GtkEntry*			entry;
@@ -17,7 +15,7 @@ typedef struct _MiniLine {
 	gulong				signal_id_key_press;
 
 	MiniLineCallback*	cb;
-} MiniLine;
+};
 
 gboolean	puss_mini_line_create();
 void		puss_mini_line_destroy();

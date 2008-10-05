@@ -1,4 +1,4 @@
-// GlobalOptions.cpp
+// GlobalOptions.c
 
 #include "GlobalOptions.h"
 
