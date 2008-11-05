@@ -3,6 +3,8 @@
 
 #include "utils.h"
 
+#include <memory>
+
 void parse_function_prefix(BlockLexer& lexer) {
 	// 函数前缀
 	for(;;) {
