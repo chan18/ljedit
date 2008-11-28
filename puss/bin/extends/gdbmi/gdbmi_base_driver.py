@@ -227,7 +227,7 @@ class BaseDriver:
 		self.pipe = AsyncPopen( ['gdb', '--quiet', '--interpreter', 'mi', self.target]
 			, stdin=PIPE
 			, stdout=PIPE
-			, shell=False )
+			, shell=False)
 
 		if sys.platform=='win32':
 			self.__call('-gdb-set new-console on')
@@ -267,6 +267,16 @@ class BaseDriver:
 			self.__call('-exec-continue')
 			#r = self.__call('-exec-run')
 			#print 'run...', self.status, r
+
+	def pause(self):
+		if sys.platform=='win32':
+			if self.child_running:
+				#CTRL_C_EVENT = 1
+				#ctypes.windll.kernel32.GenerateConsoleCtrlEvent(CTRL_C_EVENT, self.child_pid)
+
+				PROCESS_ALL_ACCESS = 2035711
+				handle = ctypes.windll.kernel32.OpenProcess(PROCESS_ALL_ACCESS, False, self.child_pid)
+				ctypes.windll.kernel32.DebugBreakProcess(handle)
 
 	def stop(self):
 		if sys.platform=='win32':
