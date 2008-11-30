@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PussConsole", "PussConsole.vcproj", "{77C61C31-6EC6-4A7B-93C3-E3860435D8FA}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vconsole", "vconsole.vcproj", "{0710309F-CBBD-4FD6-A379-3CA2E94C14DB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{77C61C31-6EC6-4A7B-93C3-E3860435D8FA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{77C61C31-6EC6-4A7B-93C3-E3860435D8FA}.Debug|Win32.Build.0 = Debug|Win32
+		{77C61C31-6EC6-4A7B-93C3-E3860435D8FA}.Release|Win32.ActiveCfg = Release|Win32
+		{77C61C31-6EC6-4A7B-93C3-E3860435D8FA}.Release|Win32.Build.0 = Release|Win32
+		{0710309F-CBBD-4FD6-A379-3CA2E94C14DB}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0710309F-CBBD-4FD6-A379-3CA2E94C14DB}.Debug|Win32.Build.0 = Debug|Win32
+		{0710309F-CBBD-4FD6-A379-3CA2E94C14DB}.Release|Win32.ActiveCfg = Release|Win32
+		{0710309F-CBBD-4FD6-A379-3CA2E94C14DB}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
