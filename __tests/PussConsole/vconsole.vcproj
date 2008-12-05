@@ -187,6 +187,10 @@
 			RelativePath=".\vconsole.c"
 			>
 		</File>
+		<File
+			RelativePath=".\vconsole.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
