@@ -29,32 +29,41 @@
 
 #define DEFAULT_SHELL	L"cmd.exe"
 
+#define DEFAULT_SCREEN_UPDATE_TIME 20
+
 extern	HMODULE	g_hModule;
 
 void HookService();
 
-struct _VConsole {
+typedef struct {
+	VConsole	_parent;
+
 	HANDLE	hCmdProcess;
 	HANDLE	hMonitorThread;
 
 	HANDLE	hShareMem;
 
-	HANDLE	hEventAlive;
 	HANDLE	hEventStopMonitor;
 
+	HANDLE	hToHook_Quit;
+	HANDLE	hToHook_Alive;
+
+	HANDLE	hFromHook_Update;
+
+	LONG			destroy_lock;
 	ShareMemory*	shared;
-};
+} VCon;
 
-static DWORD WINAPI MonitorService(VConsole* con);
-static VConsole* vconsole_create();
-static void vconsole_destroy(VConsole* con);
-static int vconsole_init(VConsole* con);
+static DWORD WINAPI MonitorService(VCon* con);
+static VCon* vconsole_create();
+static void vconsole_destroy(VCon* con);
+static int vconsole_init(VCon* con);
 
-static VConsole* vconsole_create() {
-	VConsole* con = malloc(sizeof(VConsole));
+static VCon* vconsole_create() {
+	VCon* con = malloc(sizeof(VCon));
 
 	if( con ) {
-		memset(con, 0, sizeof(VConsole));
+		memset(con, 0, sizeof(VCon));
 
 		if( vconsole_init(con)==0 ) {
 			con->hEventStopMonitor = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -70,11 +79,14 @@ static VConsole* vconsole_create() {
 	return NULL;
 }
 
-static void vconsole_destroy(VConsole* con) {
+static void vconsole_destroy(VCon* con) {
 	PTHREAD_START_ROUTINE pfnThreadRoutine;
 	HANDLE hRemoteThread;
 
 	if( !con )
+		return;
+
+	if( InterlockedCompareExchange(&(con->destroy_lock), 1, 0)!=0 )
 		return;
 
 	if( con->hMonitorThread ) {
@@ -88,21 +100,27 @@ static void vconsole_destroy(VConsole* con) {
 		CloseHandle(con->hEventStopMonitor);
 
 	if( con->hCmdProcess ) {
-		pfnThreadRoutine = (PTHREAD_START_ROUTINE)ExitProcess;
+		if( con->hToHook_Quit ) {
+			SetEvent(con->hToHook_Quit );
+			if( WaitForSingleObject(con->hCmdProcess, 5000)==WAIT_TIMEOUT) {
+				pfnThreadRoutine = (PTHREAD_START_ROUTINE)ExitProcess;
 
-		// start the remote thread
-		hRemoteThread = CreateRemoteThread(con->hCmdProcess, NULL, 0, pfnThreadRoutine, 0, 0, NULL);
-		if( hRemoteThread ) {
-			// wait for the thread to finish
-			if( WaitForSingleObject(hRemoteThread, 5000)==WAIT_TIMEOUT)
-				TerminateProcess(con->hCmdProcess, 0);
+				// start the remote thread
+				hRemoteThread = CreateRemoteThread(con->hCmdProcess, NULL, 0, pfnThreadRoutine, 0, 0, NULL);
+				if( hRemoteThread ) {
+					// wait for the thread to finish
+					if( WaitForSingleObject(hRemoteThread, 5000)==WAIT_TIMEOUT)
+						TerminateProcess(con->hCmdProcess, 0);
 
-			CloseHandle(hRemoteThread);
-		} else {
-			TerminateProcess(con->hCmdProcess, 0);
+					CloseHandle(hRemoteThread);
+				} else {
+					TerminateProcess(con->hCmdProcess, 0);
+				}
+			}
 		}
 
 		CloseHandle(con->hCmdProcess);
+		con->hCmdProcess = 0;
 	}
 
 	if( con->shared )
@@ -114,7 +132,7 @@ static void vconsole_destroy(VConsole* con) {
 	free(con);
 }
 
-static int vconsole_init(VConsole* con) {
+static int vconsole_init(VCon* con) {
 	DWORD dwRet;
 	WCHAR szComspec[MAX_PATH];
 	STARTUPINFO si;
@@ -128,6 +146,9 @@ static int vconsole_init(VConsole* con) {
 	PTHREAD_START_ROUTINE pfnThreadRoutine;
 	HANDLE hRemoteThread;
 	HANDLE hRemoteSharedMem = 0;
+
+	HANDLE hCurrentProcess = GetCurrentProcess();
+	VConsole* vcon = (VConsole*)con;
 
 	dwHookLen = GetModuleFileName(g_hModule, szHookPath, MAX_PATH);
 
@@ -152,7 +173,7 @@ static int vconsole_init(VConsole* con) {
 			, szComspec
 			, NULL
 			, NULL
-			, TRUE
+			, FALSE
 			, dwStartupFlags
 			, NULL
 			, NULL
@@ -167,7 +188,10 @@ static int vconsole_init(VConsole* con) {
 	con->hCmdProcess = pi.hProcess;
 
 	// 2.1 remote comm events
-	con->hEventAlive = CreateEvent(NULL, FALSE, FALSE, NULL);
+	con->hToHook_Quit= CreateEvent(NULL, FALSE, FALSE, NULL);
+	con->hToHook_Alive = CreateEvent(NULL, FALSE, FALSE, NULL);
+
+	con->hFromHook_Update = CreateEvent(NULL, FALSE, FALSE, NULL);
 
 	con->hShareMem = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(ShareMemory), NULL);
 	if( !con->hShareMem )
@@ -179,6 +203,7 @@ static int vconsole_init(VConsole* con) {
 
 	memset(con->shared, 0, sizeof(ShareMemory));
 	con->shared->owner_pid = GetCurrentProcessId();
+	con->shared->screen_update_time = DEFAULT_SCREEN_UPDATE_TIME;
 
 	// 3. create remote thread : insert con.dll into console process
 	{
@@ -208,18 +233,23 @@ static int vconsole_init(VConsole* con) {
 	// 4. create remote thread : call HookService(witch in con.dll) in console process
 	//    and pass share memory handle to it
 	{
-		if( !DuplicateHandle(GetCurrentProcess(), con->hEventAlive, pi.hProcess, &(con->shared->event_alive), 0, FALSE, DUPLICATE_SAME_ACCESS) )
-			return 4001;
-
-		if( !DuplicateHandle(GetCurrentProcess(), con->hShareMem, pi.hProcess, &hRemoteSharedMem, 0, FALSE, DUPLICATE_SAME_ACCESS) )
-			return 4002;
+		if( !( DuplicateHandle(hCurrentProcess, con->hShareMem, pi.hProcess, &hRemoteSharedMem, 0, FALSE, DUPLICATE_SAME_ACCESS)
+			&& DuplicateHandle(hCurrentProcess, con->hToHook_Quit, pi.hProcess, &(con->shared->tohook_event_quit), 0, FALSE, DUPLICATE_SAME_ACCESS)
+			&& DuplicateHandle(hCurrentProcess, con->hToHook_Alive, pi.hProcess, &(con->shared->tohook_event_alive), 0, FALSE, DUPLICATE_SAME_ACCESS)
+			&& DuplicateHandle(hCurrentProcess, con->hFromHook_Update, pi.hProcess, &(con->shared->fromhook_event_update), 0, FALSE, DUPLICATE_SAME_ACCESS) ) )
+		{
+			return 4000;
+		}
 
 		pfnThreadRoutine = (PTHREAD_START_ROUTINE)HookService;
 
 		// start the remote thread
 		hRemoteThread = CreateRemoteThread(pi.hProcess, NULL, 0, pfnThreadRoutine, hRemoteSharedMem, 0, NULL);
 		if( !hRemoteThread )
-			return 4003;
+			return 4001;
+
+		if( WaitForSingleObject(con->hFromHook_Update, 10000)==WAIT_TIMEOUT )
+			return 4002;
 
 		CloseHandle(hRemoteThread);
 	}
@@ -229,45 +259,10 @@ static int vconsole_init(VConsole* con) {
 	ResumeThread(pi.hThread);
 	CloseHandle(pi.hThread);
 
-	return 0;
-}
-
-static DWORD WINAPI MonitorService(VConsole* con) {
-	DWORD dwRet;
-	HANDLE hEvents[10];
-	BOOL bRunSign = TRUE;
-
-	hEvents[0] = con->hEventStopMonitor;
-	//hEvents[1] = con->xxxxx;
-
-	trace("monitor thread start!\n");
-
-	while( bRunSign ) {
-		dwRet = WaitForMultipleObjects(1, hEvents, FALSE, 1000);
-
-        switch(dwRet) {
-        case WAIT_TIMEOUT:
-			trace("monitor thread test!\n");
-
-			++(con->shared->testa);
-			SetEvent( con->hEventAlive );
-            break;
-
-        case WAIT_FAILED:
-			bRunSign = FALSE;
-            break;
-
-		default:
-			dwRet -= WAIT_OBJECT_0;
-			switch( dwRet ) {
-			case 0:
-				bRunSign = FALSE;
-				break;
-			}
-        }
-	}
-
-	trace("monitor thread stoped!\n");
+	vcon->screen_info = &(con->shared->screen_info);
+	vcon->screen_buffer = con->shared->screen_buffer;
+	vcon->cursor_info = &(con->shared->cursor_info);
+	vcon->hwnd = con->shared->hwnd;
 	return 0;
 }
 
@@ -278,4 +273,61 @@ VConsoleAPI g_api =	{
 };
 
 __declspec(dllexport) VConsoleAPI* get_vconsole_api() { return &g_api; }
+
+static DWORD WINAPI MonitorService(VCon* con) {
+	DWORD dwRet;
+	BOOL bRunSign = TRUE;
+	HANDLE hEvents[] = {
+		  con->hEventStopMonitor
+		, con->hCmdProcess
+		, con->hFromHook_Update
+	};
+	DWORD dwEventCount = sizeof(hEvents)/sizeof(HANDLE);
+	VConsole* vcon = (VConsole*)con;
+
+	trace("monitor thread start!\n");
+
+	while( bRunSign ) {
+		dwRet = WaitForMultipleObjects(dwEventCount, hEvents, FALSE, 1000);
+		if( dwRet==WAIT_TIMEOUT ) {
+			trace("monitor thread test!\n");
+
+			SetEvent( con->hToHook_Alive );
+			continue;
+
+		} else if( dwRet==WAIT_FAILED ) {
+			bRunSign = FALSE;
+			continue;
+		}
+
+		dwRet -= WAIT_OBJECT_0;
+        switch(dwRet) {
+        case 0:
+			bRunSign = FALSE;
+            break;
+
+        case 1:
+			bRunSign = FALSE;
+			if( con->hCmdProcess ) {
+				CloseHandle(con->hCmdProcess);
+				con->hCmdProcess = 0;
+			}
+            break;
+
+		case 2:
+			if( vcon->on_screen_changed )
+				(vcon->on_screen_changed)();
+			break;
+
+		default:
+			break;
+        }
+	}
+
+	trace("monitor thread stoped!\n");
+	if( vcon->on_quit )
+		(vcon->on_quit)();
+
+	return 0;
+}
 
