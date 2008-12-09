@@ -5,7 +5,9 @@
 
 #include <Windows.h>
 
-typedef struct {
+typedef struct _VConsole VConsole;
+
+struct _VConsole {
 	HWND						hwnd;
 	CONSOLE_SCREEN_BUFFER_INFO*	screen_info;
 	CHAR_INFO*					screen_buffer;
@@ -13,9 +15,9 @@ typedef struct {
 
 	void*		tag;
 
-	void		(*on_quit)();
-	void		(*on_screen_changed)();
-} VConsole;
+	void		(*on_quit)(VConsole* vcon);
+	void		(*on_screen_changed)(VConsole* vcon);
+};
 
 typedef struct {
 	VConsole*	(*create)();

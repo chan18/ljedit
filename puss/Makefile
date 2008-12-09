@@ -94,7 +94,7 @@ clean :
 
 $(OBJPATH)/%.o : src/%.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $(GTKINCS) -o $@ -c $<
+	$(CC) $(CFLAGS) -o $@ -c $<
 
 $(OBJPATH)/%.d : src/%.c
 	@echo $(CC) -MM -o $@ -c $<

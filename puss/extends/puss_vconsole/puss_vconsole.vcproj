@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="vconsole"
-	ProjectGUID="{0710309F-CBBD-4FD6-A379-3CA2E94C14DB}"
-	RootNamespace="vconsole"
+	Name="puss_vconsole"
+	ProjectGUID="{F73E2917-386F-474D-843E-7F05C34D74CD}"
+	RootNamespace="puss_vconsole"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -20,6 +20,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
+			InheritedPropertySheets="..\..\puss_d.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -40,7 +41,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;PUSS_VCONOLE_EXPORTS"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)include&quot;;&quot;$(ProjectDir)vconsole&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -48,7 +50,6 @@
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
-				CompileAs="1"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -61,6 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				OutputFile="$(SolutionDir)bin\extends\$(ProjectName).ext"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -96,6 +98,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
+			InheritedPropertySheets="..\..\puss.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -116,13 +119,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;PUSS_VCONOLE_EXPORTS"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)include&quot;;&quot;$(ProjectDir)vconsole&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
-				CompileAs="1"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -135,6 +138,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				OutputFile="$(SolutionDir)bin\extends\$(ProjectName).ext"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -172,23 +176,7 @@
 	</References>
 	<Files>
 		<File
-			RelativePath=".\dllmain.c"
-			>
-		</File>
-		<File
-			RelativePath=".\hook.c"
-			>
-		</File>
-		<File
-			RelativePath=".\share.h"
-			>
-		</File>
-		<File
-			RelativePath=".\vconsole.c"
-			>
-		</File>
-		<File
-			RelativePath=".\vconsole.h"
+			RelativePath=".\src\module.c"
 			>
 		</File>
 	</Files>

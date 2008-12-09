@@ -46,7 +46,7 @@ clean :
 
 $(OBJPATH)/%.o : src/%.cpp
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) $(GTKINCS) -o $@ -c $<
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 $(OBJPATH)/%.d : src/%.cpp
 	@echo $(CXX) -MM -o $@ -c $<

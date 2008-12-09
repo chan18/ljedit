@@ -1,6 +1,5 @@
 // vconsole.c
 // 
-
 #include "vconsole.h"
 
 #include "share.h"
@@ -80,7 +79,7 @@ static VCon* vconsole_create() {
 }
 
 static void vconsole_destroy(VCon* con) {
-	PTHREAD_START_ROUTINE pfnThreadRoutine;
+	LPTHREAD_START_ROUTINE pfnThreadRoutine;
 	HANDLE hRemoteThread;
 
 	if( !con )
@@ -103,7 +102,7 @@ static void vconsole_destroy(VCon* con) {
 		if( con->hToHook_Quit ) {
 			SetEvent(con->hToHook_Quit );
 			if( WaitForSingleObject(con->hCmdProcess, 5000)==WAIT_TIMEOUT) {
-				pfnThreadRoutine = (PTHREAD_START_ROUTINE)ExitProcess;
+				pfnThreadRoutine = (LPTHREAD_START_ROUTINE)ExitProcess;
 
 				// start the remote thread
 				hRemoteThread = CreateRemoteThread(con->hCmdProcess, NULL, 0, pfnThreadRoutine, 0, 0, NULL);
@@ -143,7 +142,7 @@ static int vconsole_init(VCon* con) {
 	DWORD dwHookLen;
 
 	LPVOID pRemoteAddr;
-	PTHREAD_START_ROUTINE pfnThreadRoutine;
+	LPTHREAD_START_ROUTINE pfnThreadRoutine;
 	HANDLE hRemoteThread;
 	HANDLE hRemoteSharedMem = 0;
 
@@ -213,7 +212,7 @@ static int vconsole_init(VCon* con) {
 		}
 
 		// get address to LoadLibraryW function
-		pfnThreadRoutine = (PTHREAD_START_ROUTINE)GetProcAddress(GetModuleHandle(L"Kernel32.dll"), "LoadLibraryW");
+		pfnThreadRoutine = (LPTHREAD_START_ROUTINE)GetProcAddress(GetModuleHandle(L"Kernel32.dll"), "LoadLibraryW");
 		if( pfnThreadRoutine==NULL)
 			return 3004;
 
@@ -241,7 +240,7 @@ static int vconsole_init(VCon* con) {
 			return 4000;
 		}
 
-		pfnThreadRoutine = (PTHREAD_START_ROUTINE)HookService;
+		pfnThreadRoutine = (LPTHREAD_START_ROUTINE)HookService;
 
 		// start the remote thread
 		hRemoteThread = CreateRemoteThread(pi.hProcess, NULL, 0, pfnThreadRoutine, hRemoteSharedMem, 0, NULL);
@@ -316,7 +315,7 @@ static DWORD WINAPI MonitorService(VCon* con) {
 
 		case 2:
 			if( vcon->on_screen_changed )
-				(vcon->on_screen_changed)();
+				(vcon->on_screen_changed)(vcon);
 			break;
 
 		default:
@@ -326,7 +325,7 @@ static DWORD WINAPI MonitorService(VCon* con) {
 
 	trace("monitor thread stoped!\n");
 	if( vcon->on_quit )
-		(vcon->on_quit)();
+		(vcon->on_quit)(vcon);
 
 	return 0;
 }
