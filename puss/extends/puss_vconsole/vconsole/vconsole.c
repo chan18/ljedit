@@ -58,9 +58,61 @@ static VCon* vconsole_create();
 static void vconsole_destroy(VCon* con);
 static int vconsole_init(VCon* con);
 
+#define ENV_STR_BLOCK_SZ	(32 * 1024)
+
+static LPWCH create_env_strings() {
+	LPWCH sEnv, sp, dEnv, dp, tp;
+	DWORD sSize, dSize, nSize;
+	DWORD dwLimit = ENV_STR_BLOCK_SZ;
+
+	sEnv = GetEnvironmentStrings();
+	sp = sEnv;
+	dEnv = malloc( dwLimit * sizeof(WCHAR) );
+	dp = dEnv;
+
+	dSize = 0;
+	// copy current env
+	while( *sp ) {
+		sSize = wcslen(sp) + 1;		// str + '\0'
+		nSize = dSize + sSize + 1;	// strs + '\0'
+		if( nSize > dwLimit ) {
+			while( nSize > dwLimit )
+				dwLimit += ENV_STR_BLOCK_SZ;
+			dEnv = realloc(dEnv, dwLimit * sizeof(WCHAR) );
+			dp = dEnv + sSize;
+		}
+		tp = memcpy(dp, sp, sSize);
+		sp += sSize;
+		dp += sSize;
+		dSize += sSize;
+	}
+
+	// append new var
+	sp = L"TEST_VAR=0";
+	{
+		sSize = wcslen(sp) + 1;		// str + '\0'
+		nSize = dSize + sSize + 1;	// strs + '\0'
+		if( nSize > dwLimit ) {
+			while( nSize > dwLimit )
+				dwLimit += ENV_STR_BLOCK_SZ;
+			dEnv = realloc(dEnv, dwLimit * sizeof(WCHAR) );
+			dp = dEnv + sSize;
+		}
+		tp = memcpy(dp, sp, sSize);
+		sp += sSize;
+		dp += sSize;
+		dSize += sSize;
+	}
+
+	*dp = 0;
+	++dp;
+
+	FreeEnvironmentStrings(sEnv);
+	return dEnv;
+}
+
 static VCon* vconsole_create() {
 	VCon* con = malloc(sizeof(VCon));
-
 	if( con ) {
 		memset(con, 0, sizeof(VCon));
 
@@ -72,9 +124,10 @@ static VCon* vconsole_create() {
 					return con;
 			}
 		}
+
+		vconsole_destroy(con);
 	}
 
-	vconsole_destroy(con);
 	return NULL;
 }
 
@@ -109,11 +162,11 @@ static void vconsole_destroy(VCon* con) {
 				if( hRemoteThread ) {
 					// wait for the thread to finish
 					if( WaitForSingleObject(hRemoteThread, 5000)==WAIT_TIMEOUT)
-						TerminateProcess(con->hCmdProcess, 0);
+						TerminateProcess(con->hCmdProcess, -9);
 
 					CloseHandle(hRemoteThread);
 				} else {
-					TerminateProcess(con->hCmdProcess, 0);
+					TerminateProcess(con->hCmdProcess, -9);
 				}
 			}
 		}
@@ -138,13 +191,16 @@ static int vconsole_init(VCon* con) {
 	PROCESS_INFORMATION pi;
 	DWORD dwStartupFlags = CREATE_NEW_CONSOLE|CREATE_SUSPENDED|CREATE_UNICODE_ENVIRONMENT;
 
-	WCHAR szHookPath[MAX_PATH];
+	//LPWCH env;
+	WCHAR szHookPath[4096];
 	DWORD dwHookLen;
 
 	LPVOID pRemoteAddr;
 	LPTHREAD_START_ROUTINE pfnThreadRoutine;
+	HMODULE	hRemoteDLL;
 	HANDLE hRemoteThread;
 	HANDLE hRemoteSharedMem = 0;
+	HANDLE hEvents[2];
 
 	HANDLE hCurrentProcess = GetCurrentProcess();
 	VConsole* vcon = (VConsole*)con;
@@ -194,11 +250,11 @@ static int vconsole_init(VCon* con) {
 
 	con->hShareMem = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(ShareMemory), NULL);
 	if( !con->hShareMem )
-		return 2001;
+		return 1001;
 
 	con->shared = (ShareMemory*)MapViewOfFile(con->hShareMem, FILE_MAP_ALL_ACCESS, 0, 0, 0);
 	if( !con->shared )
-		return 2002;
+		return 1002;
 
 	memset(con->shared, 0, sizeof(ShareMemory));
 	con->shared->owner_pid = GetCurrentProcessId();
@@ -225,6 +281,9 @@ static int vconsole_init(VCon* con) {
 		if( WaitForSingleObject(hRemoteThread, 10000)==WAIT_TIMEOUT)
 			return 3006;
 
+		if( !GetExitCodeThread(hRemoteThread, &hRemoteDLL) )
+			return 3007;
+
 		CloseHandle(hRemoteThread);
 		VirtualFreeEx(pi.hProcess, pRemoteAddr, dwHookLen*sizeof(WCHAR), MEM_RELEASE);
 	}
@@ -240,14 +299,17 @@ static int vconsole_init(VCon* con) {
 			return 4000;
 		}
 
-		pfnThreadRoutine = (LPTHREAD_START_ROUTINE)HookService;
+		pfnThreadRoutine = (LPTHREAD_START_ROUTINE)((DWORD)hRemoteDLL + (DWORD)HookService - (DWORD)g_hModule);
 
 		// start the remote thread
 		hRemoteThread = CreateRemoteThread(pi.hProcess, NULL, 0, pfnThreadRoutine, hRemoteSharedMem, 0, NULL);
 		if( !hRemoteThread )
 			return 4001;
 
-		if( WaitForSingleObject(con->hFromHook_Update, 10000)==WAIT_TIMEOUT )
+		hEvents[0] = hRemoteThread;
+		hEvents[1] = con->hFromHook_Update;
+		dwRet = WaitForMultipleObjects(2, hEvents, FALSE, 10000);
+		if( dwRet==WAIT_FAILED || dwRet==WAIT_TIMEOUT || dwRet==(WAIT_OBJECT_0 + 0) )
 			return 4002;
 
 		CloseHandle(hRemoteThread);

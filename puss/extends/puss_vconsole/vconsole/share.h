@@ -6,6 +6,8 @@
 
 #include <Windows.h>
 
+#define SHARED_FILE_NAME_FMT L"@vconsole/shared/%d"
+
 #define MAX_SCR_COL	256
 #define MAX_SCR_ROW	256
 #define MAX_SCR_LEN	(MAX_SCR_COL*MAX_SCR_ROW)

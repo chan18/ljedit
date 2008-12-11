@@ -45,7 +45,7 @@ ifeq ($(PLATFORM), win32)
 all : $(VCONSOLE) $(TARGET)
 
 $(VCONSOLE) : vconsole/*.c
-	$(CC) $(CFLAGS) -shared -o $@ $^
+	$(CC) $(CFLAGS) -DUNICODE -shared -o $@ $^
 
 $(TARGET) : $(OBJS)
 	$(CC) $(CFLAGS) $(PUSS_CFLAGS) -shared -o $@ $^ $(PUSS_LIBS)

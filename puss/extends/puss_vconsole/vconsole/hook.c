@@ -111,7 +111,7 @@ static void read_console_buffer(ShareMemory* shared) {
 	CloseHandle(hStdOut);
 }
 
-void hook_service_run(ShareMemory* shared, HANDLE hParent) {
+static void hook_service_run(ShareMemory* shared, HANDLE hParent) {
 	DWORD dwRet;
 	BOOL bRunSign;
 	DWORD dwLastAlive;
@@ -168,7 +168,15 @@ DWORD HookService(HANDLE hShareMem) {
 	HWND hWnd = GetConsoleWindow();
 	//printf("service start : %p  - %p\n", hShareMem, &hShareMem);
 
-	ShowWindow(hWnd, SW_HIDE);
+	//ShowWindow(hWnd, SW_HIDE);
+
+	{
+		HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+		COORD dwSize = { 100, 300 };
+		SMALL_RECT srWindow = { 0, 0, dwSize.X-1, 13 };
+		SetConsoleScreenBufferSize(hStdOut, dwSize);
+		SetConsoleWindowInfo(hStdOut, TRUE, &srWindow);
+	}
 
 	//printf("hook monitor thread!\n");
 	shared = MapViewOfFile(hShareMem, FILE_MAP_ALL_ACCESS, 0, 0, 0);
