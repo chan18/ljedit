@@ -22,6 +22,9 @@ struct _VConsole {
 typedef struct {
 	VConsole*	(*create)();
 	void		(*destroy)(VConsole* console);
+	void		(*scroll)(VConsole* console, int left, int top);
+	void		(*resize)(VConsole* console, int width, int height);
+	void		(*send_input)(VConsole* console, WCHAR* text);
 } VConsoleAPI;
 
 typedef VConsoleAPI* (*TGetVConsoleAPIFn)();

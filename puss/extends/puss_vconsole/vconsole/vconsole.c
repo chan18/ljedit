@@ -7,7 +7,7 @@
 #include <stdio.h>
 
 #ifdef _DEBUG
-	void trace(const char* fmt, ...) {
+	static void trace(const char* fmt, ...) {
 		#define DEBUG_INFO_SIZE 8192
 		int len = DEBUG_INFO_SIZE;
 		char str[DEBUG_INFO_SIZE];
@@ -46,6 +46,9 @@ typedef struct {
 
 	HANDLE	hToHook_Quit;
 	HANDLE	hToHook_Alive;
+	HANDLE	hToHook_Scroll;
+	HANDLE	hToHook_Resize;
+	HANDLE	hToHook_SendInput;
 
 	HANDLE	hFromHook_Update;
 
@@ -245,6 +248,9 @@ static int vconsole_init(VCon* con) {
 	// 2.1 remote comm events
 	con->hToHook_Quit= CreateEvent(NULL, FALSE, FALSE, NULL);
 	con->hToHook_Alive = CreateEvent(NULL, FALSE, FALSE, NULL);
+	con->hToHook_Scroll = CreateEvent(NULL, FALSE, FALSE, NULL);
+	con->hToHook_Resize = CreateEvent(NULL, FALSE, FALSE, NULL);
+	con->hToHook_SendInput = CreateEvent(NULL, FALSE, FALSE, NULL);
 
 	con->hFromHook_Update = CreateEvent(NULL, FALSE, FALSE, NULL);
 
@@ -294,6 +300,9 @@ static int vconsole_init(VCon* con) {
 		if( !( DuplicateHandle(hCurrentProcess, con->hShareMem, pi.hProcess, &hRemoteSharedMem, 0, FALSE, DUPLICATE_SAME_ACCESS)
 			&& DuplicateHandle(hCurrentProcess, con->hToHook_Quit, pi.hProcess, &(con->shared->tohook_event_quit), 0, FALSE, DUPLICATE_SAME_ACCESS)
 			&& DuplicateHandle(hCurrentProcess, con->hToHook_Alive, pi.hProcess, &(con->shared->tohook_event_alive), 0, FALSE, DUPLICATE_SAME_ACCESS)
+			&& DuplicateHandle(hCurrentProcess, con->hToHook_Scroll, pi.hProcess, &(con->shared->tohook_event_scroll), 0, FALSE, DUPLICATE_SAME_ACCESS)
+			&& DuplicateHandle(hCurrentProcess, con->hToHook_Resize, pi.hProcess, &(con->shared->tohook_event_resize), 0, FALSE, DUPLICATE_SAME_ACCESS)
+			&& DuplicateHandle(hCurrentProcess, con->hToHook_SendInput, pi.hProcess, &(con->shared->tohook_event_send_input), 0, FALSE, DUPLICATE_SAME_ACCESS)
 			&& DuplicateHandle(hCurrentProcess, con->hFromHook_Update, pi.hProcess, &(con->shared->fromhook_event_update), 0, FALSE, DUPLICATE_SAME_ACCESS) ) )
 		{
 			return 4000;
@@ -327,10 +336,38 @@ static int vconsole_init(VCon* con) {
 	return 0;
 }
 
+static void vconsole_scroll(VCon* con, int left, int top) {
+	if( !con )
+		return;
+
+	con->shared->tohook_scroll_pos.X = left;
+	con->shared->tohook_scroll_pos.Y = top;
+	SetEvent(con->hToHook_Scroll);
+}
+
+static void vconsole_resize(VCon* con, int width, int height) {
+	if( !con )
+		return;
+
+	con->shared->tohook_resize_val.X = width;
+	con->shared->tohook_resize_val.Y = height;
+	SetEvent(con->hToHook_Resize);
+}
+
+static void vconsole_send_input(VCon* con, WCHAR* text) {
+	if( !con || !text )
+		return;
+
+	wcsncpy(con->shared->tohook_input_text, text, SEND_INPUT_CHARS_MAX);
+	SetEvent(con->hToHook_SendInput);
+}
+
 VConsoleAPI g_api =	{
 	  vconsole_create
 	, vconsole_destroy
-	//, vconsole_xxx
+	, vconsole_scroll
+	, vconsole_resize
+	, vconsole_send_input
 };
 
 __declspec(dllexport) VConsoleAPI* get_vconsole_api() { return &g_api; }
@@ -346,12 +383,12 @@ static DWORD WINAPI MonitorService(VCon* con) {
 	DWORD dwEventCount = sizeof(hEvents)/sizeof(HANDLE);
 	VConsole* vcon = (VConsole*)con;
 
-	trace("monitor thread start!\n");
+	//trace("monitor thread start!\n");
 
 	while( bRunSign ) {
 		dwRet = WaitForMultipleObjects(dwEventCount, hEvents, FALSE, 1000);
 		if( dwRet==WAIT_TIMEOUT ) {
-			trace("monitor thread test!\n");
+			//trace("monitor thread test!\n");
 
 			SetEvent( con->hToHook_Alive );
 			continue;
@@ -385,7 +422,7 @@ static DWORD WINAPI MonitorService(VCon* con) {
         }
 	}
 
-	trace("monitor thread stoped!\n");
+	//trace("monitor thread stoped!\n");
 	if( vcon->on_quit )
 		(vcon->on_quit)(vcon);
 

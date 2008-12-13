@@ -12,13 +12,21 @@
 #define MAX_SCR_ROW	256
 #define MAX_SCR_LEN	(MAX_SCR_COL*MAX_SCR_ROW)
 
+#define SEND_INPUT_CHARS_MAX 4096
+
 typedef struct _ShareMemory {
-	DWORD	owner_pid;
+	DWORD		owner_pid;
 
-	HANDLE	tohook_event_quit;
-	HANDLE	tohook_event_alive;
+	HANDLE		tohook_event_quit;
+	HANDLE		tohook_event_alive;
+	HANDLE		tohook_event_scroll;
+	COORD		tohook_scroll_pos;
+	HANDLE		tohook_event_resize;
+	COORD		tohook_resize_val;
+	HANDLE		tohook_event_send_input;
+	WCHAR		tohook_input_text[SEND_INPUT_CHARS_MAX+1];
 
-	HANDLE	fromhook_event_update;
+	HANDLE		fromhook_event_update;
 
 	HWND		hwnd;
 	DWORD		screen_update_time;
