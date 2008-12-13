@@ -1,6 +1,9 @@
 // module.c
 // 
 
+// TODO : now it's only demo!!
+// 
+
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
 
@@ -33,7 +36,7 @@ typedef struct {
 
 } PussVConsole;
  
-void update_view(PussVConsole* self) {
+static void update_view(PussVConsole* self) {
 	VConsole* vcon = self->vcon;
 	SMALL_RECT* range;
 	DWORD i, j, h, w, sz;
@@ -112,7 +115,7 @@ void update_view(PussVConsole* self) {
 	}
 }
 
-gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, PussVConsole* self) {
+static gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, PussVConsole* self) {
 	if( self->vcon ) {
 		PostMessage(self->vcon->hwnd, WM_KEYDOWN, event->hardware_keycode, 0x001C0001);
 		PostMessage(self->vcon->hwnd, WM_KEYUP, event->hardware_keycode, 0xC01C0001);
@@ -120,7 +123,7 @@ gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, PussVConsole* self)
 	return TRUE;
 }
 
-void on_im_commit(GtkIMContext *imcontext, gchar *text, PussVConsole* self) {
+static void on_im_commit(GtkIMContext *imcontext, gchar *text, PussVConsole* self) {
 	gunichar2* utf16_text = g_utf8_to_utf16(text, -1, 0, 0, 0);
 	if( utf16_text ) {
 		self->api->send_input(self->vcon, utf16_text);
@@ -128,7 +131,7 @@ void on_im_commit(GtkIMContext *imcontext, gchar *text, PussVConsole* self) {
 	}
 }
 
-gboolean on_scroll_event(GtkWidget *widget, GdkEventScroll *event, PussVConsole* self) {
+static gboolean on_scroll_event(GtkWidget *widget, GdkEventScroll *event, PussVConsole* self) {
 	gdouble y_new = self->adjust->value;
 	switch( event->direction ) {
 	case GDK_SCROLL_UP:
@@ -163,40 +166,70 @@ static void on_paste_text(GtkClipboard *clipboard, const gchar *text, PussVConso
 	}
 }
 
-void on_paste(GtkTextView *text_view, PussVConsole* self) {
+static void on_paste(GtkTextView *text_view, PussVConsole* self) {
 	GtkClipboard* clipboard = gtk_widget_get_clipboard(self->view, GDK_SELECTION_CLIPBOARD);
 	gtk_clipboard_request_text(clipboard, on_paste_text, self);
 }
 
-void on_sbar_changed(GtkAdjustment *adjustment, PussVConsole* self) {
+static void on_sbar_changed(GtkAdjustment *adjustment, PussVConsole* self) {
 	gdouble value = gtk_adjustment_get_value(adjustment);
 	g_print("%f\n", value);
 
 	self->api->scroll(self->vcon, 0, (gint)value);
 }
 
-void on_size_allocate(GtkWidget *widget, GtkAllocation *allocation, PussVConsole* self) {
+static void on_size_allocate(GtkWidget *widget, GtkAllocation *allocation, PussVConsole* self) {
 	self->api->resize(self->vcon, 120, allocation->height/18);
 }
 
-void on_size_request(GtkWidget *widget, GtkRequisition *requisition, PussVConsole* self) {
+static void on_size_request(GtkWidget *widget, GtkRequisition *requisition, PussVConsole* self) {
 	requisition->width = 500;
-	requisition->height = 250;
+	requisition->height = 200;
 }
 
-gboolean on_timer(PussVConsole* self) {
+static void on_reset_btn_click(GtkButton *button, PussVConsole* self) {
+	self->api->destroy(self->vcon);
+}
+
+static gboolean on_show_console(PussVConsole* self) {
+	RECT rect;
+	if( self->vcon ) {
+		ShowWindow(self->vcon->hwnd, SW_SHOW);
+		GetWindowRect(self->vcon->hwnd, &rect);
+		MoveWindow(self->vcon->hwnd, 100, 100, rect.right - rect.left, rect.bottom - rect.left, FALSE);
+		BringWindowToTop(self->vcon->hwnd);
+	}
+	return FALSE;
+}
+
+static void on_show_hide_btn_click(GtkButton *button, PussVConsole* self) {
+	if( self->vcon ) {
+		if( IsWindowVisible(self->vcon->hwnd) ) {
+			ShowWindow(self->vcon->hwnd, SW_HIDE);
+		} else {
+			g_idle_add(on_show_console, self);
+		}
+	}
+}
+
+static gboolean on_timer(PussVConsole* self) {
 	update_view(self);
 	return TRUE;
 }
 
-void vcon_on_screen_changed(VConsole* vcon) {
+static gboolean on_active(GtkWidget* widget, GdkEventFocus* event, PussVConsole* self) {
+	gtk_widget_grab_focus(self->view);
+	return TRUE;
+}
+
+static void vcon_on_screen_changed(VConsole* vcon) {
 	PussVConsole* self = (PussVConsole*)vcon->tag;
 	self->need_update = TRUE;
 
 	// printf("on_screen_changed\n");
 }
 
-void vcon_on_quit(VConsole* vcon) {
+static void vcon_on_quit(VConsole* vcon) {
 	PussVConsole* self = (PussVConsole*)vcon->tag;
 	//printf("on_quit\n");
 	self->need_update = FALSE;
@@ -232,7 +265,19 @@ PUSS_EXPORT void* puss_extend_create(Puss* app) {
 			self->adjust = gtk_adjustment_new(0, 0, 14, 1, 14, 14);
 			self->sbar = gtk_vscrollbar_new(self->adjust);
 			{
+				GtkWidget* reset_btn = gtk_button_new_with_label("reset");
+				GtkWidget* show_hide_btn = gtk_button_new_with_label("show/hide");
+				GtkWidget* vbox = gtk_vbox_new(FALSE, 2);
 				GtkWidget* hbox = gtk_hbox_new(FALSE, 2);
+
+				g_signal_connect(reset_btn, "clicked", (GCallback)on_reset_btn_click, self);
+				g_signal_connect(show_hide_btn, "clicked", (GCallback)on_show_hide_btn_click, self);
+
+				g_signal_connect(hbox, "focus-in-event",G_CALLBACK(&on_active), self);
+
+				gtk_box_pack_start(vbox, reset_btn, FALSE, FALSE, 0);
+				gtk_box_pack_start(vbox, show_hide_btn, FALSE, FALSE, 0);
+				gtk_box_pack_start(hbox, vbox, FALSE, FALSE, 0);
 				gtk_box_pack_start(hbox, self->view, TRUE, TRUE, 0);
 				gtk_box_pack_start(hbox, self->sbar, FALSE, FALSE, 0);
 				gtk_widget_show_all(hbox);
@@ -255,10 +300,9 @@ PUSS_EXPORT void* puss_extend_create(Puss* app) {
 			g_signal_connect(self->view, "paste-clipboard", (GCallback)on_paste, self);
 			g_signal_connect(self->view, "size-allocate", (GCallback)on_size_allocate, self);
 			g_signal_connect(self->view, "size-request", (GCallback)on_size_request, self);
-			
 			g_signal_connect(GTK_TEXT_VIEW(self->view)->im_context, "commit", (GCallback)on_im_commit, self);
-
 			g_signal_connect(self->adjust, "value-changed", (GCallback)on_sbar_changed, self);
+
 			g_timeout_add(20, on_timer, self);
 		}
 	}
