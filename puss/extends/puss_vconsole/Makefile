@@ -55,6 +55,8 @@ clean :
 
 else	# linux
 
+PUSS_LIBS += -lvte
+
 all : $(TARGET)
 
 clean :
