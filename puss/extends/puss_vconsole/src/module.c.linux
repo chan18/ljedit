@@ -1,0 +1,23 @@
+// module.c.inux
+// 
+
+typedef struct {
+	Puss*		app;
+} PussVConsole;
+ 
+PUSS_EXPORT void* puss_extend_create(Puss* app) {
+	PussVConsole* self;
+
+	bindtextdomain(TEXT_DOMAIN, app->get_locale_path());
+	bind_textdomain_codeset(TEXT_DOMAIN, "UTF-8");
+
+	self = g_new0(PussVConsole, 1);
+	self->app = app;
+
+	return self;
+}
+
+PUSS_EXPORT void  puss_extend_destroy(void* ext) {
+	PussVConsole* self = (PussVConsole*)ext;
+	g_free(self);
+}

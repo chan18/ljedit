@@ -30,7 +30,6 @@ PUSS_LIBS += `pkg-config --libs gtksourceview-2.0` \
 # project
 # 
 PUSS_CFLAGS += -I../../include
-PUSS_CFLAGS += -Ivconsole
 
 SRCS = $(wildcard src/*.c)
 
@@ -38,22 +37,34 @@ OBJS = $(SRCS:src/%.c=$(OBJPATH)/%.o)
 
 TARGET = ../../bin/extends/puss_vconsole.ext
 
-VCONSOLE = ../../bin/extends/vconsole.dll
-
 ifeq ($(PLATFORM), win32)
+
+PUSS_CFLAGS += -Ivconsole
+
+VCONSOLE = ../../bin/extends/vconsole.dll
 
 all : $(VCONSOLE) $(TARGET)
 
 $(VCONSOLE) : vconsole/*.c
 	$(CC) $(CFLAGS) -DUNICODE -shared -o $@ $^
 
-$(TARGET) : $(OBJS)
-	$(CC) $(CFLAGS) $(PUSS_CFLAGS) -shared -o $@ $^ $(PUSS_LIBS)
-
 clean :
 	rm -f $(TARGET)
 	rm -f $(VCONSOLE)
 	rm -rf $(OBJPATH)
+
+else	# linux
+
+all : $(TARGET)
+
+clean :
+	rm -f $(TARGET)
+	rm -rf $(OBJPATH)
+
+endif
+
+$(TARGET) : $(OBJS)
+	$(CC) $(CFLAGS) $(PUSS_CFLAGS) -shared -o $@ $^ $(PUSS_LIBS)
 
 $(OBJPATH)/%.o : src/%.c
 	@mkdir -p $(dir $@)
@@ -66,11 +77,4 @@ $(OBJPATH)/%.d : src/%.c
 	@$(CC) $(CFLAGS) $(PUSS_CFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
 
 -include $(SRCS:src/%.c=$(OBJPATH)/%.d)
-
-else
-
-all :
-clean :
-
-endif
 
