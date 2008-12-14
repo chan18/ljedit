@@ -3,6 +3,7 @@
 
 #include "Environ.h"
 
+#include <cstring>
 #include <sstream>
 #include <fstream>
 #include <algorithm>

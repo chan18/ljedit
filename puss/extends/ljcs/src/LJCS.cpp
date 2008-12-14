@@ -7,6 +7,7 @@
 #include "OutlinePage.h"
 #include "Tips.h"
 
+#include <cstring>
 #include <gdk/gdkkeysyms.h>
 
 #include <gtksourceview/gtksourcebuffer.h>
