@@ -17,7 +17,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gtk_doc_helper", "extends\g
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tips_engine", "extends\tips_engine\tips_engine.vcproj", "{E2C255E0-041C-4AAB-9652-918084A27CD5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "puss", "puss.vcproj", "{B4C6ACCC-CA92-520F-4B58-EFA5F3BEB52E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "puss", "puss\puss.vcproj", "{B4C6ACCC-CA92-520F-4B58-EFA5F3BEB52E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ljcs", "extends\ljcs\ljcs.vcproj", "{E2C258E0-041C-4ABB-9652-918084A27CD4}"
 EndProject

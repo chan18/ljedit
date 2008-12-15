@@ -44,7 +44,7 @@ endif
 
 # project
 # 
-CXXFLAGS += -I../../include
+CXXFLAGS += -I../../bin/include
 
 SRCS = $(wildcard src/*.cpp)
 

@@ -12,15 +12,19 @@ void drag_data_received( GtkWidget* widget
 		, guint time
 		, Puss* app )
 {
+	gchar** p;
+	gchar** uris;
+	gchar* filepath;
+
 	if( !data || data->format!=8 )
 		return;
 
-	gchar** uris = g_uri_list_extract_uris((const gchar*)(data->data));
+	uris = g_uri_list_extract_uris((const gchar*)(data->data));
 	if( !uris )
 		return;
 
-	for( gchar** p=uris; *p; ++p ) {
-		gchar* filepath = g_filename_from_uri(*p, NULL, NULL);
+	for( p=uris; *p; ++p ) {
+		filepath = g_filename_from_uri(*p, NULL, NULL);
 		if( filepath ) {
 			app->doc_open(filepath, -1, -1, TRUE);
 			g_free(filepath);
@@ -43,11 +47,14 @@ void page_added( GtkNotebook* notebook
 }
 
 PUSS_EXPORT void* puss_extend_create(Puss* app) {
-	GtkWidget* main_window = GTK_WIDGET(puss_get_main_window(app));
+	GtkWidget* main_window;
+	GtkWidget* doc_panel;
+
+	main_window = GTK_WIDGET(puss_get_main_window(app));
 	gtk_drag_dest_set(main_window, GTK_DEST_DEFAULT_ALL, &uri_target, 1, GDK_ACTION_COPY);
 	g_signal_connect(main_window, "drag-data-received", G_CALLBACK(&drag_data_received), app);
 
-	GtkWidget* doc_panel = GTK_WIDGET(puss_get_doc_panel(app));
+	doc_panel = GTK_WIDGET(puss_get_doc_panel(app));
 	gtk_drag_dest_set(doc_panel, GTK_DEST_DEFAULT_ALL, &uri_target, 1, GDK_ACTION_COPY);
 	g_signal_connect(doc_panel, "drag-data-received", G_CALLBACK(&drag_data_received), app);
 	g_signal_connect(doc_panel, "page-added", G_CALLBACK(&page_added), app);

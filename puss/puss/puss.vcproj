@@ -20,7 +20,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets=".\puss_d.vsprops"
+			InheritedPropertySheets="..\puss_d.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)include&quot;"
+				AdditionalIncludeDirectories=""
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -96,7 +96,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine=""
+				CommandLine="copy $(ProjectDir)IPuss.h $(SolutionDir)bin\include\"
 			/>
 		</Configuration>
 		<Configuration
@@ -104,7 +104,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets=".\puss.vsprops"
+			InheritedPropertySheets="..\puss.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -126,7 +126,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				WholeProgramOptimization="false"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)include&quot;"
+				AdditionalIncludeDirectories=""
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -181,7 +181,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine=""
+				CommandLine="copy $(ProjectDir)IPuss.h $(SolutionDir)bin\include\"
 			/>
 		</Configuration>
 	</Configurations>
@@ -192,55 +192,59 @@
 			Name="src"
 			>
 			<File
-				RelativePath=".\src\AboutDialog.c"
+				RelativePath=".\AboutDialog.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\AboutDialog.h"
+				RelativePath=".\AboutDialog.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\Commands.c"
+				RelativePath=".\Commands.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\Commands.h"
+				RelativePath=".\Commands.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\DocManager.c"
+				RelativePath=".\DocManager.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\DocManager.h"
+				RelativePath=".\DocManager.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\ExtendEngine.c"
+				RelativePath=".\ExtendEngine.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\ExtendEngine.h"
+				RelativePath=".\ExtendEngine.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\GlobalOptions.c"
+				RelativePath=".\GlobalOptions.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\GlobalOptions.h"
+				RelativePath=".\GlobalOptions.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\GlobMatch.c"
+				RelativePath=".\GlobMatch.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\GlobMatch.h"
+				RelativePath=".\GlobMatch.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\main.c"
+				RelativePath=".\IPuss.h"
+				>
+			</File>
+			<File
+				RelativePath=".\main.c"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -262,85 +266,53 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\src\MiniLine.c"
+				RelativePath=".\MiniLine.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\MiniLine.h"
+				RelativePath=".\MiniLine.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\MiniLineModules.c"
+				RelativePath=".\MiniLineModules.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\MiniLineModules.h"
+				RelativePath=".\MiniLineModules.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\OptionManager.c"
+				RelativePath=".\OptionManager.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\OptionManager.h"
+				RelativePath=".\OptionManager.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\PosLocate.c"
+				RelativePath=".\PosLocate.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\PosLocate.h"
+				RelativePath=".\PosLocate.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\Puss.c"
+				RelativePath=".\Puss.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\Puss.h"
+				RelativePath=".\Puss.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\Utils.c"
+				RelativePath=".\Utils.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\Utils.h"
+				RelativePath=".\Utils.h"
 				>
 			</File>
-		</Filter>
-		<Filter
-			Name="include"
-			>
-			<File
-				RelativePath=".\include\IPuss.h"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="bin"
-			>
-			<Filter
-				Name="res"
-				>
-				<File
-					RelativePath=".\bin\res\puss.png"
-					>
-				</File>
-				<File
-					RelativePath=".\bin\res\puss_main_window.xml"
-					>
-				</File>
-				<File
-					RelativePath=".\bin\res\puss_option_dialog.xml"
-					>
-				</File>
-				<File
-					RelativePath=".\bin\res\puss_ui_manager.xml"
-					>
-				</File>
-			</Filter>
 		</Filter>
 	</Files>
 	<Globals>

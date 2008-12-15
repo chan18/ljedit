@@ -1,8 +1,12 @@
-# makefile
+# makefile puss
 # 
 # usage :
 #     build debug version   : make
 #     build release version : make BUILD=release
+# 
+# locale example :
+#	xgettext -k_ -o puss.po ./*.c
+#	msgfmt -o bin/locale/zh_CN/LC_MESSAGES/puss.mo poss.po
 # 
 
 ifeq ($(OS), Windows_NT)
@@ -18,25 +22,38 @@ ifeq ($(BUILD), release)
 	OBJPATH = release
 endif
 
-# gtk
+# gtk & gtksourceview & gthread
 # 
-CFLAGS += `pkg-config --cflags gtk+-2.0`
-LIBS += `pkg-config --libs gtk+-2.0`
+CFLAGS += `pkg-config --cflags gtksourceview-2.0`
+
+LIBS += `pkg-config --libs gtksourceview-2.0` \
+		`pkg-config --libs gmodule-2.0` \
+		`pkg-config --libs gio-2.0` \
+		`pkg-config --libs gthread-2.0`
 
 # project
 # 
-CFLAGS += -I../../bin/include
-
 SRCS = $(wildcard *.c)
 
 OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)
 
-TARGET = ../../bin/extends/dndopen.ext
+ifeq ($(PLATFORM), win32)
+	TARGET = ../bin/_puss.exe
+
+	ifeq ($(BUILD), release)
+		LDFLAGS = -mwindows
+	endif
+
+else
+	LIBS += -ldl
+	TARGET = ../bin/puss
+
+endif
 
 all : $(TARGET)
 
 $(TARGET) : $(OBJS)
-	$(CC) $(CFLAGS) -shared -o $@ $^ $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 clean :
 	rm -f $(TARGET)

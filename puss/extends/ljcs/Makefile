@@ -27,7 +27,7 @@ LIBS += `pkg-config --libs gtksourceview-2.0` \
 
 # project
 # 
-CXXFLAGS += -I../../include
+CXXFLAGS += -I../../bin/include
 
 # libljcs
 # 
