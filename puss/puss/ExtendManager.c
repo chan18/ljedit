@@ -1,7 +1,7 @@
-// ExtendEngine.c
+// ExtendManager.c
 //
 
-#include "ExtendEngine.h"
+#include "ExtendManager.h"
 
 #include <glib.h>
 #include <gmodule.h>
@@ -87,7 +87,7 @@ void extend_unload(Extend* extend) {
 	}
 }
 
-gboolean puss_extend_engine_create() {
+gboolean puss_extend_manager_create() {
 	gchar* extends_path;
 	GDir* dir;
 	Extend* extend;
@@ -133,7 +133,7 @@ gboolean puss_extend_engine_create() {
 	return TRUE;
 }
 
-void puss_extend_engine_destroy() {
+void puss_extend_manager_destroy() {
 	Extend* t;
 	Extend* p = puss_app->extends_list;
 	puss_app->extends_list = 0;
@@ -147,7 +147,7 @@ void puss_extend_engine_destroy() {
 
 }
 
-gpointer puss_extend_engine_query(const gchar* ext_name, const gchar* interface_name) {
+gpointer puss_extend_manager_query(const gchar* ext_name, const gchar* interface_name) {
 	void* (*query_fun)(void* handle, const gchar* interface_name);
 	Extend* extend = g_hash_table_lookup(puss_app->extends_map, ext_name);
 	if( extend ) {

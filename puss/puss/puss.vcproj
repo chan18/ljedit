@@ -216,11 +216,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ExtendEngine.c"
+				RelativePath=".\ExtendManager.c"
 				>
 			</File>
 			<File
-				RelativePath=".\ExtendEngine.h"
+				RelativePath=".\ExtendManager.h"
 				>
 			</File>
 			<File

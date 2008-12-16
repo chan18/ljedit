@@ -201,14 +201,14 @@ static void on_show_hide_btn_click(GtkButton *button, PussVConsole* self) {
 	}
 }
 
-static gboolean on_timer(PussVConsole* self) {
-	update_view(self);
-	return TRUE;
-}
-
 static gboolean on_active(GtkWidget* widget, GdkEventFocus* event, PussVConsole* self) {
 	gtk_widget_grab_focus(self->view);
 	return TRUE;
+}
+
+static gboolean on_idle_update(PussVConsole* self) {
+	update_view(self);
+	return FALSE;
 }
 
 static void vcon_on_screen_changed(VConsole* vcon) {
@@ -216,6 +216,9 @@ static void vcon_on_screen_changed(VConsole* vcon) {
 	self->need_update = TRUE;
 
 	// printf("on_screen_changed\n");
+	gdk_threads_enter();
+	g_idle_add(on_idle_update, self);
+	gdk_threads_leave();
 }
 
 static void vcon_on_quit(VConsole* vcon) {
@@ -291,8 +294,6 @@ PUSS_EXPORT void* puss_extend_create(Puss* app) {
 			g_signal_connect(self->view, "size-request", (GCallback)on_size_request, self);
 			g_signal_connect(GTK_TEXT_VIEW(self->view)->im_context, "commit", (GCallback)on_im_commit, self);
 			g_signal_connect(self->adjust, "value-changed", (GCallback)on_sbar_changed, self);
-
-			g_timeout_add(20, on_timer, self);
 		}
 	}
 

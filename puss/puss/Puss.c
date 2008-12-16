@@ -7,7 +7,7 @@
 
 #include "MiniLine.h"
 #include "DocManager.h"
-#include "ExtendEngine.h"
+#include "ExtendManager.h"
 #include "PosLocate.h"
 #include "OptionManager.h"
 #include "GlobalOptions.h"
@@ -348,11 +348,11 @@ gboolean puss_create(const gchar* filepath) {
 		&& puss_main_ui_create()
 		&& puss_mini_line_create()
 		&& puss_pos_locate_create()
-		&& puss_extend_engine_create();
+		&& puss_extend_manager_create();
 }
 
 void puss_destroy() {
-	puss_extend_engine_destroy();
+	puss_extend_manager_destroy();
 	puss_pos_locate_destroy();
 	puss_mini_line_destroy();
 	puss_doc_manager_destroy();
@@ -383,6 +383,8 @@ void puss_run() {
 
 	gtk_widget_show( GTK_WIDGET(puss_app->main_window) );
 
+	gdk_threads_enter();
 	gtk_main();
+	gdk_threads_leave();
 }
 
