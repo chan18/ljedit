@@ -20,6 +20,7 @@ struct _PussApp {
 	GtkBuilder*		builder;
 	gchar*			module_path;
 	gchar*			locale_path;
+	gchar*			extends_path;
 
 	// get pointer from "builder"
 	// 
@@ -34,6 +35,7 @@ struct _PussApp {
 	MiniLine*		mini_line;
 	PosList*		pos_list;
 	Extend*			extends_list;
+	GHashTable*		extends_map;
 	Utils*			utils;
 	OptionManager*	option_manager;
 };

@@ -318,8 +318,6 @@ void puss_pages_reorder_save() {
 void puss_locale_init() {
 	gtk_set_locale();
 
-	puss_app->locale_path = g_build_filename(puss_app->module_path, "locale", NULL);
-
 	bindtextdomain(TEXT_DOMAIN, puss_app->locale_path);
 	bind_textdomain_codeset(TEXT_DOMAIN, "UTF-8");
 	//textdomain(TEXT_DOMAIN);
@@ -329,6 +327,9 @@ gboolean puss_create(const gchar* filepath) {
 	puss_app = g_new0(PussApp, 1);
 
 	puss_app->module_path = g_path_get_dirname(filepath);
+	puss_app->locale_path = g_build_filename(puss_app->module_path, "locale", NULL);
+	puss_app->extends_path = g_build_filename(puss_app->module_path, "extends", NULL);
+	puss_app->extends_map = g_hash_table_new(g_str_hash, g_str_equal);
 
 	puss_locale_init();
 
@@ -361,7 +362,10 @@ void puss_destroy() {
 
 	g_object_unref(G_OBJECT(puss_app->builder));
 
+	g_hash_table_destroy(puss_app->extends_map);
 	g_free(puss_app->module_path);
+	g_free(puss_app->locale_path);
+	g_free(puss_app->extends_path);
 	g_free(puss_app);
 	puss_app = 0;
 }

@@ -33,6 +33,7 @@
 #include "Utils.h"
 
 struct _Extend {
+	gchar*		name;
 	GModule*	module;
 	void*		handle;
 	Extend*		next;
@@ -87,7 +88,7 @@ void extend_unload(Extend* extend) {
 }
 
 gboolean puss_extend_engine_create() {
-	gchar* extends_dir;
+	gchar* extends_path;
 	GDir* dir;
 	Extend* extend;
 	const gchar* filename;
@@ -96,15 +97,14 @@ gboolean puss_extend_engine_create() {
 	const gchar* match_str = ".ext";
 	size_t match_len = strlen(match_str);
 
-
 	if( !g_module_supported() )
 		return TRUE;
 
-	extends_dir = g_build_filename(puss_app->module_path, "extends", NULL);
-	if( !extends_dir )
+	extends_path = puss_app->extends_path;
+	if( !extends_path )
 		return TRUE;
 
-	dir = g_dir_open(extends_dir, 0, NULL);
+	dir = g_dir_open(extends_path, 0, NULL);
 	if( dir ) {
 		for(;;) { 
 			filename = g_dir_read_name(dir);
@@ -115,20 +115,20 @@ gboolean puss_extend_engine_create() {
 			if( len < match_len || strcmp(filename+len-match_len, match_str)!=0 )
 				continue;
 
-			filepath = g_build_filename(extends_dir, filename, NULL);
+			filepath = g_build_filename(extends_path, filename, NULL);
 			extend = extend_load(filepath);
 			g_free(filepath);
 
 			if( extend ) {
+				extend->name = g_strndup(filename, len - match_len);
 				extend->next = puss_app->extends_list;
 				puss_app->extends_list = extend;
+				g_hash_table_insert(puss_app->extends_map, extend->name, extend);
 			}
 		}
 
 		g_dir_close(dir);
 	}
-
-	g_free(extends_dir);
 
 	return TRUE;
 }
@@ -145,5 +145,19 @@ void puss_extend_engine_destroy() {
 		extend_unload(t);
 	}
 
+}
+
+gpointer puss_extend_engine_query(const gchar* ext_name, const gchar* interface_name) {
+	void* (*query_fun)(void* handle, const gchar* interface_name);
+	Extend* extend = g_hash_table_lookup(puss_app->extends_map, ext_name);
+	if( extend ) {
+		if( extend->module ) {
+			g_module_symbol(extend->module, "puss_extend_query", (gpointer*)&query_fun);
+			if( query_fun ) {
+				return (*query_fun)(extend->handle, interface_name);
+			}
+		}
+	}
+	return 0;
 }
 

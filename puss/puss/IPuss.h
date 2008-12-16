@@ -86,6 +86,8 @@ struct _Puss {
 						, GFreeFunc tag_free_fun );
 
 	gboolean		(*option_manager_monitor_reg)(const Option* option, OptionChanged fun, gpointer tag, GFreeFunc tag_free_fun);
+
+	gpointer		(*extend_engine_query)(const gchar* ext_name, const gchar* interface_name);
 };
 
 #ifdef  __cplusplus
