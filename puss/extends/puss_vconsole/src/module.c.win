@@ -216,9 +216,9 @@ static void vcon_on_screen_changed(VConsole* vcon) {
 	self->need_update = TRUE;
 
 	// printf("on_screen_changed\n");
-	gdk_threads_enter();
-	g_idle_add(on_idle_update, self);
-	gdk_threads_leave();
+	// gdk_threads_enter();
+	g_idle_add(on_idle_update, self);	// it's thread safe
+	// gdk_threads_leave();
 }
 
 static void vcon_on_quit(VConsole* vcon) {

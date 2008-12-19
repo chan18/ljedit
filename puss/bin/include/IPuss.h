@@ -102,6 +102,22 @@ struct _Puss {
 #	define	PUSS_EXPORT		__EXTERN_C
 #endif
 
+/*
+	Puss Extend DLL struct
+	
+	// create extend
+	PUSS_EXPORT	void* puss_extend_create(Puss* app);
+
+	// init extend(after all extends created)
+	PUSS_EXPORT void  puss_extend_init(void* self);
+
+	// final extend(before all extends destroy)
+	PUSS_EXPORT void  puss_extend_final(void* self);
+
+	// destroy extend
+	PUSS_EXPORT void  puss_extend_destroy(void* self);
+*/
+
 #define	SIGNAL_CALLBACK	PUSS_EXPORT
 
 

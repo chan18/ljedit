@@ -383,8 +383,8 @@ void puss_run() {
 
 	gtk_widget_show( GTK_WIDGET(puss_app->main_window) );
 
-	gdk_threads_enter();
+	//gdk_threads_enter();
 	gtk_main();
-	gdk_threads_leave();
+	//gdk_threads_leave();
 }
 

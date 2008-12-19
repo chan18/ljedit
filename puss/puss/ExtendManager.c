@@ -71,6 +71,24 @@ Extend* extend_load(const gchar* filepath) {
 	return 0;
 }
 
+void extend_init(Extend* extend) {
+	void (*init_fun)(void* handle);
+	if( extend && extend->module ) {
+		g_module_symbol(extend->module, "puss_extend_init", (gpointer*)&init_fun);
+		if( init_fun )
+			(*init_fun)(extend->handle);
+	}
+}
+
+void extend_final(Extend* extend) {
+	void (*final_fun)(void* handle);
+	if( extend && extend->module ) {
+		g_module_symbol(extend->module, "puss_extend_final", (gpointer*)&final_fun);
+		if( final_fun )
+			(*final_fun)(extend->handle);
+	}
+}
+
 void extend_unload(Extend* extend) {
 	void (*destroy_fun)(void* handle);
 	if( extend ) {
@@ -106,7 +124,7 @@ gboolean puss_extend_manager_create() {
 
 	dir = g_dir_open(extends_path, 0, NULL);
 	if( dir ) {
-		for(;;) { 
+		for(;;) {
 			filename = g_dir_read_name(dir);
 			if( !filename )
 				break;
@@ -130,12 +148,26 @@ gboolean puss_extend_manager_create() {
 		g_dir_close(dir);
 	}
 
+	extend = puss_app->extends_list;
+	while( extend ) {
+		extend_init(extend);
+		extend = extend->next;
+	}
+
 	return TRUE;
 }
 
 void puss_extend_manager_destroy() {
+	Extend* p;
 	Extend* t;
-	Extend* p = puss_app->extends_list;
+
+	p = puss_app->extends_list;
+	while( p ) {
+		extend_final(p);
+		p = p->next;
+	}
+
+	p = puss_app->extends_list;
 	puss_app->extends_list = 0;
 
 	while( p ) {
@@ -144,7 +176,6 @@ void puss_extend_manager_destroy() {
 
 		extend_unload(t);
 	}
-
 }
 
 gpointer puss_extend_manager_query(const gchar* ext_name, const gchar* interface_name) {

@@ -85,7 +85,8 @@ int main(int argc, char* argv[]) {
 	//g_atexit(g_mem_profile);
 
 	g_thread_init(NULL);
-	gdk_threads_init();
+
+	//gdk_threads_init();
 
 	gtk_init(&argc, &argv);
 
