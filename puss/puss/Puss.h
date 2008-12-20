@@ -6,7 +6,6 @@
 
 #include "IPuss.h"
 
-typedef struct _MiniLine       MiniLine;
 typedef struct _PosList        PosList;
 typedef struct _Extend         Extend;
 typedef struct _Utils          Utils;
@@ -32,7 +31,6 @@ struct _PussApp {
 	GtkNotebook*	bottom_panel;
 	GtkStatusbar*	statusbar;
 
-	MiniLine*		mini_line;
 	PosList*		pos_list;
 	Extend*			extends_list;
 	GHashTable*		extends_map;

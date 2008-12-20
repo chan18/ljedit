@@ -5,10 +5,8 @@
 #include "Puss.h"
 #include "Utils.h"
 #include "DocManager.h"
-#include "MiniLine.h"
 #include "PosLocate.h"
 #include "OptionManager.h"
-#include "MiniLineModules.h"
 #include "AboutDialog.h"
 
 // file menu
@@ -44,18 +42,6 @@ SIGNAL_CALLBACK void file_menu_close_all( GtkAction* action ) {
 SIGNAL_CALLBACK void file_menu_quit( GtkAction* action ) {
 	if( puss_doc_close_all() )
 		gtk_widget_destroy(GTK_WIDGET(puss_app->main_window));
-}
-
-SIGNAL_CALLBACK void edit_menu_jump_to( GtkAction* action ) {
-	puss_mini_line_active(puss_mini_line_GOTO_get_callback());
-}
-
-SIGNAL_CALLBACK void edit_menu_find( GtkAction* action ) {
-	puss_mini_line_active(puss_mini_line_FIND_get_callback());
-}
-
-SIGNAL_CALLBACK void edit_menu_replace( GtkAction* action ) {
-	puss_mini_line_active(puss_mini_line_REPLACE_get_callback());
 }
 
 SIGNAL_CALLBACK void edit_menu_go_back( GtkAction* action ) {

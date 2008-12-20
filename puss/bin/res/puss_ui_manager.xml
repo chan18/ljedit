@@ -86,27 +86,6 @@
 
         <!-- edit menu actions -->
         <child>
-          <object class="GtkAction" id="edit_menu_jump_to">
-            <property name="stock_id">gtk-jump-to</property>
-            <signal handler="edit_menu_jump_to" name="activate"/>
-          </object>
-          <accelerator key="I" modifiers="GDK_CONTROL_MASK"/>
-        </child>
-        <child>
-          <object class="GtkAction" id="edit_menu_find">
-            <property name="stock_id">gtk-find</property>
-            <signal handler="edit_menu_find" name="activate"/>
-          </object>
-          <accelerator key="K" modifiers="GDK_CONTROL_MASK"/>
-        </child>
-        <child>
-          <object class="GtkAction" id="edit_menu_replace">
-            <property name="stock_id">gtk-find-and-replace</property>
-            <signal handler="edit_menu_replace" name="activate"/>
-          </object>
-          <accelerator key="H" modifiers="GDK_CONTROL_MASK"/>
-        </child>
-        <child>
           <object class="GtkAction" id="edit_menu_go_back">
             <property name="stock_id">gtk-go-back</property>
             <signal handler="edit_menu_go_back" name="activate"/>
@@ -282,10 +261,6 @@
           <menuitem action="file_menu_quit"/>
         </menu>
         <menu action="edit_menu">
-          <menuitem action="edit_menu_jump_to"/>
-          <menuitem action="edit_menu_find"/>
-          <menuitem action="edit_menu_replace"/>
-          <separator/>
           <menuitem action="edit_menu_go_back"/>
           <menuitem action="edit_menu_go_forward"/>
         </menu>

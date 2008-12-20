@@ -6,21 +6,11 @@
 
 #include <gtk/gtk.h>
 
-typedef struct _MiniLineCallback MiniLineCallback;
 typedef struct _Option Option;
 typedef struct _Puss  Puss;
 
 typedef gboolean	(*OptionSetter)(GtkWindow* parent, Option* option, gpointer tag);
 typedef void		(*OptionChanged)(const Option* option, gpointer tag);
-
-// mini line
-struct _MiniLineCallback {
-	gpointer		 tag;
-
-	gboolean 		(*cb_active)( gpointer tag );
-	gboolean 		(*cb_key_press)( GdkEventKey* event, gpointer tag );
-	void     		(*cb_changed)( gpointer tag );
-};
 
 // option manager
 struct _Option {
@@ -37,6 +27,7 @@ struct _Puss {
 	// app
 	const gchar*	(*get_module_path)();
 	const gchar*	(*get_locale_path)();
+	const gchar*	(*get_extends_path)();
 
 	// UI
 	GtkBuilder*		(*get_ui_builder)();
@@ -64,10 +55,6 @@ struct _Puss {
 	gboolean		(*doc_close_current)();
 	void			(*doc_save_all)();
 	gboolean		(*doc_close_all)();
-
-	// mini line
-	void			(*mini_line_active)( MiniLineCallback* cb );
-	void			(*mini_line_deactive)();
 
 	// utils
 	void			(*send_focus_change)( GtkWidget* widget, gboolean in );
@@ -133,9 +120,6 @@ inline GtkNotebook*		puss_get_left_panel(Puss* app)					{ return GTK_NOTEBOOK(pu
 inline GtkNotebook*		puss_get_right_panel(Puss* app)					{ return GTK_NOTEBOOK(puss_get_ui_object(app, "right_panel")); }
 inline GtkNotebook*		puss_get_bottom_panel(Puss* app)				{ return GTK_NOTEBOOK(puss_get_ui_object(app, "bottom_panel")); }
 inline GtkStatusbar*	puss_get_statusbar(Puss* app)					{ return GTK_STATUSBAR(puss_get_ui_object(app, "statusbar")); }
-
-inline GtkImage*		puss_get_mini_window_image(Puss* app)			{ return GTK_IMAGE(puss_get_ui_object(app, "mini_bar_image")); }
-inline GtkEntry*		puss_get_mini_window_entry(Puss* app)			{ return GTK_ENTRY(puss_get_ui_object(app, "mini_bar_entry")); }
 */
 
 #define puss_get_ui_object(app, id)		gtk_builder_get_object((app)->get_ui_builder(), (id))
@@ -146,9 +130,6 @@ inline GtkEntry*		puss_get_mini_window_entry(Puss* app)			{ return GTK_ENTRY(pus
 #define puss_get_right_panel(app)		GTK_NOTEBOOK(puss_get_ui_object((app), "right_panel"))
 #define puss_get_bottom_panel(app)		GTK_NOTEBOOK(puss_get_ui_object((app), "bottom_panel"))
 #define puss_get_statusbar(app)			GTK_STATUSBAR(puss_get_ui_object((app), "statusbar"))
-
-#define puss_get_mini_window_image(app)	GTK_IMAGE(puss_get_ui_object((app), "mini_bar_image"))
-#define puss_get_mini_window_entry(app)	GTK_ENTRY(puss_get_ui_object((app), "mini_bar_entry"))
 
 #endif//PUSS_INC_IPUSS_H
 

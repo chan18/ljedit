@@ -229,21 +229,21 @@ void create_ui(GtkDocHelper* self) {
 	gtk_action_group_add_action_with_accel(main_action_group, search_gtk_doc_symbol_action, "F1");
 
 	const gchar* ui_info =
-		"<ui>\n"
-		"  <menubar name='main_menubar'>\n"
-		"     <menu action='tool_menu'>\n"
-		"      <placeholder name='tool_menu_extend_place'>\n"
-		"        <menuitem action='search_gtk_doc_symbol_action'/>\n"
-		"      </placeholder>\n"
-		"    </menu>\n"
-		"  </menubar>\n"
-		"\n"
-		"  <toolbar name='main_toolbar'>\n"
-		"    <placeholder name='main_toolbar_tool_place'>\n"
-		"      <toolitem action='search_gtk_doc_symbol_action'/>\n"
-		"    </placeholder>\n"
-        "  </toolbar>\n"
-		"</ui>\n"
+		"<ui>"
+		"  <menubar name='main_menubar'>"
+		"     <menu action='tool_menu'>"
+		"      <placeholder name='tool_menu_extend_place'>"
+		"        <menuitem action='search_gtk_doc_symbol_action'/>"
+		"      </placeholder>"
+		"    </menu>"
+		"  </menubar>"
+		""
+		"  <toolbar name='main_toolbar'>"
+		"    <placeholder name='main_toolbar_tool_place'>"
+		"      <toolitem action='search_gtk_doc_symbol_action'/>"
+		"    </placeholder>"
+        "  </toolbar>"
+		"</ui>"
 		;
 
 	GtkUIManager* ui_mgr = GTK_UI_MANAGER(gtk_builder_get_object(self->app->get_ui_builder(), "main_ui_manager"));

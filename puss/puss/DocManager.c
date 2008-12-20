@@ -533,34 +533,6 @@ GString* puss_doc_get_charset( GtkTextBuffer* buffer ) {
 	return (GString*)g_object_get_data(G_OBJECT(buffer), "puss-doc-charset");
 }
 
-void puss_doc_replace_all( GtkTextBuffer* buf
-		, const gchar* find_text
-		, const gchar* replace_text
-		, gint flags )
-{
-	gint replace_text_len;
-	GtkTextIter iter, ps, pe;
-	gtk_text_buffer_get_start_iter(buf, &iter);
-
-	gtk_text_buffer_begin_user_action(buf);
-	{
-		replace_text_len = (gint)strlen(replace_text);
-
-		while( gtk_source_iter_forward_search(&iter
-				, find_text
-				, (GtkSourceSearchFlags)flags
-				, &ps
-				, &pe
-				, 0) )
-		{
-			gtk_text_buffer_delete(buf, &ps, &pe);
-			gtk_text_buffer_insert(buf, &ps, replace_text, replace_text_len);
-			iter = ps;
-		}
-	}
-	gtk_text_buffer_end_user_action(buf);
-}
-
 GtkTextView* puss_doc_get_view_from_page( GtkWidget* page ) {
 	gpointer tag = g_object_get_data(G_OBJECT(page), "puss-doc-view");
 	return (tag && GTK_TEXT_VIEW(tag)) ? GTK_TEXT_VIEW(tag) : 0;

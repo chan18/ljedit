@@ -13,12 +13,6 @@ GString*		puss_doc_get_url( GtkTextBuffer* buffer );
 void			puss_doc_set_charset( GtkTextBuffer* buffer, const gchar* charset );
 GString*		puss_doc_get_charset( GtkTextBuffer* buffer );
 
-void			puss_doc_replace_all( GtkTextBuffer* buf
-									, const gchar* find_text
-									, const gchar* replace_text
-									, gint flags );
-
-
 GtkTextView*	puss_doc_get_view_from_page( GtkWidget* page );
 GtkTextBuffer*	puss_doc_get_buffer_from_page( GtkWidget* page );
 

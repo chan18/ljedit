@@ -5,7 +5,6 @@
 #include <memory.h>
 #include <stdlib.h>
 
-#include "MiniLine.h"
 #include "DocManager.h"
 #include "ExtendManager.h"
 #include "PosLocate.h"
@@ -23,6 +22,10 @@ const gchar* puss_get_locale_path() {
 	return puss_app->locale_path;
 }
 
+const gchar* puss_get_extends_path() {
+	return puss_app->extends_path;
+}
+
 GtkBuilder* puss_get_ui_builder() {
 	return puss_app->builder;
 }
@@ -31,6 +34,7 @@ void init_puss_c_api(Puss* api) {
 	// app
 	api->get_module_path = &puss_get_module_path;
 	api->get_locale_path = &puss_get_locale_path;
+	api->get_extends_path = &puss_get_extends_path; 
 
 	// UI
 	api->get_ui_builder = &puss_get_ui_builder;
@@ -58,10 +62,6 @@ void init_puss_c_api(Puss* api) {
 	api->doc_close_current = &puss_doc_close_current;
 	api->doc_save_all = &puss_doc_save_all;
 	api->doc_close_all = &puss_doc_close_all;
-
-	// mini line
-	api->mini_line_active = &puss_mini_line_active;
-	api->mini_line_deactive = &puss_mini_line_deactive;
 
 	// utils
 	api->send_focus_change = &puss_send_focus_change;
@@ -346,7 +346,6 @@ gboolean puss_create(const gchar* filepath) {
 		&& puss_doc_manager_create()
 		&& puss_load_ui_files()
 		&& puss_main_ui_create()
-		&& puss_mini_line_create()
 		&& puss_pos_locate_create()
 		&& puss_extend_manager_create();
 }
@@ -354,7 +353,6 @@ gboolean puss_create(const gchar* filepath) {
 void puss_destroy() {
 	puss_extend_manager_destroy();
 	puss_pos_locate_destroy();
-	puss_mini_line_destroy();
 	puss_doc_manager_destroy();
 	puss_utils_destroy();
 
