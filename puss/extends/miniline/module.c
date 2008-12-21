@@ -145,10 +145,12 @@ PUSS_EXPORT MiniLineCallback* miniline_FIND_get_callback();
 PUSS_EXPORT MiniLineCallback* miniline_REPLACE_get_callback();
 
 PUSS_EXPORT void* puss_extend_create(Puss* app) {
+	MiniLine* self;
+
 	bindtextdomain(TEXT_DOMAIN, app->get_locale_path());
 	bind_textdomain_codeset(TEXT_DOMAIN, "UTF-8");
 
-	MiniLine* self = (MiniLine*)g_new0(MiniLineImpl, 1);
+	self = (MiniLine*)g_new0(MiniLineImpl, 1);
 	self->app = app;
 	self->active = miniline_active;
 	self->deactive = miniline_deactive;
