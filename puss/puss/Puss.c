@@ -352,18 +352,18 @@ gboolean puss_create(const gchar* filepath) {
 
 	puss_reg_global_options();
 
-	return puss_utils_create()
+	return( puss_utils_create()
 		&& puss_doc_manager_create()
 		&& puss_load_ui_files()
 		&& puss_main_ui_create()
 		&& puss_pos_locate_create()
-		&& puss_extend_manager_create()
-		&& puss_plugin_manager_create();
+		&& puss_plugin_manager_create()
+		&& puss_extend_manager_create() );
 }
 
 void puss_destroy() {
-	puss_plugin_manager_destroy();
 	puss_extend_manager_destroy();
+	puss_plugin_manager_destroy();
 	puss_pos_locate_destroy();
 	puss_doc_manager_destroy();
 	puss_utils_destroy();
@@ -388,6 +388,8 @@ void cb_puss_main_window_destroy() {
 }
 
 void puss_run() {
+	puss_plugin_manager_load_all();
+
 	puss_pages_reorder_load();
 
 	g_signal_connect(puss_app->main_window, "destroy", G_CALLBACK(&cb_puss_main_window_destroy), 0);
@@ -397,5 +399,7 @@ void puss_run() {
 	//gdk_threads_enter();
 	gtk_main();
 	//gdk_threads_leave();
+
+	puss_plugin_manager_unload_all();
 }
 

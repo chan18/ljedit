@@ -56,7 +56,7 @@ static void plugin_unload(Plugin* plugin) {
 	}
 }
 
-static void puss_plugin_manager_load_all() {
+void puss_plugin_manager_load_all() {
 	gchar* plugin_path;
 	GDir* dir;
 	PluginEngine* engine;
@@ -102,7 +102,7 @@ static void puss_plugin_manager_load_all() {
 	}
 }
 
-static void puss_plugin_manager_unload_all() {
+void puss_plugin_manager_unload_all() {
 	Plugin* p;
 	Plugin* t;
 
@@ -133,14 +133,10 @@ gboolean puss_plugin_manager_create() {
 
 	dll_plugin_engine_regist((Puss*)puss_app);
 
-	puss_plugin_manager_load_all();
-
 	return TRUE;
 }
 
 void puss_plugin_manager_destroy() {
-	puss_plugin_manager_unload_all();
-
 	g_hash_table_destroy(puss_app->plugin_engines_map);
 }
 

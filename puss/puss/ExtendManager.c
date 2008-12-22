@@ -110,10 +110,10 @@ gboolean puss_extend_manager_create() {
 	GDir* dir;
 	Extend* extend;
 	const gchar* filename;
-	size_t len;
+	gsize len;
 	gchar* filepath;
 	const gchar* match_str = ".ext";
-	size_t match_len = strlen(match_str);
+	gsize match_len = strlen(match_str);
 
 	if( !g_module_supported() )
 		return TRUE;

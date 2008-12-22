@@ -37,7 +37,7 @@ struct _PussApp {
 	Extend*			extends_list;
 	GHashTable*		extends_map;
 	Plugin*			plugins_list;
-	PluginEngine*	plugin_engines_map;
+	GHashTable*		plugin_engines_map;
 	OptionManager*	option_manager;
 	PosList*		pos_list;
 	Utils*			utils;

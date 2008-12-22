@@ -15,5 +15,8 @@ void		puss_plugin_engine_regist( const gchar* key
 						, PluginEngineDestroy destroy
 						, gpointer tag );
 
+void puss_plugin_manager_load_all();
+void puss_plugin_manager_unload_all();
+
 #endif//PUSS_INC_PLUGINMANAGER_H
 

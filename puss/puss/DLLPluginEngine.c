@@ -31,7 +31,8 @@ gpointer dll_plugin_load(const gchar* filepath, Puss* app) {
 			g_printerr("ERROR  : not find puss_plugin_create() in extend(%s)!\n", filepath);
 
 		} else {
-			return (*create_fun)(app);
+			dll_plugin->handle = (*create_fun)(app);
+			return dll_plugin;
 		}
 	}
 
