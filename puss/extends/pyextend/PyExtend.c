@@ -436,7 +436,6 @@ struct _PyExtend {
 	Puss*		app;
 	PyObject*	py_gobject;
 	PyObject*	py_gtk;
-	PyObject*	py_impl;
 };
 
 gboolean init_pygtk_library(PyExtend* self) {
@@ -472,7 +471,6 @@ gboolean init_pygtk_library(PyExtend* self) {
 }
 
 gboolean init_puss_module(PyExtend* self) {
-	const gchar* extends_path = self->app->get_extends_path();
 	PyObject* py_puss = Py_InitModule("__puss", puss_methods);
 	if( !py_puss )
 		return FALSE;
@@ -481,19 +479,12 @@ gboolean init_puss_module(PyExtend* self) {
 
 	{
 		PyObject* py_sys_path = PySys_GetObject("path");
-		PyObject* py_extends_path = PyString_FromString(extends_path);
+		PyObject* py_plugins_path = PyString_FromString(self->app->get_plugins_path());
 
-		if( !PySequence_Contains(py_sys_path, py_extends_path) )
-			PyList_Insert(py_sys_path, 0, py_extends_path);
+		if( !PySequence_Contains(py_sys_path, py_plugins_path) )
+			PyList_Insert(py_sys_path, 0, py_plugins_path);
 
-		Py_DECREF(py_extends_path);
-	}
-
-	self->py_impl = PyImport_ImportModule("pyextend");
-	if( PyErr_Occurred() ) {
-		PyErr_Print();
-		PyErr_Clear();
-		return FALSE;
+		Py_DECREF(py_plugins_path);
 	}
 
 	return TRUE;
@@ -519,13 +510,35 @@ static gboolean python_do_pending_calls(gpointer data) {
 }
 
 gpointer py_plugin_load(const gchar* filepath, PyExtend* self) {
-	PyObject* py_plugin = 0;
-	PyObject* py_dict = PyModule_GetDict(self->py_impl);
-	PyObject* py_load_method = PyDict_GetItemString(py_dict, "puss_load_python_plugin");
+	PyObject* py_res;
+	PyObject* py_plugin;
+	PyObject* py_dict;
+	PyObject* py_active_method;
 
-	if( PyCallable_Check(py_load_method) ) {
-		py_plugin = PyObject_CallFunction(py_load_method, "s", filepath);
-		if( !py_plugin ) {
+	gchar* module_name = g_path_get_basename(filepath);
+	gsize sz = strlen(module_name);
+	for( ; sz > 0; --sz ) {
+		if( module_name[sz]=='.' ) {
+			module_name[sz] = 0;
+			break;
+		}	
+	}
+
+	py_plugin = PyImport_ImportModule(module_name);
+	if( !py_plugin ) {
+		PyErr_Print();
+		PyErr_Clear();
+		return 0;
+	}
+
+	py_dict = PyModule_GetDict(py_plugin);
+	py_active_method = PyDict_GetItemString(py_dict, "puss_plugin_active");
+
+	if( PyCallable_Check(py_active_method) ) {
+		py_res = PyObject_CallFunction(py_active_method, 0);
+		if( py_res ) {
+			Py_DECREF(py_res);
+		} else {
 			PyErr_Print();
 			PyErr_Clear();
 		}
@@ -535,28 +548,28 @@ gpointer py_plugin_load(const gchar* filepath, PyExtend* self) {
 }
 
 void py_plugin_unload(gpointer plugin, PyExtend* self) {
-	PyObject* res;
+	PyObject* py_res;
 	PyObject* py_plugin;
 	PyObject* py_dict;
-	PyObject* py_unload_method;
+	PyObject* py_deactive_method;
 
-	if( plugin==0 || self==0 || self->py_impl==0 )
+	if( plugin==0 )
 		return;
 
 	py_plugin = (PyObject*)plugin;
-	py_dict = PyModule_GetDict(self->py_impl);
-	py_unload_method = PyDict_GetItemString(py_dict, "puss_unload_python_plugin");
-	if( !PyCallable_Check(py_unload_method) )
+	py_dict = PyModule_GetDict(py_plugin);
+	py_deactive_method = PyDict_GetItemString(py_dict, "puss_plugin_deactive");
+	if( !PyCallable_Check(py_deactive_method) )
 		return;
 
-	res = PyObject_CallFunction(py_unload_method, "O", py_plugin);
+	py_res = PyObject_CallFunction(py_deactive_method, 0);
 	Py_DECREF(py_plugin);
 
-	if( res ) {
-		Py_DECREF(res);
+	if( py_res ) {
+		Py_DECREF(py_res);
 		
 	} else {
-		//PyErr_Print();
+		PyErr_Print();
 		PyErr_Clear();
 	}
 }
@@ -583,7 +596,6 @@ PyExtend* puss_py_extend_create(Puss* app) {
 
 void puss_py_extend_destroy(PyExtend* self) {
 	if( self ) {
-		Py_XDECREF(self->py_impl);
 		Py_XDECREF(self->py_gtk);
 		Py_XDECREF(self->py_gobject);
 
