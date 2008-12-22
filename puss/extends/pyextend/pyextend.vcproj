@@ -176,23 +176,15 @@
 	</References>
 	<Files>
 		<File
-			RelativePath=".\src\module.cpp"
+			RelativePath=".\module.c"
 			>
 		</File>
 		<File
-			RelativePath="..\..\bin\extends\puss.py"
+			RelativePath=".\PyExtend.c"
 			>
 		</File>
 		<File
-			RelativePath=".\src\PyExtend.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\src\PyExtend.h"
-			>
-		</File>
-		<File
-			RelativePath="..\..\bin\extends\pyextend.py"
+			RelativePath=".\PyExtend.h"
 			>
 		</File>
 	</Files>
