@@ -21,10 +21,11 @@ struct _Plugin {
 };
 
 struct _PluginEngine {
-	gchar*		key;
-
-	gpointer	(*load)(Puss* app, const gchar* filepath);
-	void		(*unload)(Puss* app, gpointer plugin);
+	gchar*				key;
+	PluginLoader		load;
+	PluginUnloader		unload;
+	PluginEngineDestroy	destroy;
+	gpointer			tag;
 };
 
 static void plugin_load(const gchar* plugin_path, const gchar* filename, PluginEngine* engine) {
@@ -41,7 +42,7 @@ static void plugin_load(const gchar* plugin_path, const gchar* filename, PluginE
 	}
 
 	plugin->engine = engine;
-	plugin->handle = engine->load((Puss*)puss_app, plugin->filepath);
+	plugin->handle = engine->load(plugin->filepath, plugin->engine->tag);
 
 	plugin->next   = puss_app->plugins_list;
 	puss_app->plugins_list = plugin;
@@ -50,7 +51,7 @@ static void plugin_load(const gchar* plugin_path, const gchar* filename, PluginE
 static void plugin_unload(Plugin* plugin) {
 	if( plugin ) {
 		if( plugin->engine && plugin->engine->unload )
-			plugin->engine->unload((Puss*)puss_app, plugin->handle);
+			plugin->engine->unload(plugin->handle, plugin->engine->tag);
 		g_free(plugin);
 	}
 }
@@ -116,8 +117,17 @@ static void puss_plugin_manager_unload_all() {
 	}
 }
 
+static void puss_plugin_engine_destroy(PluginEngine* engine) {
+	if( engine ) {
+		if( engine->destroy )
+			engine->destroy(engine->tag);
+		g_free(engine->key);
+		g_free(engine);
+	}
+}
+
 gboolean puss_plugin_manager_create() {
-	puss_app->plugin_engines_map = g_hash_table_new_full(g_str_hash, g_str_equal, 0, g_free);
+	puss_app->plugin_engines_map = g_hash_table_new_full(g_str_hash, g_str_equal, 0, puss_plugin_engine_destroy);
 	if( !puss_app->plugin_engines_map )
 		return FALSE;
 
@@ -135,12 +145,19 @@ void puss_plugin_manager_destroy() {
 }
 
 
-void puss_plugin_engine_regist(const gchar* key, PluginEngineLoader* loader, PluginEngineUnloader* unloader) {
+void puss_plugin_engine_regist( const gchar* key
+		, PluginLoader loader
+		, PluginUnloader unloader
+		, PluginEngineDestroy destroy
+		, gpointer tag )
+{
 	PluginEngine* engine = g_try_new0(PluginEngine, 1);
 	if( engine ) {
 		engine->key = g_strdup(key);
 		engine->load = loader;
 		engine->unload = unloader;
+		engine->destroy = destroy;
+		engine->tag = tag;
 
 		g_hash_table_insert(puss_app->plugin_engines_map, engine->key, engine); 
 	}

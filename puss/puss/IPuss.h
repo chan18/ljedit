@@ -8,8 +8,9 @@
 
 typedef struct _Puss  Puss;
 
-typedef gpointer (*PluginEngineLoader)(Puss* app, const gchar* filepath);
-typedef void     (*PluginEngineUnloader)(Puss* app, gpointer plugin);
+typedef gpointer (*PluginLoader)(const gchar* filepath, gpointer tag);
+typedef void     (*PluginUnloader)(gpointer plugin, gpointer tag);
+typedef void     (*PluginEngineDestroy)(gpointer tag);
 
 typedef struct _Option Option;
 
@@ -84,8 +85,10 @@ struct _Puss {
 
 	// plugin manager
 	void			(*plugin_engine_regist)( const gchar* key
-						, PluginEngineLoader* loader
-						, PluginEngineUnloader* unloader );
+						, PluginLoader loader
+						, PluginUnloader unloader
+						, PluginEngineDestroy destroy
+						, gpointer tag );
 
 	// regist_plugin_extend_engine()
 };

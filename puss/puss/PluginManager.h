@@ -10,8 +10,10 @@ gboolean	puss_plugin_manager_create();
 void		puss_plugin_manager_destroy();
 
 void		puss_plugin_engine_regist( const gchar* key
-						, PluginEngineLoader* loader
-						, PluginEngineUnloader* unloader );
+						, PluginLoader loader
+						, PluginUnloader unloader
+						, PluginEngineDestroy destroy
+						, gpointer tag );
 
 #endif//PUSS_INC_PLUGINMANAGER_H
 

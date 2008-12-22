@@ -9,7 +9,7 @@ typedef struct {
 	void*		handle;
 } DLLPlugin;
 
-gpointer dll_plugin_load(Puss* app, const gchar* filepath) {
+gpointer dll_plugin_load(const gchar* filepath, Puss* app) {
 	void* (*create_fun)(Puss* app);
 	DLLPlugin* dll_plugin = 0;
 
@@ -42,7 +42,7 @@ gpointer dll_plugin_load(Puss* app, const gchar* filepath) {
 	return 0;
 }
 
-void dll_plugin_unload(Puss* app, gpointer plugin) {
+void dll_plugin_unload(gpointer plugin, Puss* app) {
 	DLLPlugin* dll_plugin = (DLLPlugin*)plugin;
 	void (*destroy_fun)(void* handle);
 
@@ -61,5 +61,5 @@ void dll_plugin_unload(Puss* app, gpointer plugin) {
 }
 
 void dll_plugin_engine_regist(Puss* app) {
-	app->plugin_engine_regist("so", dll_plugin_load, dll_plugin_unload);
+	app->plugin_engine_regist("so", dll_plugin_load, dll_plugin_unload, 0, app);
 }

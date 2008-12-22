@@ -2,7 +2,6 @@
 //
 
 #include "PyExtend.h"
-#include "IPuss.h"
 
 #ifdef G_OS_WIN32
 	#ifdef _DEBUG
@@ -48,37 +47,41 @@ int notebook_convert(PyObject* py_obj, GtkNotebook** pnb)
 // TODO : now gtk.Builder in develop, not finished for python
 // 
 PyObject* py_wrapper_get_puss_ui_builder(PyObject* self, PyObject* args) {
+	PyObject* res;
 	Puss* app = 0;
 	if( !PyArg_ParseTuple(args, "O&:py_wrapper_get_puss_ui_builder", &app_convert, &app) )
 		return 0;
 
-	PyObject* res = pygobject_new(G_OBJECT(app->get_ui_builder()));
+	res = pygobject_new(G_OBJECT(app->get_ui_builder()));
 	return res;
 }
 
 PyObject* py_wrapper_get_puss_ui_object_by_id(PyObject* self, PyObject* args) {
+	PyObject* res;
+	GObject* gobj;
 	Puss* app = 0;
 	const char* id = 0;
 	if( !PyArg_ParseTuple(args, "O&s:py_wrapper_get_puss_ui_object_by_id", &app_convert, &app, &id) )
 		return 0;
 
-	GObject* gobj = gtk_builder_get_object(app->get_ui_builder(), id);
+	gobj = gtk_builder_get_object(app->get_ui_builder(), id);
 	if( !gobj ) {
 		Py_INCREF(Py_None);
 		return Py_None;
 	}
 
-	PyObject* res = pygobject_new(gobj);
+	res = pygobject_new(gobj);
 	return res;
 }
 
 PyObject* py_wrapper_doc_get_url(PyObject* self, PyObject* args) {
+	GString* url;
 	Puss* app = 0;
 	GtkTextBuffer* buf = 0;
 	if( !PyArg_ParseTuple(args, "O&O&:py_wrapper_doc_get_url", &app_convert, &app, &buf_convert, &buf))
 		return 0;
 
-	GString* url = app->doc_get_url(buf);
+	url = app->doc_get_url(buf);
 	if( !url ) {
 		Py_INCREF(Py_None);
 		return Py_None;
@@ -100,12 +103,13 @@ PyObject* py_wrapper_doc_set_url(PyObject* self, PyObject* args) {
 }
 
 PyObject* py_wrapper_doc_get_charset(PyObject* self, PyObject* args) {
+	GString* charset;
 	Puss* app = 0;
 	GtkTextBuffer* buf = 0;
 	if( !PyArg_ParseTuple(args, "O&O&:py_wrapper_doc_get_charset", &app_convert, &app, &buf_convert, &buf))
 		return 0;
 
-	GString* charset = app->doc_get_charset(buf);
+	charset = app->doc_get_charset(buf);
 	if( !charset ) {
 		Py_INCREF(Py_None);
 		return Py_None;
@@ -127,44 +131,48 @@ PyObject* py_wrapper_doc_set_charset(PyObject* self, PyObject* args) {
 }
 
 PyObject* py_wrapper_doc_get_view_from_page_num(PyObject* self, PyObject* args) {
+	GtkTextView* view;
+	PyObject* py_view;
 	Puss* app = 0;
 	gint page_num = 0;
 	if( !PyArg_ParseTuple(args, "O&i:py_wrapper_doc_get_view_from_page_num", &app_convert, &app, &page_num))
 		return 0;
 
-	GtkTextView* view = app->doc_get_view_from_page_num(page_num);
+	view = app->doc_get_view_from_page_num(page_num);
 	if( !view ) {
 		Py_INCREF(Py_None);
 		return Py_None;
 	}
 
-	PyObject* py_view = pygobject_new(G_OBJECT(view));
+	py_view = pygobject_new(G_OBJECT(view));
 	return py_view;
 }
 
 PyObject* py_wrapper_doc_get_buffer_from_page_num(PyObject* self, PyObject* args) {
+	GtkTextBuffer* buf;
+	PyObject* py_buf;
 	Puss* app = 0;
 	gint page_num = 0;
 	if( !PyArg_ParseTuple(args, "O&i:py_wrapper_doc_get_buffer_from_page_num", &app_convert, &app, &page_num))
 		return 0;
 
-	GtkTextBuffer* buf = app->doc_get_buffer_from_page_num(page_num);
+	buf = app->doc_get_buffer_from_page_num(page_num);
 	if( !buf ) {
 		Py_INCREF(Py_None);
 		return Py_None;
 	}
-
-	PyObject* py_buf = pygobject_new(G_OBJECT(buf));
+	py_buf = pygobject_new(G_OBJECT(buf));
 	return py_buf;
 }
 
 PyObject* py_wrapper_doc_find_page_from_url(PyObject* self, PyObject* args) {
+	gint res;
 	Puss* app = 0;
 	const char* url = 0;
 	if( !PyArg_ParseTuple(args, "O&s:py_wrapper_doc_find_page_from_url", &app_convert, &app, &url))
 		return 0;
 
-	gint res = app->doc_find_page_from_url(url);
+	res = app->doc_find_page_from_url(url);
 	return PyInt_FromLong((long)res);
 }
 
@@ -179,6 +187,7 @@ PyObject* py_wrapper_doc_new(PyObject* self, PyObject* args) {
 }
 
 PyObject* py_wrapper_doc_open(PyObject* self, PyObject* args) {
+	gboolean res;
 	Puss* app = 0;
 	const char* url = 0;
 	int line = 0;
@@ -187,11 +196,12 @@ PyObject* py_wrapper_doc_open(PyObject* self, PyObject* args) {
 	if( !PyArg_ParseTuple(args, "O&ziii:py_wrapper_doc_open", &app_convert, &app, &url, &line, &offset, &flag))
 		return 0;
 
-	gboolean res = app->doc_open(url, line, offset, flag);
+	res = app->doc_open(url, line, offset, flag);
 	return PyBool_FromLong((long)res);
 }
 
 PyObject* py_wrapper_doc_locate(PyObject* self, PyObject* args) {
+	gboolean res;
 	Puss* app = 0;
 	int page_num = 0;
 	int line = 0;
@@ -200,7 +210,7 @@ PyObject* py_wrapper_doc_locate(PyObject* self, PyObject* args) {
 	if( !PyArg_ParseTuple(args, "O&iiii:py_wrapper_doc_locate", &app_convert, &app, &page_num, &line, &offset, &add_pos_locate))
 		return 0;
 
-	gboolean res = app->doc_locate(page_num, line, offset, add_pos_locate);
+	res = app->doc_locate(page_num, line, offset, add_pos_locate);
 	return PyBool_FromLong((long)res);
 }
 
@@ -216,11 +226,12 @@ PyObject* py_wrapper_doc_save_current(PyObject* self, PyObject* args) {
 }
 
 PyObject* py_wrapper_doc_close_current(PyObject* self, PyObject* args) {
+	gboolean res;
 	Puss* app = 0;
 	if( !PyArg_ParseTuple(args, "O&:py_wrapper_doc_close_current", &app_convert, &app))
 		return 0;
 
-	gboolean res = app->doc_close_current();
+	res = app->doc_close_current();
 	return PyBool_FromLong((long)res);
 }
 
@@ -235,11 +246,12 @@ PyObject* py_wrapper_doc_save_all(PyObject* self, PyObject* args) {
 }
 
 PyObject* py_wrapper_doc_close_all(PyObject* self, PyObject* args) {
+	gboolean res;
 	Puss* app = 0;
 	if( !PyArg_ParseTuple(args, "O&:py_wrapper_doc_close_all", &app_convert, &app))
 		return 0;
 
-	gboolean res = app->doc_close_all();
+	res = app->doc_close_all();
 	return PyBool_FromLong((long)res);
 }
 
@@ -274,13 +286,14 @@ void py_object_free_wrapper(PyObject* cb) {
 }
 
 PyObject* py_wrapper_option_manager_find(PyObject* self, PyObject* args) {
+	const Option* option;
 	Puss* app = 0;
 	const char* group = 0;
 	const char* key = 0;
 	if( !PyArg_ParseTuple(args, "O&zz:py_wrapper_option_manager_find", &app_convert, &app, &group, &key))
 		return 0;
 
-	const Option* option = app->option_manager_find(group, key);
+	option = app->option_manager_find(group, key);
 	if( !option ) {
 		Py_INCREF(Py_None);
 		return Py_None;
@@ -290,16 +303,19 @@ PyObject* py_wrapper_option_manager_find(PyObject* self, PyObject* args) {
 }
 
 gboolean py_option_setter_wrapper(GtkWindow* parent, Option* option, PyObject* cb) {
+	gboolean retval;
+	PyObject* res;
+
 	g_assert( PyCallable_Check(cb) );
 
-	PyObject* res = PyObject_CallFunction(cb, "Ozzzz", pygobject_new(G_OBJECT(parent)), option->group, option->key, option->value, option->default_value);
+	res = PyObject_CallFunction(cb, "Ozzzz", pygobject_new(G_OBJECT(parent)), option->group, option->key, option->value, option->default_value);
 	if( !res ) {
 		PyErr_Print();
 		PyErr_Clear();
 		return FALSE;
 	}
 
-	gboolean retval = FALSE;
+	retval = FALSE;
 	if( PyBool_Check(res) && res==Py_True )
 		retval = TRUE;
 
@@ -313,10 +329,10 @@ PyObject* py_wrapper_option_manager_option_reg(PyObject* self, PyObject* args) {
 	const char* key = 0;
 	const char* default_value = 0;
 	PyObject* cb = 0;
+	const Option* option = 0;
 	if( !PyArg_ParseTuple(args, "O&zzzN:py_wrapper_option_manager_option_reg", &app_convert, &app, &group, &key, &default_value, &cb))
 		return 0;
 
-	const Option* option = 0;
 
 	if( !cb ) {
 		option = app->option_manager_option_reg(group, key, default_value, 0, 0, 0);
@@ -344,9 +360,11 @@ PyObject* py_wrapper_option_manager_option_reg(PyObject* self, PyObject* args) {
 
 
 void py_option_changed_wrapper(const Option* option, PyObject* cb) {
+	PyObject* res;
+
 	g_assert( PyCallable_Check(cb) );
 
-	PyObject* res = PyObject_CallFunction(cb, "zzz", option->group, option->key, option->value);
+	res = PyObject_CallFunction(cb, "zzz", option->group, option->key, option->value);
 	if( !res ) {
 		PyErr_Print();
 		PyErr_Clear();
@@ -360,6 +378,7 @@ PyObject* py_wrapper_option_manager_monitor_reg(PyObject* self, PyObject* args) 
 	const char* group = 0;
 	const char* key = 0;
 	PyObject* cb = 0;
+	const Option* option;
 	if( !PyArg_ParseTuple(args, "O&zzN:py_wrapper_option_manager_monitor_reg", &app_convert, &app, &group, &key, &cb))
 		return 0;
 
@@ -368,7 +387,7 @@ PyObject* py_wrapper_option_manager_monitor_reg(PyObject* self, PyObject* args) 
 		return 0;
 	}
 
-	const Option* option = app->option_manager_find(group, key);
+	option = app->option_manager_find(group, key);
 	if( !app->option_manager_monitor_reg(option, (OptionChanged)&py_option_changed_wrapper, cb, (GFreeFunc)&py_object_free_wrapper) ) {
 		PyErr_SetString(PyExc_Exception, "reg option monitor error, not find option!");
 		return 0;
@@ -413,7 +432,7 @@ PyMethodDef puss_methods[] =
 //----------------------------------------------------------------
 // PyExtend implements
 
-struct PyExtend {
+struct _PyExtend {
 	Puss*		app;
 	PyObject*	py_gobject;
 	PyObject*	py_gtk;
@@ -421,6 +440,8 @@ struct PyExtend {
 };
 
 gboolean init_pygtk_library(PyExtend* self) {
+	PyObject* cobject;
+
 	self->py_gobject = pygobject_init(-1, -1, -1);
 	if( !self->py_gobject ) {
 		PyErr_Print();
@@ -435,7 +456,7 @@ gboolean init_pygtk_library(PyExtend* self) {
 		return FALSE;
 	}
 
-	PyObject* cobject = PyDict_GetItemString(PyModule_GetDict(self->py_gtk), "_PyGtk_API");
+	cobject = PyDict_GetItemString(PyModule_GetDict(self->py_gtk), "_PyGtk_API");
 	if( PyCObject_Check(cobject) )
 		_PyGtk_API = (struct _PyGtk_FunctionStruct*)PyCObject_AsVoidPtr(cobject);
 	else
@@ -451,13 +472,13 @@ gboolean init_pygtk_library(PyExtend* self) {
 }
 
 gboolean init_puss_module(PyExtend* self) {
+	const gchar* extends_path = self->app->get_extends_path();
 	PyObject* py_puss = Py_InitModule("__puss", puss_methods);
 	if( !py_puss )
 		return FALSE;
 
-	PyModule_AddObject(py_puss, "__app",		PyCObject_FromVoidPtr(self->app, 0));
+	PyModule_AddObject(py_puss, "__app", PyCObject_FromVoidPtr(self->app, 0));
 
-	gchar* extends_path = g_build_filename(self->app->get_module_path(), "extends", NULL);
 	{
 		PyObject* py_sys_path = PySys_GetObject("path");
 		PyObject* py_extends_path = PyString_FromString(extends_path);
@@ -467,7 +488,6 @@ gboolean init_puss_module(PyExtend* self) {
 
 		Py_DECREF(py_extends_path);
 	}
-	g_free(extends_path);
 
 	self->py_impl = PyImport_ImportModule("pyextend");
 	if( PyErr_Occurred() ) {
@@ -477,41 +497,6 @@ gboolean init_puss_module(PyExtend* self) {
 	}
 
 	return TRUE;
-}
-
-void load_python_extends(PyExtend* self) {
-	PyObject* py_dict = PyModule_GetDict(self->py_impl);
-	PyObject* py_load_method = PyDict_GetItemString(py_dict, "puss_load_python_extends");
-	if( !PyCallable_Check(py_load_method) )
-		return;
-
-	PyObject* res = PyObject_CallFunction(py_load_method, 0);
-	if( res ) {
-		Py_DECREF(res);
-		
-	} else {
-		PyErr_Print();
-		PyErr_Clear();
-	}
-}
-
-void unload_python_extends(PyExtend* self) {
-	if( !self->py_impl )
-		return;
-
-	PyObject* py_dict = PyModule_GetDict(self->py_impl);
-	PyObject* py_unload_method = PyDict_GetItemString(py_dict, "puss_unload_python_extends");
-	if( !PyCallable_Check(py_unload_method) )
-		return;
-
-	PyObject* res = PyObject_CallFunction(py_unload_method, 0);
-	if( res ) {
-		Py_DECREF(res);
-		
-	} else {
-		//PyErr_Print();
-		PyErr_Clear();
-	}
 }
 
 // [Python-Dev] Signals, threads, blocking C functions
@@ -533,6 +518,49 @@ static gboolean python_do_pending_calls(gpointer data) {
 	return TRUE;
 }
 
+gpointer py_plugin_load(const gchar* filepath, PyExtend* self) {
+	PyObject* py_plugin = 0;
+	PyObject* py_dict = PyModule_GetDict(self->py_impl);
+	PyObject* py_load_method = PyDict_GetItemString(py_dict, "puss_load_python_plugin");
+
+	if( PyCallable_Check(py_load_method) ) {
+		py_plugin = PyObject_CallFunction(py_load_method, "s", filepath);
+		if( !py_plugin ) {
+			PyErr_Print();
+			PyErr_Clear();
+		}
+	}
+
+	return py_plugin;
+}
+
+void py_plugin_unload(gpointer plugin, PyExtend* self) {
+	PyObject* res;
+	PyObject* py_plugin;
+	PyObject* py_dict;
+	PyObject* py_unload_method;
+
+	if( plugin==0 || self==0 || self->py_impl==0 )
+		return;
+
+	py_plugin = (PyObject*)plugin;
+	py_dict = PyModule_GetDict(self->py_impl);
+	py_unload_method = PyDict_GetItemString(py_dict, "puss_unload_python_plugin");
+	if( !PyCallable_Check(py_unload_method) )
+		return;
+
+	res = PyObject_CallFunction(py_unload_method, "O", py_plugin);
+	Py_DECREF(py_plugin);
+
+	if( res ) {
+		Py_DECREF(res);
+		
+	} else {
+		//PyErr_Print();
+		PyErr_Clear();
+	}
+}
+
 PyExtend* puss_py_extend_create(Puss* app) {
 	PyExtend* self = g_try_new0(PyExtend, 1);
 	if( self ) {
@@ -543,7 +571,11 @@ PyExtend* puss_py_extend_create(Puss* app) {
 		g_timeout_add(100, python_do_pending_calls, 0);
 
 		if( init_pygtk_library(self) && init_puss_module(self) )
-			load_python_extends(self);
+			app->plugin_engine_regist( "py"
+				, py_plugin_load
+				, py_plugin_unload
+				, 0
+				, self );
 	}
 
 	return self;
@@ -551,9 +583,6 @@ PyExtend* puss_py_extend_create(Puss* app) {
 
 void puss_py_extend_destroy(PyExtend* self) {
 	if( self ) {
-		// unload python extends
-		unload_python_extends(self);
-
 		Py_XDECREF(self->py_impl);
 		Py_XDECREF(self->py_gtk);
 		Py_XDECREF(self->py_gobject);
