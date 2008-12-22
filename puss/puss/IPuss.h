@@ -6,8 +6,12 @@
 
 #include <gtk/gtk.h>
 
-typedef struct _Option Option;
 typedef struct _Puss  Puss;
+
+typedef gpointer (*PluginEngineLoader)(Puss* app, const gchar* filepath);
+typedef void     (*PluginEngineUnloader)(Puss* app, gpointer plugin);
+
+typedef struct _Option Option;
 
 typedef gboolean	(*OptionSetter)(GtkWindow* parent, Option* option, gpointer tag);
 typedef void		(*OptionChanged)(const Option* option, gpointer tag);
@@ -28,6 +32,7 @@ struct _Puss {
 	const gchar*	(*get_module_path)();
 	const gchar*	(*get_locale_path)();
 	const gchar*	(*get_extends_path)();
+	const gchar*	(*get_plugins_path)();
 
 	// UI
 	GtkBuilder*		(*get_ui_builder)();
@@ -74,7 +79,15 @@ struct _Puss {
 
 	gboolean		(*option_manager_monitor_reg)(const Option* option, OptionChanged fun, gpointer tag, GFreeFunc tag_free_fun);
 
+	// extend manager
 	gpointer		(*extend_query)(const gchar* ext_name, const gchar* interface_name);
+
+	// plugin manager
+	void			(*plugin_engine_regist)( const gchar* key
+						, PluginEngineLoader* loader
+						, PluginEngineUnloader* unloader );
+
+	// regist_plugin_extend_engine()
 };
 
 #ifdef  __cplusplus

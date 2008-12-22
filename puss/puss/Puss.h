@@ -6,10 +6,12 @@
 
 #include "IPuss.h"
 
-typedef struct _PosList        PosList;
-typedef struct _Extend         Extend;
-typedef struct _Utils          Utils;
 typedef struct _OptionManager  OptionManager;
+typedef struct _Extend         Extend;
+typedef struct _Plugin         Plugin;
+typedef struct _PluginEngine   PluginEngine;
+typedef struct _PosList        PosList;
+typedef struct _Utils          Utils;
 
 typedef struct _PussApp        PussApp;
 
@@ -20,6 +22,7 @@ struct _PussApp {
 	gchar*			module_path;
 	gchar*			locale_path;
 	gchar*			extends_path;
+	gchar*			plugins_path;
 
 	// get pointer from "builder"
 	// 
@@ -31,11 +34,13 @@ struct _PussApp {
 	GtkNotebook*	bottom_panel;
 	GtkStatusbar*	statusbar;
 
-	PosList*		pos_list;
 	Extend*			extends_list;
 	GHashTable*		extends_map;
-	Utils*			utils;
+	Plugin*			plugins_list;
+	PluginEngine*	plugin_engines_map;
 	OptionManager*	option_manager;
+	PosList*		pos_list;
+	Utils*			utils;
 };
 
 extern		PussApp*	puss_app;

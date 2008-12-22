@@ -6,8 +6,9 @@
 # 
 
 EXTS = $(wildcard extends/*)
+PLGS = $(wildcard extends/*)
 
-all : .puss .extends
+all : .puss .extends .plugins
 
 .puss :
 	@make -Cpuss BUILD=$(BUILD);
@@ -16,9 +17,13 @@ all : .puss .extends
 .extends :
 	@for ext in $(EXTS); do make -C$$ext BUILD=$(BUILD); done
 
+.plugins :
+	@for plg in $(PLGS); do make -C$$plg BUILD=$(BUILD); done
+
 clean:
 	@make -Cpuss BUILD=$(BUILD) clean
 	@for ext in $(EXTS); do make -C$$ext BUILD=$(BUILD) clean; done
+	@for ext in $(PLGS); do make -C$$ext BUILD=$(BUILD) clean; done
 
 deb :
 	@./make_deb
@@ -30,6 +35,7 @@ zip :
 	@if [ -f bin/puss.exe ]; then cp -f bin/puss.exe output/; fi
 	@if [ -f bin/puss ]; then cp -f bin/puss output/; fi
 	@cp -rf bin/extends/*.ext output/extends/
+	@cp -rf bin/plugins/plugin_* output/plugins/
 	@echo tar jcf puss-1.0-`date +%F`.tar.bz2
 	@cd output; tar jcf ../puss-1.0-`date +%F`.tar.bz2 *
 	@rm -rf output

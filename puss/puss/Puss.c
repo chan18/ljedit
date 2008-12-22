@@ -7,6 +7,7 @@
 
 #include "DocManager.h"
 #include "ExtendManager.h"
+#include "PluginManager.h"
 #include "PosLocate.h"
 #include "OptionManager.h"
 #include "GlobalOptions.h"
@@ -26,6 +27,10 @@ const gchar* puss_get_extends_path() {
 	return puss_app->extends_path;
 }
 
+const gchar* puss_get_plugins_path() {
+	return puss_app->plugins_path;
+}
+
 GtkBuilder* puss_get_ui_builder() {
 	return puss_app->builder;
 }
@@ -34,7 +39,8 @@ void init_puss_c_api(Puss* api) {
 	// app
 	api->get_module_path = &puss_get_module_path;
 	api->get_locale_path = &puss_get_locale_path;
-	api->get_extends_path = &puss_get_extends_path; 
+	api->get_extends_path = &puss_get_extends_path;
+	api->get_plugins_path = &puss_get_plugins_path; 
 
 	// UI
 	api->get_ui_builder = &puss_get_ui_builder;
@@ -73,6 +79,9 @@ void init_puss_c_api(Puss* api) {
 	api->option_manager_find = &puss_option_manager_find;
 	api->option_manager_option_reg  = &puss_option_manager_option_reg;
 	api->option_manager_monitor_reg = &puss_option_manager_monitor_reg;
+
+	// plugin manager
+	api->plugin_engine_regist = &puss_plugin_engine_regist;
 }
 
 gboolean puss_load_ui(const gchar* filename ) {
@@ -329,6 +338,7 @@ gboolean puss_create(const gchar* filepath) {
 	puss_app->module_path = g_path_get_dirname(filepath);
 	puss_app->locale_path = g_build_filename(puss_app->module_path, "locale", NULL);
 	puss_app->extends_path = g_build_filename(puss_app->module_path, "extends", NULL);
+	puss_app->plugins_path = g_build_filename(puss_app->module_path, "plugins", NULL);
 	puss_app->extends_map = g_hash_table_new(g_str_hash, g_str_equal);
 
 	puss_locale_init();
@@ -347,10 +357,12 @@ gboolean puss_create(const gchar* filepath) {
 		&& puss_load_ui_files()
 		&& puss_main_ui_create()
 		&& puss_pos_locate_create()
-		&& puss_extend_manager_create();
+		&& puss_extend_manager_create()
+		&& puss_plugin_manager_create();
 }
 
 void puss_destroy() {
+	puss_plugin_manager_destroy();
 	puss_extend_manager_destroy();
 	puss_pos_locate_destroy();
 	puss_doc_manager_destroy();
@@ -361,9 +373,10 @@ void puss_destroy() {
 	g_object_unref(G_OBJECT(puss_app->builder));
 
 	g_hash_table_destroy(puss_app->extends_map);
-	g_free(puss_app->module_path);
-	g_free(puss_app->locale_path);
+	g_free(puss_app->plugins_path);
 	g_free(puss_app->extends_path);
+	g_free(puss_app->locale_path);
+	g_free(puss_app->module_path);
 	g_free(puss_app);
 	puss_app = 0;
 }
