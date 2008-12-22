@@ -11,7 +11,7 @@ typedef struct {
 static void on_quit() {
 }
 
-PUSS_EXPORT void* puss_extend_create(Puss* app) {
+PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	PussVConsole* self;
 	GtkWidget* bottom;
 
@@ -67,7 +67,7 @@ PUSS_EXPORT void* puss_extend_create(Puss* app) {
 	return self;
 }
 
-PUSS_EXPORT void  puss_extend_destroy(void* ext) {
+PUSS_EXPORT void  puss_plugin_destroy(void* ext) {
 	PussVConsole* self = (PussVConsole*)ext;
 	g_free(self);
 }

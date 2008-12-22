@@ -1,31 +1,33 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "extends", "extends", "{1FA2A3CA-86BD-4F54-8D1E-67A9EECC4182}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "plugins", "plugins", "{1FA2A3CA-86BD-4F54-8D1E-67A9EECC4182}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pyextend", "extends\pyextend\pyextend.vcproj", "{44F803E0-12E8-4F44-8B7A-2FAB5DB8EEE4}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dndopen", "extends\dndopen\dndopen.vcproj", "{44F873E0-12E8-4F44-777A-2FAB5DB9AEE3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dndopen", "plugins\dndopen\dndopen.vcproj", "{44F873E0-12E8-4F44-777A-2FAB5DB9AEE3}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "win32_boot", "win32_boot\win32_boot.vcproj", "{EFCA6A67-B23E-4199-A6B3-26EC9C34A209}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "language_selector", "extends\language_selector\language_selector.vcproj", "{44F803E1-1E28-44F4-2FAB-5DB9FE8B7AE3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "language_selector", "plugins\language_selector\language_selector.vcproj", "{44F803E1-1E28-44F4-2FAB-5DB9FE8B7AE3}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "search_tools", "extends\search_tools\search_tools.vcproj", "{44F813E0-12E8-4F44-8B7A-3EAB5CB9FEF3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "search_tools", "plugins\search_tools\search_tools.vcproj", "{44F813E0-12E8-4F44-8B7A-3EAB5CB9FEF3}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gtk_doc_helper", "extends\gtk_doc_helper\gtk_doc_helper.vcproj", "{44F803E1-1E28-34F4-1FAB-3DB9FE8B7AE4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gtk_doc_helper", "plugins\gtk_doc_helper\gtk_doc_helper.vcproj", "{44F803E1-1E28-34F4-1FAB-3DB9FE8B7AE4}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "puss", "puss\puss.vcproj", "{B4C6ACCC-CA92-520F-4B58-EFA5F3BEB52E}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ljcs", "extends\ljcs\ljcs.vcproj", "{E2C258E0-041C-4ABB-9652-918084A27CD4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ljcs", "plugins\ljcs\ljcs.vcproj", "{E2C258E0-041C-4ABB-9652-918084A27CD4}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "puss_vconsole", "extends\puss_vconsole\puss_vconsole.vcproj", "{F73E2917-386F-474D-843E-7F05C34D74CD}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vconsole", "extends\puss_vconsole\vconsole\vconsole.vcproj", "{0710309F-CBBD-4FD6-A379-3CA2E94C14DB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "puss_vconsole", "plugins\puss_vconsole\puss_vconsole.vcproj", "{F73E2917-386F-474D-843E-7F05C34D74CD}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deps", "deps", "{93BB43B4-3C26-4CF8-A1BF-8EE6ED794D2B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "miniline", "extends\miniline\miniline.vcproj", "{44F813E0-12A8-4F44-807A-3ECB5CB9FEF4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "miniline", "plugins\miniline\miniline.vcproj", "{44F813E0-12A8-4F44-807A-3ECB5CB9FEF4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "extends", "extends", "{30F7E9D7-008F-4BEB-984E-56CD811C5CA0}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vconsole", "plugins\puss_vconsole\vconsole\vconsole.vcproj", "{0710309F-CBBD-4FD6-A379-3CA2E94C14DB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,20 +71,19 @@ Global
 		{F73E2917-386F-474D-843E-7F05C34D74CD}.Debug|Win32.Build.0 = Debug|Win32
 		{F73E2917-386F-474D-843E-7F05C34D74CD}.Release|Win32.ActiveCfg = Release|Win32
 		{F73E2917-386F-474D-843E-7F05C34D74CD}.Release|Win32.Build.0 = Release|Win32
-		{0710309F-CBBD-4FD6-A379-3CA2E94C14DB}.Debug|Win32.ActiveCfg = Debug|Win32
-		{0710309F-CBBD-4FD6-A379-3CA2E94C14DB}.Debug|Win32.Build.0 = Debug|Win32
-		{0710309F-CBBD-4FD6-A379-3CA2E94C14DB}.Release|Win32.ActiveCfg = Release|Win32
-		{0710309F-CBBD-4FD6-A379-3CA2E94C14DB}.Release|Win32.Build.0 = Release|Win32
 		{44F813E0-12A8-4F44-807A-3ECB5CB9FEF4}.Debug|Win32.ActiveCfg = Debug|Win32
 		{44F813E0-12A8-4F44-807A-3ECB5CB9FEF4}.Debug|Win32.Build.0 = Debug|Win32
 		{44F813E0-12A8-4F44-807A-3ECB5CB9FEF4}.Release|Win32.ActiveCfg = Release|Win32
 		{44F813E0-12A8-4F44-807A-3ECB5CB9FEF4}.Release|Win32.Build.0 = Release|Win32
+		{0710309F-CBBD-4FD6-A379-3CA2E94C14DB}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0710309F-CBBD-4FD6-A379-3CA2E94C14DB}.Debug|Win32.Build.0 = Debug|Win32
+		{0710309F-CBBD-4FD6-A379-3CA2E94C14DB}.Release|Win32.ActiveCfg = Release|Win32
+		{0710309F-CBBD-4FD6-A379-3CA2E94C14DB}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{44F803E0-12E8-4F44-8B7A-2FAB5DB8EEE4} = {1FA2A3CA-86BD-4F54-8D1E-67A9EECC4182}
 		{44F873E0-12E8-4F44-777A-2FAB5DB9AEE3} = {1FA2A3CA-86BD-4F54-8D1E-67A9EECC4182}
 		{44F803E1-1E28-44F4-2FAB-5DB9FE8B7AE3} = {1FA2A3CA-86BD-4F54-8D1E-67A9EECC4182}
 		{44F813E0-12E8-4F44-8B7A-3EAB5CB9FEF3} = {1FA2A3CA-86BD-4F54-8D1E-67A9EECC4182}
@@ -92,5 +93,6 @@ Global
 		{93BB43B4-3C26-4CF8-A1BF-8EE6ED794D2B} = {1FA2A3CA-86BD-4F54-8D1E-67A9EECC4182}
 		{44F813E0-12A8-4F44-807A-3ECB5CB9FEF4} = {1FA2A3CA-86BD-4F54-8D1E-67A9EECC4182}
 		{0710309F-CBBD-4FD6-A379-3CA2E94C14DB} = {93BB43B4-3C26-4CF8-A1BF-8EE6ED794D2B}
+		{44F803E0-12E8-4F44-8B7A-2FAB5DB8EEE4} = {30F7E9D7-008F-4BEB-984E-56CD811C5CA0}
 	EndGlobalSection
 EndGlobal

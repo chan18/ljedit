@@ -46,7 +46,7 @@ void page_added( GtkNotebook* notebook
 	}
 }
 
-PUSS_EXPORT void* puss_extend_create(Puss* app) {
+PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	GtkWidget* main_window;
 	GtkWidget* doc_panel;
 
@@ -62,6 +62,6 @@ PUSS_EXPORT void* puss_extend_create(Puss* app) {
 	return 0;
 }
 
-PUSS_EXPORT void  puss_extend_destroy(void* self) {
+PUSS_EXPORT void  puss_plugin_destroy(void* self) {
 }
 

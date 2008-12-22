@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(SolutionDir)bin\extends\$(ProjectName).ext"
+				OutputFile="$(SolutionDir)bin\plugins\plugin_$(ProjectName).so"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -139,7 +139,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(SolutionDir)bin\extends\$(ProjectName).ext"
+				OutputFile="$(SolutionDir)bin\plugins\plugin_$(ProjectName).so"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -178,6 +178,14 @@
 	<Files>
 		<File
 			RelativePath=".\src\module.c"
+			>
+		</File>
+		<File
+			RelativePath=".\src\module.c.linux"
+			>
+		</File>
+		<File
+			RelativePath=".\src\module.c.win"
 			>
 		</File>
 	</Files>

@@ -234,7 +234,7 @@ static void vcon_on_quit(VConsole* vcon) {
 	}
 }
 
-PUSS_EXPORT void* puss_extend_create(Puss* app) {
+PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	PussVConsole* self;
 	GtkNotebook* bottom;
 	gchar* vconsole_file;
@@ -300,7 +300,7 @@ PUSS_EXPORT void* puss_extend_create(Puss* app) {
 	return self;
 }
 
-PUSS_EXPORT void  puss_extend_destroy(void* ext) {
+PUSS_EXPORT void  puss_plugin_destroy(void* ext) {
 	PussVConsole* self = (PussVConsole*)ext;
 
 	if( self->api ) {

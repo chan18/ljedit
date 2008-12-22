@@ -8,7 +8,7 @@
 
 #include <libintl.h>
 
-#define TEXT_DOMAIN "puss_ext_vconsole"
+#define TEXT_DOMAIN "plugin_vconsole"
 
 #define _(str) dgettext(TEXT_DOMAIN, str)
 

@@ -3,7 +3,7 @@
 
 #include <libintl.h>
 
-#define TEXT_DOMAIN "puss_ext_miniline"
+#define TEXT_DOMAIN "plugin_miniline"
 
 #define _(str) dgettext(TEXT_DOMAIN, str)
 
@@ -24,16 +24,16 @@ typedef struct {
 	MiniLineCallback*	cb;
 } MiniLineImpl;
 
-#define _self ((MiniLineImpl*)self)
+#define SELF_PRIV	((MiniLineImpl*)self)
 
 static void miniline_active(MiniLine* self, MiniLineCallback* cb);
 static void miniline_deactive(MiniLine* self);
 
 SIGNAL_CALLBACK void miniline_cb_changed( GtkEditable* editable, MiniLine* self ) {
-	if( _self->cb ) {
-		g_signal_handler_block(G_OBJECT(self->entry), _self->signal_id_changed);
-		_self->cb->cb_changed(self, _self->cb->tag);
-		g_signal_handler_unblock(G_OBJECT(self->entry), _self->signal_id_changed);
+	if( SELF_PRIV->cb ) {
+		g_signal_handler_block(G_OBJECT(self->entry), SELF_PRIV->signal_id_changed);
+		SELF_PRIV->cb->cb_changed(self, SELF_PRIV->cb->tag);
+		g_signal_handler_unblock(G_OBJECT(self->entry), SELF_PRIV->signal_id_changed);
 	}
 }
 
@@ -43,8 +43,8 @@ SIGNAL_CALLBACK gboolean miniline_cb_focus_out_event( GtkWidget* widget, GdkEven
 }
 
 SIGNAL_CALLBACK gboolean miniline_cb_key_press_event( GtkWidget* widget, GdkEventKey* event, MiniLine* self ) {
-	return _self->cb
-		? _self->cb->cb_key_press(self, event, _self->cb->tag)
+	return SELF_PRIV->cb
+		? SELF_PRIV->cb->cb_key_press(self, event, SELF_PRIV->cb->tag)
 		: FALSE;
 }
 
@@ -58,7 +58,7 @@ static void miniline_active( MiniLine* self, MiniLineCallback* cb ) {
 	gint page_num;
 	GtkTextView* view;
 	GtkWidget* actived;
-	_self->cb = cb;
+	SELF_PRIV->cb = cb;
 	if( !cb )
 		return;
 
@@ -76,9 +76,9 @@ static void miniline_active( MiniLine* self, MiniLineCallback* cb ) {
 
 	gtk_widget_grab_focus(GTK_WIDGET(self->entry));
 
-	g_signal_handler_block(G_OBJECT(self->entry), _self->signal_id_changed);
-	res = _self->cb->cb_active(self, _self->cb->tag);
-	g_signal_handler_unblock(G_OBJECT(self->entry), _self->signal_id_changed);
+	g_signal_handler_block(G_OBJECT(self->entry), SELF_PRIV->signal_id_changed);
+	res = SELF_PRIV->cb->cb_active(self, SELF_PRIV->cb->tag);
+	g_signal_handler_unblock(G_OBJECT(self->entry), SELF_PRIV->signal_id_changed);
 	if( !res )
 		miniline_deactive(self);
 }
@@ -131,8 +131,8 @@ static void miniline_build_ui(MiniLine* self) {
 	toolbar_hbox = GTK_BOX(puss_get_ui_object(self->app, "main_toolbar_hbox"));
 	gtk_box_pack_end(toolbar_hbox, self->window, FALSE, FALSE, 0); 
 
-	_self->signal_id_changed   = g_signal_handler_find(self->entry, (GSignalMatchType)(G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA), 0, 0, 0, (gpointer)&miniline_cb_changed, 0);
-	_self->signal_id_key_press = g_signal_handler_find(self->entry, (GSignalMatchType)(G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA), 0, 0, 0, (gpointer)&miniline_cb_key_press_event, 0);
+	SELF_PRIV->signal_id_changed   = g_signal_handler_find(self->entry, (GSignalMatchType)(G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA), 0, 0, 0, (gpointer)&miniline_cb_changed, 0);
+	SELF_PRIV->signal_id_key_press = g_signal_handler_find(self->entry, (GSignalMatchType)(G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA), 0, 0, 0, (gpointer)&miniline_cb_key_press_event, 0);
 
 	gtk_builder_connect_signals(builder, self);
 	g_object_unref(G_OBJECT(builder));
@@ -144,7 +144,7 @@ PUSS_EXPORT MiniLineCallback* miniline_GOTO_get_callback();
 PUSS_EXPORT MiniLineCallback* miniline_FIND_get_callback();
 PUSS_EXPORT MiniLineCallback* miniline_REPLACE_get_callback();
 
-PUSS_EXPORT void* puss_extend_create(Puss* app) {
+PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	MiniLine* self;
 
 	bindtextdomain(TEXT_DOMAIN, app->get_locale_path());
@@ -160,7 +160,7 @@ PUSS_EXPORT void* puss_extend_create(Puss* app) {
 	return self;
 }
 
-PUSS_EXPORT void  puss_extend_destroy(void* ext) {
+PUSS_EXPORT void  puss_plugin_destroy(void* ext) {
 	MiniLineImpl* self = (MiniLineImpl*)ext;
 	g_free(self);
 }

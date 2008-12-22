@@ -6,7 +6,7 @@
 
 #include <libintl.h>
 
-#define TEXT_DOMAIN "puss_ext_ljcs"
+#define TEXT_DOMAIN "plugin_ljcs"
 
 #define _(str) dgettext(TEXT_DOMAIN, str)
 

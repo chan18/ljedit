@@ -7,7 +7,7 @@
 
 #include "LJCS.h"
 
-PUSS_EXPORT void* puss_extend_create(Puss* app) {
+PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	bindtextdomain(TEXT_DOMAIN, app->get_locale_path());
 	bind_textdomain_codeset(TEXT_DOMAIN, "UTF-8");
 
@@ -21,7 +21,7 @@ PUSS_EXPORT void* puss_extend_create(Puss* app) {
 	return self;
 }
 
-PUSS_EXPORT void  puss_extend_destroy(void* self) {
+PUSS_EXPORT void  puss_plugin_destroy(void* self) {
 	delete (LJCS*)self;
 }
 

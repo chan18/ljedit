@@ -7,7 +7,7 @@
 
 #include <libintl.h>
 
-#define TEXT_DOMAIN "puss_ext_search_tools"
+#define TEXT_DOMAIN "plugin_search_tools"
 
 #define _(str) dgettext(TEXT_DOMAIN, str)
 
@@ -340,7 +340,7 @@ void search_tools_build_ui(SearchTools* self) {
 	g_object_unref(G_OBJECT(builder));
 }
 
-PUSS_EXPORT void* puss_extend_create(Puss* app) {
+PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	bindtextdomain(TEXT_DOMAIN, app->get_locale_path());
 	bind_textdomain_codeset(TEXT_DOMAIN, "UTF-8");
 
@@ -353,7 +353,7 @@ PUSS_EXPORT void* puss_extend_create(Puss* app) {
 	return self;
 }
 
-PUSS_EXPORT void  puss_extend_destroy(void* ext) {
+PUSS_EXPORT void  puss_plugin_destroy(void* ext) {
 	SearchTools* self = (SearchTools*)ext;
 	clear_search_results(self);
 	g_object_unref(self->result_store);

@@ -8,7 +8,7 @@
 
 #include <libintl.h>
 
-#define TEXT_DOMAIN "puss_ext_language_selector"
+#define TEXT_DOMAIN "plugin_language_selector"
 
 #define _(str) dgettext(TEXT_DOMAIN, str)
 
@@ -65,7 +65,7 @@ gboolean destroy_language_section(gchar* key, GList* value, gpointer) {
 	return FALSE;
 }
 
-PUSS_EXPORT void* puss_extend_create(Puss* app) {
+PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	bindtextdomain(TEXT_DOMAIN, app->get_locale_path());
 	bind_textdomain_codeset(TEXT_DOMAIN, "UTF-8");
 
@@ -167,7 +167,7 @@ PUSS_EXPORT void* puss_extend_create(Puss* app) {
 	return 0;
 }
 
-PUSS_EXPORT void  puss_extend_destroy(void* self) {
+PUSS_EXPORT void  puss_plugin_destroy(void* self) {
 	puss_app = 0;
 }
 

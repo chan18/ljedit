@@ -5,7 +5,7 @@
 
 #include <libintl.h>
 
-#define TEXT_DOMAIN "puss_ext_gtk_doc_helper"
+#define TEXT_DOMAIN "plugin_gtk_doc_helper"
 
 #define _(str) dgettext(TEXT_DOMAIN, str)
 
@@ -259,7 +259,7 @@ void create_ui(GtkDocHelper* self) {
 	gtk_ui_manager_ensure_update(ui_mgr);
 }
 
-PUSS_EXPORT void* puss_extend_create(Puss* app) {
+PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	bindtextdomain(TEXT_DOMAIN, app->get_locale_path());
 	bind_textdomain_codeset(TEXT_DOMAIN, "UTF-8");
 
@@ -312,7 +312,7 @@ PUSS_EXPORT void* puss_extend_create(Puss* app) {
 	return self;
 }
 
-PUSS_EXPORT void  puss_extend_destroy(void* ext) {
+PUSS_EXPORT void  puss_plugin_destroy(void* ext) {
 	if( ext ) {
 		GtkDocHelper* self = (GtkDocHelper*)ext;
 		g_regex_unref(self->re_dt);
