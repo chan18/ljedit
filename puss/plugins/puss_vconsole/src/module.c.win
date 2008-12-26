@@ -245,7 +245,7 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	self = g_new0(PussVConsole, 1);
 	self->app = app;
 
-	vconsole_file = g_build_filename(app->get_module_path(), "extends", "vconsole.dll", NULL);
+	vconsole_file = g_build_filename(app->get_plugins_path(), "vconsole.dll", NULL);
 	self->module = g_module_open(vconsole_file, G_MODULE_BIND_LAZY);
 	g_free(vconsole_file);
 

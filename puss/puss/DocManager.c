@@ -196,6 +196,18 @@ void doc_cb_move_focus(GtkWidget* widget, GtkDirectionType dir) {
 	}
 }
 
+#ifdef G_OS_WIN32
+	static gboolean __win32_GtkTextView_ImContext_bug_hack_focus_in(GtkWidget* widget, GdkEventFocus *event) {
+		gtk_text_view_set_editable(GTK_TEXT_VIEW(widget), TRUE);
+		return FALSE;
+	}
+
+	static gboolean __win32_GtkTextView_ImContext_bug_hack_focus_out(GtkWidget* widget, GdkEventFocus *event) {
+		gtk_text_view_set_editable(GTK_TEXT_VIEW(widget), FALSE);
+		return FALSE;
+	}
+#endif//G_OS_WIN32
+
 gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 	gint page_num;
 	GtkSourceView* view;
@@ -222,6 +234,11 @@ gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(view), GTK_WRAP_NONE);
 
 	g_signal_connect(view, "move-focus", G_CALLBACK(&doc_cb_move_focus), 0);
+
+#ifdef G_OS_WIN32
+	g_signal_connect_after(view, "focus-in-event", G_CALLBACK(&__win32_GtkTextView_ImContext_bug_hack_focus_in), 0);
+	g_signal_connect(view, "focus-out-event", G_CALLBACK(&__win32_GtkTextView_ImContext_bug_hack_focus_out), 0);
+#endif//G_OS_WIN32
 
 	font_option = puss_option_manager_find("puss", "editor.font");
 	if( font_option && font_option->value) {
