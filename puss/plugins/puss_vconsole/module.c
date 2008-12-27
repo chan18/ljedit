@@ -1,8 +1,20 @@
 // module.c
 // 
 
-// TODO : now it's only demo!!
-// 
+#include <gtk/gtk.h>
+#include <gdk/gdkkeysyms.h>
+
+#include "IPuss.h"
+
+#include <libintl.h>
+
+#define TEXT_DOMAIN "plugin_vconsole"
+
+#define _(str) dgettext(TEXT_DOMAIN, str)
+
+#ifdef G_OS_WIN32
+
+//-----------------------------------------------------------------
 
 #include "vconsole.h"
 
@@ -70,7 +82,7 @@ static void update_view(PussVConsole* self) {
 						--cx;
 				}
 			} else {
-				g_print("unknown =  %d\n", ps->Char.UnicodeChar);
+				//g_print("unknown =  %d\n", ps->Char.UnicodeChar);
 			}
 			++ps;
 		}
@@ -162,13 +174,23 @@ static void on_paste(GtkTextView *text_view, PussVConsole* self) {
 
 static void on_sbar_changed(GtkAdjustment *adjustment, PussVConsole* self) {
 	gdouble value = gtk_adjustment_get_value(adjustment);
-	g_print("%f\n", value);
-
 	self->api->scroll(self->vcon, 0, (gint)value);
 }
 
 static void on_size_allocate(GtkWidget *widget, GtkAllocation *allocation, PussVConsole* self) {
-	self->api->resize(self->vcon, 120, allocation->height/18);
+	gint w, h;
+	GtkTextIter iter;
+	GdkRectangle loc;
+	GtkTextView* view = GTK_TEXT_VIEW( self->view );
+	GtkTextBuffer* buf = gtk_text_view_get_buffer(view);
+
+	gtk_text_buffer_get_start_iter(buf, &iter);
+	gtk_text_view_get_iter_location(view, &iter, &loc);
+	h = loc.height;
+	h += gtk_text_view_get_pixels_below_lines(view);
+	h += gtk_text_view_get_pixels_above_lines(view);
+
+	self->api->resize(self->vcon, 120, allocation->height/h);
 }
 
 static void on_size_request(GtkWidget *widget, GtkRequisition *requisition, PussVConsole* self) {
@@ -215,10 +237,7 @@ static void vcon_on_screen_changed(VConsole* vcon) {
 	PussVConsole* self = (PussVConsole*)vcon->tag;
 	self->need_update = TRUE;
 
-	// printf("on_screen_changed\n");
-	// gdk_threads_enter();
 	g_idle_add(on_idle_update, self);	// it's thread safe
-	// gdk_threads_leave();
 }
 
 static void vcon_on_quit(VConsole* vcon) {
@@ -316,3 +335,81 @@ PUSS_EXPORT void  puss_plugin_destroy(void* ext) {
 
 	g_free(self);
 }
+
+
+#else//LINUX IMPLEMENTS
+
+//-----------------------------------------------------------------
+
+#include <vte/vte.h>
+
+typedef struct {
+	Puss*		app;
+	GtkWidget*	vte;
+} PussVConsole;
+
+static void on_quit() {
+}
+
+PUSS_EXPORT void* puss_plugin_create(Puss* app) {
+	PussVConsole* self;
+	GtkWidget* bottom;
+
+	bindtextdomain(TEXT_DOMAIN, app->get_locale_path());
+	bind_textdomain_codeset(TEXT_DOMAIN, "UTF-8");
+
+	self = g_new0(PussVConsole, 1);
+	self->app = app;
+	self->vte = vte_terminal_new();
+
+	{
+		GtkWidget* hbox = gtk_hbox_new(FALSE, 4);
+		GtkWidget* sbar = gtk_vscrollbar_new( vte_terminal_get_adjustment(self->vte) );
+        
+		/*
+        gtk.HBox.__init__(self, False, 4)
+
+        gconf_client.add_dir(self.GCONF_PROFILE_DIR,
+                             gconf.CLIENT_PRELOAD_RECURSIVE)
+
+        self._vte = vte.Terminal()
+        self.reconfigure_vte()
+        self._vte.set_size(self._vte.get_column_count(), 5)
+        self._vte.set_size_request(200, 50)
+        self._vte.show()
+
+        gconf_client.notify_add(self.GCONF_PROFILE_DIR,
+                                self.on_gconf_notification)
+        self._vte.connect("key-press-event", self.on_vte_key_press)
+        self._vte.connect("child-exited", lambda term: term.fork_command())
+
+        self._vte.fork_command()
+        */
+        
+        gtk_widget_show_all(hbox);
+
+		bottom = puss_get_bottom_panel(app);
+		gtk_notebook_append_page(GTK_NOTEBOOK(bottom), hbox, gtk_label_new(_("Terminal")));
+
+		gtk_box_pack_start(GTK_BOX(hbox), self->vte, TRUE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(hbox), sbar, FALSE, FALSE, 0);
+
+		g_signal_connect(self->vte, "child-exited", on_quit, self);
+
+		vte_terminal_fork_command( VTE_TERMINAL(self->vte)
+				, 0, 0
+				, 0, 0
+				, FALSE
+				, FALSE
+				, FALSE );
+	}
+
+	return self;
+}
+
+PUSS_EXPORT void  puss_plugin_destroy(void* ext) {
+	PussVConsole* self = (PussVConsole*)ext;
+	g_free(self);
+}
+
+#endif

@@ -177,15 +177,7 @@
 	</References>
 	<Files>
 		<File
-			RelativePath=".\src\module.c"
-			>
-		</File>
-		<File
-			RelativePath=".\src\module.c.linux"
-			>
-		</File>
-		<File
-			RelativePath=".\src\module.c.win"
+			RelativePath=".\module.c"
 			>
 		</File>
 	</Files>

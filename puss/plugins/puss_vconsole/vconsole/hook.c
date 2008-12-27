@@ -113,8 +113,6 @@ static BOOL read_console_buffer(ShareMemory* shared) {
 		CopyMemory(&(shared->screen_info), &csbiConsole, sizeof(CONSOLE_SCREEN_BUFFER_INFO));
 		CopyMemory(shared->screen_buffer, sbuf, dwScreenBufferSize*sizeof(CHAR_INFO));
 
-		GetConsoleCursorInfo(hStdOut, &(shared->cursor_info));
-
 		SetEvent(shared->fromhook_event_update);
 	}
 
@@ -129,12 +127,31 @@ static BOOL console_on_scroll(ShareMemory* shared) {
 	SHORT w = srNew.Right - srNew.Left;
 	HANDLE hStdOut;
 
+	if( h < 1 ) h = 1;
+	if( w < 1 ) w = 1;
+
 	srNew.Top = newPos.Y;
 	srNew.Bottom = srNew.Top + h;
 	srNew.Left = newPos.X;
 	srNew.Right = srNew.Left + w;
 
 	hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	GetConsoleScreenBufferInfo(hStdOut, &(shared->screen_info));
+
+	if( srNew.Bottom >= shared->screen_info.dwSize.Y ) {
+		srNew.Bottom = shared->screen_info.dwSize.Y - 1;
+		srNew.Top = srNew.Bottom - h;
+		if( srNew.Top <= 0 )
+			srNew.Top = 1;
+	}
+
+	if( srNew.Right >= shared->screen_info.dwSize.X ) {
+		srNew.Left = shared->screen_info.dwSize.X - 1;
+		srNew.Left = srNew.Right - w;
+		if( srNew.Left <= 0 )
+			srNew.Left = 1;
+	}
+
 	SetConsoleWindowInfo(hStdOut, TRUE, &srNew);
 
 	return read_console_buffer(shared);
@@ -144,9 +161,19 @@ static BOOL console_on_resize(ShareMemory* shared) {
 	COORD newVal = shared->tohook_resize_val;
 	SMALL_RECT srNew = shared->screen_info.srWindow;
 	HANDLE hStdOut;
-	srNew.Bottom = srNew.Top + newVal.Y;
+
+	// TODO : width resize, now not use width
+	srNew.Bottom = srNew.Top + newVal.Y - 1;
+
 	if( srNew.Bottom > srNew.Top ) {
 		hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+		if( GetConsoleScreenBufferInfo(hStdOut,&(shared->screen_info)) ) {
+			if( shared->screen_info.dwCursorPosition.Y > srNew.Bottom ) {
+				srNew.Bottom = shared->screen_info.dwCursorPosition.Y;
+				srNew.Top = srNew.Bottom - newVal.Y + 1;
+			}
+		}
+
 		SetConsoleWindowInfo(hStdOut, TRUE, &srNew);
 	}
 

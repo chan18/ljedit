@@ -33,7 +33,6 @@ typedef struct _ShareMemory {
 	DWORD		screen_buffer_len;
 	CHAR_INFO	screen_buffer[MAX_SCR_LEN];
 	CONSOLE_SCREEN_BUFFER_INFO	screen_info;
-	CONSOLE_CURSOR_INFO			cursor_info;
 
 } ShareMemory;
 

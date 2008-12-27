@@ -331,7 +331,6 @@ static int vconsole_init(VCon* con) {
 
 	vcon->screen_info = &(con->shared->screen_info);
 	vcon->screen_buffer = con->shared->screen_buffer;
-	vcon->cursor_info = &(con->shared->cursor_info);
 	vcon->hwnd = con->shared->hwnd;
 	return 0;
 }
@@ -348,6 +347,12 @@ static void vconsole_scroll(VCon* con, int left, int top) {
 static void vconsole_resize(VCon* con, int width, int height) {
 	if( !con )
 		return;
+
+	if( con->shared->tohook_resize_val.X == width
+		&& con->shared->tohook_resize_val.Y == height )
+	{
+		return;
+	}
 
 	con->shared->tohook_resize_val.X = width;
 	con->shared->tohook_resize_val.Y = height;

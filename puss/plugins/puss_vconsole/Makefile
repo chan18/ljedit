@@ -31,9 +31,9 @@ PUSS_LIBS += `pkg-config --libs gtksourceview-2.0` \
 # 
 PUSS_CFLAGS += -I../../bin/include
 
-SRCS = $(wildcard src/*.c)
+SRCS = $(wildcard *.c)
 
-OBJS = $(SRCS:src/%.c=$(OBJPATH)/%.o)
+OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)
 
 TARGET = ../../bin/extends/puss_vconsole.ext
 
@@ -68,15 +68,15 @@ endif
 $(TARGET) : $(OBJS)
 	$(CC) $(CFLAGS) $(PUSS_CFLAGS) -shared -o $@ $^ $(PUSS_LIBS)
 
-$(OBJPATH)/%.o : src/%.c
+$(OBJPATH)/%.o : %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $(PUSS_CFLAGS) -o $@ -c $<
 
-$(OBJPATH)/%.d : src/%.c
+$(OBJPATH)/%.d : %.c
 	@echo $(CC) -MM -o $@ -c $<
 	@rm -f $@
 	@mkdir -p $(dir $@)
 	@$(CC) $(CFLAGS) $(PUSS_CFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
 
--include $(SRCS:src/%.c=$(OBJPATH)/%.d)
+-include $(SRCS:%.c=$(OBJPATH)/%.d)
 
