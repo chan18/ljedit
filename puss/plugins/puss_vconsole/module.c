@@ -257,6 +257,7 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	PussVConsole* self;
 	GtkNotebook* bottom;
 	gchar* vconsole_file;
+	PangoFontDescription* desc;
 
 	bindtextdomain(TEXT_DOMAIN, app->get_locale_path());
 	bind_textdomain_codeset(TEXT_DOMAIN, "UTF-8");
@@ -273,6 +274,12 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 			self->api = self->get_vconsole_api();
 
 			self->view = gtk_text_view_new();
+			desc = pango_font_description_from_string("monospace 9");
+			if( desc ) {
+				gtk_widget_modify_font(self->view, desc);
+				pango_font_description_free(desc);
+			}
+
 			self->adjust = gtk_adjustment_new(0, 0, 14, 1, 14, 14);
 			self->sbar = gtk_vscrollbar_new(self->adjust);
 			{
