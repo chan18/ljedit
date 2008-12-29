@@ -263,6 +263,9 @@
         <menu action="edit_menu">
           <menuitem action="edit_menu_go_back"/>
           <menuitem action="edit_menu_go_forward"/>
+          <separator/>
+          <placeholder name="edit_menu_plugins_place">
+          </placeholder>
         </menu>
         <menu action="view_menu">
           <placeholder name="view_menu_default_place">
@@ -291,10 +294,10 @@
           </placeholder>
         </menu>
         <menu action="tool_menu">
-          <placeholder name="tool_menu_extend_place">
+          <placeholder name="tool_menu_plugins_place">
           </placeholder>
           <separator/>
-          <placeholder name="view_menu_default_place">
+          <placeholder name="tool_menu_default_place">
             <menuitem action="tools_menu_preferences"/>
           </placeholder>
         </menu>
