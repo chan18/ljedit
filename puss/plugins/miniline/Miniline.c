@@ -32,6 +32,8 @@ typedef struct {
 	gulong		signal_changed_id;
 	gulong		signal_key_press_id;
 
+	gint		last_line;
+	gint		last_offset;
 } Miniline;
 
 static Miniline* g_self = 0;
@@ -598,6 +600,24 @@ static void miniline_deactive() {
 static void miniline_cb_changed( GtkEditable* editable ) {
 	g_signal_handler_block(G_OBJECT(g_self->entry), g_self->signal_changed_id);
 	//	SELF_PRIV->cb->cb_changed(self, SELF_PRIV->cb->tag);
+	{
+		const gchar* text;
+		gint page_num;
+		GtkTextView* view;
+
+		page_num = gtk_notebook_get_current_page(puss_get_doc_panel(g_self->app));
+		view = g_self->app->doc_get_view_from_page_num(page_num);
+		if( !view ) {
+			miniline_deactive();
+
+		} else {
+			text = gtk_entry_get_text(g_self->entry);
+			if( *text=='\0' )
+				move_cursor_to_pos(view, g_self->last_line, g_self->last_offset);
+			else
+				find_and_locate_text(g_self, view, text, TRUE, FALSE);
+		}
+	}
 	g_signal_handler_unblock(G_OBJECT(g_self->entry), g_self->signal_changed_id);
 }
 
@@ -619,7 +639,7 @@ static gboolean miniline_cb_key_press_event( GtkWidget* widget, GdkEventKey* eve
 	}
 
 	if( event->keyval==GDK_Escape ) {
-		//move_cursor_to_pos(view, self->last_line, self->last_offset);
+		move_cursor_to_pos(view, g_self->last_line, g_self->last_offset);
 		miniline_deactive();
 		return TRUE;
 	}
@@ -640,6 +660,9 @@ static gboolean miniline_cb_key_press_event( GtkWidget* widget, GdkEventKey* eve
 
 	case GDK_Down:
 		find_and_locate_text(g_self, view, text, TRUE, TRUE);
+		return TRUE;
+
+	case GDK_Tab:
 		return TRUE;
 	}
 
@@ -673,9 +696,22 @@ static void miniline_cb_active(GtkAction* action) {
 
 	g_signal_handler_block(G_OBJECT(g_self->entry), g_self->signal_changed_id);
 	{
-		res = TRUE;
-		// do active
-		//res = g_self->cb->cb_active(g_self, g_self->cb->tag);
+		GtkTextBuffer* buf;
+		GtkTextIter ps, pe;
+		gchar* text;
+		buf = gtk_text_view_get_buffer(view);
+		if( buf ) {
+			get_insert_pos(buf, &(g_self->last_line), &(g_self->last_offset));
+			gtk_widget_modify_base(GTK_WIDGET(g_self->entry), GTK_STATE_NORMAL, NULL);
+		
+			if( gtk_text_buffer_get_selection_bounds(buf, &ps, &pe) ) {
+				text = gtk_text_buffer_get_text(buf, &ps, &pe, FALSE);
+				gtk_entry_set_text(g_self->entry, text);
+				g_free(text);
+			}
+			gtk_entry_select_region(g_self->entry, 0, -1);
+			res = TRUE;
+		}
 	}
 	g_signal_handler_unblock(G_OBJECT(g_self->entry), g_self->signal_changed_id);
 
@@ -724,7 +760,7 @@ static void miniline_create() {
 	GtkBox* hbox;
 
 	g_self->action = gtk_action_new("plugin_miniline_action", _("miniline"), _("active miniline."), GTK_STOCK_FIND);
-	g_signal_connect(g_self->action, "activate", miniline_cb_active, 0);
+	g_signal_connect(g_self->action, "activate", G_CALLBACK(miniline_cb_active), 0);
 
 	builder = g_self->app->get_ui_builder();
 	group = GTK_ACTION_GROUP( gtk_builder_get_object(builder, "main_action_group") );
@@ -741,10 +777,11 @@ static void miniline_create() {
 	g_self->panel = GTK_WIDGET( gtk_builder_get_object(builder, "mini_bar_panel") );
 	g_self->entry = GTK_ENTRY( gtk_builder_get_object(builder, "mini_bar_entry") );
 	g_self->image = GTK_IMAGE( gtk_builder_get_object(builder, "mini_bar_image") );
+	gtk_image_set_from_stock(g_self->image, GTK_STOCK_FIND, GTK_ICON_SIZE_SMALL_TOOLBAR);
 
-	g_self->signal_changed_id = g_signal_connect(g_self->entry, "changed", miniline_cb_changed, 0);
-	g_self->signal_key_press_id = g_signal_connect(g_self->entry, "key-press-event", miniline_cb_key_press_event, 0);
-	g_signal_connect(g_self->entry, "focus-out-event", miniline_cb_focus_out_event, 0);
+	g_self->signal_changed_id = g_signal_connect(g_self->entry, "changed", G_CALLBACK(miniline_cb_changed), 0);
+	g_self->signal_key_press_id = g_signal_connect(g_self->entry, "key-press-event", G_CALLBACK(miniline_cb_key_press_event), 0);
+	g_signal_connect(g_self->entry, "focus-out-event", G_CALLBACK(miniline_cb_focus_out_event), 0);
 
 	gtk_widget_show_all(g_self->panel);
 	gtk_widget_hide(g_self->panel);
