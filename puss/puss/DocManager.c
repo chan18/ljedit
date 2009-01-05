@@ -656,19 +656,19 @@ gboolean puss_doc_locate( gint page_num, gint line, gint line_offset, gboolean a
 	if( page_num < 0 )
 		return FALSE;
 
-	if( line < 0 )
-		return FALSE;
-
-	if( add_pos_locate ) {
+	if( add_pos_locate )
 		puss_pos_locate_add_current_pos();
-		doc_locate_page_line(page_num, line, line_offset);
-		puss_pos_locate_add(page_num, line, line_offset);
 
-	} else {
+	if( line >= 0 ) {
 		doc_locate_page_line(page_num, line, line_offset);
+
+		if( add_pos_locate )
+			puss_pos_locate_add(page_num, line, line_offset);
+
+		return TRUE;
 	}
 
-	return TRUE;
+	return FALSE;
 }
 
 void puss_doc_save_current( gboolean save_as ) {

@@ -15,7 +15,7 @@ struct DocModuleNode {
 	GHashTable*	index;
 };
 
-void doc_module_node_free(DocModuleNode* node, gpointer) {
+static void doc_module_node_free(DocModuleNode* node, gpointer) {
 	g_free(node->path);
 	g_hash_table_destroy(node->index);
 }
@@ -33,7 +33,7 @@ struct GtkDocHelper {
 	#include <windows.h>
 
 	/*
-	gchar* auto_search_browser() {
+	static gchar* auto_search_browser() {
 		HKEY hkRoot;
 		HKEY hSubKey;
 		CHAR ValueName[256];
@@ -54,7 +54,7 @@ struct GtkDocHelper {
 	}
 	*/
 
-	void open_url(GtkDocHelper* self, const gchar* link) {
+	static void open_url(GtkDocHelper* self, const gchar* link) {
 		//if( !self->browser || self->browser[0]=='\0' )
 		//	self->browser = auto_search_browser();
 
@@ -68,7 +68,7 @@ struct GtkDocHelper {
 #else
 	#include <stdlib.h>
 
-	void open_url(GtkDocHelper* self, const gchar* link) {
+	static void open_url(GtkDocHelper* self, const gchar* link) {
 		if( !self->browser || self->browser[0]=='\0' )
 			self->browser = g_strdup("/usr/bin/firefox");
 
@@ -80,8 +80,8 @@ struct GtkDocHelper {
 
 #endif
 
-void parse_doc_module(GtkDocHelper* self, const gchar* path, const gchar* index_html_file) {
-	gchar* index_filename = g_build_filename(path, index_html_file, NULL);
+static void parse_doc_module(GtkDocHelper* self, const gchar* gtk_doc_path, const char* path, const gchar* index_html_file) {
+	gchar* index_filename = g_build_filename(gtk_doc_path, path, index_html_file, NULL);
 	if( !index_filename )
 		return;
 
@@ -92,7 +92,7 @@ void parse_doc_module(GtkDocHelper* self, const gchar* path, const gchar* index_
 		GMatchInfo* info = 0;
 		if( g_regex_match_full(self->re_dt, text, len, 0, (GRegexMatchFlags)0, &info, 0) ) {
 			DocModuleNode* node = g_new0(DocModuleNode, 1);
-			node->path = g_strdup(path);
+			node->path = g_strdup(gtk_doc_path);
 			node->index = g_hash_table_new_full(&g_str_hash, &g_str_equal, &g_free, &g_free);
 
 			self->modules = g_list_prepend(self->modules, node);
@@ -107,6 +107,23 @@ void parse_doc_module(GtkDocHelper* self, const gchar* path, const gchar* index_
 	g_free(index_filename);
 }
 
+static void parse_gtk_doc_module(GtkDocHelper* self, const gchar* gtk_doc_path) {
+	const gchar* filename;
+	GDir* dir = g_dir_open(gtk_doc_path, 0, NULL);
+	if( dir ) {
+		for(;;) {
+			filename = g_dir_read_name(dir);
+			if( !filename )
+				break;
+
+			parse_doc_module(self, gtk_doc_path, filename, "index.sgml");
+		}
+
+		g_dir_close(dir);
+	}
+
+}
+
 struct _FindTag {
 	GtkDocHelper*	self;
 	const gchar*	key;
@@ -115,7 +132,7 @@ struct _FindTag {
 	const gchar*	res_pos;
 };
 
-void __find_and_open_in_brower(DocModuleNode* node, _FindTag* tag) {
+static void __find_and_open_in_brower(DocModuleNode* node, _FindTag* tag) {
 	if( !tag->res_path ) {
 		gchar* value = (gchar*)g_hash_table_lookup(node->index, tag->key);
 		if( value ) {
@@ -125,7 +142,7 @@ void __find_and_open_in_brower(DocModuleNode* node, _FindTag* tag) {
 	}
 }
 
-void find_and_open_in_brower(GtkDocHelper* self, const gchar* key) {
+static void find_and_open_in_brower(GtkDocHelper* self, const gchar* key) {
 	if( !self->modules ) {
 		GtkWidget* dlg = gtk_message_dialog_new( puss_get_main_window(self->app)
 			, GTK_DIALOG_MODAL
@@ -158,23 +175,23 @@ void find_and_open_in_brower(GtkDocHelper* self, const gchar* key) {
 	}
 }
 
-void parse_web_browser_option(const Option* option, GtkDocHelper* self) {
+static void parse_web_browser_option(const Option* option, GtkDocHelper* self) {
 	g_free(self->browser);
 	self->browser = g_strdup(option->value);
 }
 
-void parse_gtk_doc_path_option(const Option* option, GtkDocHelper* self) {
+static void parse_gtk_doc_path_option(const Option* option, GtkDocHelper* self) {
 	gchar** items = g_strsplit_set(option->value, ",; \t\r\n", 0);
 	for( gchar** p=items; *p; ++p ) {
 		if( *p[0]=='\0' )
 			continue;
 
-		parse_doc_module(self, *p, "ix01.html");
+		parse_gtk_doc_module(self, *p);
 	}
 	g_strfreev(items);
 }
 
-void search_gtk_doc_symbol_active(GtkAction* action, GtkDocHelper* self) {
+static void search_gtk_doc_symbol_active(GtkAction* action, GtkDocHelper* self) {
 	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(self->app));
 	if( page_num < 0 )
 		return;
@@ -221,7 +238,7 @@ void search_gtk_doc_symbol_active(GtkAction* action, GtkDocHelper* self) {
 	}
 }
 
-void create_ui(GtkDocHelper* self) {
+static void create_ui(GtkDocHelper* self) {
 	GtkAction* search_gtk_doc_symbol_action = gtk_action_new("search_gtk_doc_symbol_action", _("search gtk symbol"), _("search current symbol in gtk-doc html files and show gtk-doc helper."), GTK_STOCK_FIND);
 	g_signal_connect(search_gtk_doc_symbol_action, "activate", G_CALLBACK(&search_gtk_doc_symbol_active), self);
 
@@ -232,7 +249,7 @@ void create_ui(GtkDocHelper* self) {
 		"<ui>"
 		"  <menubar name='main_menubar'>"
 		"     <menu action='tool_menu'>"
-		"      <placeholder name='tool_menu_extend_place'>"
+		"      <placeholder name='tool_menu_plugin_place'>"
 		"        <menuitem action='search_gtk_doc_symbol_action'/>"
 		"      </placeholder>"
 		"    </menu>"
@@ -266,7 +283,7 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	GtkDocHelper* self = g_new0(GtkDocHelper, 1);
 
 	self->app = app;
-	self->re_dt = g_regex_new("<dt>(.*), <a class=\"indexterm\" href=\"(.*)\">", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
+	self->re_dt = g_regex_new("<ANCHOR id=\"(.*)\" href=\"(.*)\">", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
 
 	{
 		const Option* option = app->option_manager_option_reg( "gtk_doc_helper"
@@ -286,17 +303,11 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 
 	{
 		const Option* option = app->option_manager_option_reg( "gtk_doc_helper"
-			, "gtk_doc_paths"
+			, "gtk_doc_path"
 #ifdef G_OS_WIN32
-			, "c:/gtk/share/gtk-doc/html/glib\n"
-			  "c:/gtk/share/gtk-doc/html/gobject\n"
-			  "c:/gtk/share/gtk-doc/html/gdk\n"
-			  "c:/gtk/share/gtk-doc/html/gtk\n"
+			, "c:/gtk/share/gtk-doc/html"
 #else
-			, "/usr/share/gtk-doc/html/glib\n"
-			  "/usr/share/gtk-doc/html/gobject\n"
-			  "/usr/share/gtk-doc/html/gdk\n"
-			  "/usr/share/gtk-doc/html/gtk\n"
+			, "/usr/share/gtk-doc/html"
 #endif
 			, 0
 			, (gpointer)"text"
