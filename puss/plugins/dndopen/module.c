@@ -41,7 +41,8 @@ void page_added( GtkNotebook* notebook
 {
 	GtkTextView* view = app->doc_get_view_from_page_num(page_num);
 	if( view ) {
-		gtk_drag_dest_set(GTK_WIDGET(view), GTK_DEST_DEFAULT_ALL, &uri_target, 1, GDK_ACTION_COPY);
+		gtk_drag_dest_add_uri_targets(GTK_WIDGET(view));
+		//gtk_drag_dest_set(GTK_WIDGET(view), GTK_DEST_DEFAULT_ALL, &uri_target, 1, GDK_ACTION_COPY);
 		g_signal_connect(view, "drag-data-received", G_CALLBACK(&drag_data_received), app);
 	}
 }
