@@ -9,47 +9,52 @@ ifeq ($(OS), Windows_NT)
 	PLATFORM = win32
 endif
 
-CXXFLAGS = -g -Wall
+CFLAGS = -g -Wall
 OBJPATH = debug
 
 ifeq ($(BUILD), release)
-	CXXFLAGS = -O3 -Wall
+	CFLAGS = -O3 -Wall
 	OBJPATH = release
 endif
 
 # gtk & gtksourceview(for libintl.h on win32)
 # 
-CXXFLAGS += `pkg-config --cflags gtksourceview-2.0`
+CFLAGS += `pkg-config --cflags gtksourceview-2.0`
 LIBS += `pkg-config --libs gtksourceview-2.0`
 
 # project
 # 
-CXXFLAGS += -I../../bin/include
+CFLAGS += -I../../bin/include
 
-SRCS = $(wildcard src/*.cpp)
+SRCS = $(wildcard *.c)
 
-OBJS = $(SRCS:src/%.cpp=$(OBJPATH)/%.o)
+OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)
 
-TARGET = ../../bin/extends/gtk_doc_helper.ext
+TARGET_NAME = gtk_doc_helper
+TARGET_PATH = ../../bin/plugins
+TARGET = $(TARGET_PATH)/$(TARGET_NAME)
 
-all : $(TARGET)
+all : $(TARGET).so $(TARGET).plugin
 
-$(TARGET) : $(OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o $@ $^ $(LIBS)
+$(TARGET).so : $(OBJS)
+	$(CC) $(CFLAGS) -shared -o $@ $^ $(LIBS)
+
+$(TARGET).plugin : $(TARGET_NAME).plugin
+	cp -f $< $@
 
 clean :
 	rm -f $(TARGET)
 	rm -rf $(OBJPATH)
 
-$(OBJPATH)/%.o : src/%.cpp
+$(OBJPATH)/%.o : %.c
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -o $@ -c $<
+	$(CC) $(CFLAGS) -o $@ -c $<
 
 $(OBJPATH)/%.d : src/%.cpp
-	@echo $(CXX) -MM -o $@ -c $<
+	@echo $(CC) -MM -o $@ -c $<
 	@rm -f $@
 	@mkdir -p $(dir $@)
-	@$(CXX) $(CXXFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
+	@$(CC) $(CFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
 
--include $(SRCS:src/%.cpp=$(OBJPATH)/%.d)
+-include $(SRCS:%.c=$(OBJPATH)/%.d)
 

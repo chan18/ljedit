@@ -63,7 +63,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="ljcs_mdd.lib"
-				OutputFile="$(SolutionDir)bin\plugins\plugin_$(ProjectName).so"
+				OutputFile="$(SolutionDir)bin\plugins\$(ProjectName).so"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\ljcs\lib&quot;"
 				GenerateDebugInformation="true"
@@ -93,6 +93,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\"
 			/>
 		</Configuration>
 		<Configuration
@@ -141,7 +142,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="ljcs_md.lib"
-				OutputFile="$(SolutionDir)bin\plugins\plugin_$(ProjectName).so"
+				OutputFile="$(SolutionDir)bin\plugins\$(ProjectName).so"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\ljcs\lib&quot;"
 				GenerateDebugInformation="true"
@@ -173,6 +174,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\"
 			/>
 		</Configuration>
 	</Configurations>

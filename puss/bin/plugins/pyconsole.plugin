@@ -1,0 +1,7 @@
+# puss plugin
+# 
+
+[plugin]
+name = python console
+engine = python
+description = python console

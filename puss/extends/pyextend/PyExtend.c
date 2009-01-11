@@ -434,22 +434,13 @@ static gboolean python_do_pending_calls(gpointer data) {
 	return TRUE;
 }
 
-gpointer py_plugin_load(const gchar* filepath, PyExtend* self) {
+gpointer py_plugin_load(const gchar* plugin_id, GKeyFile* keyfile, PyExtend* self) {
 	PyObject* py_res;
 	PyObject* py_plugin;
 	PyObject* py_dict;
 	PyObject* py_active_method;
 
-	gchar* module_name = g_path_get_basename(filepath);
-	gsize sz = (gsize)strlen(module_name);
-	for( ; sz > 0; --sz ) {
-		if( module_name[sz]=='.' ) {
-			module_name[sz] = 0;
-			break;
-		}	
-	}
-
-	py_plugin = PyImport_ImportModule(module_name);
+	py_plugin = PyImport_ImportModule(plugin_id);
 	if( !py_plugin ) {
 		PyErr_Print();
 		PyErr_Clear();
@@ -509,7 +500,7 @@ PyExtend* puss_py_extend_create(Puss* app) {
 		g_timeout_add(100, python_do_pending_calls, 0);
 
 		if( init_pygtk_library(self) && init_puss_module(self) )
-			g_app->plugin_engine_regist( "py"
+			g_app->plugin_engine_regist( "python"
 				, py_plugin_load
 				, py_plugin_unload
 				, 0

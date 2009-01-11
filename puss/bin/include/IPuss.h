@@ -8,7 +8,7 @@
 
 typedef struct _Puss  Puss;
 
-typedef gpointer (*PluginLoader)(const gchar* filepath, gpointer tag);
+typedef gpointer (*PluginLoader)(const gchar* plugin_id, GKeyFile* keyfile, gpointer tag);
 typedef void     (*PluginUnloader)(gpointer plugin, gpointer tag);
 typedef void     (*PluginEngineDestroy)(gpointer tag);
 

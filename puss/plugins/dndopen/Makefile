@@ -31,15 +31,21 @@ SRCS = $(wildcard *.c)
 
 OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)
 
-TARGET = ../../bin/extends/dndopen.ext
+TARGET_NAME = dndopen
+TARGET_PATH = ../../bin/plugins
+TARGET = $(TARGET_PATH)/$(TARGET_NAME)
 
-all : $(TARGET)
+all : $(TARGET).so $(TARGET).plugin
 
-$(TARGET) : $(OBJS)
+$(TARGET).so : $(OBJS)
 	$(CC) $(CFLAGS) -shared -o $@ $^ $(LIBS)
 
+$(TARGET).plugin : $(TARGET_NAME).plugin
+	cp -f $< $@
+
 clean :
-	rm -f $(TARGET)
+	rm -f $(TARGET_PATH)/dndopen.so
+	rm -f $(TARGET_PATH)/dndopen.plugin
 	rm -rf $(OBJPATH)
 
 $(OBJPATH)/%.o : %.c

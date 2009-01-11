@@ -9,15 +9,26 @@ typedef struct {
 	void*		handle;
 } DLLPlugin;
 
-gpointer dll_plugin_load(const gchar* filepath, Puss* app) {
+gpointer dll_plugin_load(const gchar* plugin_id, GKeyFile* keyfile, Puss* app) {
 	void* (*create_fun)(Puss* app);
-	DLLPlugin* dll_plugin = 0;
+	gchar* filename;
+	gchar* filepath;
+	DLLPlugin* dll_plugin;
 
 	dll_plugin = g_try_new0(DLLPlugin, 1);
 	if( !dll_plugin )
 		return 0;
 
-	dll_plugin->module = g_module_open(filepath, G_MODULE_BIND_LAZY);
+	filename = g_strconcat(plugin_id, ".so", 0);
+	if( filename ) {
+		filepath = g_build_filename(app->get_plugins_path(), filename, 0);
+		if( filepath ) {
+			dll_plugin->module = g_module_open(filepath, G_MODULE_BIND_LAZY);
+			g_free(filepath);
+		}
+		g_free(filename);
+	}
+
 	if( !dll_plugin->module ) {
 		g_printerr("ERROR  : load plugin(%s) failed!\n", filepath);
 		g_printerr("REASON : %s\n", g_module_error());
@@ -62,5 +73,5 @@ void dll_plugin_unload(gpointer plugin, Puss* app) {
 }
 
 void dll_plugin_engine_regist(Puss* app) {
-	app->plugin_engine_regist("so", dll_plugin_load, dll_plugin_unload, 0, app);
+	app->plugin_engine_regist(DLL_PLUGIN_ENGINE_ID, dll_plugin_load, dll_plugin_unload, 0, app);
 }

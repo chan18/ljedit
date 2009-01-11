@@ -113,7 +113,7 @@ gboolean puss_extend_manager_create() {
 	gsize len;
 	gchar* filepath;
 	const gchar* match_str = ".ext";
-	gsize match_len = strlen(match_str);
+	gsize match_len = (gsize)strlen(match_str);
 
 	if( !g_module_supported() )
 		return TRUE;
@@ -129,7 +129,7 @@ gboolean puss_extend_manager_create() {
 			if( !filename )
 				break;
 
-			len = strlen(filename);
+			len = (gsize)strlen(filename);
 			if( len < match_len || strcmp(filename+len-match_len, match_str)!=0 )
 				continue;
 

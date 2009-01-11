@@ -39,6 +39,20 @@ void puss_utils_destroy() {
 	}
 }
 
+void puss_show_error_dialog( const gchar* error ) {
+	GtkWidget* dlg = gtk_dialog_new_with_buttons( _("ERROR")
+		, puss_app->main_window
+		, GTK_DIALOG_MODAL|GTK_DIALOG_DESTROY_WITH_PARENT
+		, _("OK"), NULL );
+
+	if( dlg ) {
+		gtk_widget_show(dlg);
+	}
+}
+
+void puss_show_error_ignore( const gchar* error ) {
+}
+
 void puss_send_focus_change(GtkWidget *widget, gboolean in) {
 	// Cut and paste from gtkwindow.c
 

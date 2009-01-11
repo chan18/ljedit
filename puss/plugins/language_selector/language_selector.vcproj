@@ -62,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(SolutionDir)bin\plugins\plugin_$(ProjectName).so"
+				OutputFile="$(SolutionDir)bin\plugins\$(ProjectName).so"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -91,6 +91,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\"
 			/>
 		</Configuration>
 		<Configuration
@@ -138,7 +139,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(SolutionDir)bin\plugins\plugin_$(ProjectName).so"
+				OutputFile="$(SolutionDir)bin\plugins\$(ProjectName).so"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -169,6 +170,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\"
 			/>
 		</Configuration>
 	</Configurations>

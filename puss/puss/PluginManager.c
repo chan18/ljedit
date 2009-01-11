@@ -12,8 +12,11 @@
 #include "Utils.h"
 #include "DLLPluginEngine.h"
 
+#define PLUGIN_SUFFIX ".plugin"
+
 struct _Plugin {
-	gchar*			filepath;
+	gchar*			id;
+	GKeyFile*		keyfile;
 	PluginEngine*	engine;
 	gpointer		handle;
 
@@ -28,44 +31,90 @@ struct _PluginEngine {
 	gpointer			tag;
 };
 
-static void plugin_load(const gchar* plugin_path, const gchar* filename, PluginEngine* engine) {
-	Plugin* plugin;
+static void unload_plugin( Plugin* plugin ) {
+	if( plugin ) {
+		if( plugin->handle && plugin->engine && plugin->engine->unload )
+			plugin->engine->unload(plugin->handle, plugin->engine->tag);
 
-	plugin = g_try_new0(Plugin, 1);
-	if( !plugin )
-		return;
-
-	plugin->filepath = g_build_filename(plugin_path, filename, NULL);
-	if( !plugin->filepath ) {
+		g_free(plugin->id);
+		g_key_file_free(plugin->keyfile);
 		g_free(plugin);
-		return;
 	}
-
-	plugin->engine = engine;
-	plugin->handle = engine->load(plugin->filepath, plugin->engine->tag);
-
-	plugin->next   = puss_app->plugins_list;
-	puss_app->plugins_list = plugin;
 }
 
-static void plugin_unload(Plugin* plugin) {
-	if( plugin ) {
-		if( plugin->engine && plugin->engine->unload )
-			plugin->engine->unload(plugin->handle, plugin->engine->tag);
-		g_free(plugin);
+static gboolean load_plugin( const gchar* plugin_id, const gchar* filepath ) {
+	gchar* engine_id;
+	Plugin* plugin;
+	GError* error;
+
+	plugin = g_try_new0(Plugin, 1);
+	if( !plugin ) {
+		g_printerr( "new Plugin memory error!\n" );
+		return FALSE;
 	}
+
+	plugin->id = g_strdup(plugin_id);
+	if( plugin->id ) {
+		plugin->keyfile = g_key_file_new();
+		if( plugin->keyfile ) {
+			error = 0;
+			g_key_file_load_from_file(plugin->keyfile, filepath, G_KEY_FILE_NONE, &error);
+			if( error ) {
+				g_printerr( "load plugin error : load (%s).plugin failed(%s)!\n", plugin_id, error->message );
+				g_error_free(error);
+
+			} else {
+				error = 0;
+				engine_id = g_key_file_get_value(plugin->keyfile, "plugin", "engine", &error);
+				if( error ) {
+					g_printerr( "get engine-key error when load plugin[%s] - (%s)\n", plugin_id, error->message );
+					g_error_free(error);
+				}
+				plugin->engine = (PluginEngine*)g_hash_table_lookup(puss_app->plugin_engines_map, engine_id?engine_id:DLL_PLUGIN_ENGINE_ID);
+				g_free(engine_id);
+
+				if( plugin->engine ) {
+					plugin->handle = plugin->engine->load( plugin->id
+						, plugin->keyfile
+						, plugin->engine->tag );
+
+					if( plugin->handle ) {
+						plugin->next = puss_app->plugins_list;
+						puss_app->plugins_list = plugin;
+						return TRUE;
+					}
+				}
+			}
+		}
+	}
+
+	unload_plugin(plugin);
+	return FALSE;
+}
+
+gboolean puss_plugin_manager_load_plugin(const gchar* plugin_id) {
+	gchar* filename;
+	gchar* filepath;
+	gboolean res = FALSE;
+
+	filename = g_strconcat(plugin_id, PLUGIN_SUFFIX, 0);
+	if( filename ) {
+		filepath = g_build_filename(puss_app->plugins_path, filename, 0);
+		if( filepath )
+			res = load_plugin( plugin_id, filepath );
+	}
+
+	g_free(filename);
+	g_free(filepath);
+	return res;
 }
 
 void puss_plugin_manager_load_all() {
+	const gchar* filename;
 	gchar* plugin_path;
 	GDir* dir;
-	PluginEngine* engine;
-	const gchar* filename;
-	size_t len;
-	const gchar* ps;
-	const gchar* pe;
-	const gchar* prefix_str = "plugin_";
-	size_t prefix_len = strlen(prefix_str);
+	gsize len;
+	gchar* plugin_id;
 
 	if( !g_module_supported() )
 		return;
@@ -81,21 +130,13 @@ void puss_plugin_manager_load_all() {
 			if( !filename )
 				break;
 
-			len = strlen(filename);
-			if( !g_str_has_prefix(filename, prefix_str) )
+			len = (gsize)strlen(filename);
+			if( !g_str_has_suffix(filename, PLUGIN_SUFFIX) )
 				continue;
 
-			ps = filename + prefix_len;
-			pe = filename + len;
-			for( ; pe > ps; --pe )
-				if( *(pe-1)=='.' )
-					break;
-
-			engine = (PluginEngine*)g_hash_table_lookup(puss_app->plugin_engines_map, pe);
-			if( !engine )
-				continue;
-
-			plugin_load(plugin_path, filename, engine);
+			plugin_id = g_strndup(filename, len - strlen(PLUGIN_SUFFIX));
+			puss_plugin_manager_load_plugin(plugin_id);
+			g_free(plugin_id);
 		}
 
 		g_dir_close(dir);
@@ -113,7 +154,7 @@ void puss_plugin_manager_unload_all() {
 		t = p;
 		p = p->next;
 
-		plugin_unload(t);
+		unload_plugin(t);
 	}
 }
 
