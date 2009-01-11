@@ -10,24 +10,24 @@
 #define _(str) dgettext(TEXT_DOMAIN, str)
 
 
-struct DocModuleNode {
+typedef struct {
 	gchar*		path;
 	GHashTable*	index;
-};
+} DocModuleNode;
 
-static void doc_module_node_free(DocModuleNode* node, gpointer) {
+static void doc_module_node_free(DocModuleNode* node, gpointer nouse) {
 	g_free(node->path);
 	g_hash_table_destroy(node->index);
 }
 
-struct GtkDocHelper {
+typedef struct {
 	Puss*		app;
 	GRegex*		re_dt;
 
 	gchar*		browser;
 
 	GList*		modules;	// DocModuleNode list
-};
+} GtkDocHelper;
 
 #ifdef G_OS_WIN32
 	#include <windows.h>
@@ -81,12 +81,11 @@ struct GtkDocHelper {
 #endif
 
 static void parse_doc_module(GtkDocHelper* self, const gchar* gtk_doc_path, const char* path, const gchar* index_html_file) {
+	gchar* text = 0;
+	gsize len = 0;
 	gchar* index_filename = g_build_filename(gtk_doc_path, path, index_html_file, NULL);
 	if( !index_filename )
 		return;
-
-	gchar* text = 0;
-	gsize len = 0;
 
 	if( self->app->load_file(index_filename, &text, &len, 0) ) {
 		GMatchInfo* info = 0;
@@ -124,13 +123,13 @@ static void parse_gtk_doc_module(GtkDocHelper* self, const gchar* gtk_doc_path) 
 
 }
 
-struct _FindTag {
+typedef struct {
 	GtkDocHelper*	self;
 	const gchar*	key;
 
 	const gchar*	res_path;
 	const gchar*	res_pos;
-};
+} _FindTag;
 
 static void __find_and_open_in_brower(DocModuleNode* node, _FindTag* tag) {
 	if( !tag->res_path ) {
@@ -143,6 +142,7 @@ static void __find_and_open_in_brower(DocModuleNode* node, _FindTag* tag) {
 }
 
 static void find_and_open_in_brower(GtkDocHelper* self, const gchar* key) {
+	_FindTag tag = {0, 0, 0, 0};
 	if( !self->modules ) {
 		GtkWidget* dlg = gtk_message_dialog_new( puss_get_main_window(self->app)
 			, GTK_DIALOG_MODAL
@@ -155,7 +155,9 @@ static void find_and_open_in_brower(GtkDocHelper* self, const gchar* key) {
 		return;
 	}
 
-	_FindTag tag = { self, key, 0, 0 };
+	tag.self = self;
+	tag.key = key;
+
 	g_list_foreach(self->modules, (GFunc)&__find_and_open_in_brower, &tag);
 
 	if( tag.res_path ) {
@@ -181,8 +183,9 @@ static void parse_web_browser_option(const Option* option, GtkDocHelper* self) {
 }
 
 static void parse_gtk_doc_path_option(const Option* option, GtkDocHelper* self) {
+	gchar** p;
 	gchar** items = g_strsplit_set(option->value, ",; \t\r\n", 0);
-	for( gchar** p=items; *p; ++p ) {
+	for( p=items; *p; ++p ) {
 		if( *p[0]=='\0' )
 			continue;
 
@@ -192,29 +195,32 @@ static void parse_gtk_doc_path_option(const Option* option, GtkDocHelper* self) 
 }
 
 static void search_gtk_doc_symbol_active(GtkAction* action, GtkDocHelper* self) {
+	gunichar ch;
+	gchar* keyword;
+	GtkTextIter ps, pe;
+	GtkTextBuffer* buf;
 	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(self->app));
 	if( page_num < 0 )
 		return;
 
-	GtkTextBuffer* buf = self->app->doc_get_buffer_from_page_num(page_num);
+	buf = self->app->doc_get_buffer_from_page_num(page_num);
 	if( !buf )
 		return;
 
 	// get current word
-	GtkTextIter ps;
 	gtk_text_buffer_get_iter_at_mark(buf, &ps, gtk_text_buffer_get_insert(buf));
 	if( gtk_text_iter_is_end(&ps) )
 		return;
 
-	gunichar ch = gtk_text_iter_get_char(&ps);
+	ch = gtk_text_iter_get_char(&ps);
 	if( !g_unichar_isalnum(ch) && ch!='_' && ch!='-' )
 		return;
 
-	GtkTextIter pe = ps;
+	pe = ps;
 
 	// find key start position
 	while( gtk_text_iter_backward_char(&ps) ) {
-		gunichar ch = gtk_text_iter_get_char(&ps);
+		ch = gtk_text_iter_get_char(&ps);
 		if( !g_unichar_isalnum(ch) && ch!='_' && ch!='-' ) {
 			gtk_text_iter_forward_char(&ps);
 			break;
@@ -223,7 +229,7 @@ static void search_gtk_doc_symbol_active(GtkAction* action, GtkDocHelper* self) 
 
 	// find key end position
 	while( gtk_text_iter_forward_char(&pe) ) {
-		gunichar ch = gtk_text_iter_get_char(&pe);
+		ch = gtk_text_iter_get_char(&pe);
 		if( !g_unichar_isalnum(ch) && ch!='_' && ch!='-' )
 			break;
     }
@@ -231,41 +237,46 @@ static void search_gtk_doc_symbol_active(GtkAction* action, GtkDocHelper* self) 
 	if( gtk_text_iter_equal(&ps, &pe) )
 		return;
 
-	gchar* keyword = gtk_text_iter_get_text(&ps, &pe);
+	keyword = gtk_text_iter_get_text(&ps, &pe);
 	if( keyword ) {
 		find_and_open_in_brower(self, keyword);
 		g_free(keyword);
 	}
 }
 
+const gchar* ui_info =
+	"<ui>"
+	"  <menubar name='main_menubar'>"
+	"     <menu action='tool_menu'>"
+	"      <placeholder name='tool_menu_plugin_place'>"
+	"        <menuitem action='search_gtk_doc_symbol_action'/>"
+	"      </placeholder>"
+	"    </menu>"
+	"  </menubar>"
+	""
+	"  <toolbar name='main_toolbar'>"
+	"    <placeholder name='main_toolbar_tool_place'>"
+	"      <toolitem action='search_gtk_doc_symbol_action'/>"
+	"    </placeholder>"
+    "  </toolbar>"
+	"</ui>"
+	;
+
 static void create_ui(GtkDocHelper* self) {
-	GtkAction* search_gtk_doc_symbol_action = gtk_action_new("search_gtk_doc_symbol_action", _("search gtk symbol"), _("search current symbol in gtk-doc html files and show gtk-doc helper."), GTK_STOCK_FIND);
+	GtkAction* search_gtk_doc_symbol_action;
+	GtkActionGroup* main_action_group;
+	GtkUIManager* ui_mgr;
+	GError* err;
+
+	search_gtk_doc_symbol_action = gtk_action_new("search_gtk_doc_symbol_action", _("search gtk symbol"), _("search current symbol in gtk-doc html files and show gtk-doc helper."), GTK_STOCK_FIND);
 	g_signal_connect(search_gtk_doc_symbol_action, "activate", G_CALLBACK(&search_gtk_doc_symbol_active), self);
 
-	GtkActionGroup* main_action_group = GTK_ACTION_GROUP(gtk_builder_get_object(self->app->get_ui_builder(), "main_action_group"));
+	main_action_group = GTK_ACTION_GROUP(gtk_builder_get_object(self->app->get_ui_builder(), "main_action_group"));
 	gtk_action_group_add_action_with_accel(main_action_group, search_gtk_doc_symbol_action, "F1");
 
-	const gchar* ui_info =
-		"<ui>"
-		"  <menubar name='main_menubar'>"
-		"     <menu action='tool_menu'>"
-		"      <placeholder name='tool_menu_plugin_place'>"
-		"        <menuitem action='search_gtk_doc_symbol_action'/>"
-		"      </placeholder>"
-		"    </menu>"
-		"  </menubar>"
-		""
-		"  <toolbar name='main_toolbar'>"
-		"    <placeholder name='main_toolbar_tool_place'>"
-		"      <toolitem action='search_gtk_doc_symbol_action'/>"
-		"    </placeholder>"
-        "  </toolbar>"
-		"</ui>"
-		;
+	ui_mgr = GTK_UI_MANAGER(gtk_builder_get_object(self->app->get_ui_builder(), "main_ui_manager"));
 
-	GtkUIManager* ui_mgr = GTK_UI_MANAGER(gtk_builder_get_object(self->app->get_ui_builder(), "main_ui_manager"));
-
-	GError* err = 0;
+	err = 0;
 	gtk_ui_manager_add_ui_from_string(ui_mgr, ui_info, -1, &err);
 
 	if( err ) {
@@ -277,10 +288,12 @@ static void create_ui(GtkDocHelper* self) {
 }
 
 PUSS_EXPORT void* puss_plugin_create(Puss* app) {
+	GtkDocHelper* self;
+
 	bindtextdomain(TEXT_DOMAIN, app->get_locale_path());
 	bind_textdomain_codeset(TEXT_DOMAIN, "UTF-8");
 
-	GtkDocHelper* self = g_new0(GtkDocHelper, 1);
+	self = g_new0(GtkDocHelper, 1);
 
 	self->app = app;
 	self->re_dt = g_regex_new("<ANCHOR id=\"(.*)\" href=\"(.*)\">", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
