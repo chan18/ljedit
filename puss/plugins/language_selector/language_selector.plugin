@@ -1,0 +1,7 @@
+# puss plugin
+# 
+
+[plugin]
+name = language selector
+engine = so
+description = select program source language
