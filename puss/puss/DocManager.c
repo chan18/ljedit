@@ -198,6 +198,7 @@ void doc_cb_move_focus(GtkWidget* widget, GtkDirectionType dir) {
 
 #ifdef G_OS_WIN32
 	static gboolean __win32_GtkTextView_bug_hack_on_button_press_event(GtkWidget* widget) {
+		gtk_widget_grab_focus(widget);
 		gtk_text_view_set_editable(GTK_TEXT_VIEW(widget), FALSE);
 		gtk_text_view_set_editable(GTK_TEXT_VIEW(widget), TRUE);
 		return FALSE;
