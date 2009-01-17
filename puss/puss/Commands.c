@@ -7,6 +7,7 @@
 #include "DocManager.h"
 #include "PosLocate.h"
 #include "OptionManager.h"
+#include "PluginManager.h"
 #include "AboutDialog.h"
 
 // file menu
@@ -104,10 +105,13 @@ SIGNAL_CALLBACK void view_menu_bottom_page_n( GtkRadioAction* action ) {
 		puss_active_panel_page(puss_app->bottom_panel, (page_num - 1));
 }
 
+SIGNAL_CALLBACK void tools_menu_plugin_manager( GtkAction* action ) {
+	puss_plugin_manager_show_config_dialog();
+}
+
 SIGNAL_CALLBACK void tools_menu_preferences( GtkAction* action ) {
 	puss_option_manager_active();
 }
-
 
 SIGNAL_CALLBACK void help_menu_about( GtkAction* action ) {
 	puss_show_about_dialog();
