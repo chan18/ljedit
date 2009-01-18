@@ -1,7 +1,0 @@
-# puss plugin
-# 
-
-[plugin]
-name = dndopen
-engine = so
-description = allow drag & dorp file into puss

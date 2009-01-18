@@ -8,6 +8,7 @@
 #include "Puss.h"
 #include "Utils.h"
 #include "DocManager.h"
+#include "DndOpen.h"
 
 #ifdef G_OS_WIN32
 	#include <Windows.h>
@@ -93,6 +94,8 @@ int main(int argc, char* argv[]) {
 	filepath = find_module_filepath(argv[0]);
 	res = puss_create(filepath);
 	g_free(filepath);
+
+	puss_dnd_open_support();
 
 	if( argc==2 )
 		open_arg1_file(argv[1]);

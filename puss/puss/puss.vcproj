@@ -213,6 +213,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\DndOpen.c"
+			>
+		</File>
+		<File
+			RelativePath=".\DndOpen.h"
+			>
+		</File>
+		<File
 			RelativePath=".\DocManager.c"
 			>
 		</File>

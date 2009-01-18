@@ -396,9 +396,7 @@ void puss_run() {
 
 	gtk_widget_show( GTK_WIDGET(puss_app->main_window) );
 
-	//gdk_threads_enter();
 	gtk_main();
-	//gdk_threads_leave();
 
 	puss_plugin_manager_unload_all();
 }
