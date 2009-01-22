@@ -299,34 +299,30 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	self->re_dt = g_regex_new("<ANCHOR id=\"(.*)\" href=\"(.*)\">", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
 
 	{
-		const Option* option = app->option_manager_option_reg( "gtk_doc_helper"
+		const Option* option = app->option_reg( "gtk_doc_helper"
 			, "web_browser"
 #ifdef G_OS_WIN32
 			, "C:\\Program Files\\Mozilla Firefox\\firefox.exe"
 #else
 			, "/usr/bin/firefox"
 #endif
-			, 0
-			, 0
-			, 0 );
+			);
 
-		app->option_manager_monitor_reg(option, (OptionChanged)&parse_web_browser_option, self, 0);
+		app->option_monitor_reg(option, (OptionChanged)&parse_web_browser_option, self, 0);
 		parse_web_browser_option(option, self);
 	}
 
 	{
-		const Option* option = app->option_manager_option_reg( "gtk_doc_helper"
+		const Option* option = app->option_reg( "gtk_doc_helper"
 			, "gtk_doc_path"
 #ifdef G_OS_WIN32
 			, "c:/gtk/share/gtk-doc/html"
 #else
 			, "/usr/share/gtk-doc/html"
 #endif
-			, 0
-			, (gpointer)"text"
-			, 0 );
+			);
 
-		app->option_manager_monitor_reg(option, (OptionChanged)&parse_gtk_doc_path_option, self, 0);
+		app->option_monitor_reg(option, (OptionChanged)&parse_gtk_doc_path_option, self, 0);
 		parse_gtk_doc_path_option(option, self);
 	}
 

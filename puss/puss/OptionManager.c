@@ -17,22 +17,16 @@ struct _OptionNotifer {
 
 typedef struct _OptionNode {
 	Option			option;
-
-	OptionSetter	setter_fun;
-	gpointer		setter_tag;
-	GFreeFunc		setter_tag_free_fun;
-
+	gchar*			value;
+	gchar*			default_value;
 	OptionNotifer*	notifer_list;
 } OptionNode;
 
-void option_node_free(OptionNode* node) {
+static void option_node_free(OptionNode* node) {
 	OptionNotifer* p;
 
-	g_free(node->option.value);
-	g_free(node->option.default_value);
-
-	if( node->setter_tag_free_fun )
-		(*node->setter_tag_free_fun)(node->setter_tag);
+	g_free(node->value);
+	g_free(node->default_value);
 
 	while( node->notifer_list ) {
 		p = node->notifer_list;
@@ -53,7 +47,7 @@ struct _OptionManager {
 	GTree*		option_groups;	// group, GTree(key, OptionNode)
 };
 
-gint compare_data_func_wrapper(gpointer a, gpointer b, GCompareFunc cmp) { return (*cmp)(a, b); }
+static gint compare_data_func_wrapper(gpointer a, gpointer b, GCompareFunc cmp) { return (*cmp)(a, b); }
 
 gboolean puss_option_manager_create() {
 	OptionManager* self;
@@ -101,28 +95,6 @@ void puss_option_manager_destroy() {
 	}
 }
 
-gboolean option_manager_notify_option_changed(OptionNode* node) {
-	OptionNotifer* p;
-	OptionManager* self = puss_app->option_manager;
-
-	//gchar* old = g_key_file_get_string(self->keyfile, node->option.group, node->option.key, 0);
-	//if( old==0 && node->option.value==0 )
-	//	return FALSE;
-
-	g_key_file_set_string(self->keyfile, node->option.group, node->option.key, node->option.value);
-	self->modified = TRUE;
-
-	for( p = node->notifer_list; p; p = p->next ) {
-		g_assert( p->fun );
-
-		//p->fun(&node->option, old, p->tag);
-		p->fun(&node->option, p->tag);
-	}
-
-	//g_free(old);
-	return TRUE;
-}
-
 void option_manager_save() {
 	OptionManager* self = puss_app->option_manager;
 
@@ -140,13 +112,7 @@ void option_manager_save() {
 	g_free(content);
 }
 
-const Option* puss_option_manager_option_reg( const gchar* group
-		, const gchar* key
-		, const gchar* default_value
-		, OptionSetter fun
-		, gpointer tag
-		, GFreeFunc tag_free_fun )
-{
+const Option* puss_option_manager_option_reg( const gchar* group, const gchar* key, const gchar* default_value ) {
 	OptionNode* node;
 	OptionManager* self = puss_app->option_manager;
 
@@ -176,46 +142,82 @@ const Option* puss_option_manager_option_reg( const gchar* group
 			node->option.value = g_strdup(default_value);
 	}
 
-	node->setter_fun = fun;
-	node->setter_tag = tag;
-	node->setter_tag_free_fun = tag_free_fun;
-	node->notifer_list = 0;
-
 	g_tree_insert(option_group, (gpointer)node->option.key, node);
 	return &node->option;
 }
 
-const Option* puss_option_manager_find(const gchar* group, const gchar* key) {
+const Option* puss_option_manager_option_find(const gchar* group, const gchar* key) {
 	OptionNode* node;
 	OptionManager* self = puss_app->option_manager;
 	GTree* option_group = (GTree*)g_tree_lookup(self->option_groups, group);
 	if( option_group ) {
 		node = (OptionNode*)g_tree_lookup(option_group, key);
 		if( node )
-			return &node->option;
+			return &(node->option);
 	}
 
 	return 0;
 }
 
-gboolean puss_option_manager_monitor_reg(const Option* option, OptionChanged fun, gpointer tag, GFreeFunc tag_free_fun) {
-	OptionNode* node;
-	OptionNotifer* notifer;
+void puss_option_manager_option_set(const Option* option, const gchar* value) {
+	gchar* old;
+	OptionNotifer* p;
+	OptionManager* self = puss_app->option_manager;
+	OptionNode* node = (OptionNode*)option;
 
-	if( !option )
-		return FALSE;
+	if( !g_str_equal(node->option.value, value) ) {
+		old = node->option.value;
+		node->option.value = g_strdup(value);
+		g_key_file_set_string(self->keyfile, option->group, option->key, node->option.value);
+		self->modified = TRUE;
 
-	node = (OptionNode*)option;
-	notifer = g_new0(OptionNotifer, 1);
+		for( p = node->notifer_list; p; p = p->next ) {
+			if( p->fun ) {
+				p->fun(option, old, p->tag);
+			} else  {
+				OptionNotifer* t = p;
+				p = p->next;
+				if( t==node->notifer_list )
+					node->notifer_list = p;
+				g_free(t);
+			}
+		}
 
-	notifer->next = node->notifer_list;
-	notifer->fun = fun;
-	notifer->tag = tag;
-	notifer->tag_free_fun = tag_free_fun;
-	node->notifer_list = notifer;
-	return TRUE;
+		g_free(old);
+	}
 }
 
+gpointer puss_option_manager_monitor_reg(const Option* option, OptionChanged fun, gpointer tag, GFreeFunc tag_free_fun) {
+	OptionNotifer* notifer = 0;
+	OptionNode* node = (OptionNode*)option;
+
+	if( fun ) {
+		notifer = g_new0(OptionNotifer, 1);
+		notifer->next = node->notifer_list;
+		notifer->fun = fun;
+		notifer->tag = tag;
+		notifer->tag_free_fun = tag_free_fun;
+		node->notifer_list = notifer;
+	} else {
+		if( tag_free_fun )
+			tag_free_fun(tag);
+	}
+
+	return notifer;
+}
+
+void puss_option_manager_monitor_unreg(gpointer handler) {
+	OptionNotifer* p = (OptionNotifer*)handler; 
+	if( p ) {
+		p->fun = 0;
+		if( p->tag_free_fun ) {
+			p->tag_free_fun( p->tag );
+			p->tag_free_fun = 0;
+		}
+	}
+}
+
+/*
 typedef struct _ParentTreePosition {
 	GtkTreeStore*	store;
 	GtkTreeIter*	parent;
@@ -551,4 +553,4 @@ gboolean default_option_setter(GtkWindow* parent, Option* option, gpointer tag) 
 
 	return default_string_option_setter(parent, option);
 }
-
+*/

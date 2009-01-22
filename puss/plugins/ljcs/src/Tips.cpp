@@ -110,10 +110,10 @@ gboolean init_tips(Tips* self, Puss* app, Environ* env, Icons* icons) {
 
 	g_object_unref(G_OBJECT(builder));
 
-	const Option* option = app->option_manager_find("puss", "editor.font");
+	const Option* option = app->option_find("puss", "editor.font");
 	if( option ) {
 		tips_parse_editor_font_option(option, self);
-		app->option_manager_monitor_reg(option, (OptionChanged)&tips_parse_editor_font_option, self, 0);
+		app->option_monitor_reg(option, (OptionChanged)&tips_parse_editor_font_option, self, 0);
 	}
 
 	//gtk_widget_show(tip_window);

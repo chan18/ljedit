@@ -237,7 +237,7 @@ gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 	g_signal_connect_after(view, "scroll-event", G_CALLBACK(&__win32_GtkTextView_bug_hack_on_button_press_event), 0);
 #endif//G_OS_WIN32
 
-	font_option = puss_option_manager_find("puss", "editor.font");
+	font_option = puss_option_manager_option_find("puss", "editor.font");
 	if( font_option && font_option->value) {
 		PangoFontDescription* desc = pango_font_description_from_string(font_option->value);
 		if( desc ) {
@@ -246,7 +246,7 @@ gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 		}
 	}
 
-	style_option = puss_option_manager_find("puss", "editor.style");
+	style_option = puss_option_manager_option_find("puss", "editor.style");
 	if( style_option ) {
 		GtkSourceStyleSchemeManager* ssm = gtk_source_style_scheme_manager_get_default();
 		GtkSourceStyleScheme* style = gtk_source_style_scheme_manager_get_scheme(ssm, style_option->value);

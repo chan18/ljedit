@@ -44,7 +44,7 @@ gboolean ljcs_update_timeout(LJCS* self) {
 	return TRUE;
 }
 
-void parse_include_path_option(const Option* option, Environ* env) {
+void parse_include_path_option(const Option* option, const gchar* old, Environ* env) {
 	StrVector paths;
 
 	gchar** items = g_strsplit_set(option->value, ",; \t\r\n", 0);
@@ -70,9 +70,9 @@ bool LJCS::create(Puss* _app) {
 	app = _app;
 	env.set_app(app);
 
-	const Option* option = app->option_manager_option_reg("cpp_helper", "include_path", "/usr/include\n/usr/include/c++/4.2\n", 0, (gpointer)"text", 0);
-	app->option_manager_monitor_reg(option, (OptionChanged)&parse_include_path_option, &env, 0);
-	parse_include_path_option(option, &env);
+	const Option* option = app->option_reg("cpp_helper", "include_path", "/usr/include\n/usr/include/c++/4.0\n");
+	app->option_monitor_reg(option, (OptionChanged)&parse_include_path_option, &env, 0);
+	parse_include_path_option(option, 0, &env);
 
 	icons.create(app);
 

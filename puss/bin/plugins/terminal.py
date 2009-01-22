@@ -184,7 +184,8 @@ try:
 	def puss_plugin_active():
 		terminal.show_all()
 
-		puss.main_window.bottom_panel.append_page(terminal, gtk.Label(_('Terminal')))
+		bottom_panel = puss.ui.get_object("bottom_panel")
+		bottom_panel.append_page(terminal, gtk.Label(_('Terminal')))
 		terminal.connect('focus_in_event', lambda *args : terminal._vte.grab_focus())
 
 	def puss_plugin_deactive():

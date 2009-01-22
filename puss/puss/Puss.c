@@ -76,9 +76,12 @@ void init_puss_c_api(Puss* api) {
 	api->format_filename = &puss_format_filename;
 
 	// option manager
-	api->option_manager_find = &puss_option_manager_find;
-	api->option_manager_option_reg  = &puss_option_manager_option_reg;
-	api->option_manager_monitor_reg = &puss_option_manager_monitor_reg;
+	api->option_reg = &puss_option_manager_option_reg;
+	api->option_find = &puss_option_manager_option_find;
+	api->option_set = &puss_option_manager_option_set;
+
+	api->option_monitor_reg = &puss_option_manager_monitor_reg;
+	api->option_monitor_unreg = &puss_option_manager_monitor_unreg;
 
 	// plugin manager
 	api->plugin_engine_regist = &puss_plugin_engine_regist;
@@ -295,7 +298,7 @@ void puss_nb_pages_get_order(GKeyFile* keyfile, const gchar* nb_id) {
 			ids[i] = "_not_rec_page_";
 	}
 	g_key_file_set_string_list(keyfile, "puss", nb_id, ids, count);
-	g_free(ids);
+	g_free((gchar**)ids);
 }
 
 void puss_pages_reorder_save() {

@@ -105,10 +105,10 @@ gboolean PreviewPage::create(Puss* app, Environ* env) {
 	gtk_builder_connect_signals(builder, this);
 	g_object_unref(G_OBJECT(builder));
 
-	const Option* option = app->option_manager_find("puss", "editor.font");
+	const Option* option = app->option_find("puss", "editor.font");
 	if( option ) {
 		parse_editor_font_option(option, this);
-		app->option_manager_monitor_reg(option, (OptionChanged)&parse_editor_font_option, this, 0);
+		app->option_monitor_reg(option, (OptionChanged)&parse_editor_font_option, this, 0);
 	}
 
 	// init search thread

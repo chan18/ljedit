@@ -110,7 +110,7 @@ SIGNAL_CALLBACK void tools_menu_plugin_manager( GtkAction* action ) {
 }
 
 SIGNAL_CALLBACK void tools_menu_preferences( GtkAction* action ) {
-	puss_option_manager_active();
+	//puss_option_manager_active();
 }
 
 SIGNAL_CALLBACK void help_menu_about( GtkAction* action ) {

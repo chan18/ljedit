@@ -340,7 +340,8 @@ def puss_plugin_active():
 	pyconsole.eval('print "copy this plugin from gedit!" ', False)
 	pyconsole.show_all()
 
-	puss.main_window.bottom_panel.append_page(pyconsole, gtk.Label(_('Python Console')))
+	bottom_panel = puss.ui.get_object('bottom_panel')
+	bottom_panel.append_page(pyconsole, gtk.Label(_('Python Console')))
 	pyconsole.connect('focus_in_event', lambda *args : pyconsole.view.grab_focus())
 
 def puss_plugin_deactive():

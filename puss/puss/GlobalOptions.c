@@ -10,7 +10,7 @@
 #include "DocManager.h"
 #include "Utils.h"
 
-void parse_puss_theme_option(const Option* option, gpointer tag) {
+void parse_puss_theme_option(const Option* option, const gchar* old, gpointer tag) {
 	gchar* str;
 	if( !option->value || option->value[0]=='\0' )
 		return;
@@ -51,16 +51,16 @@ void reg_gtk_theme_option() {
 	g_free(path);
 
 #ifdef G_OS_WIN32
-	option = puss_option_manager_option_reg("puss", "theme", "MS-Windows", 0, tag, &g_free);
+	option = puss_option_manager_option_reg("puss", "theme", "MS-Windows");
 #else
-	option = puss_option_manager_option_reg("puss", "theme", 0, 0, tag, &g_free);
+	option = puss_option_manager_option_reg("puss", "theme", 0);
 #endif
 
 	puss_option_manager_monitor_reg(option, &parse_puss_theme_option, 0, 0);
-	parse_puss_theme_option(option, 0);
+	parse_puss_theme_option(option, 0, 0);
 }
 
-void parse_puss_editor_style_option(const Option* option, gpointer tag) {
+void parse_puss_editor_style_option(const Option* option, const gchar* old, gpointer tag) {
 	GtkSourceStyleSchemeManager* ssm;
 	GtkSourceStyleScheme* style;
 	GtkSourceBuffer* buf;
@@ -83,14 +83,15 @@ void parse_puss_editor_style_option(const Option* option, gpointer tag) {
 }
 
 void reg_source_editor_style_option() {
-	gchar* style_path;
-	gchar* styles;
-	gchar* tag;
-	const gchar* const * ids;
+	//gchar* style_path;
+	//gchar* styles;
+	//gchar* tag;
+	//const gchar* const * ids;
 	const Option* option;
 
 	GtkSourceStyleSchemeManager* ssm = gtk_source_style_scheme_manager_get_default();
 	if( ssm ) {
+		/*
 		style_path = g_build_filename(puss_app->module_path, "styles", NULL);
 		gtk_source_style_scheme_manager_append_search_path(ssm, style_path);
 		g_free(style_path);
@@ -99,13 +100,14 @@ void reg_source_editor_style_option() {
 		styles = g_strjoinv(" ", (gchar**)ids);
 		tag = g_strdup_printf("enum:%s", styles);
 		g_free(styles);
+		*/
 
-		option = puss_option_manager_option_reg("puss", "editor.style", "puss", 0, tag, &g_free);
+		option = puss_option_manager_option_reg("puss", "editor.style", "puss");
 		puss_option_manager_monitor_reg(option, &parse_puss_editor_style_option, 0, 0);
 	}
 }
 
-void parse_source_editor_font_option(const Option* option, gpointer tag) {
+void parse_source_editor_font_option(const Option* option, const gchar* old, gpointer tag) {
 	gint i;
 	gint num;
 	GtkTextView* view;
@@ -123,9 +125,7 @@ void parse_source_editor_font_option(const Option* option, gpointer tag) {
 }
 
 void reg_source_editor_font_option() {
-	const Option* option = 0;
-
-	option = puss_option_manager_option_reg("puss", "editor.font", "", 0, (gpointer)"font", 0);
+	const Option* option = puss_option_manager_option_reg("puss", "editor.font", "");
 	puss_option_manager_monitor_reg(option, &parse_source_editor_font_option, 0, 0);
 }
 

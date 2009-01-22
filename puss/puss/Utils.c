@@ -23,7 +23,7 @@ gboolean puss_utils_create() {
 
 	puss_app->utils = g_new0(Utils, 1);
 
-	option = puss_option_manager_option_reg("puss", "fileloader.charset_list", "GBK", 0, 0, 0);
+	option = puss_option_manager_option_reg("puss", "fileloader.charset_list", "GBK");
 	puss_option_manager_monitor_reg(option, &parse_charset_list_option, 0, 0);
 	parse_charset_list_option(option, 0);
 

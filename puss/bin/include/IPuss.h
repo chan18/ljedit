@@ -15,16 +15,14 @@ typedef void     (*PluginEngineDestroy)(gpointer tag);
 typedef struct _Option Option;
 
 typedef gboolean	(*OptionSetter)(GtkWindow* parent, Option* option, gpointer tag);
-typedef void		(*OptionChanged)(const Option* option, gpointer tag);
+typedef void		(*OptionChanged)(const Option* option, const gchar* old, gpointer tag);
 
 // option manager
 struct _Option {
-	const gchar*	group;
-	const gchar*	key;
-
-	gchar*			value;
-
-	gchar*			default_value;
+	gchar*	group;
+	gchar*	key;
+	gchar*	default_value;
+	gchar*	value;
 };
 
 // main
@@ -69,16 +67,12 @@ struct _Puss {
 	gchar*			(*format_filename)(const gchar* filename);
 
 	// option manager
-	const Option*	(*option_manager_find)(const gchar* group, const gchar* key);
+	const Option*	(*option_reg)(const gchar* group, const gchar* key, const gchar* default_value);
+	const Option*	(*option_find)(const gchar* group, const gchar* key);
+	void			(*option_set)(const Option* option, const gchar* value);
 
-	const Option*	(*option_manager_option_reg)( const gchar* group
-						, const gchar* key
-						, const gchar* default_value
-						, OptionSetter fun
-						, gpointer tag
-						, GFreeFunc tag_free_fun );
-
-	gboolean		(*option_manager_monitor_reg)(const Option* option, OptionChanged fun, gpointer tag, GFreeFunc tag_free_fun);
+	gpointer		(*option_monitor_reg)(const Option* option, OptionChanged fun, gpointer tag, GFreeFunc tag_free_fun);
+	void			(*option_monitor_unreg)(gpointer handler);
 
 	// extend manager
 	gpointer		(*extend_query)(const gchar* ext_name, const gchar* interface_name);
@@ -89,8 +83,6 @@ struct _Puss {
 						, PluginUnloader unloader
 						, PluginEngineDestroy destroy
 						, gpointer tag );
-
-	// regist_plugin_extend_engine()
 };
 
 #ifdef  __cplusplus
