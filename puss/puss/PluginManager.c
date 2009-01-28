@@ -161,11 +161,8 @@ void puss_plugin_manager_unload_plugin(const gchar* plugin_id) {
 	Plugin* last;
 	Plugin* p;
 
-	p = puss_app->plugins_list;
-	puss_app->plugins_list = 0;
-
 	last = 0;
-	for( ; p; p = p->next ) {
+	for( p = puss_app->plugins_list; p; p = p->next ) {
 		if( g_str_equal(p->id, plugin_id) ) {
 			if( last )
 				last->next = p->next;
@@ -237,7 +234,7 @@ static gboolean do_fill_plugin_list(const gchar* plugin_id, const gchar* engine_
 
 	gtk_list_store_append(store, &iter);
 	gtk_list_store_set( store, &iter
-		, 0, TRUE
+		, 0, enabled
 		, 1, plugin_id
 		, 2, engine_id
 		, 3, g_key_file_get_string(keyfile, "plugin", "description", 0)

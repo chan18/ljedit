@@ -178,7 +178,7 @@
 	</References>
 	<Files>
 		<File
-			RelativePath=".\src\module.cpp"
+			RelativePath=".\module.c"
 			>
 		</File>
 	</Files>

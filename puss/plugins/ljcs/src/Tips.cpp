@@ -8,7 +8,7 @@
 
 struct Tips {
 	Puss*			app;
-	Environ*			env;
+	Environ*		env;
 	Icons*			icons;
 
 	GtkWidget*		include_window;
@@ -23,6 +23,8 @@ struct Tips {
 	GtkWidget*		decl_window;
 	GtkTextView*	decl_view;
 	GtkTextBuffer*	decl_buffer;
+
+	gpointer		option_font_changed_handler_;
 };
 
 SIGNAL_CALLBACK gboolean tips_list_cb_query_tooltip( GtkTreeView* tree_view
@@ -113,7 +115,7 @@ gboolean init_tips(Tips* self, Puss* app, Environ* env, Icons* icons) {
 	const Option* option = app->option_find("puss", "editor.font");
 	if( option ) {
 		tips_parse_editor_font_option(option, self);
-		app->option_monitor_reg(option, (OptionChanged)&tips_parse_editor_font_option, self, 0);
+		self->option_font_changed_handler_ = app->option_monitor_reg(option, (OptionChanged)&tips_parse_editor_font_option, self, 0);
 	}
 
 	//gtk_widget_show(tip_window);
@@ -206,6 +208,10 @@ Tips* tips_create(Puss* app, Environ* env, Icons* icons) {
 
 void tips_destroy(Tips* self) {
 	if( self ) {
+		const Option* option = self->app->option_find("puss", "editor.font");
+		if( option )
+			self->app->option_monitor_unreg(self->option_font_changed_handler_);
+
 		g_object_unref(self->list_model);
 		g_object_unref(self->include_model);
 

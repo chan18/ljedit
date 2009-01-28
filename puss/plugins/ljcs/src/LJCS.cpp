@@ -71,7 +71,7 @@ bool LJCS::create(Puss* _app) {
 	env.set_app(app);
 
 	const Option* option = app->option_reg("cpp_helper", "include_path", "/usr/include\n/usr/include/c++/4.0\n");
-	app->option_monitor_reg(option, (OptionChanged)&parse_include_path_option, &env, 0);
+	option_path_change_handler_ = app->option_monitor_reg(option, (OptionChanged)&parse_include_path_option, &env, 0);
 	parse_include_path_option(option, 0, &env);
 
 	icons.create(app);
@@ -81,17 +81,33 @@ bool LJCS::create(Puss* _app) {
 	tips = tips_create(app, &env, &icons);
 
 	GtkNotebook* doc_panel = puss_get_doc_panel(app);
-	g_signal_connect(doc_panel, "page-added",   G_CALLBACK(&LJCS::on_doc_page_added),   this);
-	g_signal_connect(doc_panel, "page-removed", G_CALLBACK(&LJCS::on_doc_page_removed), this);
+	page_added_handler_id_ = g_signal_connect(doc_panel, "page-added",   G_CALLBACK(&LJCS::on_doc_page_added), this);
+	page_removed_handler_id_ = g_signal_connect(doc_panel, "page-removed", G_CALLBACK(&LJCS::on_doc_page_removed), this);
+
+	gint page_count = gtk_notebook_get_n_pages(doc_panel);
+	for( gint i=0; i<page_count; ++i )
+		signals_connect( app->doc_get_view_from_page_num(i) );
 
 	parse_thread.run(&env);
 
-	g_timeout_add(500, (GSourceFunc)&ljcs_update_timeout, this);
+	update_timer_handler_id_ = g_timeout_add(500, (GSourceFunc)&ljcs_update_timeout, this);
 
 	return true;
 }
 
 void LJCS::destroy() {
+	const Option* option = app->option_reg("cpp_helper", "include_path", "/usr/include\n/usr/include/c++/4.0\n");
+	app->option_monitor_unreg(option_path_change_handler_);
+	g_source_remove(update_timer_handler_id_);
+
+	GtkNotebook* doc_panel = puss_get_doc_panel(app);
+	g_signal_handler_disconnect(doc_panel, page_added_handler_id_);
+	g_signal_handler_disconnect(doc_panel, page_removed_handler_id_);
+
+	gint page_count = gtk_notebook_get_n_pages(doc_panel);
+	for( gint i=0; i<page_count; ++i )
+		signals_disconnect( app->doc_get_view_from_page_num(i) );
+
 	parse_thread.stop();
 	
 	tips_destroy(tips);
@@ -694,31 +710,27 @@ void LJCS::on_modified_changed(GtkTextBuffer* buf, LJCS* self) {
 		self->parse_thread.add(std::string(url->str, url->len));
 }
 
-void LJCS::on_doc_page_added(GtkNotebook* doc_panel, GtkWidget* page, guint page_num, LJCS* self) {
-	GtkTextView* view = self->app->doc_get_view_from_page(page);
-	if( !view )
-		return;
-
+void LJCS::signals_connect(GtkTextView* view) {
 	GtkTextBuffer* buf = gtk_text_view_get_buffer(view);
 	if( !buf )
 		return;
 
-	GString* url = self->app->doc_get_url(buf);
+	GString* url = app->doc_get_url(buf);
 	if( !url )
 		return;
 
 	std::string filepath(url->str, url->len);
-	if( !self->env.check_cpp_files(filepath) )
+	if( !env.check_cpp_files(filepath) )
 		return;
 
-	g_signal_connect(view, "key-press-event", G_CALLBACK(&LJCS::on_key_press_event), self);
-	g_signal_connect(view, "key-release-event", G_CALLBACK(&LJCS::on_key_release_event), self);
+	g_signal_connect(view, "key-press-event", G_CALLBACK(&LJCS::on_key_press_event), this);
+	g_signal_connect(view, "key-release-event", G_CALLBACK(&LJCS::on_key_release_event), this);
 
-	g_signal_connect(view, "button-release-event", G_CALLBACK(&LJCS::on_button_release_event), self);
-	g_signal_connect(view, "focus-out-event", G_CALLBACK(&LJCS::on_focus_out_event), self);
-	g_signal_connect(view, "scroll-event", G_CALLBACK(&LJCS::on_scroll_event), self);
+	g_signal_connect(view, "button-release-event", G_CALLBACK(&LJCS::on_button_release_event), this);
+	g_signal_connect(view, "focus-out-event", G_CALLBACK(&LJCS::on_focus_out_event), this);
+	g_signal_connect(view, "scroll-event", G_CALLBACK(&LJCS::on_scroll_event), this);
 
-	g_signal_connect(buf, "modified-changed", G_CALLBACK(&LJCS::on_modified_changed), self);
+	g_signal_connect(buf, "modified-changed", G_CALLBACK(&LJCS::on_modified_changed), this);
 
 	GtkSourceLanguage* lang = gtk_source_buffer_get_language(GTK_SOURCE_BUFFER(buf));
 	if( !lang ) {
@@ -727,7 +739,22 @@ void LJCS::on_doc_page_added(GtkNotebook* doc_panel, GtkWidget* page, guint page
 		gtk_source_buffer_set_language(GTK_SOURCE_BUFFER(buf), cpp_lang);
 	}
 
-	self->parse_thread.add(filepath);
+	parse_thread.add(filepath);
+}
+
+void LJCS::signals_disconnect(GtkTextView* view) {
+	GtkTextBuffer* buf = gtk_text_view_get_buffer(view);
+	if( !buf )
+		return;
+
+    g_signal_handlers_disconnect_matched( view, (GSignalMatchType)(G_SIGNAL_MATCH_DATA), 0, 0, NULL, NULL, this );
+    g_signal_handlers_disconnect_matched( buf, (GSignalMatchType)(G_SIGNAL_MATCH_DATA), 0, 0, NULL, NULL, this );
+}
+
+void LJCS::on_doc_page_added(GtkNotebook* doc_panel, GtkWidget* page, guint page_num, LJCS* self) {
+	GtkTextView* view = self->app->doc_get_view_from_page(page);
+	if( view )
+		self->signals_connect(view);
 }
 
 void LJCS::on_doc_page_removed(GtkNotebook* doc_panel, GtkWidget* page, guint page_num, LJCS* self) {

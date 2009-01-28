@@ -40,11 +40,10 @@ public:
 		tree_view_ = GTK_TREE_VIEW(gtk_builder_get_object(builder, "outline_treeview"));
 		tree_store_ = GTK_TREE_STORE(g_object_ref(gtk_builder_get_object(builder, "outline_store")));
 
-		GtkWidget*	self_panel = GTK_WIDGET(gtk_builder_get_object(builder, "outline_panel"));
-		gtk_widget_show_all(self_panel);
+		self_panel_ = GTK_WIDGET(gtk_builder_get_object(builder, "outline_panel"));
+		gtk_widget_show_all(self_panel_);
 
-		GtkNotebook* right = puss_get_right_panel(app_);
-		gtk_notebook_append_page(right, self_panel, gtk_label_new(_("Outline")));
+		app_->panel_append(self_panel_, gtk_label_new(_("Outline")), "ljcs_outline", PUSS_PANEL_POS_RIGHT);
 
 		gtk_builder_connect_signals(builder, this);
 		g_object_unref(G_OBJECT(builder));
@@ -53,6 +52,11 @@ public:
 	}
 
 	void destroy() {
+		if( self_panel_ ) {
+			app_->panel_remove(self_panel_);
+			self_panel_ = 0;
+		}
+
 		if( tree_store_ ) {
 			g_object_unref(G_OBJECT(tree_store_));
 			tree_store_ = 0;
@@ -190,6 +194,7 @@ public:
 	Icons*			icons_;
 
 	// UI
+	GtkWidget*		self_panel_;
 	GtkTreeView*	tree_view_;
 	GtkTreeStore*	tree_store_;
 

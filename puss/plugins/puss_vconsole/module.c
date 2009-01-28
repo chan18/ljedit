@@ -25,6 +25,8 @@
 typedef struct {
 	Puss*				app;
 
+	GtkWidget*			panel;
+
 	gboolean			need_update;
 	GtkWidget*			view;
 	GtkWidget*			sbar;
@@ -178,7 +180,7 @@ static void on_sbar_changed(GtkAdjustment *adjustment, PussVConsole* self) {
 }
 
 static void on_size_allocate(GtkWidget *widget, GtkAllocation *allocation, PussVConsole* self) {
-	gint w, h;
+	gint h;
 	GtkTextIter iter;
 	GdkRectangle loc;
 	GtkTextView* view = GTK_TEXT_VIEW( self->view );
@@ -195,7 +197,7 @@ static void on_size_allocate(GtkWidget *widget, GtkAllocation *allocation, PussV
 
 static void on_size_request(GtkWidget *widget, GtkRequisition *requisition, PussVConsole* self) {
 	requisition->width = 500;
-	requisition->height = 200;
+	requisition->height = 1;
 }
 
 static void on_reset_btn_click(GtkButton *button, PussVConsole* self) {
@@ -255,7 +257,6 @@ static void vcon_on_quit(VConsole* vcon) {
 
 PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	PussVConsole* self;
-	GtkNotebook* bottom;
 	gchar* vconsole_file;
 	PangoFontDescription* desc;
 
@@ -280,7 +281,7 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 				pango_font_description_free(desc);
 			}
 
-			self->adjust = gtk_adjustment_new(0, 0, 14, 1, 14, 14);
+			self->adjust = GTK_ADJUSTMENT( gtk_adjustment_new(0, 0, 14, 1, 14, 14) );
 			self->sbar = gtk_vscrollbar_new(self->adjust);
 			{
 				GtkWidget* reset_btn = gtk_button_new_with_label("reset");
@@ -293,15 +294,15 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 
 				g_signal_connect(hbox, "focus-in-event",G_CALLBACK(&on_active), self);
 
-				gtk_box_pack_start(vbox, reset_btn, FALSE, FALSE, 0);
-				gtk_box_pack_start(vbox, show_hide_btn, FALSE, FALSE, 0);
-				gtk_box_pack_start(hbox, vbox, FALSE, FALSE, 0);
-				gtk_box_pack_start(hbox, self->view, TRUE, TRUE, 0);
-				gtk_box_pack_start(hbox, self->sbar, FALSE, FALSE, 0);
+				gtk_box_pack_start(GTK_BOX(vbox), reset_btn, FALSE, FALSE, 0);
+				gtk_box_pack_start(GTK_BOX(vbox), show_hide_btn, FALSE, FALSE, 0);
+				gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
+				gtk_box_pack_start(GTK_BOX(hbox), self->view, TRUE, TRUE, 0);
+				gtk_box_pack_start(GTK_BOX(hbox), self->sbar, FALSE, FALSE, 0);
 				gtk_widget_show_all(hbox);
 
-				bottom = puss_get_bottom_panel(self->app);
-				gtk_notebook_append_page(bottom, hbox, gtk_label_new(_("Terminal")));
+				self->panel = hbox;
+				self->app->panel_append(self->panel, gtk_label_new(_("Terminal")), "puss_vconsole_plugin_panel", PUSS_PANEL_POS_BOTTOM);
 			}
 
 			self->need_update = FALSE;
@@ -328,6 +329,8 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 
 PUSS_EXPORT void  puss_plugin_destroy(void* ext) {
 	PussVConsole* self = (PussVConsole*)ext;
+
+	self->app->panel_remove(self->panel);
 
 	if( self->api ) {
 		if( self->vcon ) {

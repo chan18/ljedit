@@ -61,6 +61,9 @@ public:
     RWLock<cpp::Elements>	elems_;
 	size_t					index_;
 	cpp::File*				last_preview_file_;
+
+private:
+	gpointer				option_font_change_handler_;
 };
 
 gboolean PreviewPage::create(Puss* app, Environ* env) {
@@ -99,8 +102,7 @@ gboolean PreviewPage::create(Puss* app, Environ* env) {
 	set_cpp_lang_to_source_view(preview_view_);
 
 	gtk_widget_show_all(self_panel_);
-	GtkNotebook* bottom = puss_get_bottom_panel(app_);
-	gtk_notebook_append_page(bottom, self_panel_, gtk_label_new(_("Preview")));
+	app_->panel_append(self_panel_, gtk_label_new(_("Preview")), "ljcs_preview", PUSS_PANEL_POS_BOTTOM);
 
 	gtk_builder_connect_signals(builder, this);
 	g_object_unref(G_OBJECT(builder));
@@ -108,7 +110,7 @@ gboolean PreviewPage::create(Puss* app, Environ* env) {
 	const Option* option = app->option_find("puss", "editor.font");
 	if( option ) {
 		parse_editor_font_option(option, this);
-		app->option_monitor_reg(option, (OptionChanged)&parse_editor_font_option, this, 0);
+		option_font_change_handler_ = app->option_monitor_reg(option, (OptionChanged)&parse_editor_font_option, this, 0);
 	}
 
 	// init search thread
@@ -119,11 +121,20 @@ gboolean PreviewPage::create(Puss* app, Environ* env) {
 }
 
 void PreviewPage::destroy() {
+	const Option* option = app_->option_find("puss", "editor.font");
+	if( option )
+		app_->option_monitor_unreg(option_font_change_handler_);
+
 	if( search_thread_ ) {
 		search_stopsign_ = true;
 		search_run_sem_.signal();
 		g_thread_join(search_thread_);
 		search_thread_ = 0;
+	}
+
+	if( self_panel_ ) {
+		app_->panel_remove(self_panel_);
+		self_panel_ = 0;
 	}
 }
 

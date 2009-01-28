@@ -10,6 +10,6 @@ PUSS_EXPORT void* puss_extend_create(Puss* app) {
 }
 
 PUSS_EXPORT void  puss_extend_destroy(void* self) {
-	return puss_py_extend_destroy((PyExtend*)self);
+	puss_py_extend_destroy((PyExtend*)self);
 }
 

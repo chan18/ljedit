@@ -40,7 +40,7 @@ int buf_convert(PyObject* py_obj, GtkTextBuffer** pbuf) {
 }
 
 int widget_convert(PyObject* py_obj, GtkWidget** pwidget) {
-	PyObject* cls = PyDict_GetItemString(PyModule_GetDict(g_self->py_gtk), "GTK_WIDGET");
+	PyObject* cls = PyDict_GetItemString(PyModule_GetDict(g_self->py_gtk), "Widget");
 	if( PyObject_IsInstance(py_obj, cls) ) {
 		*pwidget = GTK_WIDGET(pygobject_get(py_obj));
 		return 1;
@@ -49,7 +49,7 @@ int widget_convert(PyObject* py_obj, GtkWidget** pwidget) {
 }
 
 int notebook_convert(PyObject* py_obj, GtkNotebook** pnb) {
-	PyObject* cls = PyDict_GetItemString(PyModule_GetDict(g_self->py_gtk), "GtkNotebook");
+	PyObject* cls = PyDict_GetItemString(PyModule_GetDict(g_self->py_gtk), "Notebook");
 	if( PyObject_IsInstance(py_obj, cls) ) {
 		*pnb = GTK_NOTEBOOK(pygobject_get(py_obj));
 		return 1;
@@ -59,6 +59,54 @@ int notebook_convert(PyObject* py_obj, GtkNotebook** pnb) {
 
 //----------------------------------------------------------------
 // IPuss wrappers
+
+PyObject* py_wrapper_panel_append(PyObject* self, PyObject* args) {
+	GtkWidget* panel = 0;
+	GtkWidget* tab_label = 0;
+	gchar* id = 0;
+	int default_pos = PUSS_PANEL_POS_BOTTOM;
+
+	if( !PyArg_ParseTuple(args, "O&O&z|i:py_wrapper_panel_append", &widget_convert, &panel, &widget_convert, &tab_label, &id, &default_pos) )
+		return 0;
+
+	g_self->app->panel_append(panel, tab_label, id, default_pos);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+PyObject* py_wrapper_panel_remove(PyObject* self, PyObject* args) {
+	GtkWidget* panel = 0;
+
+	if( !PyArg_ParseTuple(args, "O&:py_wrapper_panel_remove", &widget_convert, &panel) )
+		return 0;
+
+	g_self->app->panel_remove(panel);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+PyObject* py_wrapper_panel_get_pos(PyObject* self, PyObject* args) {
+	GtkWidget* panel = 0;
+	GtkNotebook* parent = 0;
+	gint page_num = 0;
+
+	PyObject* py_parent;
+	PyObject* py_ret;
+
+	if( !PyArg_ParseTuple(args, "O&:py_wrapper_panel_get_pos", &widget_convert, &panel) )
+		return 0;
+
+	if( !g_self->app->panel_get_pos(panel, &parent, &page_num) ) {
+		Py_INCREF(Py_None);
+		return Py_None;
+	}
+
+	py_parent = pygobject_new(G_OBJECT(parent));
+	py_ret = Py_BuildValue("(Oi)", py_parent, page_num);
+	Py_DECREF(py_parent);
+
+	return py_ret;
+}
 
 PyObject* py_wrapper_doc_get_url(PyObject* self, PyObject* args) {
 	GString* url;
@@ -162,21 +210,13 @@ PyObject* py_wrapper_doc_new(PyObject* self, PyObject* args) {
 }
 
 PyObject* py_wrapper_doc_open(PyObject* self, PyObject* args) {
-	int res = 1;
+	int res;
 	const char* url = 0;
 	int line = -1;
 	int offset = -1;
 	gboolean flag = FALSE;
 
-	switch( PyTuple_Size(args) ) {
-	case 0: break;
-	case 1: res = PyArg_ParseTuple(args, "z:py_wrapper_doc_open", &url); break;
-	case 2: res = PyArg_ParseTuple(args, "zi:py_wrapper_doc_open", &url, &line); break;
-	case 3: res = PyArg_ParseTuple(args, "zii:py_wrapper_doc_open", &url, &line, &offset); break;
-	case 4: res = PyArg_ParseTuple(args, "ziii:py_wrapper_doc_open", &url, &line, &offset, &flag); break;
-	}
-
-	if( !res )
+	if( !PyArg_ParseTuple(args, "z|iii:py_wrapper_doc_open", &url, &line, &offset, &flag) )
 		return 0;
 
 	res = g_self->app->doc_open(url, line, offset, flag);
@@ -184,21 +224,13 @@ PyObject* py_wrapper_doc_open(PyObject* self, PyObject* args) {
 }
 
 PyObject* py_wrapper_doc_locate(PyObject* self, PyObject* args) {
-	gboolean res = TRUE;
+	int res;
 	int page_num = 0;
 	int line = 0;
 	int offset = 0;
 	int add_pos_locate = 0;
 
-	switch( PyTuple_Size(args) ) {
-	case 0: break;
-	case 1: res = PyArg_ParseTuple(args, "i:py_wrapper_doc_locate", &page_num); break;
-	case 2: res = PyArg_ParseTuple(args, "ii:py_wrapper_doc_locate", &page_num, &line); break;
-	case 3: res = PyArg_ParseTuple(args, "iii:py_wrapper_doc_locate", &page_num, &line, &offset); break;
-	case 4: res = PyArg_ParseTuple(args, "iiii:py_wrapper_doc_locate", &page_num, &line, &offset, &add_pos_locate); break;
-	}
-
-	if( !res )
+	if( !PyArg_ParseTuple(args, "i|iii:py_wrapper_doc_locate", &page_num, &line, &offset, &add_pos_locate) )
 		return 0;
 
 	res = g_self->app->doc_locate(page_num, line, offset, add_pos_locate);
@@ -208,9 +240,8 @@ PyObject* py_wrapper_doc_locate(PyObject* self, PyObject* args) {
 PyObject* py_wrapper_doc_save_current(PyObject* self, PyObject* args) {
 	gboolean save_as = FALSE;
 
-	if( PyTuple_Size(args) > 0 )
-		if( !PyArg_ParseTuple(args, "i:py_wrapper_doc_save_current", &save_as) )
-			return 0;
+	if( !PyArg_ParseTuple(args, "|i:py_wrapper_doc_save_current", &save_as) )
+		return 0;
 
 	g_self->app->doc_save_current((gboolean)save_as);
 	Py_INCREF(Py_None);
@@ -281,13 +312,9 @@ PyObject* py_wrapper_option_set(PyObject* self, PyObject* args) {
 	const char* group = 0;
 	const char* key = 0;
 	const char* value = 0;
-	if( PyTuple_Size(args)==2 ) {
-		if( !PyArg_ParseTuple(args, "zz:py_wrapper_option_set", &group, &key))
-			return 0;
-	} else {
-		if( !PyArg_ParseTuple(args, "zzz:py_wrapper_option_set", &group, &key, &value))
-			return 0;
-	}
+
+	if( !PyArg_ParseTuple(args, "zz|z:py_wrapper_option_set", &group, &key, &value))
+		return 0;
 
 	option = g_self->app->option_find(group, key);
 	if( option )
@@ -301,6 +328,7 @@ PyObject* py_wrapper_option_get(PyObject* self, PyObject* args) {
 	const Option* option;
 	const char* group = 0;
 	const char* key = 0;
+
 	if( !PyArg_ParseTuple(args, "zz:py_wrapper_option_get", &group, &key))
 		return 0;
 
@@ -364,9 +392,19 @@ PyObject* py_wrapper_option_monitor_unreg(PyObject* self, PyObject* args) {
 	return Py_None;
 }
 
+
+PyObject* py_wrapper_panel_append(PyObject* self, PyObject* args);
+PyObject* py_wrapper_panel_remove(PyObject* self, PyObject* args);
+PyObject* py_wrapper_panel_get_pos(PyObject* self, PyObject* args);
+
 PyMethodDef puss_methods[] =
-	{ { "doc_get_url", &py_wrapper_doc_get_url, METH_VARARGS, NULL }
+	{ { "panel_append", &py_wrapper_panel_append, METH_VARARGS, NULL }
+	, { "panel_remove", &py_wrapper_panel_remove, METH_VARARGS, NULL }
+	, { "panel_get_pos", &py_wrapper_panel_get_pos, METH_VARARGS, NULL }
+
+	, { "doc_get_url", &py_wrapper_doc_get_url, METH_VARARGS, NULL }
 	, { "doc_set_url", &py_wrapper_doc_set_url, METH_VARARGS, NULL }
+
 	, { "doc_get_charset", &py_wrapper_doc_get_charset, METH_VARARGS, NULL }
 	, { "doc_set_charset", &py_wrapper_doc_set_charset, METH_VARARGS, NULL }
 
@@ -435,6 +473,10 @@ gboolean init_puss_module(PyExtend* self) {
 		return FALSE;
 
 	PyModule_AddObject( py_puss, "ui", pygobject_new(G_OBJECT(g_self->app->get_ui_builder())) );
+
+	PyModule_AddIntConstant( py_puss, "PANEL_POS_LEFT", PUSS_PANEL_POS_LEFT);
+	PyModule_AddIntConstant( py_puss, "PANEL_POS_RIGHT", PUSS_PANEL_POS_RIGHT);
+	PyModule_AddIntConstant( py_puss, "PANEL_POS_BOTTOM", PUSS_PANEL_POS_BOTTOM);
 
 	{
 		PyObject* py_sys_path = PySys_GetObject("path");

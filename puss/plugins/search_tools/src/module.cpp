@@ -31,6 +31,8 @@ struct FileResultNode {
 struct SearchTools {
 	Puss*				app;
 
+	GtkWidget*			panel;
+
 	FileResultNode*		result_list;
 	FileResultNode*		result_list_last;
 
@@ -291,7 +293,7 @@ gboolean search_tools_active_search_entry(GtkWidget* widget, GdkEventFocus* even
 	return TRUE;
 }
 
-void search_tools_build_ui(SearchTools* self) {
+void create_ui(SearchTools* self) {
 	GtkBuilder* builder = gtk_builder_new();
 	if( !builder )
 		return;
@@ -315,14 +317,14 @@ void search_tools_build_ui(SearchTools* self) {
 		return;
 	}
 
-	GtkWidget* panel = GTK_WIDGET(gtk_builder_get_object(builder, "search_tools_panel"));
+	self->panel = GTK_WIDGET(gtk_builder_get_object(builder, "search_tools_panel"));
 	self->search_entry = GTK_ENTRY(gtk_builder_get_object(builder, "search_entry"));
 	self->result_store = GTK_LIST_STORE(gtk_builder_get_object(builder, "search_result_store"));
 	self->result_view = GTK_TREE_VIEW(gtk_builder_get_object(builder, "search_result_view"));
 	self->search_option_in_current_file = GTK_TOGGLE_BUTTON(gtk_builder_get_object(builder, "search_option_in_current_file"));
 	self->search_option_in_opened_files = GTK_TOGGLE_BUTTON(gtk_builder_get_object(builder, "search_option_in_opened_files"));
 	self->search_option_in_current_file_dir = GTK_TOGGLE_BUTTON(gtk_builder_get_object(builder, "search_option_in_current_file_dir"));
-	g_assert( panel
+	g_assert( self->panel
 		&& self->search_entry
 		&& self->result_store
 		&& self->result_view
@@ -330,14 +332,17 @@ void search_tools_build_ui(SearchTools* self) {
 		&& self->search_option_in_opened_files
 		&& self->search_option_in_current_file_dir );
 
-	gtk_widget_show_all(panel);
-	GtkNotebook* bottom = puss_get_bottom_panel(self->app);
-	gtk_notebook_append_page(bottom, panel, gtk_label_new(_("Search")));
+	gtk_widget_show_all(self->panel);
+	self->app->panel_append(self->panel, gtk_label_new(_("Search")), "puss_plugin_search_tools_panel", PUSS_PANEL_POS_BOTTOM);
 
-	g_signal_connect(panel, "focus-in-event",G_CALLBACK(&search_tools_active_search_entry), self);
+	g_signal_connect(self->panel, "focus-in-event",G_CALLBACK(&search_tools_active_search_entry), self);
 
 	gtk_builder_connect_signals(builder, self);
 	g_object_unref(G_OBJECT(builder));
+}
+
+void destroy_ui(SearchTools* self) {
+	self->app->panel_remove(self->panel);
 }
 
 PUSS_EXPORT void* puss_plugin_create(Puss* app) {
@@ -346,7 +351,7 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 
 	SearchTools* self = g_new0(SearchTools, 1);
 	self->app = app;
-	search_tools_build_ui(self);
+	create_ui(self);
 
 	g_object_ref(self->result_store);
 
@@ -355,8 +360,12 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 
 PUSS_EXPORT void  puss_plugin_destroy(void* ext) {
 	SearchTools* self = (SearchTools*)ext;
-	clear_search_results(self);
-	g_object_unref(self->result_store);
-	g_free(self);
+	if( self ) {
+		destroy_ui(self);
+
+		clear_search_results(self);
+		g_object_unref(self->result_store);
+		g_free(self);
+	}
 }
 

@@ -184,12 +184,11 @@ try:
 	def puss_plugin_active():
 		terminal.show_all()
 
-		bottom_panel = puss.ui.get_object("bottom_panel")
-		bottom_panel.append_page(terminal, gtk.Label(_('Terminal')))
+		puss.panel_append(terminal, gtk.Label(_('Terminal')), "py_terminal_plugin_console", puss.PANEL_POS_BOTTOM)
 		terminal.connect('focus_in_event', lambda *args : terminal._vte.grab_focus())
 
 	def puss_plugin_deactive():
-		pass
+		puss.panel_remove(terminal)
 
 except:
 	pass

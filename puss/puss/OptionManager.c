@@ -82,19 +82,6 @@ gboolean puss_option_manager_create() {
 	return TRUE;
 }
 
-void puss_option_manager_destroy() {
-	OptionManager* self = puss_app->option_manager;
-	puss_app->option_manager = 0;
-
-	if( self ) {
-		g_key_file_free(self->keyfile);
-		g_free(self->filepath);
-		g_tree_destroy(self->option_groups);
-
-		g_free(self);
-	}
-}
-
 void option_manager_save() {
 	OptionManager* self = puss_app->option_manager;
 
@@ -110,6 +97,21 @@ void option_manager_save() {
 		g_printerr("ERROR(g_file_set_contents) : %s\n", err->message);
 
 	g_free(content);
+}
+
+void puss_option_manager_destroy() {
+	OptionManager* self = puss_app->option_manager;
+	if( self && self->modified )
+		option_manager_save();
+
+	puss_app->option_manager = 0;
+	if( self ) {
+		g_key_file_free(self->keyfile);
+		g_free(self->filepath);
+		g_tree_destroy(self->option_groups);
+
+		g_free(self);
+	}
 }
 
 const Option* puss_option_manager_option_reg( const gchar* group, const gchar* key, const gchar* default_value ) {
@@ -128,21 +130,21 @@ const Option* puss_option_manager_option_reg( const gchar* group, const gchar* k
 	}
 
 	node = (OptionNode*)g_tree_lookup(option_group, key);
-	if( node )
-		return 0;
+	if( !node ) {
+		node = g_new0(OptionNode, 1);
+		node->option.group = ptr_group;
+		node->option.key = g_strdup(key);
 
-	node = g_new0(OptionNode, 1);
-	node->option.group = ptr_group;
-	node->option.key = g_strdup(key);
+		node->option.value = g_key_file_get_string(self->keyfile, group, key, 0);
+		if( default_value ) {
+			node->option.default_value = g_strdup(default_value);
+			if( !node->option.value )
+				node->option.value = g_strdup(default_value);
+		}
 
-	node->option.value = g_key_file_get_string(self->keyfile, group, key, 0);
-	if( default_value ) {
-		node->option.default_value = g_strdup(default_value);
-		if( !node->option.value )
-			node->option.value = g_strdup(default_value);
+		g_tree_insert(option_group, (gpointer)node->option.key, node);
 	}
 
-	g_tree_insert(option_group, (gpointer)node->option.key, node);
 	return &node->option;
 }
 

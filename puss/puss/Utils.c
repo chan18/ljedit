@@ -9,7 +9,7 @@ struct _Utils {
 	gchar** charset_list;
 };
 
-void parse_charset_list_option(const Option* option, gpointer tag) {
+void parse_charset_list_option(const Option* option, const gchar* old, gpointer tag) {
 	Utils* self = puss_app->utils;
 
 	g_strfreev(self->charset_list);
@@ -25,7 +25,7 @@ gboolean puss_utils_create() {
 
 	option = puss_option_manager_option_reg("puss", "fileloader.charset_list", "GBK");
 	puss_option_manager_monitor_reg(option, &parse_charset_list_option, 0, 0);
-	parse_charset_list_option(option, 0);
+	parse_charset_list_option(option, 0, 0);
 
 	return TRUE;
 }

@@ -295,13 +295,14 @@ try:
 
 	def puss_plugin_active():
 		explorer.show_all()
-		left_panel = puss.ui.get_object('left_panel')
+		puss.panel_append(explorer, gtk.Label(_('Explorer')), "py_explorer_plugin_panel", puss.PANEL_POS_LEFT)
 		doc_panel = puss.ui.get_object('doc_panel')
-		left_panel.insert_page(explorer, gtk.Label(_('Explorer')), 0)
-		doc_panel.connect('switch-page', on_switch_page)
+		explorer.switch_page_id = doc_panel.connect('switch-page', on_switch_page)
 
 	def puss_plugin_deactive():
-		pass
+		doc_panel = puss.ui.get_object('doc_panel')
+		doc_panel.disconnect(explorer.switch_page_id)
+		puss.panel_remove(explorer)
 
 except Exception:
 	pass

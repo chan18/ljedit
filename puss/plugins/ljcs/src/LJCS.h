@@ -31,6 +31,13 @@ public:
 	Tips*			tips;
 	ParseThread		parse_thread;
 
+private:
+	gulong			page_added_handler_id_;
+	gulong			page_removed_handler_id_;
+	guint			update_timer_handler_id_;
+
+	gpointer		option_path_change_handler_;
+
 public:
 	LJCS();
 	~LJCS();
@@ -51,6 +58,9 @@ private:
 	void set_show_hint_timer(GtkTextView* view);
 	void kill_show_hint_timer();
 	gboolean on_show_hint_timeout(GtkTextView* view, gint tag);
+
+	void signals_connect(GtkTextView* view);
+	void signals_disconnect(GtkTextView* view);
 
 private:
 	static gboolean on_key_press_event(GtkTextView* view, GdkEventKey* event, LJCS* self);

@@ -46,6 +46,7 @@ struct _PussApp {
 extern		PussApp*	puss_app;
 
 gboolean	puss_create(const gchar* filepath);
+void		puss_init();
 void		puss_destroy();
 
 void		puss_run();

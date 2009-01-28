@@ -6,16 +6,23 @@
 
 #include <gtk/gtk.h>
 
-typedef struct _Puss  Puss;
+typedef struct _Puss Puss;
 
-typedef gpointer (*PluginLoader)(const gchar* plugin_id, GKeyFile* keyfile, gpointer tag);
-typedef void     (*PluginUnloader)(gpointer plugin, gpointer tag);
-typedef void     (*PluginEngineDestroy)(gpointer tag);
+typedef gpointer	(*PluginLoader)(const gchar* plugin_id, GKeyFile* keyfile, gpointer tag);
+typedef void		(*PluginUnloader)(gpointer plugin, gpointer tag);
+typedef void		(*PluginEngineDestroy)(gpointer tag);
 
 typedef struct _Option Option;
 
 typedef gboolean	(*OptionSetter)(GtkWindow* parent, Option* option, gpointer tag);
 typedef void		(*OptionChanged)(const Option* option, const gchar* old, gpointer tag);
+
+typedef enum {
+	  PUSS_PANEL_POS_HIDE	// TODO : Now It's equal LEFT
+	, PUSS_PANEL_POS_LEFT
+	, PUSS_PANEL_POS_RIGHT
+	, PUSS_PANEL_POS_BOTTOM
+} PanelPosition;
 
 // option manager
 struct _Option {
@@ -35,6 +42,9 @@ struct _Puss {
 
 	// UI
 	GtkBuilder*		(*get_ui_builder)();
+	void			(*panel_append)(GtkWidget* panel, GtkWidget* tab_label, const gchar* id, PanelPosition default_pos);
+	void			(*panel_remove)(GtkWidget* panel);
+	gboolean		(*panel_get_pos)(GtkWidget* panel, GtkNotebook** parent, gint* page_num);
 
 	// doc & view
 	void			(*doc_set_url)( GtkTextBuffer* buffer, const gchar* url );

@@ -26,6 +26,12 @@ typedef struct {
 
 	gchar*		browser;
 
+	guint		merge_id;
+	GtkAction*	search_gtk_doc_symbol_action;
+	gulong		search_gtk_doc_symbol_handler;
+	gpointer	option_monitor_web_browser;
+	gpointer	option_monitor_gtk_doc_path;
+
 	GList*		modules;	// DocModuleNode list
 } GtkDocHelper;
 
@@ -177,12 +183,12 @@ static void find_and_open_in_brower(GtkDocHelper* self, const gchar* key) {
 	}
 }
 
-static void parse_web_browser_option(const Option* option, GtkDocHelper* self) {
+static void parse_web_browser_option(const Option* option, const gchar* old, GtkDocHelper* self) {
 	g_free(self->browser);
 	self->browser = g_strdup(option->value);
 }
 
-static void parse_gtk_doc_path_option(const Option* option, GtkDocHelper* self) {
+static void parse_gtk_doc_path_option(const Option* option, const gchar* old, GtkDocHelper* self) {
 	gchar** p;
 	gchar** items = g_strsplit_set(option->value, ",; \t\r\n", 0);
 	for( p=items; *p; ++p ) {
@@ -263,26 +269,41 @@ const gchar* ui_info =
 	;
 
 static void create_ui(GtkDocHelper* self) {
-	GtkAction* search_gtk_doc_symbol_action;
 	GtkActionGroup* main_action_group;
 	GtkUIManager* ui_mgr;
 	GError* err;
 
-	search_gtk_doc_symbol_action = gtk_action_new("search_gtk_doc_symbol_action", _("search gtk symbol"), _("search current symbol in gtk-doc html files and show gtk-doc helper."), GTK_STOCK_FIND);
-	g_signal_connect(search_gtk_doc_symbol_action, "activate", G_CALLBACK(&search_gtk_doc_symbol_active), self);
+	self->search_gtk_doc_symbol_action = gtk_action_new("search_gtk_doc_symbol_action", _("search gtk symbol"), _("search current symbol in gtk-doc html files and show gtk-doc helper."), GTK_STOCK_FIND);
+	self->search_gtk_doc_symbol_handler = g_signal_connect(self->search_gtk_doc_symbol_action, "activate", G_CALLBACK(&search_gtk_doc_symbol_active), self);
 
 	main_action_group = GTK_ACTION_GROUP(gtk_builder_get_object(self->app->get_ui_builder(), "main_action_group"));
-	gtk_action_group_add_action_with_accel(main_action_group, search_gtk_doc_symbol_action, "F1");
+	gtk_action_group_add_action_with_accel(main_action_group, self->search_gtk_doc_symbol_action, "F1");
 
 	ui_mgr = GTK_UI_MANAGER(gtk_builder_get_object(self->app->get_ui_builder(), "main_ui_manager"));
 
 	err = 0;
-	gtk_ui_manager_add_ui_from_string(ui_mgr, ui_info, -1, &err);
+	self->merge_id = gtk_ui_manager_add_ui_from_string(ui_mgr, ui_info, -1, &err);
 
 	if( err ) {
 		g_printerr("ERROR(gtk_doc_helper) : %s", err->message);
 		g_error_free(err);
 	}
+
+	gtk_ui_manager_ensure_update(ui_mgr);
+}
+
+static void destroy_ui(GtkDocHelper* self) {
+	GtkActionGroup* main_action_group;
+	GtkUIManager* ui_mgr;
+
+	g_signal_handler_disconnect(self->search_gtk_doc_symbol_action, self->search_gtk_doc_symbol_handler);
+
+	main_action_group = GTK_ACTION_GROUP(gtk_builder_get_object(self->app->get_ui_builder(), "main_action_group"));
+	gtk_action_group_remove_action(main_action_group, self->search_gtk_doc_symbol_action);
+
+	ui_mgr = GTK_UI_MANAGER(gtk_builder_get_object(self->app->get_ui_builder(), "main_ui_manager"));
+
+	gtk_ui_manager_remove_ui(ui_mgr, self->merge_id);
 
 	gtk_ui_manager_ensure_update(ui_mgr);
 }
@@ -308,8 +329,8 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 #endif
 			);
 
-		app->option_monitor_reg(option, (OptionChanged)&parse_web_browser_option, self, 0);
-		parse_web_browser_option(option, self);
+		self->option_monitor_web_browser = app->option_monitor_reg(option, &parse_web_browser_option, self, 0);
+		parse_web_browser_option(option, 0, self);
 	}
 
 	{
@@ -322,8 +343,8 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 #endif
 			);
 
-		app->option_monitor_reg(option, (OptionChanged)&parse_gtk_doc_path_option, self, 0);
-		parse_gtk_doc_path_option(option, self);
+		self->option_monitor_gtk_doc_path = app->option_monitor_reg(option, &parse_gtk_doc_path_option, self, 0);
+		parse_gtk_doc_path_option(option, 0, self);
 	}
 
 	// UI
@@ -335,6 +356,11 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 PUSS_EXPORT void  puss_plugin_destroy(void* ext) {
 	if( ext ) {
 		GtkDocHelper* self = (GtkDocHelper*)ext;
+		destroy_ui(self);
+
+		self->app->option_monitor_unreg(self->option_monitor_web_browser);
+		self->app->option_monitor_unreg(self->option_monitor_gtk_doc_path);
+
 		g_regex_unref(self->re_dt);
 		g_free(self->browser);
 
