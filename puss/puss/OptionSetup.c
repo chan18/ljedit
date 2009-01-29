@@ -5,6 +5,7 @@
 
 #include "Puss.h"
 #include "Utils.h"
+#include "GlobalOptions.h"
 
 typedef struct _SetupNode SetupNode;
 
@@ -31,17 +32,13 @@ static void setup_node_free(SetupNode* node) {
 static SetupNode*	puss_main_setup = 0;
 static GHashTable*	puss_setup_panels = 0;
 
-static GtkWidget* puss_setup_widget_create(gpointer tag) {
-	return gtk_button_new_with_label("puss main setup");
-}
-
 gboolean puss_option_setup_create() {
 	puss_main_setup = g_new0(SetupNode, 1);
 	puss_setup_panels = g_hash_table_new_full(g_str_hash, g_str_equal, 0, setup_node_free);
 	if( puss_main_setup && puss_setup_panels ) {
 		puss_main_setup->id = g_strdup( "puss" );
 		puss_main_setup->name = g_strdup( _("puss") );
-		puss_main_setup->creator = puss_setup_widget_create;
+		puss_main_setup->creator = puss_create_global_options_setup_widget;
 		return TRUE;
 	}
 
@@ -122,8 +119,10 @@ SIGNAL_CALLBACK void cb_option_setup_changed(GtkTreeView* tree_view, GtkContaine
 	}
 
 	page = node->creator(node->tag);
-	gtk_container_add(frame, page);
-	gtk_widget_show_all(GTK_WIDGET(frame));
+	if( page ) {
+		gtk_container_add(frame, page);
+		gtk_widget_show_all(GTK_WIDGET(frame));
+	}
 }
 
 void puss_option_setup_show_dialog(const gchar* filter) {

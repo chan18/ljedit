@@ -161,7 +161,7 @@ void puss_option_manager_option_set(const Option* option, const gchar* value) {
 	OptionNotifer* p;
 	OptionNode* node = (OptionNode*)option;
 
-	if( !g_str_equal(node->option.value, value) ) {
+	if( value && !g_str_equal(node->option.value, value) ) {
 		old = node->option.value;
 		node->option.value = g_strdup(value);
 		g_key_file_set_string(puss_option_manager->keyfile, option->group, option->key, node->option.value);

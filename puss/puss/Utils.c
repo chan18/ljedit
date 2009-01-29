@@ -13,7 +13,7 @@ struct _Utils {
 
 static Utils* puss_utils = 0;
 
-void parse_charset_list_option(const Option* option, const gchar* old, gpointer tag) {
+static void parse_charset_list_option(const Option* option, const gchar* old, gpointer tag) {
 	g_strfreev(puss_utils->charset_list);
 	puss_utils->charset_list = g_strsplit_set(option->value, " \t,;", 0);
 	//for( char** p=puss_utils->charset_list; *p; ++p )

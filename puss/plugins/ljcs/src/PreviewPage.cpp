@@ -3,6 +3,8 @@
 
 #include "PreviewPage.h"
 
+#include <gtksourceview/gtksourceview.h>
+#include <gtksourceview/gtksourcestyleschememanager.h>
 #include <sstream>
 
 #include "LJCS.h"
@@ -38,7 +40,8 @@ public:
 	static gboolean scroll_to_define_line_wrapper(PreviewPage* self);
 
 public:
-	static void parse_editor_font_option(const Option* option, PreviewPage* self);
+	static void parse_editor_font_option(const Option* option, const gchar* old, PreviewPage* self);
+	static void parse_editor_style_option(const Option* option, const gchar* old, PreviewPage* self);
 
 public:
 	Puss*					app_;
@@ -64,6 +67,7 @@ public:
 
 private:
 	gpointer				option_font_change_handler_;
+	gpointer				option_style_change_handler_;
 };
 
 gboolean PreviewPage::create(Puss* app, Environ* env) {
@@ -107,10 +111,18 @@ gboolean PreviewPage::create(Puss* app, Environ* env) {
 	gtk_builder_connect_signals(builder, this);
 	g_object_unref(G_OBJECT(builder));
 
-	const Option* option = app->option_find("puss", "editor.font");
+	const Option* option;
+
+	option = app->option_find("puss", "editor.font");
 	if( option ) {
-		parse_editor_font_option(option, this);
-		option_font_change_handler_ = app->option_monitor_reg(option, (OptionChanged)&parse_editor_font_option, this, 0);
+		parse_editor_font_option(option, 0, this);
+		option_font_change_handler_ = app->option_monitor_reg(option, (OptionChanged)&PreviewPage::parse_editor_font_option, this, 0);
+	}
+
+	option = app->option_find("puss", "editor.style");
+	if( option ) {
+		parse_editor_style_option(option, 0, this);
+		option_style_change_handler_ = app->option_monitor_reg(option, (OptionChanged)&PreviewPage::parse_editor_style_option, this, 0);
 	}
 
 	// init search thread
@@ -121,9 +133,15 @@ gboolean PreviewPage::create(Puss* app, Environ* env) {
 }
 
 void PreviewPage::destroy() {
-	const Option* option = app_->option_find("puss", "editor.font");
+	const Option* option;
+
+	option = app_->option_find("puss", "editor.font");
 	if( option )
 		app_->option_monitor_unreg(option_font_change_handler_);
+
+	option = app_->option_find("puss", "editor.style");
+	if( option )
+		app_->option_monitor_unreg(option_style_change_handler_);
 
 	if( search_thread_ ) {
 		search_stopsign_ = true;
@@ -298,12 +316,29 @@ gboolean PreviewPage::scroll_to_define_line_wrapper(PreviewPage* self) {
     return FALSE;
 }
 
-void PreviewPage::parse_editor_font_option(const Option* option, PreviewPage* self) {
+void PreviewPage::parse_editor_font_option(const Option* option, const gchar* old, PreviewPage* self) {
 	PangoFontDescription* desc = pango_font_description_from_string(option->value);
 	if( desc ) {
 		gtk_widget_modify_font(GTK_WIDGET(self->preview_view_), desc);
 
 		pango_font_description_free(desc);
+	}
+}
+
+void PreviewPage::parse_editor_style_option(const Option* option, const gchar* old, PreviewPage* self) {
+	GtkSourceStyleSchemeManager* ssm;
+	GtkSourceStyleScheme* style;
+	GtkSourceBuffer* buf;
+
+	if( !option->value || option->value[0]=='\0' )
+		return;
+
+	ssm = gtk_source_style_scheme_manager_get_default();
+	style = gtk_source_style_scheme_manager_get_scheme(ssm, option->value);
+	if( style ) {
+		buf = GTK_SOURCE_BUFFER(gtk_text_view_get_buffer(self->preview_view_));
+		if( buf )
+			gtk_source_buffer_set_style_scheme(buf, style);
 	}
 }
 

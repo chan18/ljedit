@@ -55,7 +55,7 @@ SIGNAL_CALLBACK void tips_include_cb_row_activated(GtkTreeView* tree_view, GtkTr
 SIGNAL_CALLBACK void tips_list_cb_row_activated(GtkTreeView* tree_view, GtkTreePath* path, GtkTreeViewColumn* col, Tips* self) {
 }
 
-void tips_parse_editor_font_option(const Option* option, Tips* self) {
+void tips_parse_editor_font_option(const Option* option, const gchar* old, Tips* self) {
 	PangoFontDescription* desc = pango_font_description_from_string(option->value);
 	if( desc ) {
 		gtk_widget_modify_font(GTK_WIDGET(self->decl_view), desc);
@@ -114,7 +114,7 @@ gboolean init_tips(Tips* self, Puss* app, Environ* env, Icons* icons) {
 
 	const Option* option = app->option_find("puss", "editor.font");
 	if( option ) {
-		tips_parse_editor_font_option(option, self);
+		tips_parse_editor_font_option(option, 0, self);
 		self->option_font_changed_handler_ = app->option_monitor_reg(option, (OptionChanged)&tips_parse_editor_font_option, self, 0);
 	}
 

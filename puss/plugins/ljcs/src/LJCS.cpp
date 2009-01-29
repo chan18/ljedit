@@ -96,7 +96,7 @@ bool LJCS::create(Puss* _app) {
 }
 
 void LJCS::destroy() {
-	const Option* option = app->option_reg("cpp_helper", "include_path", "/usr/include\n/usr/include/c++/4.0\n");
+	const Option* option = app->option_find("cpp_helper", "include_path");
 	app->option_monitor_unreg(option_path_change_handler_);
 	g_source_remove(update_timer_handler_id_);
 
