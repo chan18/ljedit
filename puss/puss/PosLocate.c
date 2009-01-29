@@ -21,6 +21,8 @@ struct _PosNode {
 	gint			offset;
 };
 
+typedef struct _PosList PosList;
+
 struct _PosList {
 	PosNode*		head;
 	PosNode*		tail;
@@ -31,20 +33,20 @@ struct _PosList {
 	PosNode			pool[POS_NODE_MAX];
 };
 
+static PosList* puss_pos_list = 0;
+
 gboolean __debug_pos_list_check() {
 	PosNode* p;
 	size_t count = 0;
-	PosList* list = puss_app->pos_list;
-	for( p = list->head; p && count <= POS_NODE_MAX; p = p->next )
+	for( p = puss_pos_list->head; p && count <= POS_NODE_MAX; p = p->next )
 		++count;
-	for( p = list->free_list; p && count <= POS_NODE_MAX; p = p->next )
+	for( p = puss_pos_list->free_list; p && count <= POS_NODE_MAX; p = p->next )
 		++count;
 	return count==POS_NODE_MAX;
 }
 
 gboolean __debug_pos_list_check_node(PosNode* node) {
-	PosList* list = puss_app->pos_list;
-	PosNode* p = list->head;
+	PosNode* p = puss_pos_list->head;
 	for(; p && p!=node; p = p->next);
 	return p==node;
 }
@@ -52,13 +54,13 @@ gboolean __debug_pos_list_check_node(PosNode* node) {
 gboolean puss_pos_locate_create() {
 	PosNode* pool;
 	gint i;
-	puss_app->pos_list = g_new0(PosList, 1);
+	puss_pos_list = g_new0(PosList, 1);
 
-	pool = puss_app->pos_list->pool;
+	pool = puss_pos_list->pool;
 	for( i=0; i<POS_NODE_MAX-1; ++i )
 		pool[i].next = &pool[i+1];
 
-	puss_app->pos_list->free_list = &pool[0];
+	puss_pos_list->free_list = &pool[0];
 
 	g_assert(__debug_pos_list_check());
 
@@ -66,12 +68,12 @@ gboolean puss_pos_locate_create() {
 }
 
 void puss_pos_locate_destroy() {
-	g_free(puss_app->pos_list);
-	puss_app->pos_list = 0;
+	g_free(puss_pos_list);
+	puss_pos_list = 0;
 }
 
 void page_delete_notify(PosNode* node, GObject* where_the_object_was) {
-	PosList* list = puss_app->pos_list;
+	PosList* list = puss_pos_list;
 
 	g_assert(node && G_OBJECT(node->page)==where_the_object_was);
 
@@ -111,7 +113,7 @@ void puss_pos_locate_add(gint page_num, gint line, gint offset) {
 	if( !page )
 		return;
 
-	list = puss_app->pos_list;
+	list = puss_pos_list;
 	if( list->current ) {
 		// if in same as current pos (modify offset only)
 		if( list->current->page==page && list->current->line==line ) {
@@ -131,9 +133,9 @@ void puss_pos_locate_add(gint page_num, gint line, gint offset) {
 		list->tail->next = 0;
 	}
 
-	node = puss_app->pos_list->free_list;
+	node = puss_pos_list->free_list;
 	if( node ) {
-		puss_app->pos_list->free_list = node->next;
+		puss_pos_list->free_list = node->next;
 
 	} else {
 		g_assert( list->head && list->head->next );
@@ -196,38 +198,33 @@ void puss_pos_locate_add_current_pos() {
 
 void puss_pos_locate_current() {
 	gint page_num;
-	PosList* list = puss_app->pos_list;
-	if( !list->current )
+	if( !puss_pos_list->current )
 		return;
 
-	page_num = gtk_notebook_page_num(puss_app->doc_panel, list->current->page);
+	page_num = gtk_notebook_page_num(puss_app->doc_panel, puss_pos_list->current->page);
 	if( page_num < 0 )
 		return;
 
-	puss_doc_locate(page_num, list->current->line, list->current->offset, FALSE);
+	puss_doc_locate(page_num, puss_pos_list->current->line, puss_pos_list->current->offset, FALSE);
 }
 
 void puss_pos_locate_forward() {
-	PosList* list = puss_app->pos_list;
-
-	if( list->current && list->current->next )
-		list->current = list->current->next;
+	if( puss_pos_list->current && puss_pos_list->current->next )
+		puss_pos_list->current = puss_pos_list->current->next;
 
 	puss_pos_locate_current();
 }
 
 void puss_pos_locate_back() {
-	PosList* list = puss_app->pos_list;
-
-	if( list->current ) {
-		if( !list->current->prev )
+	if( puss_pos_list->current ) {
+		if( !puss_pos_list->current->prev )
 			return;
-		list->current = list->current->prev;
+		puss_pos_list->current = puss_pos_list->current->prev;
 
 	} else {
-		if( !list->tail )
+		if( !puss_pos_list->tail )
 			return;
-		list->current = list->tail;
+		puss_pos_list->current = puss_pos_list->tail;
 	}
 
 	puss_pos_locate_current();

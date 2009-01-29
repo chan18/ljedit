@@ -32,6 +32,8 @@ struct _Option {
 	gchar*	value;
 };
 
+typedef GtkWidget* (*CreateSetupWidget)(gpointer tag);
+
 // main
 struct _Puss {
 	// app
@@ -83,6 +85,11 @@ struct _Puss {
 
 	gpointer		(*option_monitor_reg)(const Option* option, OptionChanged fun, gpointer tag, GFreeFunc tag_free_fun);
 	void			(*option_monitor_unreg)(gpointer handler);
+
+	// option setup
+	gboolean		(*option_setup_reg)(const gchar* id, const gchar* name, CreateSetupWidget creator, gpointer tag, GDestroyNotify tag_destroy);
+	void			(*option_setup_unreg)(const gchar* id);
+
 
 	// extend manager
 	gpointer		(*extend_query)(const gchar* ext_name, const gchar* interface_name);

@@ -6,12 +6,7 @@
 
 #include "IPuss.h"
 
-typedef struct _OptionManager  OptionManager;
-typedef struct _Extend         Extend;
 typedef struct _Plugin         Plugin;
-typedef struct _PluginEngine   PluginEngine;
-typedef struct _PosList        PosList;
-typedef struct _Utils          Utils;
 
 typedef struct _PussApp        PussApp;
 
@@ -34,13 +29,8 @@ struct _PussApp {
 	GtkNotebook*	bottom_panel;
 	GtkStatusbar*	statusbar;
 
-	Extend*			extends_list;
 	GHashTable*		extends_map;
 	Plugin*			plugins_list;
-	GHashTable*		plugin_engines_map;
-	OptionManager*	option_manager;
-	PosList*		pos_list;
-	Utils*			utils;
 };
 
 extern		PussApp*	puss_app;

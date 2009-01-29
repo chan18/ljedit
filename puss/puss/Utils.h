@@ -9,9 +9,6 @@
 gboolean	puss_utils_create();
 void		puss_utils_destroy();
 
-void		puss_show_error_dialog( const gchar* error );
-void		puss_show_error_ignore( const gchar* error );
-
 void		puss_send_focus_change(GtkWidget* widget, gboolean in);
 
 void		puss_active_panel_page(GtkNotebook* panel, gint page_num);

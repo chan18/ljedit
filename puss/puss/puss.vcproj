@@ -287,6 +287,22 @@
 			>
 		</File>
 		<File
+			RelativePath=".\OptionSetup.c"
+			>
+		</File>
+		<File
+			RelativePath=".\OptionSetup.h"
+			>
+		</File>
+		<File
+			RelativePath=".\PanelOrder.c"
+			>
+		</File>
+		<File
+			RelativePath=".\PanelOrder.h"
+			>
+		</File>
+		<File
 			RelativePath=".\PluginManager.c"
 			>
 		</File>

@@ -166,20 +166,17 @@ msgstr "值"
 msgid "close"
 msgstr "关闭"
 
-### gtk-doc-helper
-# 
-msgid "search gtk symbol"
-msgstr "gtk搜索"
+msgid "Plugins Setup"
+msgstr "插件管理"
 
-msgid "search current symbol in gtk-doc html files and show gtk-doc helper."
-msgstr "在gtk-doc html文档中搜索当前符号."
+msgid "enabled"
+msgstr "启用"
 
-msgid "Not find gtk-doc html files."
-msgstr "没有找到gtk-doc html文件."
+msgid "name"
+msgstr "名称"
 
-msgid "please setup\n   option : (gtk_doc_helper.gtk_doc_paths)\n   in [menu]->[tools]->[options]\n  and retry!"
-msgstr "请先在[首选项]中设置\n   选项:(gtk_doc_helper.gtk_doc_paths) 并重试!"
+msgid "engine"
+msgstr "插件引擎"
 
-msgid "Not find symbol(%s) in gtk-doc."
-msgstr "在gtk-doc中找不到符号(%s)."
-
+msgid "description"
+msgstr "描述"

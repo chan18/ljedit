@@ -310,6 +310,9 @@ class PythonConsole(gtk.ScrolledWindow):
 		pass
 		#gtk.ScrolledWindow.destroy(self)
 
+	def create_setup_widget(self):
+		return gtk.Button("test2")
+
 class OutFile:
 	"""A fake output file object. It sends output to a TK test widget,
 	and if asked for a file number, returns one set on instance creation"""
@@ -334,15 +337,21 @@ import gobject, gtk
 
 import puss
 
-pyconsole = PythonConsole(namespace = {'__builtins__' : __builtins__, 'puss' : puss})
-
 def puss_plugin_active():
+	global pyconsole
+	pyconsole = PythonConsole(namespace = {'__builtins__' : __builtins__, 'puss' : puss})
+
 	pyconsole.eval('print "copy this plugin from gedit!" ', False)
 	pyconsole.show_all()
 
 	puss.panel_append(pyconsole, gtk.Label(_('Python Console')), "pyconsole_plugin_panel", puss.PANEL_POS_BOTTOM)
+	puss.option_setup_reg('pyconsole', ('Python Console'), pyconsole.create_setup_widget)
 	pyconsole.connect('focus_in_event', lambda *args : pyconsole.view.grab_focus())
 
+
 def puss_plugin_deactive():
+	global pyconsole
+	puss.option_setup_unreg('pyconsole')
 	puss.panel_remove(pyconsole)
+	pyconsole = None
 

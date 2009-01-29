@@ -32,12 +32,16 @@
 #include "Puss.h"
 #include "Utils.h"
 
+typedef struct _Extend         Extend;
+
 struct _Extend {
 	gchar*		name;
 	GModule*	module;
 	void*		handle;
 	Extend*		next;
 };
+
+static Extend* puss_extends_list = 0;
 
 Extend* extend_load(const gchar* filepath) {
 	void* (*create_fun)(Puss* app);
@@ -139,8 +143,8 @@ gboolean puss_extend_manager_create() {
 
 			if( extend ) {
 				extend->name = g_strndup(filename, len - match_len);
-				extend->next = puss_app->extends_list;
-				puss_app->extends_list = extend;
+				extend->next = puss_extends_list;
+				puss_extends_list = extend;
 				g_hash_table_insert(puss_app->extends_map, extend->name, extend);
 			}
 		}
@@ -148,7 +152,7 @@ gboolean puss_extend_manager_create() {
 		g_dir_close(dir);
 	}
 
-	extend = puss_app->extends_list;
+	extend = puss_extends_list;
 	while( extend ) {
 		extend_init(extend);
 		extend = extend->next;
@@ -161,14 +165,14 @@ void puss_extend_manager_destroy() {
 	Extend* p;
 	Extend* t;
 
-	p = puss_app->extends_list;
+	p = puss_extends_list;
 	while( p ) {
 		extend_final(p);
 		p = p->next;
 	}
 
-	p = puss_app->extends_list;
-	puss_app->extends_list = 0;
+	p = puss_extends_list;
+	puss_extends_list = 0;
 
 	while( p ) {
 		t = p;

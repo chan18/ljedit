@@ -179,16 +179,18 @@ if __name__ == "__main__":
 try:
 	import puss
 
-	terminal = Terminal()
-
 	def puss_plugin_active():
+		global terminal
+		terminal = Terminal()
 		terminal.show_all()
 
 		puss.panel_append(terminal, gtk.Label(_('Terminal')), "py_terminal_plugin_console", puss.PANEL_POS_BOTTOM)
 		terminal.connect('focus_in_event', lambda *args : terminal._vte.grab_focus())
 
 	def puss_plugin_deactive():
+		global terminal
 		puss.panel_remove(terminal)
+		terminal = None
 
 except:
 	pass

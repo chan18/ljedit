@@ -6,7 +6,7 @@
 #include "Utils.h"
 #include "DocManager.h"
 #include "PosLocate.h"
-#include "OptionManager.h"
+#include "OptionSetup.h"
 #include "PluginManager.h"
 #include "AboutDialog.h"
 
@@ -110,7 +110,7 @@ SIGNAL_CALLBACK void tools_menu_plugin_manager( GtkAction* action ) {
 }
 
 SIGNAL_CALLBACK void tools_menu_preferences( GtkAction* action ) {
-	//puss_option_manager_active();
+	puss_option_setup_show_dialog(0);
 }
 
 SIGNAL_CALLBACK void help_menu_about( GtkAction* action ) {

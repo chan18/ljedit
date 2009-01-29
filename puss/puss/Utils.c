@@ -5,23 +5,25 @@
 #include "Puss.h"
 #include "OptionManager.h"
 
+typedef struct _Utils          Utils;
+
 struct _Utils {
 	gchar** charset_list;
 };
 
-void parse_charset_list_option(const Option* option, const gchar* old, gpointer tag) {
-	Utils* self = puss_app->utils;
+static Utils* puss_utils = 0;
 
-	g_strfreev(self->charset_list);
-	self->charset_list = g_strsplit_set(option->value, " \t,;", 0);
-	//for( char** p=self->charset_list; *p; ++p )
+void parse_charset_list_option(const Option* option, const gchar* old, gpointer tag) {
+	g_strfreev(puss_utils->charset_list);
+	puss_utils->charset_list = g_strsplit_set(option->value, " \t,;", 0);
+	//for( char** p=puss_utils->charset_list; *p; ++p )
 	//	printf("%s\n", *p);
 }
 
 gboolean puss_utils_create() {
 	const Option* option;
 
-	puss_app->utils = g_new0(Utils, 1);
+	puss_utils = g_new0(Utils, 1);
 
 	option = puss_option_manager_option_reg("puss", "fileloader.charset_list", "GBK");
 	puss_option_manager_monitor_reg(option, &parse_charset_list_option, 0, 0);
@@ -31,26 +33,12 @@ gboolean puss_utils_create() {
 }
 
 void puss_utils_destroy() {
-	Utils* self = puss_app->utils;
-	if( self ) {
-		g_strfreev(self->charset_list);
+	if( puss_utils ) {
+		g_strfreev(puss_utils->charset_list);
 
-		g_free(self);
+		g_free(puss_utils);
+		puss_utils = 0;
 	}
-}
-
-void puss_show_error_dialog( const gchar* error ) {
-	GtkWidget* dlg = gtk_dialog_new_with_buttons( _("ERROR")
-		, puss_app->main_window
-		, GTK_DIALOG_MODAL|GTK_DIALOG_DESTROY_WITH_PARENT
-		, _("OK"), NULL );
-
-	if( dlg ) {
-		gtk_widget_show(dlg);
-	}
-}
-
-void puss_show_error_ignore( const gchar* error ) {
 }
 
 void puss_send_focus_change(GtkWidget *widget, gboolean in) {
@@ -108,7 +96,6 @@ gboolean puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST
 	const gchar* locale = 0;
 	gchar* sbuf = 0;
 	gsize  slen = 0;
-	Utils* self = puss_app->utils;
 
 	g_return_val_if_fail(filename && text && len , FALSE);
 	g_return_val_if_fail(*filename, FALSE);
@@ -124,8 +111,8 @@ gboolean puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST
 		return TRUE;
 	}
 
-	if( self->charset_list ) {
-		for( cs=self->charset_list; *cs; ++cs ) {
+	if( puss_utils->charset_list ) {
+		for( cs=puss_utils->charset_list; *cs; ++cs ) {
 			if( (*cs)[0]=='\0' )
 				continue;
 

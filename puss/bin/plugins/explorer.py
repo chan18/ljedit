@@ -280,8 +280,6 @@ try:
 			ufilename = filename.decode(sys.getfilesystemencoding()).encode('utf8')
 			puss.doc_open(ufilename, -1, -1, True)
 
-	explorer = PussExplorer()
-
 	def on_switch_page(nb, gp, page):
 		buf = puss.doc_get_buffer_from_page_num(page)
 		if buf==None:
@@ -294,15 +292,20 @@ try:
 			explorer.locate_to_file(filepath)
 
 	def puss_plugin_active():
+		global explorer
+		explorer = PussExplorer()
+
 		explorer.show_all()
 		puss.panel_append(explorer, gtk.Label(_('Explorer')), "py_explorer_plugin_panel", puss.PANEL_POS_LEFT)
 		doc_panel = puss.ui.get_object('doc_panel')
 		explorer.switch_page_id = doc_panel.connect('switch-page', on_switch_page)
 
 	def puss_plugin_deactive():
+		global explorer
 		doc_panel = puss.ui.get_object('doc_panel')
 		doc_panel.disconnect(explorer.switch_page_id)
 		puss.panel_remove(explorer)
+		explorer = None
 
 except Exception:
 	pass

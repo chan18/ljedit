@@ -14,6 +14,8 @@
 
 #define PLUGIN_SUFFIX ".plugin"
 
+typedef struct _PluginEngine   PluginEngine;
+
 struct _Plugin {
 	gchar*			id;
 	PluginEngine*	engine;
@@ -29,6 +31,8 @@ struct _PluginEngine {
 	PluginEngineDestroy	destroy;
 	gpointer			tag;
 };
+
+static GHashTable* puss_plugin_engines_map = 0;
 
 static void unload_plugin( Plugin* plugin ) {
 	if( plugin ) {
@@ -130,7 +134,7 @@ static gboolean do_load_plugin(const gchar* plugin_id, const gchar* engine_id, G
 	plugin = g_try_new0(Plugin, 1);
 	if( plugin ) {
 		plugin->id = g_strdup(plugin_id);
-		plugin->engine = (PluginEngine*)g_hash_table_lookup(puss_app->plugin_engines_map, engine_id?engine_id:DLL_PLUGIN_ENGINE_ID);;
+		plugin->engine = (PluginEngine*)g_hash_table_lookup(puss_plugin_engines_map, engine_id?engine_id:DLL_PLUGIN_ENGINE_ID);;
 		if( plugin->id && plugin->engine ) {
 			plugin->handle = plugin->engine->load( plugin->id
 				, keyfile
@@ -206,8 +210,8 @@ static void puss_plugin_engine_destroy(PluginEngine* engine) {
 }
 
 gboolean puss_plugin_manager_create() {
-	puss_app->plugin_engines_map = g_hash_table_new_full(g_str_hash, g_str_equal, 0, puss_plugin_engine_destroy);
-	if( !puss_app->plugin_engines_map )
+	puss_plugin_engines_map = g_hash_table_new_full(g_str_hash, g_str_equal, 0, puss_plugin_engine_destroy);
+	if( !puss_plugin_engines_map )
 		return FALSE;
 
 	dll_plugin_engine_regist((Puss*)puss_app);
@@ -216,7 +220,7 @@ gboolean puss_plugin_manager_create() {
 }
 
 void puss_plugin_manager_destroy() {
-	g_hash_table_destroy(puss_app->plugin_engines_map);
+	g_hash_table_destroy(puss_plugin_engines_map);
 }
 
 static gboolean do_fill_plugin_list(const gchar* plugin_id, const gchar* engine_id, GKeyFile* keyfile, gpointer tag) {
@@ -277,6 +281,7 @@ void puss_plugin_manager_show_config_dialog() {
 	builder = gtk_builder_new();
 	if( !builder )
 		return;
+	gtk_builder_set_translation_domain(builder, TEXT_DOMAIN);
 
 	filepath = g_build_filename(puss_app->module_path, "res", "puss_plugin_manager_dialog.xml", NULL);
 	if( !filepath ) {
@@ -332,7 +337,7 @@ void puss_plugin_engine_regist( const gchar* key
 		engine->destroy = destroy;
 		engine->tag = tag;
 
-		g_hash_table_insert(puss_app->plugin_engines_map, engine->key, engine); 
+		g_hash_table_insert(puss_plugin_engines_map, engine->key, engine); 
 	}
 }
 
