@@ -634,14 +634,15 @@ PyExtend* puss_py_extend_create(Puss* app) {
 
 		Py_Initialize();
 
-		g_timeout_add(100, python_do_pending_calls, 0);
-
-		if( init_pygtk_library(g_self) && init_puss_module(g_self) )
+		if( init_pygtk_library(g_self) && init_puss_module(g_self) ) {
 			g_self->app->plugin_engine_regist( "python"
 				, (PluginLoader)py_plugin_load
 				, (PluginUnloader)py_plugin_unload
 				, 0
 				, g_self );
+			
+			g_timeout_add(100, python_do_pending_calls, 0);
+		}
 	}
 
 	return g_self;
