@@ -77,7 +77,7 @@ static gboolean walk_read_plugin(const gchar* plugin_id, const gchar* filepath, 
 	return res;
 }
 
-static walk_one_plugin(const gchar* plugin_id, TPluginWalkerFn cb, gpointer tag) {
+static gboolean walk_one_plugin(const gchar* plugin_id, TPluginWalkerFn cb, gpointer tag) {
 	gchar* filename;
 	gchar* filepath;
 	gboolean res = FALSE;
@@ -210,7 +210,7 @@ static void puss_plugin_engine_destroy(PluginEngine* engine) {
 }
 
 gboolean puss_plugin_manager_create() {
-	puss_plugin_engines_map = g_hash_table_new_full(g_str_hash, g_str_equal, 0, puss_plugin_engine_destroy);
+	puss_plugin_engines_map = g_hash_table_new_full(g_str_hash, g_str_equal, 0, (GDestroyNotify)puss_plugin_engine_destroy);
 	if( !puss_plugin_engines_map )
 		return FALSE;
 

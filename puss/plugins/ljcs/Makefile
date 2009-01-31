@@ -42,15 +42,28 @@ SRCS = $(wildcard src/*.cpp)
 
 OBJS = $(SRCS:src/%.cpp=$(OBJPATH)/%.o)
 
-TARGET = ../../bin/extends/ljcs.ext
+TARGET_NAME = ljcs
+TARGET_PATH = ../../bin/plugins
 
-all : $(TARGET)
+TARGET = $(TARGET_PATH)/$(TARGET_NAME)
 
-$(TARGET) : $(OBJS)  $(LJCSLIB)
-	$(CXX) $(CXXFLAGS) -shared -o $@ $^ $(LIBS)
+all : $(TARGET).so $(TARGET)_res $(TARGET).plugin
+
+$(TARGET).so : $(OBJS)
+	$(CXX) $(CXXFLAGS) -shared -o $@ $^ $(LIBS) $(LJCSLIB)
+
+$(TARGET)_res : $(TARGET_NAME)_res
+	@mkdir $@
+	@cp -f $</*.png $@/
+	@cp -f $</*.xml $@/
+
+$(TARGET).plugin : $(TARGET_NAME).plugin
+	cp -f $< $@
 
 clean :
-	rm -f $(TARGET)
+	rm -f $(TARGET).so
+	rm -f $(TARGET).plugin
+	rm -rf $(TARGET)_res
 	rm -rf $(OBJPATH)
 
 $(OBJPATH)/%.o : src/%.cpp
@@ -63,5 +76,7 @@ $(OBJPATH)/%.d : src/%.cpp
 	@mkdir -p $(dir $@)
 	@$(CXX) $(CXXFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
 
+ifneq ($(NOT_USE_D_FILE), 1)
 -include $(SRCS:src/%.cpp=$(OBJPATH)/%.d)
+endif
 

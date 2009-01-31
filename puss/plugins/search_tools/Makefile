@@ -33,15 +33,26 @@ SRCS = $(wildcard src/*.cpp)
 
 OBJS = $(SRCS:src/%.cpp=$(OBJPATH)/%.o)
 
-TARGET = ../../bin/extends/search_tools.ext
+TARGET_NAME = search_tools
+TARGET_PATH = ../../bin/plugins
 
-all : $(TARGET)
+TARGET = $(TARGET_PATH)/$(TARGET_NAME)
 
-$(TARGET) : $(OBJS)
+all : $(TARGET).so $(TARGET).ui $(TARGET).plugin
+
+$(TARGET).so : $(OBJS)
 	$(CXX) $(CXXFLAGS) -shared -o $@ $^ $(LIBS)
 
+$(TARGET).ui : $(TARGET_NAME).ui
+	cp -f $< $@
+
+$(TARGET).plugin : $(TARGET_NAME).plugin
+	cp -f $< $@
+
 clean :
-	rm -f $(TARGET)
+	rm -f $(TARGET).so
+	rm -f $(TARGET).ui
+	rm -f $(TARGET).plugin
 	rm -rf $(OBJPATH)
 
 $(OBJPATH)/%.o : src/%.cpp
@@ -54,5 +65,7 @@ $(OBJPATH)/%.d : src/%.cpp
 	@mkdir -p $(dir $@)
 	@$(CXX) $(CXXFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
 
+ifneq ($(NOT_USE_D_FILE), 1)
 -include $(SRCS:src/%.cpp=$(OBJPATH)/%.d)
+endif
 

@@ -299,7 +299,7 @@ void create_ui(SearchTools* self) {
 		return;
 	gtk_builder_set_translation_domain(builder, TEXT_DOMAIN);
 
-	gchar* filepath = g_build_filename(self->app->get_module_path(), "extends", "search_tools_res", "search_tools_ui.xml", NULL);
+	gchar* filepath = g_build_filename(self->app->get_plugins_path(), "search_tools.ui", NULL);
 	if( !filepath ) {
 		g_printerr("ERROR(search_tools) : build preview page ui filepath failed!\n");
 		g_object_unref(G_OBJECT(builder));

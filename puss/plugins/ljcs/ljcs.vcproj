@@ -93,7 +93,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\"
+				CommandLine="copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\&#x0D;&#x0A;mkdir $(SolutionDir)bin\plugins\$(ProjectName)_res&#x0D;&#x0A;copy $(ProjectDir)$(ProjectName)_res\*.* $(SolutionDir)bin\plugins\$(ProjectName)_res\"
 			/>
 		</Configuration>
 		<Configuration
@@ -174,7 +174,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\"
+				CommandLine="copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\&#x0D;&#x0A;mkdir $(SolutionDir)bin\plugins\$(ProjectName)_res&#x0D;&#x0A;copy $(ProjectDir)$(ProjectName)_res\*.* $(SolutionDir)bin\plugins\$(ProjectName)_res\"
 			/>
 		</Configuration>
 	</Configurations>
@@ -182,18 +182,54 @@
 	</References>
 	<Files>
 		<Filter
-			Name="res"
+			Name="ljcs_res"
 			>
 			<File
-				RelativePath="..\..\bin\extends\ljcs_res\outline_page_ui.xml"
+				RelativePath=".\ljcs.res\class.png"
 				>
 			</File>
 			<File
-				RelativePath="..\..\bin\extends\ljcs_res\preview_page_ui.xml"
+				RelativePath=".\ljcs.res\enum.png"
 				>
 			</File>
 			<File
-				RelativePath="..\..\bin\extends\ljcs_res\tips_ui.xml"
+				RelativePath=".\ljcs.res\enumitem.png"
+				>
+			</File>
+			<File
+				RelativePath=".\ljcs.res\fun.png"
+				>
+			</File>
+			<File
+				RelativePath=".\ljcs.res\keyword.png"
+				>
+			</File>
+			<File
+				RelativePath=".\ljcs.res\macro.png"
+				>
+			</File>
+			<File
+				RelativePath=".\ljcs.res\namespace.png"
+				>
+			</File>
+			<File
+				RelativePath=".\ljcs.res\outline_page_ui.xml"
+				>
+			</File>
+			<File
+				RelativePath=".\ljcs.res\preview_page_ui.xml"
+				>
+			</File>
+			<File
+				RelativePath=".\ljcs.res\tips_ui.xml"
+				>
+			</File>
+			<File
+				RelativePath=".\ljcs.res\typedef.png"
+				>
+			</File>
+			<File
+				RelativePath=".\ljcs.res\var.png"
 				>
 			</File>
 		</Filter>
@@ -219,6 +255,10 @@
 		</File>
 		<File
 			RelativePath=".\src\LJCS.h"
+			>
+		</File>
+		<File
+			RelativePath=".\ljcs.plugin"
 			>
 		</File>
 		<File

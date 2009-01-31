@@ -6,7 +6,7 @@
 # 
 
 EXTS = $(wildcard extends/*)
-PLGS = $(wildcard extends/*)
+PLGS = $(wildcard plugins/*)
 
 all : .puss .extends .plugins
 
@@ -21,22 +21,12 @@ all : .puss .extends .plugins
 	@for plg in $(PLGS); do make -C$$plg BUILD=$(BUILD); done
 
 clean:
-	@make -Cpuss BUILD=$(BUILD) clean
-	@for ext in $(EXTS); do make -C$$ext BUILD=$(BUILD) clean; done
-	@for ext in $(PLGS); do make -C$$ext BUILD=$(BUILD) clean; done
+	@make -Cpuss BUILD=$(BUILD) NOT_USE_D_FILE=1 clean
+	@make -Cwin32_boot BUILD=$(BUILD) NOT_USE_D_FILE=1 clean
+	@for ext in $(EXTS); do make -C$$ext BUILD=$(BUILD) NOT_USE_D_FILE=1 clean; done
+	@for plg in $(PLGS); do make -C$$plg BUILD=$(BUILD) NOT_USE_D_FILE=1 clean; done
+	@echo make clean finished!
 
 deb :
 	@./make_deb
-
-zip :
-	@rm -rf output
-	@svn export ./bin output
-	@if [ -f bin/_puss.exe ]; then cp -f bin/_puss.exe output/; fi
-	@if [ -f bin/puss.exe ]; then cp -f bin/puss.exe output/; fi
-	@if [ -f bin/puss ]; then cp -f bin/puss output/; fi
-	@cp -rf bin/extends/*.ext output/extends/
-	@cp -rf bin/plugins/plugin_* output/plugins/
-	@echo tar jcf puss-1.0-`date +%F`.tar.bz2
-	@cd output; tar jcf ../puss-1.0-`date +%F`.tar.bz2 *
-	@rm -rf output
 

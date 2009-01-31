@@ -31,15 +31,22 @@ SRCS = $(wildcard *.c)
 
 OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)
 
-TARGET = ../../bin/plugins/plugin_miniline.so
+TARGET_NAME = miniline
+TARGET_PATH = ../../bin/plugins
 
-all : $(TARGET)
+TARGET = $(TARGET_PATH)/$(TARGET_NAME)
 
-$(TARGET) : $(OBJS)
+all : $(TARGET).so $(TARGET).plugin
+
+$(TARGET).so : $(OBJS)
 	$(CC) $(CFLAGS) -shared -o $@ $^ $(LIBS)
 
+$(TARGET).plugin : $(TARGET_NAME).plugin
+	cp -f $< $@
+
 clean :
-	rm -f $(TARGET)
+	rm -f $(TARGET).so
+	rm -f $(TARGET).plugin
 	rm -rf $(OBJPATH)
 
 $(OBJPATH)/%.o : %.c
@@ -52,5 +59,7 @@ $(OBJPATH)/%.d : %.c
 	@mkdir -p $(dir $@)
 	@$(CC) $(CFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
 
+ifneq ($(NOT_USE_D_FILE), 1)
 -include $(SRCS:%.c=$(OBJPATH)/%.d)
+endif
 

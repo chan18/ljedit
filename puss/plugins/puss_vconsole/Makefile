@@ -35,25 +35,34 @@ SRCS = $(wildcard *.c)
 
 OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)
 
-TARGET = ../../bin/extends/puss_vconsole.ext
+TARGET_NAME = puss_vconsole
+TARGET_PATH = ../../bin/plugins
+
+TARGET = $(TARGET_PATH)/$(TARGET_NAME)
 
 ifeq ($(PLATFORM), win32)
 
 PUSS_CFLAGS += -Ivconsole
+VCONSOLE = $(TARGET_PATH)/vconsole.dll
 
-VCONSOLE = ../../bin/extends/vconsole.dll
-
-all : $(VCONSOLE) $(TARGET)
+all : $(VCONSOLE) $(TARGET).so $(TARGET).plugin
 
 $(VCONSOLE) : vconsole/*.c
 	$(CC) $(CFLAGS) -DUNICODE -shared -o $@ $^
 
+$(TARGET).so : $(OBJS)
+	$(CC) $(CFLAGS) $(PUSS_CFLAGS) -shared -o $@ $^ $(PUSS_LIBS)
+
+$(TARGET).plugin : $(TARGET_NAME).plugin
+	cp -f $< $@
+
 clean :
-	rm -f $(TARGET)
 	rm -f $(VCONSOLE)
+	rm -f $(TARGET).so
+	rm -f $(TARGET).plugin
 	rm -rf $(OBJPATH)
 
-else	# linux
+else #linux
 
 PUSS_LIBS += -lvte
 
@@ -65,9 +74,6 @@ clean :
 
 endif
 
-$(TARGET) : $(OBJS)
-	$(CC) $(CFLAGS) $(PUSS_CFLAGS) -shared -o $@ $^ $(PUSS_LIBS)
-
 $(OBJPATH)/%.o : %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $(PUSS_CFLAGS) -o $@ -c $<
@@ -78,5 +84,7 @@ $(OBJPATH)/%.d : %.c
 	@mkdir -p $(dir $@)
 	@$(CC) $(CFLAGS) $(PUSS_CFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
 
+ifneq ($(NOT_USE_D_FILE), 1)
 -include $(SRCS:%.c=$(OBJPATH)/%.d)
+endif
 

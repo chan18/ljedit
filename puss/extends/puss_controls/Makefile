@@ -18,35 +18,35 @@ ifeq ($(BUILD), release)
 	OBJPATH = release
 endif
 
-# gtk & gtksourceview(for libintl.h on win32)
+# gtk & gtksourceview
 # 
 CFLAGS += `pkg-config --cflags gtksourceview-2.0`
+
 LIBS += `pkg-config --libs gtksourceview-2.0`
 
 # project
 # 
-CFLAGS += -I../../bin/include
+TARGET_PATH = ../../bin
+
+CFLAGS += -I$(TARGET_PATH)/include
 
 SRCS = $(wildcard *.c)
 
 OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)
 
-TARGET_NAME = gtk_doc_helper
-TARGET_PATH = ../../bin/plugins
+TARGET = $(TARGET_PATH)/extends/puss_controls.ext
 
-TARGET = $(TARGET_PATH)/$(TARGET_NAME)
+all : $(TARGET) $(TARGET_PATH)/include/IPussControls.h
 
-all : $(TARGET).so $(TARGET).plugin
-
-$(TARGET).so : $(OBJS)
+$(TARGET) : $(OBJS)
 	$(CC) $(CFLAGS) -shared -o $@ $^ $(LIBS)
 
-$(TARGET).plugin : $(TARGET_NAME).plugin
+$(TARGET_PATH)/include/IPussControls.h : IPussControls.h
 	cp -f $< $@
 
 clean :
-	rm -f $(TARGET).so
-	rm -f $(TARGET).plugin
+	rm -f $(TARGET)
+	rm -f $(TARGET_PATH)/include/IPussControls.h
 	rm -rf $(OBJPATH)
 
 $(OBJPATH)/%.o : %.c
@@ -58,6 +58,7 @@ $(OBJPATH)/%.d : %.c
 	@rm -f $@
 	@mkdir -p $(dir $@)
 	@$(CC) $(CFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
+
 
 ifneq ($(NOT_USE_D_FILE), 1)
 -include $(SRCS:%.c=$(OBJPATH)/%.d)

@@ -79,7 +79,7 @@ gboolean PreviewPage::create(Puss* app, Environ* env) {
 	if( !builder )
 		return FALSE;
 
-	gchar* filepath = g_build_filename(app_->get_module_path(), "extends", "ljcs_res", "preview_page_ui.xml", NULL);
+	gchar* filepath = g_build_filename(app_->get_plugins_path(), "ljcs_res", "preview_page_ui.xml", NULL);
 	if( !filepath ) {
 		g_printerr("ERROR(ljcs) : build preview page ui filepath failed!\n");
 		g_object_unref(G_OBJECT(builder));

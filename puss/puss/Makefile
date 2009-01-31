@@ -37,8 +37,10 @@ SRCS = $(wildcard *.c)
 
 OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)
 
+TARGET_PATH = ../bin
+
 ifeq ($(PLATFORM), win32)
-	TARGET = ../bin/_puss.exe
+	TARGET = $(TARGET_PATH)/_puss.exe
 
 	ifeq ($(BUILD), release)
 		LDFLAGS = -mwindows
@@ -46,17 +48,21 @@ ifeq ($(PLATFORM), win32)
 
 else
 	LIBS += -ldl
-	TARGET = ../bin/puss
+	TARGET = $(TARGET_PATH)/puss
 
 endif
 
-all : $(TARGET)
+all : $(TARGET) $(TARGET_PATH)/include/IPuss.h
 
 $(TARGET) : $(OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
+$(TARGET_PATH)/include/IPuss.h : IPuss.h
+	cp -f $< $@
+
 clean :
 	rm -f $(TARGET)
+	rm -f $(TARGET_PATH)/include/IPuss.h
 	rm -rf $(OBJPATH)
 
 $(OBJPATH)/%.o : %.c
@@ -69,5 +75,6 @@ $(OBJPATH)/%.d : %.c
 	@mkdir -p $(dir $@)
 	@$(CC) $(CFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
 
+ifneq ($(NOT_USE_D_FILE), 1)
 -include $(SRCS:%.c=$(OBJPATH)/%.d)
-
+endif

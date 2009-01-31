@@ -74,7 +74,7 @@ gboolean init_tips(Tips* self, Puss* app, Environ* env, Icons* icons) {
 	if( !builder )
 		return FALSE;
 
-	gchar* filepath = g_build_filename(app->get_module_path(), "extends", "ljcs_res", "tips_ui.xml", NULL);
+	gchar* filepath = g_build_filename(app->get_plugins_path(), "ljcs_res", "tips_ui.xml", NULL);
 	if( !filepath ) {
 		g_printerr("ERROR(ljcs) : build tips ui filepath failed!\n");
 		g_object_unref(G_OBJECT(builder));

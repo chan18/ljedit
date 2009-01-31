@@ -91,7 +91,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\"
+				CommandLine="copy $(ProjectDir)$(ProjectName).ui $(SolutionDir)bin\plugins\&#x0D;&#x0A;copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\"
 			/>
 		</Configuration>
 		<Configuration
@@ -170,23 +170,23 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\"
+				CommandLine="copy $(ProjectDir)$(ProjectName).ui $(SolutionDir)bin\plugins\&#x0D;&#x0A;copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\"
 			/>
 		</Configuration>
 	</Configurations>
 	<References>
 	</References>
 	<Files>
-		<Filter
-			Name="res"
-			>
-			<File
-				RelativePath="..\..\bin\extends\search_tools_res\search_tools_ui.xml"
-				>
-			</File>
-		</Filter>
 		<File
 			RelativePath=".\src\module.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\search_tools.plugin"
+			>
+		</File>
+		<File
+			RelativePath=".\search_tools.ui"
 			>
 		</File>
 	</Files>

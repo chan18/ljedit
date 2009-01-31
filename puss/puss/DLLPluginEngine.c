@@ -73,5 +73,5 @@ void dll_plugin_unload(gpointer plugin, Puss* app) {
 }
 
 void dll_plugin_engine_regist(Puss* app) {
-	app->plugin_engine_regist(DLL_PLUGIN_ENGINE_ID, dll_plugin_load, dll_plugin_unload, 0, app);
+	app->plugin_engine_regist(DLL_PLUGIN_ENGINE_ID, (PluginLoader)dll_plugin_load, (PluginUnloader)dll_plugin_unload, 0, app);
 }

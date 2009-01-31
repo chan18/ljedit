@@ -34,7 +34,7 @@ static GHashTable*	puss_setup_panels = 0;
 
 gboolean puss_option_setup_create() {
 	puss_main_setup = g_new0(SetupNode, 1);
-	puss_setup_panels = g_hash_table_new_full(g_str_hash, g_str_equal, 0, setup_node_free);
+	puss_setup_panels = g_hash_table_new_full(g_str_hash, g_str_equal, 0, (GDestroyNotify)setup_node_free);
 	if( puss_main_setup && puss_setup_panels ) {
 		puss_main_setup->id = g_strdup( "puss" );
 		puss_main_setup->name = g_strdup( _("puss") );

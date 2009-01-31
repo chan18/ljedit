@@ -72,5 +72,7 @@ $(OBJPATH)/%.d : %.c
 	@mkdir -p $(dir $@)
 	@$(CC) $(CFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
 
+ifneq ($(NOT_USE_D_FILE), 1)
 -include $(SRCS:%.c=$(OBJPATH)/%.d)
+endif
 

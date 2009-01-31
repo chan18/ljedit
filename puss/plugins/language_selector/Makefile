@@ -9,47 +9,57 @@ ifeq ($(OS), Windows_NT)
 	PLATFORM = win32
 endif
 
-CXXFLAGS = -g -Wall
+CC = gcc
+CFLAGS = -g -Wall
 OBJPATH = debug
 
 ifeq ($(BUILD), release)
-	CXXFLAGS = -O3 -Wall
+	CFLAGS = -O3 -Wall
 	OBJPATH = release
 endif
 
 # gtk & gtksourceview
 # 
-CXXFLAGS += `pkg-config --cflags gtksourceview-2.0`
+CFLAGS += `pkg-config --cflags gtksourceview-2.0`
 LIBS += `pkg-config --libs gtksourceview-2.0`
 
 # project
 # 
-CXXFLAGS += -I../../bin/include
+CFLAGS += -I../../bin/include
 
-SRCS = $(wildcard src/*.cpp)
+SRCS = $(wildcard *.c)
 
-OBJS = $(SRCS:src/%.cpp=$(OBJPATH)/%.o)
+OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)
 
-TARGET = ../../bin/extends/language_selector.ext
+TARGET_NAME = language_selector
+TARGET_PATH = ../../bin/plugins
 
-all : $(TARGET)
+TARGET = $(TARGET_PATH)/$(TARGET_NAME)
 
-$(TARGET) : $(OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o $@ $^ $(LIBS)
+all : $(TARGET).so $(TARGET).plugin
+
+$(TARGET).so : $(OBJS)
+	$(CC) $(CFLAGS) -shared -o $@ $^ $(LIBS)
+
+$(TARGET).plugin : $(TARGET_NAME).plugin
+	cp -f $< $@
 
 clean :
-	rm -f $(TARGET)
+	rm -f $(TARGET).so
+	rm -f $(TARGET).plugin
 	rm -rf $(OBJPATH)
 
-$(OBJPATH)/%.o : src/%.cpp
+$(OBJPATH)/%.o : %.c
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -o $@ -c $<
+	$(CC) $(CFLAGS) -o $@ -c $<
 
-$(OBJPATH)/%.d : src/%.cpp
-	@echo $(CXX) -MM -o $@ -c $<
+$(OBJPATH)/%.d : %.c
+	@echo $(CC) -MM -o $@ -c $<
 	@rm -f $@
 	@mkdir -p $(dir $@)
-	@$(CXX) $(CXXFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
+	@$(CC) $(CFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
 
--include $(SRCS:src/%.cpp=$(OBJPATH)/%.d)
+ifneq ($(NOT_USE_D_FILE), 1)
+-include $(SRCS:%.c=$(OBJPATH)/%.d)
+endif
 

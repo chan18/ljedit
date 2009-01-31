@@ -430,7 +430,7 @@ PyObject* py_wrapper_option_setup_reg(PyObject* self, PyObject* args) {
 		return 0;
 	}
 
-	res = g_self->app->option_setup_reg(id, name, option_setup_widget_creator_py_wrapper, cb, py_object_decref);
+	res = g_self->app->option_setup_reg(id, name, option_setup_widget_creator_py_wrapper, cb, (GDestroyNotify)py_object_decref);
 	if( res ) {
 		Py_INCREF(cb);
 	}
@@ -638,8 +638,8 @@ PyExtend* puss_py_extend_create(Puss* app) {
 
 		if( init_pygtk_library(g_self) && init_puss_module(g_self) )
 			g_self->app->plugin_engine_regist( "python"
-				, py_plugin_load
-				, py_plugin_unload
+				, (PluginLoader)py_plugin_load
+				, (PluginUnloader)py_plugin_unload
 				, 0
 				, g_self );
 	}

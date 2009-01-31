@@ -8,8 +8,8 @@
 #include "ljcs/ds.h"
 #include "LJCS.h"
 
-GdkPixbuf* load_icon(const gchar* app_path, const gchar* name) {
-	gchar* filepath = g_build_filename(app_path, "extends", "ljcs_res", name, NULL);
+GdkPixbuf* load_icon(const gchar* plugin_path, const gchar* name) {
+	gchar* filepath = g_build_filename(plugin_path, "ljcs_res", name, NULL);
 
 	GdkPixbuf* icon = gdk_pixbuf_new_from_file(filepath, NULL);
 	if( !icon )
@@ -26,7 +26,7 @@ void free_icon(GdkPixbuf* icon) {
 }
 
 void Icons::create(Puss* app) {
-	const gchar* module_path = app->get_module_path();
+	const gchar* module_path = app->get_plugins_path();
 
 	icon_keyword   = load_icon(module_path, "keyword.png");
 	icon_var       = load_icon(module_path, "var.png");
