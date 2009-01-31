@@ -66,6 +66,176 @@ void parse_include_path_option(const Option* option, const gchar* old, Environ* 
 	env->set_include_paths(paths);
 }
 
+const gchar* setup_ui_info =
+	"<interface>"
+	"  <object class='GtkTable' id='main_panel'>"
+	"    <property name='visible'>True</property>"
+	"    <property name='n_rows'>2</property>"
+	"    <property name='n_columns'>3</property>"
+	"    <property name='column_spacing'>5</property>"
+	"    <property name='row_spacing'>5</property>"
+	"    <child>"
+	"      <object class='GtkScrolledWindow' id='scrolled_window'>"
+	"        <property name='visible'>True</property>"
+	"        <property name='can_focus'>True</property>"
+	"        <property name='hscrollbar_policy'>GTK_POLICY_AUTOMATIC</property>"
+	"        <property name='vscrollbar_policy'>GTK_POLICY_AUTOMATIC</property>"
+	"        <child>"
+	"          <object class='GtkTextView' id='path_text_view'>"
+	"            <property name='visible'>True</property>"
+	"            <property name='can_focus'>True</property>"
+	"          </object>"
+	"        </child>"
+	"      </object>"
+	"      <packing>"
+	"        <property name='right_attach'>3</property>"
+	"      </packing>"
+	"    </child>"
+	"    <child>"
+	"      <object class='GtkButton' id='apply_button'>"
+	"        <property name='visible'>True</property>"
+	"        <property name='can_focus'>True</property>"
+	"        <property name='receives_default'>True</property>"
+	"        <property name='label' translatable='yes'>apply</property>"
+	"     </object>"
+	"      <packing>"
+	"        <property name='left_attach'>2</property>"
+	"        <property name='right_attach'>3</property>"
+	"        <property name='top_attach'>1</property>"
+	"        <property name='bottom_attach'>2</property>"
+	"        <property name='y_options'>GTK_FILL</property>"
+	"      </packing>"
+	"    </child>"
+	"    <child>"
+	"      <object class='GtkFileChooserButton' id='path_choose_button'>"
+	"        <property name='visible'>True</property>"
+	"        <property name='action'>GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER</property>"
+	"      </object>"
+	"      <packing>"
+	"        <property name='top_attach'>1</property>"
+	"        <property name='bottom_attach'>2</property>"
+	"        <property name='y_options'>GTK_FILL</property>"
+	"      </packing>"
+	"    </child>"
+	"    <child>"
+	"      <object class='GtkButton' id='add_button'>"
+	"        <property name='visible'>True</property>"
+	"        <property name='can_focus'>True</property>"
+	"        <property name='receives_default'>True</property>"
+	"        <property name='label' translatable='yes'>add</property>"
+	"     </object>"
+	"      <packing>"
+	"        <property name='left_attach'>1</property>"
+	"        <property name='right_attach'>2</property>"
+	"        <property name='top_attach'>1</property>"
+	"        <property name='bottom_attach'>2</property>"
+	"        <property name='y_options'>GTK_FILL</property>"
+	"      </packing>"
+	"    </child>"
+	"  </object>"
+	"</interface>"
+	;
+
+const gchar* TARGET_OPTION_KEY = "target_option";
+const gchar* TEXT_VIEW_KEY = "text_view";
+const gchar* FILE_BUTTON_KEY = "file_button";
+
+static void cb_add_button_changed(GtkButton* w, LJCS* self) {
+	GtkTextIter iter;
+	gchar* uri;
+	gchar* path;
+	const Option* option;
+	GtkTextView* view;
+	GtkFileChooserButton* btn;
+	GtkTextBuffer* buf;
+
+	option = (const Option*)g_object_get_data(G_OBJECT(w), TARGET_OPTION_KEY);
+	view = (GtkTextView*)g_object_get_data(G_OBJECT(w), TEXT_VIEW_KEY);
+	btn = (GtkFileChooserButton*)g_object_get_data(G_OBJECT(w), FILE_BUTTON_KEY);
+
+	uri = gtk_file_chooser_get_uri(GTK_FILE_CHOOSER(btn));
+	path = g_filename_from_uri(uri, NULL, NULL);
+	g_free(uri);
+
+	buf = gtk_text_view_get_buffer(view);
+	gtk_text_buffer_get_end_iter(buf, &iter);
+	gtk_text_buffer_place_cursor(buf, &iter);
+	if( gtk_text_iter_backward_char(&iter) && gtk_text_iter_get_char(&iter)!='\n' )
+		gtk_text_buffer_insert_at_cursor(buf, "\n", -1);
+	gtk_text_buffer_insert_at_cursor(buf, path, -1);
+
+	g_free(path);
+}
+
+static void cb_apply_button_changed(GtkButton* w, LJCS* self) {
+	GtkTextIter ps, pe;
+	gchar* text;
+	const Option* option;
+	GtkTextView* view;
+	GtkTextBuffer* buf;
+
+	option = (const Option*)g_object_get_data(G_OBJECT(w), TARGET_OPTION_KEY);
+	view = (GtkTextView*)g_object_get_data(G_OBJECT(w), TEXT_VIEW_KEY);
+	buf = gtk_text_view_get_buffer(view);
+
+	gtk_text_buffer_get_start_iter(buf, &ps);
+	gtk_text_buffer_get_end_iter(buf, &pe);
+	text = gtk_text_buffer_get_text(buf, &ps, &pe, TRUE);
+
+	self->app->option_set(option, text);
+	g_free(text);
+}
+
+static GtkWidget* create_setup_ui(LJCS* self) {
+	GtkBuilder* builder;
+	GtkWidget* panel;
+	GtkWidget* w;
+	GtkTextView* view;
+	GtkTextBuffer* buf;
+	GError* err = 0;
+	const Option* option;
+
+	// create UI
+	builder = gtk_builder_new();
+	if( !builder )
+		return 0;
+	gtk_builder_set_translation_domain(builder, TEXT_DOMAIN);
+
+	gtk_builder_add_from_string(builder, setup_ui_info, -1, &err);
+	if( err ) {
+		g_printerr("ERROR(gtk_doc_helper): %s\n", err->message);
+		g_error_free(err);
+		g_object_unref(G_OBJECT(builder));
+		return 0;
+	}
+
+	panel = GTK_WIDGET(g_object_ref(gtk_builder_get_object(builder, "main_panel")));
+
+	{
+		option = self->app->option_find("cpp_helper", "include_path");
+		view = GTK_TEXT_VIEW(gtk_builder_get_object(builder, "path_text_view"));
+
+		w = GTK_WIDGET(gtk_builder_get_object(builder, "add_button"));
+		g_object_set_data(G_OBJECT(w), "target_option", (gpointer)option);
+		g_object_set_data(G_OBJECT(w), "text_view", view);
+		g_object_set_data(G_OBJECT(w), "file_button", gtk_builder_get_object(builder, "path_choose_button"));
+		g_signal_connect(w, "clicked", G_CALLBACK(cb_add_button_changed), self);
+
+		w = GTK_WIDGET(gtk_builder_get_object(builder, "apply_button"));
+		g_object_set_data(G_OBJECT(w), "target_option", (gpointer)option);
+		g_object_set_data(G_OBJECT(w), "text_view", view);
+		g_signal_connect(w, "clicked", G_CALLBACK(cb_apply_button_changed), self);
+
+		buf = gtk_text_view_get_buffer(view);
+		gtk_text_buffer_set_text(buf, option->value, -1);
+
+	}
+
+	g_object_unref(G_OBJECT(builder));
+
+	return panel;
+}
+
 bool LJCS::create(Puss* _app) {
 	app = _app;
 	env.set_app(app);
@@ -92,10 +262,14 @@ bool LJCS::create(Puss* _app) {
 
 	update_timer_handler_id_ = g_timeout_add(500, (GSourceFunc)&ljcs_update_timeout, this);
 
+	app->option_setup_reg("ljcs", _("c++ helper"), (CreateSetupWidget)&create_setup_ui, this, 0);
+
 	return true;
 }
 
 void LJCS::destroy() {
+	app->option_setup_unreg("ljcs");
+
 	const Option* option = app->option_find("cpp_helper", "include_path");
 	app->option_monitor_unreg(option_path_change_handler_);
 	g_source_remove(update_timer_handler_id_);

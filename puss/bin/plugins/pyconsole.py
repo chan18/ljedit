@@ -311,7 +311,7 @@ class PythonConsole(gtk.ScrolledWindow):
 		#gtk.ScrolledWindow.destroy(self)
 
 	def create_setup_widget(self):
-		return gtk.Button("test2")
+		return gtk.Label("test use option_setup_reg() in python!")
 
 class OutFile:
 	"""A fake output file object. It sends output to a TK test widget,
