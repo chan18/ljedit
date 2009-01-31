@@ -25,6 +25,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	GetEnvironmentVariableA("PATH", buf, 8192);
 	strcat(buf, ";");
 	strcat(buf, basePath);
+	strcat(buf, "environ");
+	strcat(buf, ";");
+	strcat(buf, basePath);
 	strcat(buf, "environ\\gtk\\bin");
 	SetEnvironmentVariableA("PATH", buf);
 
