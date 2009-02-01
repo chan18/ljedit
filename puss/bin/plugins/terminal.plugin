@@ -1,7 +1,0 @@
-# puss plugin
-# 
-
-[plugin]
-name = terminal plugin
-engine = python
-description = terminal plugin
