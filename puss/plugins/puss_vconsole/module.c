@@ -352,6 +352,7 @@ PUSS_EXPORT void  puss_plugin_destroy(void* ext) {
 //-----------------------------------------------------------------
 
 #include <vte/vte.h>
+#include <gmodule.h>
 
 typedef struct {
 	Puss*		app;
@@ -368,11 +369,26 @@ static void on_quit(VteTerminal* vte, PussVConsole* self) {
 			, FALSE );
 }
 
+static const gchar* LIBVTE_KEEP_KEY = "VCONSOLE_LIBVTE_KEEP";
+ 
 PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	PussVConsole* self;
+	GtkWindow* window;
+	GModule* module;
 
 	bindtextdomain(TEXT_DOMAIN, app->get_locale_path());
 	bind_textdomain_codeset(TEXT_DOMAIN, "UTF-8");
+
+	window = puss_get_main_window(app);
+	module = (GModule*)g_object_get_data(G_OBJECT(window), LIBVTE_KEEP_KEY);
+	if( !module ) {
+		module = g_module_open("libvte", G_MODULE_BIND_LAZY);
+		if( !module ) {
+			g_printerr("warning(puss_vconsole) : keep libvte failed! reload plugin will cause error!\n");
+		} else {
+			g_object_set_data_full(G_OBJECT(window), LIBVTE_KEEP_KEY, module, (GDestroyNotify)g_module_close);
+		}
+	}
 
 	self = g_new0(PussVConsole, 1);
 	self->app = app;
@@ -380,12 +396,12 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 
 	{
 		GtkWidget* hbox = gtk_hbox_new(FALSE, 4);
-		GtkWidget* sbar = gtk_vscrollbar_new( vte_terminal_get_adjustment(self->vte) );
+		GtkWidget* sbar = gtk_vscrollbar_new( vte_terminal_get_adjustment(VTE_TERMINAL(self->vte)) );
 
 		gtk_box_pack_start(GTK_BOX(hbox), self->vte, TRUE, TRUE, 0);
 		gtk_box_pack_start(GTK_BOX(hbox), sbar, FALSE, FALSE, 0);
 
-		g_signal_connect(self->vte, "child-exited", on_quit, self);
+		g_signal_connect(self->vte, "child-exited", G_CALLBACK(on_quit), self);
 
 		vte_terminal_fork_command( VTE_TERMINAL(self->vte)
 				, 0, 0
