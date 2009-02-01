@@ -50,12 +50,6 @@ all : $(VCONSOLE) $(TARGET).so $(TARGET).plugin
 $(VCONSOLE) : vconsole/*.c
 	$(CC) $(CFLAGS) -DUNICODE -shared -o $@ $^
 
-$(TARGET).so : $(OBJS)
-	$(CC) $(CFLAGS) $(PUSS_CFLAGS) -shared -o $@ $^ $(PUSS_LIBS)
-
-$(TARGET).plugin : $(TARGET_NAME).plugin
-	cp -f $< $@
-
 clean :
 	rm -f $(VCONSOLE)
 	rm -f $(TARGET).so
@@ -66,13 +60,20 @@ else #linux
 
 PUSS_LIBS += -lvte
 
-all : $(TARGET)
+all : $(TARGET).so $(TARGET).plugin
 
 clean :
-	rm -f $(TARGET)
+	rm -f $(TARGET).so
+	rm -f $(TARGET).plugin
 	rm -rf $(OBJPATH)
 
 endif
+
+$(TARGET).so : $(OBJS)
+	$(CC) $(CFLAGS) $(PUSS_CFLAGS) -shared -o $@ $^ $(PUSS_LIBS)
+
+$(TARGET).plugin : $(TARGET_NAME).plugin
+	cp -f $< $@
 
 $(OBJPATH)/%.o : %.c
 	@mkdir -p $(dir $@)

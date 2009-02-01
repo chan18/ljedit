@@ -356,14 +356,20 @@ PUSS_EXPORT void  puss_plugin_destroy(void* ext) {
 typedef struct {
 	Puss*		app;
 	GtkWidget*	vte;
+	GtkWidget*	panel;
 } PussVConsole;
 
-static void on_quit() {
+static void on_quit(VteTerminal* vte, PussVConsole* self) {
+	vte_terminal_fork_command( VTE_TERMINAL(vte)
+			, 0, 0
+			, 0, 0
+			, FALSE
+			, FALSE
+			, FALSE );
 }
 
 PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	PussVConsole* self;
-	GtkWidget* bottom;
 
 	bindtextdomain(TEXT_DOMAIN, app->get_locale_path());
 	bind_textdomain_codeset(TEXT_DOMAIN, "UTF-8");
@@ -375,33 +381,8 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	{
 		GtkWidget* hbox = gtk_hbox_new(FALSE, 4);
 		GtkWidget* sbar = gtk_vscrollbar_new( vte_terminal_get_adjustment(self->vte) );
-        
-		/*
-        gtk.HBox.__init__(self, False, 4)
 
-        gconf_client.add_dir(self.GCONF_PROFILE_DIR,
-                             gconf.CLIENT_PRELOAD_RECURSIVE)
-
-        self._vte = vte.Terminal()
-        self.reconfigure_vte()
-        self._vte.set_size(self._vte.get_column_count(), 5)
-        self._vte.set_size_request(200, 50)
-        self._vte.show()
-
-        gconf_client.notify_add(self.GCONF_PROFILE_DIR,
-                                self.on_gconf_notification)
-        self._vte.connect("key-press-event", self.on_vte_key_press)
-        self._vte.connect("child-exited", lambda term: term.fork_command())
-
-        self._vte.fork_command()
-        */
-        
-        gtk_widget_show_all(hbox);
-
-		bottom = puss_get_bottom_panel(app);
-		gtk_notebook_append_page(GTK_NOTEBOOK(bottom), hbox, gtk_label_new(_("Terminal")));
-
-		gtk_box_pack_start(GTK_BOX(hbox), self->vte, TRUE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(hbox), self->vte, TRUE, TRUE, 0);
 		gtk_box_pack_start(GTK_BOX(hbox), sbar, FALSE, FALSE, 0);
 
 		g_signal_connect(self->vte, "child-exited", on_quit, self);
@@ -412,6 +393,14 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 				, FALSE
 				, FALSE
 				, FALSE );
+
+		vte_terminal_set_size(VTE_TERMINAL(self->vte), vte_terminal_get_column_count(VTE_TERMINAL(self->vte)), 5);
+		vte_terminal_set_audible_bell(VTE_TERMINAL(self->vte), FALSE);
+		gtk_widget_set_size_request(self->vte, 200, 50);
+        gtk_widget_show_all(hbox);
+
+		self->panel = hbox;
+		app->panel_append(self->panel, gtk_label_new(_("Terminal")), "puss_vconsole_plugin_panel", PUSS_PANEL_POS_BOTTOM);
 	}
 
 	return self;
@@ -419,7 +408,10 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 
 PUSS_EXPORT void  puss_plugin_destroy(void* ext) {
 	PussVConsole* self = (PussVConsole*)ext;
-	g_free(self);
+	if( self ) {
+		self->app->panel_remove(self->panel);
+		g_free(self);
+	}
 }
 
 #endif
