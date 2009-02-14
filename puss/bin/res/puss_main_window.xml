@@ -112,23 +112,77 @@
 
   <object class="GtkDialog" id="search_dialog">
     <property name="default_width">300</property>
-    <property name="default_height">200</property>
-    <signal handler="cb_search_dialog_delete" name="delete-event"/>
+    <property name="default_height">170</property>
+    <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
+    <property name="has_separator">False</property>
+    <signal handler="cb_search_dialog_delete" name="delete-event" />
 
     <child internal-child="vbox">
-    </child>
-    <child internal-child="action_area">
-      <object class="GtkHButtonBox" id="hbuttonbox">
+
+      <object class="GtkVBox" id="dialog-vbox1">
+        <property name="spacing">2</property>
         <child>
-          <object class="GtkButton" id="close_button">
-            <property name="label" translatable="yes">find</property>
+          <object class="GtkHBox" id="hbox1">
+            <child>
+              <object class="GtkVBox" id="vbox1">
+                <property name="spacing">5</property>
+                <child>
+                  <object class="GtkEntry" id="find_entry">
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEntry" id="replace_entry">
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkVButtonBox" id="vbuttonbox1">
+                <property name="spacing">5</property>
+                <property name="layout_style">GTK_BUTTONBOX_START</property>
+                <child>
+                  <object class="GtkButton" id="find_button">
+                    <property name="label" translatable="yes">find</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton" id="replace_button">
+                    <property name="label" translatable="yes">replace</property>
+                  </object>
+                  <packing>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="close_button">
+                    <property name="label" translatable="yes">close</property>
+                  </object>
+                  <packing>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
           </object>
+          <packing>
+            <property name="position">1</property>
+          </packing>
         </child>
       </object>
     </child>
-    <action-widgets>
-      <action-widget response="0">close_button</action-widget>
-    </action-widgets>
   </object>
 </interface>
 

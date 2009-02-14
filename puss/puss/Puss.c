@@ -111,7 +111,6 @@ static gboolean puss_main_ui_create() {
 
 	gtk_widget_show_all( gtk_dialog_get_content_area(puss_app->search_dlg) );
 	gtk_window_set_modal(GTK_WINDOW(puss_app->search_dlg), FALSE);
-	GTK_WIDGET_SET_FLAGS(GTK_WINDOW(puss_app->search_dlg), GTK_HAS_FOCUS|GTK_CAN_FOCUS);
 	gtk_window_set_destroy_with_parent(GTK_WINDOW(puss_app->search_dlg), TRUE);
 
 	return TRUE;

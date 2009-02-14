@@ -10,6 +10,7 @@
 #include <windows.h>
 #endif
 
+#include <gdk/gdkkeysyms.h>
 #include <gtksourceview/gtksourceview.h>
 #include <gtksourceview/gtksourceiter.h>
 #include <gtksourceview/gtksourcestyleschememanager.h>
@@ -23,6 +24,115 @@
 #include "GlobMatch.h"
 #include "PosLocate.h"
 #include "OptionManager.h"
+
+#define PUSS_TYPE_TEXT_VIEW             (puss_text_view_get_type ())
+#define PUSS_TEXT_VIEW(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), PUSS_TYPE_TEXT_VIEW, PussTextView))
+#define PUSS_TEXT_VIEW_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), PUSS_TYPE_TEXT_VIEW, PussTextViewClass))
+#define PUSS_IS_TEXT_VIEW(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), PUSS_TYPE_TEXT_VIEW))
+#define PUSS_IS_TEXT_VIEW_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), PUSS_TYPE_TEXT_VIEW))
+#define PUSS_TEXT_VIEW_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), PUSS_TYPE_TEXT_VIEW, PussTextViewClass))
+
+
+typedef struct _PussTextView PussTextView;
+typedef struct _PussTextViewClass PussTextViewClass;
+
+struct _PussTextView {
+	GtkSourceView         parent;
+};
+
+struct _PussTextViewClass {
+	GtkSourceViewClass parent_class;
+
+	void (*search)(PussTextView *view);
+};
+
+G_DEFINE_TYPE(PussTextView, puss_text_view, GTK_TYPE_SOURCE_VIEW)
+
+/* Signals */
+enum {
+	PUSS_SEARCH,
+	LAST_SIGNAL
+};
+
+static guint signals[LAST_SIGNAL] = { 0 };
+
+static void puss_text_view_search(PussTextView *view);
+
+static void puss_text_view_class_init(PussTextViewClass* klass) {
+	GtkBindingSet* binding_set;
+	binding_set = gtk_binding_set_by_class(klass);
+
+	klass->search = puss_text_view_search;
+
+	signals[PUSS_SEARCH] = g_signal_new( "puss_search"
+		, G_TYPE_FROM_CLASS(klass)
+		, G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION
+		, G_STRUCT_OFFSET(PussTextViewClass, search)
+		, NULL
+		, NULL
+		, gtk_marshal_VOID__VOID
+		, G_TYPE_NONE
+		, 0 );
+
+	gtk_binding_entry_add_signal(binding_set, GDK_F, GDK_CONTROL_MASK, "puss_search", 0);
+}
+
+static void doc_cb_move_focus(GtkWidget* widget, GtkDirectionType dir) {
+	//GtkSourceView* view = GTK_SOURCE_VIEW(widget);
+	g_signal_stop_emission_by_name(widget, "move-focus");
+
+	switch( dir ) {
+	case GTK_DIR_TAB_FORWARD:
+		gtk_notebook_next_page(puss_app->doc_panel);
+		break;
+	case GTK_DIR_TAB_BACKWARD:
+		gtk_notebook_prev_page(puss_app->doc_panel);
+		break;
+	default:
+		break;
+	}
+}
+
+#ifdef G_OS_WIN32
+	static gboolean __win32_GtkTextView_bug_hack_on_button_press_event(GtkWidget* widget) {
+		gtk_widget_grab_focus(widget);
+		gtk_text_view_set_editable(GTK_TEXT_VIEW(widget), FALSE);
+		gtk_text_view_set_editable(GTK_TEXT_VIEW(widget), TRUE);
+		return FALSE;
+	}
+
+#endif//G_OS_WIN32
+
+static void puss_text_view_init(PussTextView* view) {
+	GtkSourceView* sview = GTK_SOURCE_VIEW(view);
+	gtk_source_view_set_auto_indent(sview, TRUE);
+	gtk_source_view_set_highlight_current_line(sview, TRUE);
+	gtk_source_view_set_show_line_numbers(sview, TRUE);
+	gtk_source_view_set_smart_home_end(sview, GTK_SOURCE_SMART_HOME_END_BEFORE);
+	gtk_source_view_set_right_margin_position(sview, 120);
+	gtk_source_view_set_show_right_margin(sview, TRUE);
+	gtk_source_view_set_tab_width(sview, 4);
+
+	gtk_text_view_set_left_margin(GTK_TEXT_VIEW(view), 3);
+	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(view), GTK_WRAP_NONE);
+
+	g_signal_connect(view, "move-focus", G_CALLBACK(&doc_cb_move_focus), 0);
+
+#ifdef G_OS_WIN32
+	g_signal_connect_after(view, "scroll-event", G_CALLBACK(&__win32_GtkTextView_bug_hack_on_button_press_event), 0);
+#endif//G_OS_WIN32
+}
+
+/* Constructors */
+static GtkWidget* puss_text_view_new_with_buffer(GtkSourceBuffer* buf) {
+	PussTextView* view = g_object_new(PUSS_TYPE_TEXT_VIEW, 0);
+	gtk_text_view_set_buffer(GTK_TEXT_VIEW(view), GTK_TEXT_BUFFER(buf));
+	return GTK_WIDGET(view);
+}
+
+static void puss_text_view_search(PussTextView *view) {
+	puss_show_find_dialog();
+}
 
 void __free_g_string( GString* gstr ) {
 	g_string_free(gstr, TRUE);
@@ -180,32 +290,6 @@ gboolean doc_cb_button_release_on_label(GtkWidget* widget, GdkEventButton *event
 	return FALSE;
 }
 
-void doc_cb_move_focus(GtkWidget* widget, GtkDirectionType dir) {
-	//GtkSourceView* view = GTK_SOURCE_VIEW(widget);
-	g_signal_stop_emission_by_name(widget, "move-focus");
-
-	switch( dir ) {
-	case GTK_DIR_TAB_FORWARD:
-		gtk_notebook_next_page(puss_app->doc_panel);
-		break;
-	case GTK_DIR_TAB_BACKWARD:
-		gtk_notebook_prev_page(puss_app->doc_panel);
-		break;
-	default:
-		break;
-	}
-}
-
-#ifdef G_OS_WIN32
-	static gboolean __win32_GtkTextView_bug_hack_on_button_press_event(GtkWidget* widget) {
-		gtk_widget_grab_focus(widget);
-		gtk_text_view_set_editable(GTK_TEXT_VIEW(widget), FALSE);
-		gtk_text_view_set_editable(GTK_TEXT_VIEW(widget), TRUE);
-		return FALSE;
-	}
-
-#endif//G_OS_WIN32
-
 gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 	gint page_num;
 	GtkSourceView* view;
@@ -218,24 +302,8 @@ gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 
 	gtk_source_buffer_set_highlight_matching_brackets(buf, TRUE);
 
-	view = GTK_SOURCE_VIEW(gtk_source_view_new_with_buffer(buf));
+	view = GTK_SOURCE_VIEW(puss_text_view_new_with_buffer(buf));
 	g_object_unref(G_OBJECT(buf));
-	gtk_source_view_set_auto_indent(view, TRUE);
-	gtk_source_view_set_highlight_current_line(view, TRUE);
-	gtk_source_view_set_show_line_numbers(view, TRUE);
-	gtk_source_view_set_smart_home_end(view, GTK_SOURCE_SMART_HOME_END_BEFORE);
-	gtk_source_view_set_right_margin_position(view, 120);
-	gtk_source_view_set_show_right_margin(view, TRUE);
-	gtk_source_view_set_tab_width(view, 4);
-
-	gtk_text_view_set_left_margin(GTK_TEXT_VIEW(view), 3);
-	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(view), GTK_WRAP_NONE);
-
-	g_signal_connect(view, "move-focus", G_CALLBACK(&doc_cb_move_focus), 0);
-
-#ifdef G_OS_WIN32
-	g_signal_connect_after(view, "scroll-event", G_CALLBACK(&__win32_GtkTextView_bug_hack_on_button_press_event), 0);
-#endif//G_OS_WIN32
 
 	font_option = puss_option_manager_option_find("puss", "editor.font");
 	if( font_option && font_option->value) {
@@ -862,6 +930,7 @@ gboolean doc_mtime_check(gpointer tag) {
 
 gboolean puss_doc_manager_create() {
 	g_timeout_add(1000, (GSourceFunc)doc_mtime_check, 0);
+
 	return TRUE;
 }
 
