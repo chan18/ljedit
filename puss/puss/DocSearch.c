@@ -148,3 +148,8 @@ gboolean puss_find_and_locate_text( GtkTextView* view
 	return res;
 }
 
+void puss_show_find_dialog() {
+	gtk_widget_show(GTK_WIDGET(puss_app->search_dlg));
+	gtk_widget_grab_focus(GTK_WIDGET(puss_app->search_dlg));
+}
+

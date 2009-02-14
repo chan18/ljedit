@@ -5,6 +5,7 @@
 #include "Puss.h"
 #include "Utils.h"
 #include "DocManager.h"
+#include "DocSearch.h"
 #include "PosLocate.h"
 #include "OptionSetup.h"
 #include "PluginManager.h"
@@ -43,6 +44,10 @@ SIGNAL_CALLBACK void file_menu_close_all( GtkAction* action ) {
 SIGNAL_CALLBACK void file_menu_quit( GtkAction* action ) {
 	if( puss_doc_close_all() )
 		gtk_widget_destroy(GTK_WIDGET(puss_app->main_window));
+}
+
+SIGNAL_CALLBACK void edit_menu_find( GtkAction* action ) {
+	puss_show_find_dialog();
 }
 
 SIGNAL_CALLBACK void edit_menu_go_back( GtkAction* action ) {
@@ -119,5 +124,10 @@ SIGNAL_CALLBACK void help_menu_about( GtkAction* action ) {
 
 SIGNAL_CALLBACK gboolean cb_main_window_delete(GtkWidget *widget, GdkEvent *event) {
 	return !puss_doc_close_all();
+}
+
+SIGNAL_CALLBACK gboolean cb_search_dialog_delete(GtkWidget *widget, GdkEvent *event) {
+	gtk_widget_hide(widget);
+	return TRUE;
 }
 

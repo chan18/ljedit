@@ -28,6 +28,7 @@ struct _PussApp {
 	GtkNotebook*	right_panel;
 	GtkNotebook*	bottom_panel;
 	GtkStatusbar*	statusbar;
+	GtkDialog*		search_dlg;
 
 	GHashTable*		extends_map;
 	Plugin*			plugins_list;
