@@ -100,6 +100,16 @@ struct _Puss {
 						, PluginUnloader unloader
 						, PluginEngineDestroy destroy
 						, gpointer tag );
+
+	// search utils
+	gboolean		(*find_and_locate_text)( GtkTextView* view
+						, const gchar* text
+						, gboolean is_forward
+						, gboolean skip_current
+						, gboolean mark_current
+						, gboolean mark_all
+						, gboolean is_continue
+						, int search_flags );
 };
 
 #ifdef  __cplusplus

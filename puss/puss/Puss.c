@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "DocManager.h"
+#include "DocSearch.h"
 #include "ExtendManager.h"
 #include "PluginManager.h"
 #include "PosLocate.h"
@@ -169,6 +170,9 @@ static void init_puss_c_api(Puss* api) {
 
 	// plugin manager
 	api->plugin_engine_regist = &puss_plugin_engine_regist;
+
+	// search utils
+	api->find_and_locate_text = &puss_find_and_locate_text;
 }
 
 static void puss_locale_init() {

@@ -28,6 +28,7 @@
   <!-- Constants -->
   <style name="def:constant"                foreground="magenta"/>
   <style name="def:special-char"            foreground="violet"/>
+  <style name="def:string"                  foreground="#DD0000"/>
 
   <!-- Identifiers -->
   <style name="def:identifier"              foreground="cyan"/>

@@ -188,6 +188,8 @@ GtkWidget* puss_create_global_options_setup_widget(gpointer tag) {
 			gtk_source_style_scheme_manager_append_search_path(ssm, style_path);
 			g_free(style_path);
 
+			gtk_source_style_scheme_manager_force_rescan(ssm);
+
 			ids = gtk_source_style_scheme_manager_get_scheme_ids(ssm);
 			i = 0;
 			for( p=ids; *p; ++p ) {

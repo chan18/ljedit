@@ -229,6 +229,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\DocSearch.c"
+			>
+		</File>
+		<File
+			RelativePath=".\DocSearch.h"
+			>
+		</File>
+		<File
 			RelativePath=".\ExtendManager.c"
 			>
 		</File>
