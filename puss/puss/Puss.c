@@ -88,7 +88,6 @@ static gboolean puss_main_ui_create() {
 	puss_app->right_panel	= GTK_NOTEBOOK(gtk_builder_get_object(puss_app->builder, "right_panel"));
 	puss_app->bottom_panel	= GTK_NOTEBOOK(gtk_builder_get_object(puss_app->builder, "bottom_panel"));
 	puss_app->statusbar		= GTK_STATUSBAR(gtk_builder_get_object(puss_app->builder, "statusbar"));
-	puss_app->search_dlg	= GTK_DIALOG(gtk_builder_get_object(puss_app->builder, "search_dialog"));
 
 	if( !( puss_app->main_window
 		&& puss_app->ui_manager
@@ -97,7 +96,7 @@ static gboolean puss_main_ui_create() {
 		&& puss_app->right_panel
 		&& puss_app->bottom_panel
 		&& puss_app->statusbar
-		&& puss_app->search_dlg ) )
+		&& puss_find_dialog_init(puss_app->builder) ) )
 	{
 		return FALSE;
 	}
@@ -108,10 +107,6 @@ static gboolean puss_main_ui_create() {
 	g_free(icon_file);
 
 	gtk_widget_show_all( gtk_bin_get_child(GTK_BIN(puss_app->main_window)) );
-
-	gtk_widget_show_all( gtk_dialog_get_content_area(puss_app->search_dlg) );
-	gtk_window_set_modal(GTK_WINDOW(puss_app->search_dlg), FALSE);
-	gtk_window_set_destroy_with_parent(GTK_WINDOW(puss_app->search_dlg), TRUE);
 
 	return TRUE;
 }

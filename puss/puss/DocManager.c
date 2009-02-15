@@ -148,7 +148,16 @@ static GtkWidget* puss_text_view_new_with_buffer(GtkSourceBuffer* buf) {
 }
 
 static void puss_text_view_search(PussTextView *view) {
-	puss_show_find_dialog();
+	gchar* text = 0;
+	GtkTextBuffer* buf;
+	GtkTextIter ps, pe;
+	buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
+	if( gtk_text_buffer_get_selection_bounds(buf, &ps, &pe) )
+		text = gtk_text_buffer_get_text(buf, &ps, &pe, FALSE);
+
+	puss_find_dialog_show(text);
+
+	g_free(text);
 }
 
 static void puss_text_view_move_cursor(GtkTextView *view, GtkMovementStep step, gint count, gboolean extend_selection) {

@@ -47,7 +47,23 @@ SIGNAL_CALLBACK void file_menu_quit( GtkAction* action ) {
 }
 
 SIGNAL_CALLBACK void edit_menu_find( GtkAction* action ) {
-	puss_show_find_dialog();
+	gchar* seled = 0;
+	gint page_num;
+	GtkTextView* view;
+	GtkTextBuffer* buf;
+	GtkTextIter ps, pe;
+
+	page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
+	view = puss_doc_get_view_from_page_num(page_num);
+	if( view ) {
+		buf = gtk_text_view_get_buffer(view);
+		if( gtk_text_buffer_get_selection_bounds(buf, &ps, &pe) )
+			seled = gtk_text_buffer_get_text(buf, &ps, &pe, FALSE);
+	}
+
+	puss_find_dialog_show(seled);
+
+	g_free(seled);
 }
 
 SIGNAL_CALLBACK void edit_menu_go_back( GtkAction* action ) {

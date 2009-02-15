@@ -15,7 +15,8 @@ gboolean	puss_find_and_locate_text( GtkTextView* view
 				, gboolean is_continue
 				, int search_flags );
 
-void puss_show_find_dialog();
+gboolean	puss_find_dialog_init(GtkBuilder* builder);
+void		puss_find_dialog_show(const gchar* text);
 
 #endif//PUSS_INC_DOC_SEARCH_H
 
