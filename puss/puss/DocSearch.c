@@ -113,15 +113,9 @@ gboolean puss_find_and_locate_text( GtkTextView* view
 	}
 
 	if( !is_continue ) {
-		if( gtk_text_buffer_get_selection_bounds(buf, &ps, &pe) ) {
-			gtk_text_buffer_move_mark_by_name(buf, "puss:searched_mark_start", &ps);
-			gtk_text_buffer_move_mark_by_name(buf, "puss:searched_mark_end", &pe);
-
-		} else {
-			gtk_text_buffer_get_iter_at_mark(buf, &ps, gtk_text_buffer_get_insert(buf));
-			gtk_text_buffer_move_mark_by_name(buf, "puss:searched_mark_start", &ps);
-			gtk_text_buffer_move_mark_by_name(buf, "puss:searched_mark_end", &ps);
-		}
+		gtk_text_buffer_get_selection_bounds(buf, &ps, &pe);
+		gtk_text_buffer_move_mark_by_name(buf, "puss:searched_mark_start", &ps);
+		gtk_text_buffer_move_mark_by_name(buf, "puss:searched_mark_end", &pe);
 	}
 
 	if( text ) {

@@ -20,6 +20,7 @@
 #include <string.h>
 
 #include "Puss.h"
+#include "DocSearch.h"
 #include "Utils.h"
 #include "GlobMatch.h"
 #include "PosLocate.h"
@@ -54,14 +55,30 @@ enum {
 	LAST_SIGNAL
 };
 
+
+typedef  void (*MoveCursorFn)(GtkTextView *text_view, GtkMovementStep step, gint count, gboolean extend_selection);
+typedef  gint (*ButtonPressFn)(GtkWidget *widget, GdkEventButton *event);
+
 static guint signals[LAST_SIGNAL] = { 0 };
+static MoveCursorFn parent_move_cursor_fn = 0;
+static ButtonPressFn parent_press_event_fn = 0;
 
 static void puss_text_view_search(PussTextView *view);
 
+static void puss_text_view_move_cursor(GtkTextView *view, GtkMovementStep step, gint count, gboolean extend_selection);
+static gint puss_text_view_button_press_event(GtkWidget *widget, GdkEventButton *event);
+
 static void puss_text_view_class_init(PussTextViewClass* klass) {
 	GtkBindingSet* binding_set;
-	binding_set = gtk_binding_set_by_class(klass);
+	GtkTextViewClass* parent_klass = GTK_TEXT_VIEW_CLASS(klass);
+	GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
 
+	parent_move_cursor_fn = parent_klass->move_cursor;
+	parent_press_event_fn = widget_class->button_press_event;
+	parent_klass->move_cursor = puss_text_view_move_cursor;
+	widget_class->button_press_event = puss_text_view_button_press_event;
+
+	binding_set = gtk_binding_set_by_class(klass);
 	klass->search = puss_text_view_search;
 
 	signals[PUSS_SEARCH] = g_signal_new( "puss_search"
@@ -132,6 +149,121 @@ static GtkWidget* puss_text_view_new_with_buffer(GtkSourceBuffer* buf) {
 
 static void puss_text_view_search(PussTextView *view) {
 	puss_show_find_dialog();
+}
+
+static void puss_text_view_move_cursor(GtkTextView *view, GtkMovementStep step, gint count, gboolean extend_selection) {
+	(*parent_move_cursor_fn)(view, step, count, extend_selection);
+
+	if( step==GTK_MOVEMENT_WORDS ) {
+		// set select word include "_"
+		// 
+		// TODO : maybe use PangoLanguage extends will easy to fix this, but i don't understand it.
+		// 
+
+		gunichar ch;
+		GtkTextBuffer* buf;
+		GtkTextIter ps, pe;
+
+		buf = gtk_text_view_get_buffer(view);
+		gtk_text_buffer_get_iter_at_mark(buf, &ps, gtk_text_buffer_get_insert(buf));
+		gtk_text_buffer_get_iter_at_mark(buf, &pe, gtk_text_buffer_get_selection_bound(buf));
+
+		if( count < 0 ) {
+			if( !gtk_text_iter_ends_line(&ps) ) {
+				ch = gtk_text_iter_get_char(&ps);
+				if( ch=='_' || g_unichar_isalnum(ch) ) {
+					while( ch=='_' || g_unichar_isalnum(ch) ) {
+						ch = gtk_text_iter_backward_char(&ps)
+							? gtk_text_iter_get_char(&ps)
+							: 0;
+					}
+					if( ch )
+						gtk_text_iter_forward_char(&ps);
+				} else {
+					while( !(ch=='_' || g_unichar_isalnum(ch)) ) {
+						ch = gtk_text_iter_backward_char(&ps)
+							? gtk_text_iter_get_char(&ps)
+							: '_';
+					}
+					if( ch=='_' )
+						gtk_text_iter_forward_char(&ps);
+				}
+			}
+
+		} else if( count > 0 ) {
+			if( !gtk_text_iter_ends_line(&ps) ) {
+				ch = gtk_text_iter_get_char(&ps);
+				if( ch=='_' || g_unichar_isalnum(ch) ) {
+					while( ch=='_' || g_unichar_isalnum(ch) ) {
+						if( !gtk_text_iter_forward_char(&ps) )
+							break;
+						ch = gtk_text_iter_get_char(&ps);
+					}
+				} else {
+					while( !(ch=='_' || g_unichar_isalnum(ch)) ) {
+						if( !gtk_text_iter_forward_char(&ps) )
+							break;
+						ch = gtk_text_iter_get_char(&ps);
+					}
+				}
+			}
+		}
+
+		gtk_text_buffer_select_range(buf, &ps, extend_selection ? &pe : &ps);
+	}
+}
+
+static gint puss_text_view_button_press_event(GtkWidget *widget, GdkEventButton *event) {
+	gint res = (*parent_press_event_fn)(widget, event);
+
+	if( event->button==1 && event->type == GDK_2BUTTON_PRESS ) {
+		// Double-Click word can select word(include "_" )
+		// but sorry that : after double-click, then drag whill change selection range
+		// 
+
+		// !!!	no public way to set GtkTextView drag selection, 
+		//		so after double click selection range will change
+		// 
+
+		// TODO : maybe use PangoLanguage extends will easy to fix this, but i don't understand it.
+		// 
+
+		gunichar ch;
+		GtkTextBuffer* buf;
+		GtkTextIter ps, pe;
+
+		buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget));
+		gtk_text_buffer_get_iter_at_mark(buf, &ps, gtk_text_buffer_get_insert(buf));
+		gtk_text_buffer_get_iter_at_mark(buf, &pe, gtk_text_buffer_get_selection_bound(buf));
+
+		if( !gtk_text_iter_ends_line(&ps) ) {
+			ch = gtk_text_iter_get_char(&ps);
+			if( ch=='_' || g_unichar_isalnum(ch) ) {
+				while( ch=='_' || g_unichar_isalnum(ch) ) {
+					ch = gtk_text_iter_backward_char(&ps)
+						? gtk_text_iter_get_char(&ps)
+						: 0;
+				}
+				if( ch )
+					gtk_text_iter_forward_char(&ps);
+			}
+		}
+
+		if( !gtk_text_iter_ends_line(&pe) ) {
+			ch = gtk_text_iter_get_char(&pe);
+			if( ch=='_' || g_unichar_isalnum(ch) ) {
+				while( ch=='_' || g_unichar_isalnum(ch) ) {
+					if( !gtk_text_iter_forward_char(&pe) )
+						break;
+					ch = gtk_text_iter_get_char(&pe);
+				}
+			}
+		}
+
+		gtk_text_buffer_select_range(buf, &ps, &pe);
+	}
+
+	return res;
 }
 
 void __free_g_string( GString* gstr ) {
