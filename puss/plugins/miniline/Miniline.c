@@ -367,12 +367,11 @@ static void miniline_cb_changed( GtkEditable* editable ) {
 
 			case '/':
 				++text;
-				find_and_locate_text(g_self, view, text, TRUE, FALSE);
-				miniline_switch_image( GTK_STOCK_FIND );
-				break;
+				// no break;
 
 			default:
-				gtk_widget_modify_base(GTK_WIDGET(g_self->entry), GTK_STATE_NORMAL, &FAILED_COLOR);
+				find_and_locate_text(g_self, view, text, TRUE, FALSE);
+				miniline_switch_image( GTK_STOCK_FIND );
 				break;
 			}
 		}
@@ -381,11 +380,6 @@ static void miniline_cb_changed( GtkEditable* editable ) {
 }
 
 static gboolean miniline_cb_focus_out_event( GtkWidget* widget, GdkEventFocus* event ) {
-	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(g_self->app));
-	GtkTextView* view = g_self->app->doc_get_view_from_page_num(page_num);
-	if( view )
-		select_current_search(view);
-
 	gtk_widget_hide(g_self->panel);
 	return FALSE;
 }
@@ -402,18 +396,8 @@ static gboolean miniline_cb_key_press_event( GtkWidget* widget, GdkEventKey* eve
 		return TRUE;
 	}
 
-	if( event->keyval==GDK_Escape ) {
-		g_self->app->doc_locate(page_num, g_self->last_line, g_self->last_offset, FALSE);
-		g_self->app->find_and_locate_text(view, NULL, TRUE, TRUE, TRUE, TRUE, FALSE, SEARCH_FLAGS);
-		miniline_deactive();
-		return TRUE;
-	}
-
 	text = gtk_entry_get_text(g_self->entry);
 	switch( *text ) {
-	case '\0':
-		return FALSE;
-
 	case ':':
 		++text;
 	case '0':	case '1':	case '2':	case '3':	case '4':
@@ -423,6 +407,13 @@ static gboolean miniline_cb_key_press_event( GtkWidget* widget, GdkEventKey* eve
 			miniline_deactive();
 			g_self->app->doc_locate(page_num, -1, -1, TRUE);
 			return TRUE;
+
+		case GDK_Escape:
+			g_self->app->doc_locate(page_num, g_self->last_line, g_self->last_offset, FALSE);
+			g_self->app->find_and_locate_text(view, NULL, TRUE, TRUE, TRUE, TRUE, FALSE, SEARCH_FLAGS);
+			miniline_deactive();
+			return TRUE;
+
 		case GDK_Up:
 		case GDK_Down:
 		case GDK_Tab:
@@ -432,10 +423,19 @@ static gboolean miniline_cb_key_press_event( GtkWidget* widget, GdkEventKey* eve
 
 	case '/':
 		++text;
+		// no break;
+
+	default:
 		switch( event->keyval ) {
 		case GDK_Return:
 			miniline_deactive();
 			select_current_search(view);
+			return TRUE;
+
+		case GDK_Escape:
+			g_self->app->doc_locate(page_num, g_self->last_line, g_self->last_offset, FALSE);
+			g_self->app->find_and_locate_text(view, NULL, TRUE, TRUE, TRUE, TRUE, FALSE, SEARCH_FLAGS);
+			miniline_deactive();
 			return TRUE;
 
 		case GDK_Up:
@@ -446,18 +446,6 @@ static gboolean miniline_cb_key_press_event( GtkWidget* widget, GdkEventKey* eve
 			find_and_locate_text(g_self, view, text, TRUE, TRUE);
 			return TRUE;
 
-		case GDK_Tab:
-			return TRUE;
-		}
-		break;
-
-	default:
-		switch( event->keyval ) {
-		case GDK_Return:
-			miniline_deactive();
-			return TRUE;
-		case GDK_Up:
-		case GDK_Down:
 		case GDK_Tab:
 			return TRUE;
 		}
@@ -565,6 +553,7 @@ const gchar* MINILINE_UI =
 
 const gchar* HELP_TEXT =
 	"<line>    -  goto line.\n"
+	"<text>    -  find text.\n"
 	":<line>   -  goto line.\n"
 	"/<text>   -  find text.\n"
 	;

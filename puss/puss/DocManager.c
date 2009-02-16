@@ -70,12 +70,12 @@ static gint puss_text_view_button_press_event(GtkWidget *widget, GdkEventButton 
 
 static void puss_text_view_class_init(PussTextViewClass* klass) {
 	GtkBindingSet* binding_set;
-	GtkTextViewClass* parent_klass = GTK_TEXT_VIEW_CLASS(klass);
+	GtkTextViewClass* parent_class = GTK_TEXT_VIEW_CLASS(klass);
 	GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
 
-	parent_move_cursor_fn = parent_klass->move_cursor;
+	parent_move_cursor_fn = parent_class->move_cursor;
 	parent_press_event_fn = widget_class->button_press_event;
-	parent_klass->move_cursor = puss_text_view_move_cursor;
+	parent_class->move_cursor = puss_text_view_move_cursor;
 	widget_class->button_press_event = puss_text_view_button_press_event;
 
 	binding_set = gtk_binding_set_by_class(klass);
