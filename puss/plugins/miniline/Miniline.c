@@ -84,9 +84,11 @@ static void find_and_locate_text(Miniline* miniline, GtkTextView* view, const gc
 static void select_current_search(GtkTextView* view) {
 	GtkTextIter ps, pe;
 	GtkTextBuffer* buf = gtk_text_view_get_buffer(view);
-	if( buf ) {
-		gtk_text_buffer_get_iter_at_mark(buf, &ps, gtk_text_buffer_get_mark(buf, "puss:searched_mark_start"));
-		gtk_text_buffer_get_iter_at_mark(buf, &pe, gtk_text_buffer_get_mark(buf, "puss:searched_mark_end"));
+	GtkTextMark* ms = gtk_text_buffer_get_mark(buf, "puss:searched_mark_start");
+	GtkTextMark* me = gtk_text_buffer_get_mark(buf, "puss:searched_mark_end");
+	if( buf && ms && me ) {
+		gtk_text_buffer_get_iter_at_mark(buf, &ps, ms);
+		gtk_text_buffer_get_iter_at_mark(buf, &pe, me);
 		gtk_text_buffer_remove_tag_by_name(buf, "puss:searched_current", &ps, &pe);
 		gtk_text_buffer_select_range(buf, &ps, &pe);
 	}

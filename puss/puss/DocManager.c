@@ -492,6 +492,13 @@ gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 		gtk_widget_grab_focus(GTK_WIDGET(view));
 	}
 
+	gtk_text_buffer_get_start_iter(GTK_TEXT_BUFFER(buf), &iter);
+	gtk_text_buffer_create_mark(GTK_TEXT_BUFFER(buf), "puss:searched_mark_start", &iter ,TRUE);
+	gtk_text_buffer_create_mark(GTK_TEXT_BUFFER(buf), "puss:searched_mark_end", &iter ,FALSE);
+
+	gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buf), "puss:searched", "background", "yellow", NULL);
+	gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buf), "puss:searched_current", "background", "green", NULL);
+
 	gtk_text_buffer_get_iter_at_offset(GTK_TEXT_BUFFER(buf), &iter, 0);
 	gtk_text_buffer_place_cursor(GTK_TEXT_BUFFER(buf), &iter);
 
@@ -511,7 +518,6 @@ gint doc_open_file( const gchar* filename, gint line, gint line_offset, gboolean
 
 		if( puss_load_file(url, &text, &len, &charset) ) {
 			// create text buffer & set text
-			GtkTextIter it;
 			GtkSourceBuffer* buf = gtk_source_buffer_new(0);
 			GtkTextBuffer* tbuf = GTK_TEXT_BUFFER(buf);
 			gtk_source_buffer_begin_not_undoable_action(buf);
@@ -519,13 +525,6 @@ gint doc_open_file( const gchar* filename, gint line, gint line_offset, gboolean
 			gtk_source_buffer_end_not_undoable_action(buf);
 			gtk_text_buffer_set_modified(tbuf, FALSE);
 			g_free(text);
-
-			gtk_text_buffer_get_start_iter(tbuf, &it);
-			gtk_text_buffer_create_mark(GTK_TEXT_BUFFER(buf), "puss:searched_mark_start", &it ,TRUE);
-			gtk_text_buffer_create_mark(GTK_TEXT_BUFFER(buf), "puss:searched_mark_end", &it ,FALSE);
-
-			gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buf), "puss:searched", "background", "yellow", NULL);
-			gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buf), "puss:searched_current", "background", "green", NULL);
 
 			// save url & charset
 			puss_doc_set_url(GTK_TEXT_BUFFER(buf), url);
