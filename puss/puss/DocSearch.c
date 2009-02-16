@@ -193,13 +193,83 @@ SIGNAL_CALLBACK void puss_search_dialog_cb_find(GtkButton* button) {
 	text = gtk_entry_get_text(g_self.find_entry);
 	page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
 	view = puss_doc_get_view_from_page_num(page_num);
+	if( !view )
+		return;
 
 	puss_find_and_locate_text(view, text, TRUE, TRUE, TRUE, TRUE, TRUE, (GTK_SOURCE_SEARCH_TEXT_ONLY | GTK_SOURCE_SEARCH_CASE_INSENSITIVE));
 }
 
 SIGNAL_CALLBACK void puss_search_dialog_cb_replace(GtkButton* button) {
+	gint page_num;
+	GtkTextView* view;
+	GtkTextBuffer* buf;
+	GtkTextIter ps, pe;
+	const gchar* find_text;
+	const gint flags = (GTK_SOURCE_SEARCH_TEXT_ONLY | GTK_SOURCE_SEARCH_CASE_INSENSITIVE);
+
+	page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
+	view = puss_doc_get_view_from_page_num(page_num);
+	if( !view )
+		return;
+
+	find_text = gtk_entry_get_text(g_self.find_entry);
+	buf = gtk_text_view_get_buffer(view);
+	gtk_text_buffer_get_iter_at_mark(buf, &ps, gtk_text_buffer_get_mark(buf, "puss:searched_mark_start"));
+	gtk_text_buffer_get_iter_at_mark(buf, &pe, gtk_text_buffer_get_mark(buf, "puss:searched_mark_end"));
+	if( !gtk_text_iter_equal(&ps, &pe) && g_self.last_search_text ) {
+		gchar* txt = gtk_text_buffer_get_text(buf, &ps, &pe, FALSE);
+		gboolean equ = g_str_equal(find_text, txt);
+		g_free(txt);
+
+		if( equ ) {
+			const gchar* replace_text = gtk_entry_get_text(g_self.replace_entry);
+
+			gtk_text_buffer_begin_user_action(buf);
+			gtk_text_buffer_delete(buf, &ps, &pe);
+			gtk_text_buffer_insert(buf, &ps, replace_text, -1);
+			gtk_text_buffer_end_user_action(buf);
+		}
+	}
+
+	puss_find_and_locate_text(view, find_text, TRUE, TRUE, TRUE, TRUE, TRUE, flags);
 }
 
 SIGNAL_CALLBACK void puss_search_dialog_cb_replace_all(GtkButton* button) {
+	gint page_num;
+	GtkTextView* view;
+	GtkTextBuffer* buf;
+	GtkTextIter iter, ps, pe;
+	const gchar* find_text;
+	const gchar* replace_text;
+	gint replace_text_len;
+	const gint flags = (GTK_SOURCE_SEARCH_TEXT_ONLY | GTK_SOURCE_SEARCH_CASE_INSENSITIVE);
+
+	page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
+	view = puss_doc_get_view_from_page_num(page_num);
+	if( !view )
+		return;
+
+	find_text = gtk_entry_get_text(g_self.find_entry);
+	replace_text = gtk_entry_get_text(g_self.replace_entry);
+	buf = gtk_text_view_get_buffer(view);
+
+	gtk_text_buffer_get_start_iter(buf, &iter);
+
+	gtk_text_buffer_begin_user_action(buf);
+	{
+		replace_text_len = (gint)strlen(replace_text);
+		while( gtk_source_iter_forward_search(&iter
+				, find_text
+				, flags
+				, &ps
+				, &pe
+				, 0) )
+		{
+			gtk_text_buffer_delete(buf, &ps, &pe);
+			gtk_text_buffer_insert(buf, &ps, replace_text, replace_text_len);
+			iter = ps;
+		}
+	}
+	gtk_text_buffer_end_user_action(buf);
 }
 
