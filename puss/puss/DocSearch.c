@@ -17,9 +17,9 @@ typedef struct {
 	GtkDialog*	dlg;
 	GtkEntry*	find_entry;
 	GtkEntry*	replace_entry;
-
-	gchar*		last_search_text;
 } FindDialog;
+
+static const gchar* PUSS_LAST_SEARCH_TEXT = "puss:last_search_text";
 
 static FindDialog g_self;
 
@@ -67,34 +67,36 @@ static gboolean find_prev_text(GtkTextView* view, const gchar* text, GtkTextIter
 
 static void unmark_all_search_text_matched(GtkTextBuffer* buf, int search_flags) {
 	GtkTextIter ps, pe, end;
-	if( g_self.last_search_text ) {
+	gchar* last_search_text = g_object_steal_data(G_OBJECT(buf), PUSS_LAST_SEARCH_TEXT);
+	if( last_search_text ) {
 		gtk_text_buffer_get_start_iter(buf, &ps);
 		gtk_text_buffer_get_end_iter(buf, &end);
 
-		while( gtk_source_iter_forward_search(&ps, g_self.last_search_text, search_flags, &ps, &pe, &end) ) {
+		while( gtk_source_iter_forward_search(&ps, last_search_text, search_flags, &ps, &pe, &end) ) {
 			gtk_text_buffer_remove_tag_by_name(buf, "puss:searched", &ps, &pe);
 			ps = pe;
 		}
 
-		g_free(g_self.last_search_text);
-		g_self.last_search_text = 0;
+		g_free(last_search_text);
 	}
 }
 
 static void mark_all_search_text_matched(GtkTextBuffer* buf, const gchar* text, int search_flags) {
 	GtkTextIter ps, pe, end;
-	if( g_self.last_search_text ) {
-		if( !text || !g_str_equal(text, g_self.last_search_text) )
+	gchar* last_search_text = g_object_get_data(G_OBJECT(buf), PUSS_LAST_SEARCH_TEXT);
+	if( last_search_text ) {
+		if( !text || !g_str_equal(text, last_search_text) )
 			unmark_all_search_text_matched(buf, search_flags);
 	}
 
 	if( text && *text!='\0' ) {
-		g_self.last_search_text = g_strdup(text);
-		if( g_self.last_search_text ) {
+		last_search_text = g_strdup(text);
+		g_object_set_data_full(G_OBJECT(buf), PUSS_LAST_SEARCH_TEXT, last_search_text, g_free); 
+		if( last_search_text ) {
 			gtk_text_buffer_get_start_iter(buf, &ps);
 			gtk_text_buffer_get_end_iter(buf, &end);
 
-			while( gtk_source_iter_forward_search(&ps, g_self.last_search_text, search_flags, &ps, &pe, &end) ) {
+			while( gtk_source_iter_forward_search(&ps, last_search_text, search_flags, &ps, &pe, &end) ) {
 				gtk_text_buffer_apply_tag_by_name(buf, "puss:searched", &ps, &pe);
 				ps = pe;
 			}
@@ -114,9 +116,11 @@ gboolean puss_find_and_locate_text( GtkTextView* view
 	GtkTextBuffer* buf;
 	GtkTextIter ps, pe;
 	gboolean res = FALSE;
+	gchar* last_search_text = 0;
 
 	buf = gtk_text_view_get_buffer(view);
-	if( mark_current && g_self.last_search_text ) {
+	last_search_text = g_object_get_data(G_OBJECT(buf), PUSS_LAST_SEARCH_TEXT);
+	if( mark_current && last_search_text ) {
 		gtk_text_buffer_get_iter_at_mark(buf, &ps, gtk_text_buffer_get_mark(buf, "puss:searched_mark_start"));
 		gtk_text_buffer_get_iter_at_mark(buf, &pe, gtk_text_buffer_get_mark(buf, "puss:searched_mark_end"));
 		gtk_text_buffer_remove_tag_by_name(buf, "puss:searched_current", &ps, &pe);
@@ -204,6 +208,7 @@ SIGNAL_CALLBACK void puss_search_dialog_cb_replace(GtkButton* button) {
 	GtkTextView* view;
 	GtkTextBuffer* buf;
 	GtkTextIter ps, pe;
+	gchar* last_search_text = 0;
 	const gchar* find_text;
 	const gint flags = (GTK_SOURCE_SEARCH_TEXT_ONLY | GTK_SOURCE_SEARCH_CASE_INSENSITIVE);
 
@@ -214,9 +219,11 @@ SIGNAL_CALLBACK void puss_search_dialog_cb_replace(GtkButton* button) {
 
 	find_text = gtk_entry_get_text(g_self.find_entry);
 	buf = gtk_text_view_get_buffer(view);
+	last_search_text = g_object_get_data(G_OBJECT(buf), PUSS_LAST_SEARCH_TEXT);
+
 	gtk_text_buffer_get_iter_at_mark(buf, &ps, gtk_text_buffer_get_mark(buf, "puss:searched_mark_start"));
 	gtk_text_buffer_get_iter_at_mark(buf, &pe, gtk_text_buffer_get_mark(buf, "puss:searched_mark_end"));
-	if( !gtk_text_iter_equal(&ps, &pe) && g_self.last_search_text ) {
+	if( !gtk_text_iter_equal(&ps, &pe) && last_search_text ) {
 		gchar* txt = gtk_text_buffer_get_text(buf, &ps, &pe, FALSE);
 		gboolean equ = g_str_equal(find_text, txt);
 		g_free(txt);
