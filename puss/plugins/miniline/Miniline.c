@@ -428,6 +428,7 @@ static gboolean miniline_cb_key_press_event( GtkWidget* widget, GdkEventKey* eve
 	default:
 		switch( event->keyval ) {
 		case GDK_Return:
+		case GDK_KP_Enter:
 			miniline_deactive();
 			select_current_search(view);
 			return TRUE;

@@ -184,6 +184,9 @@ void search_in_dir(const gchar* dirname, const gchar* search_text, SearchTools* 
 		if( !fname )
 			break;
 
+		if( fname[0]=='.' )
+			continue;
+
 		gchar* filename = g_build_filename(dirname, fname, NULL);
 		if( g_file_test(filename, G_FILE_TEST_IS_DIR) ) {
 			search_in_dir(filename, search_text, self);

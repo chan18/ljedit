@@ -189,6 +189,32 @@ void puss_find_dialog_show(const gchar* text) {
 	puss_find_and_locate_text(view, text, TRUE, FALSE, TRUE, TRUE, FALSE, (GTK_SOURCE_SEARCH_TEXT_ONLY | GTK_SOURCE_SEARCH_CASE_INSENSITIVE));
 }
 
+SIGNAL_CALLBACK gboolean puss_search_dialog_cb_find_entry_key_press( GtkWidget* widget, GdkEventKey* event ) {
+	gint page_num;
+	const gchar* text;
+	GtkTextView* view;
+
+	text = gtk_entry_get_text(g_self.find_entry);
+	page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
+	view = puss_doc_get_view_from_page_num(page_num);
+	if( !view )
+		return FALSE;
+
+	switch( event->keyval ) {
+	case GDK_Return:
+	case GDK_KP_Enter:
+	case GDK_Down:
+		puss_find_and_locate_text(view, text, TRUE, TRUE, TRUE, TRUE, TRUE, (GTK_SOURCE_SEARCH_TEXT_ONLY | GTK_SOURCE_SEARCH_CASE_INSENSITIVE));
+		return TRUE;
+
+	case GDK_Up:
+		puss_find_and_locate_text(view, text, FALSE, TRUE, TRUE, TRUE, TRUE, (GTK_SOURCE_SEARCH_TEXT_ONLY | GTK_SOURCE_SEARCH_CASE_INSENSITIVE));
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
 SIGNAL_CALLBACK void puss_search_dialog_cb_find(GtkButton* button) {
 	gint page_num;
 	const gchar* text;
