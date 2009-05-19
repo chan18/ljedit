@@ -35,7 +35,7 @@ static MLToken* parse_function_prefix(MLToken* ps, MLToken* pe) {
 static MLToken* parse_function_args(MLToken* ps, MLToken* pe, CppElem* fun, gboolean need_save_args) {
 	MLToken* retval = 0;
 	MLToken* decl_start;
-	TinyStr* typekey;
+	TinyStr* typekey = 0;
 	gint dt;
 	TinyStr* nskey = 0;
 	MLToken* name = 0;
@@ -224,10 +224,10 @@ gboolean cps_fun(Block* block, CppElem* parent) {
 				name = ps;
 
 			} else {
-				err_return_false_if_not( (gsize)(nskey->len) > ps->len );
-				err_return_false_if_not( nskey->buf[nskey->len - (ps->len + 1)]=='.' );
-				nskey->len -= (ps->len + 1);
-				nskey->buf[nskey->len] = '\0';
+				err_return_false_if_not( (gsize)(typekey->len) > ps->len );
+				err_return_false_if_not( typekey->buf[typekey->len - (ps->len + 1)]=='.' );
+				typekey->len -= (ps->len + 1);
+				typekey->buf[typekey->len] = '\0';
 				name = ps;
 			}
 

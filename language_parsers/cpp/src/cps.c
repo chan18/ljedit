@@ -371,7 +371,7 @@ MLToken* parse_scope(CppParser*	env, MLToken* tokens, gsize count, CppElem* pare
 			}
 		}
 
-		(*fn)(&block, 0);
+		(*fn)(&block, parent);
 	}
 
 	spliter_final(&spliter);

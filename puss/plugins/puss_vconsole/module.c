@@ -38,7 +38,7 @@ typedef struct {
 	VConsole*			vcon;
 
 } PussVConsole;
- 
+
 static void update_view(PussVConsole* self) {
 	VConsole* vcon = self->vcon;
 	SMALL_RECT* range;
@@ -118,6 +118,14 @@ static void update_view(PussVConsole* self) {
 	}
 }
 
+static void send_utf8_text(const gchar *text, PussVConsole* self) {
+	gunichar2* utf16_text = g_utf8_to_utf16(text, -1, 0, 0, 0);
+	if( utf16_text ) {
+		self->api->send_input(self->vcon, utf16_text);
+		g_free(utf16_text);
+	}
+}
+
 static gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, PussVConsole* self) {
 	if( self->vcon ) {
 		PostMessage(self->vcon->hwnd, WM_KEYDOWN, event->hardware_keycode, 0x001C0001);
@@ -160,13 +168,8 @@ static gboolean on_scroll_event(GtkWidget *widget, GdkEventScroll *event, PussVC
 	return TRUE;
 }
 
-static void on_paste_text(GtkClipboard *clipboard, const gchar *text, PussVConsole* self)
-{
-	gunichar2* utf16_text = g_utf8_to_utf16(text, -1, 0, 0, 0);
-	if( utf16_text ) {
-		self->api->send_input(self->vcon, utf16_text);
-		g_free(utf16_text);
-	}
+static void on_paste_text(GtkClipboard *clipboard, const gchar *text, PussVConsole* self) {
+	send_utf8_text(text, self);
 }
 
 static void on_paste(GtkTextView *text_view, PussVConsole* self) {
@@ -225,6 +228,41 @@ static void on_show_hide_btn_click(GtkButton *button, PussVConsole* self) {
 	}
 }
 
+static void on_chdir_btn_click(GtkButton *button, PussVConsole* self) {
+	gint page_num;
+	GtkTextBuffer* buf;
+	GString* url;
+	gchar* dirname;
+	gchar* cmd;
+
+	if( !self->vcon )
+		return;
+
+	page_num = gtk_notebook_get_current_page(puss_get_doc_panel(self->app));
+	if( page_num < 0 )
+		return;
+
+	buf = self->app->doc_get_buffer_from_page_num(page_num);
+	if( !buf )
+		return;
+
+	url = self->app->doc_get_url(buf);
+	if( !url )
+		return;
+
+	dirname = g_path_get_dirname(url->str);
+	if( dirname ) {
+		cmd = g_strdup_printf("%c:\nCD %s\n", dirname[0], dirname);
+		if( cmd ) {
+			send_utf8_text(cmd, self);
+			g_free(cmd);
+		}
+		g_free(dirname);
+	}
+
+	gtk_widget_grab_focus(self->view);
+}
+
 static gboolean on_active(GtkWidget* widget, GdkEventFocus* event, PussVConsole* self) {
 	gtk_widget_grab_focus(self->view);
 	return TRUE;
@@ -270,59 +308,64 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	self->module = g_module_open(vconsole_file, G_MODULE_BIND_LAZY);
 	g_free(vconsole_file);
 
-	if( self->module ) {
-		if( g_module_symbol(self->module, "get_vconsole_api", (gpointer*)&(self->get_vconsole_api)) ) {
-			self->api = self->get_vconsole_api();
+	if( !self->module )
+		return self;
 
-			self->view = gtk_text_view_new();
-			desc = pango_font_description_from_string("monospace 9");
-			if( desc ) {
-				gtk_widget_modify_font(self->view, desc);
-				pango_font_description_free(desc);
-			}
+	if( !g_module_symbol(self->module, "get_vconsole_api", (gpointer*)&(self->get_vconsole_api)) )
+		return self;
 
-			self->adjust = GTK_ADJUSTMENT( gtk_adjustment_new(0, 0, 14, 1, 14, 14) );
-			self->sbar = gtk_vscrollbar_new(self->adjust);
-			{
-				GtkWidget* reset_btn = gtk_button_new_with_label("reset");
-				GtkWidget* show_hide_btn = gtk_button_new_with_label("show/hide");
-				GtkWidget* vbox = gtk_vbox_new(FALSE, 2);
-				GtkWidget* hbox = gtk_hbox_new(FALSE, 2);
+	self->api = self->get_vconsole_api();
 
-				g_signal_connect(reset_btn, "clicked", (GCallback)on_reset_btn_click, self);
-				g_signal_connect(show_hide_btn, "clicked", (GCallback)on_show_hide_btn_click, self);
-
-				g_signal_connect(hbox, "focus-in-event",G_CALLBACK(&on_active), self);
-
-				gtk_box_pack_start(GTK_BOX(vbox), reset_btn, FALSE, FALSE, 0);
-				gtk_box_pack_start(GTK_BOX(vbox), show_hide_btn, FALSE, FALSE, 0);
-				gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
-				gtk_box_pack_start(GTK_BOX(hbox), self->view, TRUE, TRUE, 0);
-				gtk_box_pack_start(GTK_BOX(hbox), self->sbar, FALSE, FALSE, 0);
-				gtk_widget_show_all(hbox);
-
-				self->panel = hbox;
-				self->app->panel_append(self->panel, gtk_label_new(_("Terminal")), "puss_vconsole_plugin_panel", PUSS_PANEL_POS_BOTTOM);
-			}
-
-			self->need_update = FALSE;
-
-			self->vcon = self->api->create();
-			if( self->vcon ) {
-				self->vcon->on_screen_changed = vcon_on_screen_changed;
-				self->vcon->on_quit = vcon_on_quit;
-				self->vcon->tag = self;
-			}
-
-			g_signal_connect(self->view, "key-press-event", (GCallback)on_key_press, self);
-			g_signal_connect(self->view, "scroll-event", (GCallback)on_scroll_event, self);
-			g_signal_connect(self->view, "paste-clipboard", (GCallback)on_paste, self);
-			g_signal_connect(self->view, "size-allocate", (GCallback)on_size_allocate, self);
-			g_signal_connect(self->view, "size-request", (GCallback)on_size_request, self);
-			g_signal_connect(GTK_TEXT_VIEW(self->view)->im_context, "commit", (GCallback)on_im_commit, self);
-			g_signal_connect(self->adjust, "value-changed", (GCallback)on_sbar_changed, self);
-		}
+	self->view = gtk_text_view_new();
+	desc = pango_font_description_from_string("monospace 9");
+	if( desc ) {
+		gtk_widget_modify_font(self->view, desc);
+		pango_font_description_free(desc);
 	}
+
+	self->adjust = GTK_ADJUSTMENT( gtk_adjustment_new(0, 0, 14, 1, 14, 14) );
+	self->sbar = gtk_vscrollbar_new(self->adjust);
+	{
+		GtkWidget* reset_btn = gtk_button_new_with_label("reset");
+		GtkWidget* show_hide_btn = gtk_button_new_with_label("show/hide");
+		GtkWidget* chdir_btn = gtk_button_new_with_label("chdir");
+		GtkWidget* vbox = gtk_vbox_new(FALSE, 2);
+		GtkWidget* hbox = gtk_hbox_new(FALSE, 2);
+
+		g_signal_connect(reset_btn, "clicked", (GCallback)on_reset_btn_click, self);
+		g_signal_connect(show_hide_btn, "clicked", (GCallback)on_show_hide_btn_click, self);
+		g_signal_connect(chdir_btn, "clicked", (GCallback)on_chdir_btn_click, self);
+
+		g_signal_connect(hbox, "focus-in-event",G_CALLBACK(&on_active), self);
+
+		gtk_box_pack_start(GTK_BOX(vbox), reset_btn, FALSE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(vbox), show_hide_btn, FALSE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(vbox), chdir_btn, FALSE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(hbox), self->view, TRUE, TRUE, 0);
+		gtk_box_pack_start(GTK_BOX(hbox), self->sbar, FALSE, FALSE, 0);
+		gtk_widget_show_all(hbox);
+
+		self->panel = hbox;
+		self->app->panel_append(self->panel, gtk_label_new(_("Terminal")), "puss_vconsole_plugin_panel", PUSS_PANEL_POS_BOTTOM);
+	}
+
+	self->need_update = FALSE;
+
+	self->vcon = self->api->create();
+	if( self->vcon ) {
+		self->vcon->on_screen_changed = vcon_on_screen_changed;
+		self->vcon->on_quit = vcon_on_quit;
+		self->vcon->tag = self;
+	}
+
+	g_signal_connect(self->view, "key-press-event", (GCallback)on_key_press, self);
+	g_signal_connect(self->view, "scroll-event", (GCallback)on_scroll_event, self);
+	g_signal_connect(self->view, "paste-clipboard", (GCallback)on_paste, self);
+	g_signal_connect(self->view, "size-allocate", (GCallback)on_size_allocate, self);
+	g_signal_connect(self->view, "size-request", (GCallback)on_size_request, self);
+	g_signal_connect(GTK_TEXT_VIEW(self->view)->im_context, "commit", (GCallback)on_im_commit, self);
+	g_signal_connect(self->adjust, "value-changed", (GCallback)on_sbar_changed, self);
 
 	return self;
 }
