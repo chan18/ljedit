@@ -36,10 +36,10 @@ ifeq ($(PLATFORM), win32)
 
 else
 	CFLAGS += `pkg-config --cflags pygtk-2.0` \
-			-I/usr/include/python2.5
+			-I/usr/include/python2.6
 
 	LIBS += `pkg-config --libs pygtk-2.0` \
-			-lpython2.5
+			-lpython2.6
 
 endif
 
