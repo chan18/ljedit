@@ -1,0 +1,7 @@
+# puss plugin
+# 
+
+[plugin]
+name = javascript test
+engine = javascript
+description = javascript test desc
