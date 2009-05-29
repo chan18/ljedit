@@ -16,6 +16,8 @@ function JsTest() {
 	this.active = function() {
 		Seed.print("active");
 		Seed.print(this.a);
+		Seed.print(puss.plugins_path);
+		puss.doc_new()
 	}
 
 	this.deactive = function() {
