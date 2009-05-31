@@ -1,5 +1,5 @@
 /*
-Seed.import_namespace("Gtk");
+Gtk = imports.gi.Gtk
 
 with(Gtk)
 {
@@ -10,20 +10,15 @@ with(Gtk)
 }
 */
 
-function JsTest() {
-	this.a = "vvv";
-
-	this.active = function() {
-		Seed.print("active");
-		Seed.print(this.a);
-		Seed.print(puss.plugins_path);
-		puss.doc_new()
-	}
-
-	this.deactive = function() {
-		Seed.print("deactive");
-		Seed.print(this.a);
-	}
+puss_plugin_active = function() {
+	Seed.print("active");
+	Seed.print("aaa");
+	Seed.print(puss.plugins_path);
+	puss.doc_new()
+	return "aaa";
 }
 
-new JsTest();
+function puss_plugin_deactive(plugin) {
+	Seed.print("deactive");
+	Seed.print(plugin);
+}
