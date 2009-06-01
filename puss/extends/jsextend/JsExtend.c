@@ -17,13 +17,13 @@ static JsExtend* g_self = 0;
 //----------------------------------------------------------------
 // IPuss wrappers
 
-void js_wrapper_doc_new(SeedContext ctx, SeedObject fn, SeedObject self, gsize argc, const SeedValue argv[], SeedException* e) {
+SeedValue js_wrapper_doc_new(SeedContext ctx, SeedObject fn, SeedObject self, gsize argc, const SeedValue argv[], SeedException* e) {
 	if( argc != 0 ) {
 		seed_make_exception(ctx, e, "ArgumentError", "puss.doc_new expected 1 args");
-		return;
+	} else {
+		g_self->app->doc_new();
 	}
-
-	g_self->app->doc_new();
+	return seed_make_undefined(ctx);
 }
 
 //----------------------------------------------------------------
@@ -37,10 +37,9 @@ typedef struct {
 
 gpointer js_plugin_load(const gchar* plugin_id, GKeyFile* keyfile, JsExtend* self) {
 	gchar* url = 0;
-	gchar* sbuf = 0;
-	gsize  slen = 0;
 	SeedScript* script = 0;
 	PussJsPlugin* js_plugin = 0;
+	gchar* sbuf = 0;
 	SeedValue global = 0;
 	SeedValue obj = 0;
 	SeedException e = 0;
@@ -179,5 +178,9 @@ JsExtend* puss_js_extend_create(Puss* app) {
 
 void puss_js_extend_destroy(JsExtend* self) {
 	g_self = 0;
+	if( self ) {
+		// TODO : destroy engine
+		g_free(self);
+	}
 }
 

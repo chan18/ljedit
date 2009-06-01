@@ -289,10 +289,6 @@ PyObject* py_wrapper_active_panel_page(PyObject* self, PyObject* args) {
 
 // puss option manager
 
-void py_object_free_wrapper(PyObject* cb) {
-	Py_XDECREF(cb);
-}
-
 PyObject* py_wrapper_option_reg(PyObject* self, PyObject* args) {
 	const char* group = 0;
 	const char* key = 0;
@@ -374,7 +370,7 @@ PyObject* py_wrapper_option_monitor_reg(PyObject* self, PyObject* args) {
 		return 0;
 	}
 
-	handler = g_self->app->option_monitor_reg(option, (OptionChanged)&py_option_changed_wrapper, cb, (GFreeFunc)&py_object_free_wrapper);
+	handler = g_self->app->option_monitor_reg(option, (OptionChanged)&py_option_changed_wrapper, cb, (GFreeFunc)&py_object_decref);
 	Py_INCREF(cb);
 
 	return PyCObject_FromVoidPtr(handler, 0);
@@ -393,10 +389,7 @@ PyObject* py_wrapper_option_monitor_unreg(PyObject* self, PyObject* args) {
 
 // option setup
 
-gboolean	puss_option_setup_reg(const gchar* id, const gchar* name, CreateSetupWidget creator, gpointer tag, GDestroyNotify tag_destroy);
-void		puss_option_setup_unreg(const gchar* id);
-
-static GtkWidget* option_setup_widget_creator_py_wrapper(gpointer tag) {
+static GtkWidget* py_option_setup_widget_creator_wrapper(gpointer tag) {
 	GtkWidget* res = 0;
 	PyObject* cb = (PyObject*)tag;
 	if( cb && PyCallable_Check(cb) ) {
@@ -430,7 +423,7 @@ PyObject* py_wrapper_option_setup_reg(PyObject* self, PyObject* args) {
 		return 0;
 	}
 
-	res = g_self->app->option_setup_reg(id, name, option_setup_widget_creator_py_wrapper, cb, (GDestroyNotify)py_object_decref);
+	res = g_self->app->option_setup_reg(id, name, py_option_setup_widget_creator_wrapper, cb, (GDestroyNotify)py_object_decref);
 	if( res ) {
 		Py_INCREF(cb);
 	}

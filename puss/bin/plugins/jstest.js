@@ -13,8 +13,8 @@ with(Gtk)
 puss_plugin_active = function() {
 	Seed.print("active");
 	Seed.print("aaa");
-	Seed.print(puss.plugins_path);
-	puss.doc_new()
+	print(puss.plugins_path);
+	puss.doc_new();
 	return "aaa";
 }
 
