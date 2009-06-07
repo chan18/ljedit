@@ -318,6 +318,9 @@ void puss_panel_remove(GtkWidget* panel) {
 	GtkNotebook* parent;
 	PosNode* pos;
 
+	if( !panel )
+		return;
+
 	pos = (PosNode*)g_object_get_data(G_OBJECT(panel), PUSS_PANEL_SORT_ID);
 	if( pos )
 		pos->panel = 0;
