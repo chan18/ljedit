@@ -106,3 +106,20 @@ void cpp_file_clear(CppFile* file) {
 	cpp_elem_clear(&(file->root_scope));
 }
 
+CppFile* cpp_file_ref(CppFile* file) {
+	g_assert( file );
+	g_atomic_int_add(&file->ref_count, 1);
+	return file;
+}
+
+void cpp_file_unref(CppFile* file) {
+	g_assert( file );
+	g_atomic_int_add(&file->ref_count, -1);
+
+	g_assert( file->ref_count >= 0 );
+	if( file->ref_count==0 ) {
+		cpp_file_clear(file);
+		g_free(file);
+	}
+}
+

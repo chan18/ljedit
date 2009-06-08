@@ -274,10 +274,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\cpp\test.c"
-				>
-			</File>
-			<File
 				RelativePath=".\cpp\token.h"
 				>
 			</File>

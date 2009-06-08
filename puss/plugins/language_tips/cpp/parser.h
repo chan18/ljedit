@@ -12,20 +12,17 @@ typedef struct {
 	gboolean		enable_macro_replace;
 	gpointer		keywords_table;
 
-	void			(*pe_file_incref)(CppFile* file);
-	void			(*pe_file_decref)(CppFile* file);
+	GHashTable*		parsing_files;
+	GHashTable*		parsed_files;
 
-	CppFile*		(*pe_find_parsed)(gchar* filekey);
-	gboolean		(*pe_get_content)(gchar* filekey);
-
-	void			(*on_parsed)(CppFile* file);
-
+	gboolean		(*load_file)(const gchar* filename, gchar** text, gsize* len, G_CONST_RETURN gchar** charset);
 } CppParser;
 
 void cpp_parser_init(CppParser* env, gboolean enable_macro_replace);
 void cpp_parser_final(CppParser* env);
 
-CppFile* cpp_parser_parse(CppParser* env, gchar* filename_buf, gsize filename_len, gchar* buf, gsize len);
+gchar* cpp_parser_filename_to_filekey(const gchar* filename, glong namelen);
+CppFile* cpp_parser_parse(CppParser* env, const gchar* filekey, glong keylen);
 
 #endif//PUSS_CPP_PARSER_H
 

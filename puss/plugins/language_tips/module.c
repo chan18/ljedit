@@ -68,7 +68,7 @@ static gpointer tips_parse_thread(gpointer args) {
 
 	while( (filename = (gchar*)g_async_queue_pop(queue)) != PARSE_THREAD_EXIT_SIGN ) {
 		// parse file
-		cpp_parser_parse(&(g_self->cpp_parser), filename, -1, 0, 0);
+		cpp_parser_parse(&(g_self->cpp_parser), filename, -1);
 
 		g_free(filename);
 	}

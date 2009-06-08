@@ -159,5 +159,8 @@ struct _CppFile {
 
 void cpp_file_clear(CppFile* file);
 
+CppFile* cpp_file_ref(CppFile* file);
+void cpp_file_unref(CppFile* file);
+
 #endif//PUSS_CPP_DS_H
 

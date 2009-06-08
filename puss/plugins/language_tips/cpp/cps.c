@@ -16,6 +16,8 @@
 static MLToken* spliter_next_token(BlockSpliter* spliter, CppParser* env, gboolean skip_comment) {
 	MLToken* token;
 	gsize count;
+	BlockTag tag = { env, spliter->file };
+
 	g_assert( spliter->pos < spliter->end );
 
 	if( spliter->policy==SPLITER_POLICY_USE_TEXT ) {
@@ -34,10 +36,10 @@ static MLToken* spliter_next_token(BlockSpliter* spliter, CppParser* env, gboole
 			token = spliter->tokens + spliter->end;
 
 #ifdef USE_COMMENT_TOKEN
-			cpp_macro_lexer_next(spliter->lexer, token, &(env->macro_environ), env);
+			cpp_macro_lexer_next(spliter->lexer, token, &(env->macro_environ), &tag);
 #else
 			for(;;) {
-				cpp_macro_lexer_next(spliter->lexer, token, &(env->macro_environ), env);
+				cpp_macro_lexer_next(spliter->lexer, token, &(env->macro_environ), &tag);
 				if( token->type==TK_BLOCK_COMMENT || token->type==TK_LINE_COMMENT )
 					continue;
 				break;
@@ -120,8 +122,9 @@ static gboolean spliter_skip_pair_angle_bracket(BlockSpliter* spliter, CppParser
 	return TRUE;
 }
 
-void spliter_init_with_text(BlockSpliter* spliter, gchar* buf, gsize len, gint start_line) {
+void spliter_init_with_text(BlockSpliter* spliter, CppFile* file, gchar* buf, gsize len, gint start_line) {
 	spliter->policy = SPLITER_POLICY_USE_TEXT;
+	spliter->file = file;
 	spliter->tokens = 0;
 	spliter->cap = 0;
 	spliter->end = 0;
@@ -130,8 +133,9 @@ void spliter_init_with_text(BlockSpliter* spliter, gchar* buf, gsize len, gint s
 	cpp_lexer_init(spliter->lexer, buf, len, start_line);
 }
 
-void spliter_init_with_tokens(BlockSpliter* spliter, MLToken* tokens, gint count) {
+void spliter_init_with_tokens(BlockSpliter* spliter, CppFile* file, MLToken* tokens, gint count) {
 	spliter->policy = SPLITER_POLICY_USE_TOKENS;
+	spliter->file = file;
 	spliter->lexer = 0;
 	spliter->tokens = tokens;
 	spliter->cap = count;
@@ -359,7 +363,7 @@ MLToken* parse_scope(CppParser*	env, MLToken* tokens, gsize count, CppElem* pare
 	memset(&block, 0, sizeof(block));
 	block.env = env;
 
-	spliter_init_with_tokens(&spliter, tokens, count);
+	spliter_init_with_tokens(&spliter, parent->file, tokens, count);
 
 	while( (fn = spliter_next_block(&spliter, &block)) != 0 ) {
 		if( fn==CPS_BREAK_OUT_BLOCK ) {
