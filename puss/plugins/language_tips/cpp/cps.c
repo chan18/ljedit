@@ -359,6 +359,8 @@ MLToken* parse_scope(CppParser*	env, MLToken* tokens, gsize count, CppElem* pare
 	TParseFn fn;
 	BlockSpliter spliter;
 	Block block;
+	
+	g_assert( cpp_elem_has_subscope(parent) );
 
 	memset(&block, 0, sizeof(block));
 	block.env = env;

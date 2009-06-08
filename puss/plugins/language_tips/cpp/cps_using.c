@@ -30,8 +30,7 @@ gboolean cps_using(Block* block, CppElem* parent) {
 	elem->v_using.nskey = nskey;
 	nskey = 0;
 
-	//scope_insert(scope, p);
-	cpp_elem_free(elem);
+	cpp_scope_insert(parent, elem);
 	return TRUE;
 
 __cps_finish__:

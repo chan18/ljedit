@@ -65,8 +65,7 @@ gboolean cps_var(Block* block, CppElem* parent) {
 			need_parse_next = TRUE;
 		}
 
-		//scope_insert(scope, p);
-		cpp_elem_free(elem);
+		cpp_scope_insert(parent, elem);
 		elem = 0;
 	}
 

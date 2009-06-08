@@ -15,6 +15,13 @@
 #define _(str) dgettext(TEXT_DOMAIN, str)
 
 typedef struct {
+	Puss* app;
+
+	CppParser		cpp_parser;
+
+	GAsyncQueue*	parse_queue;
+	GThread*		parse_thread;
+
 	GtkBuilder*		builder;
 
 	// outline window
@@ -43,17 +50,10 @@ typedef struct {
 	GtkWidget*		tips_decl_window;
 	GtkTextView*	tips_decl_view;
 	GtkTextBuffer*	tips_decl_buffer;
-} DevUI;
 
-typedef struct {
-	Puss* app;
+	// update timer
+	guint			update_timer;
 
-	CppParser		cpp_parser;
-
-	GAsyncQueue*	parse_queue;
-	GThread*		parse_thread;
-
-	DevUI			ui;
 } LanguageTips;
 
 static LanguageTips* g_self = 0;
@@ -78,17 +78,68 @@ static gpointer tips_parse_thread(gpointer args) {
 	return 0;
 }
 
+typedef struct {
+	GtkTreeStore*	store;
+	GtkTreeIter*	iter;
+} AddItemTag;
+
+static void outline_add_elem(CppElem* elem, AddItemTag* parent) {
+	GtkTreeIter iter;
+
+	if( elem->type==CPP_ET_INCLUDE || elem->type==CPP_ET_UNDEF )
+		return;
+
+	gtk_tree_store_append(parent->store, &iter, parent->iter);
+	gtk_tree_store_set( parent->store, &iter
+		//, 0, icons_->get_icon_from_elem(*elem)
+		, 1, elem->name->buf
+		, 2, elem
+		, -1 );
+
+	if( cpp_elem_has_subscope(elem) ) {
+		AddItemTag tag = {parent->store, &iter};
+		g_list_foreach( cpp_elem_get_subscope(elem), (GFunc)outline_add_elem, &tag );
+	}
+}
+
+static void outline_set_file(LanguageTips* self, CppFile* file, gint line) {
+	if( file != self->outline_file ) {
+		gtk_tree_view_set_model(self->outline_view, 0);
+		gtk_tree_store_clear(self->outline_store);
+
+		if( self->outline_file ) {
+			cpp_file_unref(self->outline_file);
+			self->outline_file = 0;
+		}
+
+		if( file ) {
+			AddItemTag tag = {self->outline_store, 0};
+
+			self->outline_file = cpp_file_ref(file);
+			g_list_foreach( file->root_scope.v_ncscope.scope, (GFunc)outline_add_elem, &tag );
+		}
+
+		gtk_tree_view_set_model(self->outline_view, GTK_TREE_MODEL(self->outline_store));
+	}
+
+	if( file && self->outline_pos != line ) {
+		self->outline_pos = line;
+		gtk_tree_selection_unselect_all( gtk_tree_view_get_selection(self->outline_view) );
+
+		// locate_line( (size_t)line + 1, 0 );
+	}
+}
+
 static void create_ui(LanguageTips* self) {
 	gchar* filepath;
 	GtkBuilder* builder;
 	GError* err = 0;
-	DevUI* ui = &(self->ui);
 
 	builder = gtk_builder_new();
 	if( !builder )
 		return;
 
-	ui->builder = builder;
+	self->builder = builder;
 
 	gtk_builder_set_translation_domain(builder, TEXT_DOMAIN);
 
@@ -109,54 +160,82 @@ static void create_ui(LanguageTips* self) {
 		return;
 	}
 
-	ui->outline_panel = GTK_WIDGET(gtk_builder_get_object(builder, "outline_panel"));
-	ui->outline_view = GTK_TREE_VIEW(gtk_builder_get_object(builder, "outline_treeview"));
-	ui->outline_store = GTK_TREE_STORE(g_object_ref(gtk_builder_get_object(builder, "outline_store")));
-	g_assert( ui->outline_panel && ui->outline_view && ui->outline_store );
+	self->outline_panel = GTK_WIDGET(gtk_builder_get_object(builder, "outline_panel"));
+	self->outline_view = GTK_TREE_VIEW(gtk_builder_get_object(builder, "outline_treeview"));
+	self->outline_store = GTK_TREE_STORE(g_object_ref(gtk_builder_get_object(builder, "outline_store")));
+	g_assert( self->outline_panel && self->outline_view && self->outline_store );
 
-	gtk_widget_show_all(ui->outline_panel);
-	self->app->panel_append(ui->outline_panel, gtk_label_new(_("Outline")), "dev_outline", PUSS_PANEL_POS_RIGHT);
+	gtk_widget_show_all(self->outline_panel);
+	self->app->panel_append(self->outline_panel, gtk_label_new(_("Outline")), "dev_outline", PUSS_PANEL_POS_RIGHT);
 
-	ui->preview_panel = GTK_WIDGET(gtk_builder_get_object(builder, "preview_panel"));
-	ui->preview_filename_label = GTK_LABEL(gtk_builder_get_object(builder, "filename_label"));
-	ui->preview_number_button = GTK_BUTTON(gtk_builder_get_object(builder, "number_button"));
-	ui->preview_view           = GTK_TEXT_VIEW(gtk_builder_get_object(builder, "preview_view"));
-	g_assert( ui->preview_panel && ui->preview_filename_label && ui->preview_number_button && ui->preview_view );
+	self->preview_panel = GTK_WIDGET(gtk_builder_get_object(builder, "preview_panel"));
+	self->preview_filename_label = GTK_LABEL(gtk_builder_get_object(builder, "filename_label"));
+	self->preview_number_button = GTK_BUTTON(gtk_builder_get_object(builder, "number_button"));
+	self->preview_view           = GTK_TEXT_VIEW(gtk_builder_get_object(builder, "preview_view"));
+	g_assert( self->preview_panel && self->preview_filename_label && self->preview_number_button && self->preview_view );
 
-	gtk_widget_show_all(ui->preview_panel);
-	self->app->panel_append(ui->preview_panel, gtk_label_new(_("Preview")), "dev_preview", PUSS_PANEL_POS_BOTTOM);
+	gtk_widget_show_all(self->preview_panel);
+	self->app->panel_append(self->preview_panel, gtk_label_new(_("Preview")), "dev_preview", PUSS_PANEL_POS_BOTTOM);
 
-	ui->tips_include_window = GTK_WIDGET(gtk_builder_get_object(builder, "include_window"));
-	ui->tips_include_view = GTK_TREE_VIEW(gtk_builder_get_object(builder, "include_view"));
-	ui->tips_include_model = GTK_TREE_MODEL(gtk_builder_get_object(builder, "include_store"));
-	g_assert( ui->tips_include_window && ui->tips_include_view && ui->tips_include_model );
+	self->tips_include_window = GTK_WIDGET(gtk_builder_get_object(builder, "include_window"));
+	self->tips_include_view = GTK_TREE_VIEW(gtk_builder_get_object(builder, "include_view"));
+	self->tips_include_model = GTK_TREE_MODEL(gtk_builder_get_object(builder, "include_store"));
+	g_assert( self->tips_include_window && self->tips_include_view && self->tips_include_model );
 	gtk_widget_show_all(GTK_WIDGET(gtk_builder_get_object(builder, "include_panel")));
 
-	ui->tips_list_window = GTK_WIDGET(gtk_builder_get_object(builder, "list_window"));
-	ui->tips_list_view = GTK_TREE_VIEW(gtk_builder_get_object(builder, "list_view"));
-	ui->tips_list_model = GTK_TREE_MODEL(gtk_builder_get_object(builder, "list_store"));
-	g_assert( ui->tips_list_window && ui->tips_list_view && ui->tips_list_model );
+	self->tips_list_window = GTK_WIDGET(gtk_builder_get_object(builder, "list_window"));
+	self->tips_list_view = GTK_TREE_VIEW(gtk_builder_get_object(builder, "list_view"));
+	self->tips_list_model = GTK_TREE_MODEL(gtk_builder_get_object(builder, "list_store"));
+	g_assert( self->tips_list_window && self->tips_list_view && self->tips_list_model );
 	gtk_widget_show_all(GTK_WIDGET(gtk_builder_get_object(builder, "list_panel")));
 
-	ui->tips_decl_window = GTK_WIDGET(gtk_builder_get_object(builder, "decl_window"));
-	ui->tips_decl_view = GTK_TEXT_VIEW(gtk_builder_get_object(builder, "decl_view"));
-	ui->tips_decl_buffer = GTK_TEXT_BUFFER(gtk_text_view_get_buffer(ui->tips_decl_view));
-	g_assert( ui->tips_decl_window && ui->tips_decl_view && ui->tips_decl_buffer );
+	self->tips_decl_window = GTK_WIDGET(gtk_builder_get_object(builder, "decl_window"));
+	self->tips_decl_view = GTK_TEXT_VIEW(gtk_builder_get_object(builder, "decl_view"));
+	self->tips_decl_buffer = GTK_TEXT_BUFFER(gtk_text_view_get_buffer(self->tips_decl_view));
+	g_assert( self->tips_decl_window && self->tips_decl_view && self->tips_decl_buffer );
 	gtk_widget_show_all(GTK_WIDGET(gtk_builder_get_object(builder, "decl_panel")));
 
 	gtk_builder_connect_signals(builder, self);
 }
 
 static void destroy_ui(LanguageTips* self) {
-	DevUI* ui = &(self->ui);
-
-	if( !ui->builder )
+	if( !self->builder )
 		return;
 
-	self->app->panel_remove(ui->outline_panel);
-	self->app->panel_remove(ui->preview_panel);
+	self->app->panel_remove(self->outline_panel);
+	self->app->panel_remove(self->preview_panel);
 
-	g_object_unref(G_OBJECT(ui->builder));
+	g_object_unref(G_OBJECT(self->builder));
+}
+
+static void outline_update(LanguageTips* self) {
+	GtkNotebook* doc_panel;
+	gint num;
+	GtkTextBuffer* buf;
+	GString* url;
+	CppFile* file;
+	GtkTextIter iter;
+
+	doc_panel = puss_get_doc_panel(self->app);
+	if( (num = gtk_notebook_get_current_page(doc_panel)) < 0
+		|| !(buf = self->app->doc_get_buffer_from_page_num(num))
+		|| !(url = self->app->doc_get_url(buf))
+		|| !(file = (CppFile*)g_hash_table_lookup(self->cpp_parser.parsed_files, url->str)) )
+	{
+		return;
+	}
+
+	gtk_text_buffer_get_iter_at_mark(buf, &iter, gtk_text_buffer_get_insert(buf));
+	num = gtk_text_iter_get_line(&iter);
+	outline_set_file(self, file, num);
+
+	cpp_file_unref(file);
+}
+
+static gboolean on_update_timeout(LanguageTips* self) {
+	outline_update(self);
+
+	return TRUE;
 }
 
 PUSS_EXPORT void* puss_plugin_create(Puss* app) {
@@ -167,6 +246,7 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	g_self->app = app;
 
 	cpp_parser_init( &(g_self->cpp_parser), TRUE );
+	g_self->cpp_parser.load_file = app->load_file;
 
 	g_self->parse_queue = g_async_queue_new_full(g_free);
 	g_self->parse_thread = g_thread_create(tips_parse_thread, g_self->parse_queue, TRUE, 0);
@@ -175,12 +255,16 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 
 	create_ui(g_self);
 
+	g_self->update_timer = g_timeout_add(500, on_update_timeout, g_self);
+
 	return g_self;
 }
 
 PUSS_EXPORT void puss_plugin_destroy(void* ext) {
 	if( !g_self )
 		return;
+
+	g_source_remove(g_self->update_timer);
 
 	destroy_ui(g_self);
 

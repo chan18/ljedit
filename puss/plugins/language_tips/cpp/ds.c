@@ -98,6 +98,16 @@ void cpp_elem_clear(CppElem* elem) {
 	}
 }
 
+static gint cpp_elem_pos_compare(const CppElem* a, const CppElem* b) {
+	return b->sline - a->sline;
+}
+
+void cpp_scope_insert(CppElem* parent, CppElem* elem) {
+	parent->v_ncscope.scope = parent->v_ncscope.scope
+		? g_list_insert_sorted( &(parent->v_ncscope.scope), elem, cpp_elem_pos_compare )
+		: elem ;
+}
+
 void cpp_file_clear(CppFile* file) {
 	if( !file )
 		return;

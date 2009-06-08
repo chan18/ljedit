@@ -87,7 +87,7 @@ static MLToken* parse_function_args(MLToken* ps, MLToken* pe, CppElem* fun, gboo
 			p->typekey = ns;
 
 			meger_tokens(lexer, start_pos, lexer.pos(), p->decl);
-			scope_insert(fun.impl, p);
+			cpp_scope_insert(fun, elem);
 			*/
 			tiny_str_free(typekey);
 			tiny_str_free(nskey);
@@ -156,8 +156,7 @@ static gboolean parse_function_common(Block* block, CppElem* parent, MLToken* st
 
 	elem->decl = block_meger_tokens(block->tokens, ps, 0);
 
-	//scope_insert(scope, ptr.release());
-	cpp_elem_free(elem);
+	cpp_scope_insert(parent, elem);
 
 	if( block->style==BLOCK_STYLE_BLOCK ) {
 		while( (ps < pe) && ps->type!='{' )

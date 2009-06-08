@@ -197,7 +197,7 @@ CppFile* cpp_parser_parse(CppParser* env, const gchar* filekey, glong keylen) {
 		return file;
 
 	// check re-parsing
-	if( (file = (CppFile*)g_hash_table_lookup(env->parsing_files, filekey, &mtime)) != 0 );
+	if( (file = (CppFile*)g_hash_table_lookup(env->parsing_files, filekey, &mtime)) != 0 )
 		return file;
 
 	// check already parsed and get file modify time

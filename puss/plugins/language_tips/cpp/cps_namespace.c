@@ -29,7 +29,8 @@ gboolean cps_namespace(Block* block, CppElem* parent) {
 		elem->decl = tiny_str_new(0, 10 + name->len);
 		memcpy(elem->decl->buf, "namesapce ", 10);
 		memcpy(elem->decl->buf + 8, name->buf, name->len);
-		// scope_insert(scope, p);
+
+		cpp_scope_insert(parent, elem);
 		parent = elem;
 	}
 

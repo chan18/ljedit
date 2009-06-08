@@ -4,12 +4,15 @@
 #include "cps_utils.h"
 
 gboolean cps_class(Block* block, CppElem* parent) {
+	MLToken* ps;
+	MLToken* pe;
 	CppElem* elem = 0;
 	TinyStr* nskey = 0;
 	MLToken* name = 0;
 	gint class_type = KD_UNK;
-	MLToken* ps = block->tokens;
-	MLToken* pe = ps + block->count;
+
+	ps = block->tokens;
+	pe = ps + block->count;
 	for( ; ps < pe; ++ps ) {
 		if( ps->type==KW_STRUCT || ps->type==KW_CLASS || ps->type==KW_UNION ) {
 			class_type = ps->type;
@@ -48,8 +51,7 @@ gboolean cps_class(Block* block, CppElem* parent) {
 	elem->v_class.class_type = class_type==KW_STRUCT ? 's' : (class_type==KW_CLASS ? 'c' : (class_type==KW_UNION ? 'u' : '?'));
 	elem->decl = block_meger_tokens(block->tokens, ps, 0);
 
-	//scope_insert(scope, p);
-	cpp_elem_free(elem);
+	cpp_scope_insert(parent, elem);
 
 	err_goto_finish_if_not( ps < pe );
 

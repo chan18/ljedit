@@ -109,8 +109,8 @@ static gboolean cps_complex_typedef(Block* block, CppElem* parent) {
 	elem = (CppElem*)(node->data);
 	node->data = 0;
 	err_goto_finish_if( elem->type!=CPP_ET_CLASS && elem->type!=CPP_ET_ENUM );
-	// scope_insert(scope, elem);
-	cpp_elem_free(elem);
+
+	cpp_scope_insert(parent, elem);
 
 	node = g_list_next(node);
 	for( ; node; node = g_list_next(node) ) {
@@ -130,8 +130,7 @@ static gboolean cps_complex_typedef(Block* block, CppElem* parent) {
 		memcpy(elem->decl->buf + 8, str->buf, str->len);
 		tiny_str_free(str);
 
-		//scope_insert(scope, p);
-		cpp_elem_free(elem);
+		cpp_scope_insert(parent, elem);
 	}
 
 __cps_finish__:

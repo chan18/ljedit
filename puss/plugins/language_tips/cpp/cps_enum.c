@@ -10,8 +10,7 @@ MLToken* parse_enum_iterms(MLToken* ps, MLToken* pe, CppElem* parent) {
 		elem->name = tiny_str_new(ps->buf, ps->len);
 		elem->decl = tiny_str_new(ps->buf, ps->len);
 
-		//scope_insert(scope, p);
-		cpp_elem_free(elem);
+		cpp_scope_insert(parent, elem);
 
 		++ps;
 
@@ -46,8 +45,7 @@ gboolean cps_enum(Block* block, CppElem* parent) {
 
 	elem->decl = block_meger_tokens(block->tokens, ps, 0);
 
-	//scope_insert(scope, p);
-	cpp_elem_free(elem);
+	cpp_scope_insert(parent, elem);
 
 	if( (ps < pe) && ps->type=='{' ) {
 		err_return_false_if( (ps = parse_enum_iterms(ps + 1, pe, elem))==0 );
