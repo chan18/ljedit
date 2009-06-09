@@ -254,7 +254,6 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	g_self->app = app;
 
 	cpp_parser_init( &(g_self->cpp_parser), TRUE );
-	g_self->cpp_parser.load_file = app->load_file;
 
 	g_self->parse_queue = g_async_queue_new_full(g_free);
 	g_self->parse_thread = g_thread_create(tips_parse_thread, g_self->parse_queue, TRUE, 0);

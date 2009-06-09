@@ -12,10 +12,10 @@ typedef struct {
 	gboolean		enable_macro_replace;
 	gpointer		keywords_table;
 
+	GList*			include_paths;
+
 	GHashTable*		parsing_files;
 	GHashTable*		parsed_files;
-
-	gboolean		(*load_file)(const gchar* filename, gchar** text, gsize* len, G_CONST_RETURN gchar** charset);
 } CppParser;
 
 void cpp_parser_init(CppParser* env, gboolean enable_macro_replace);

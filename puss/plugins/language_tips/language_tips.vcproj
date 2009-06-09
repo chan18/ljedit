@@ -242,6 +242,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\cpp\guide.c"
+				>
+			</File>
+			<File
+				RelativePath=".\cpp\guide.h"
+				>
+			</File>
+			<File
 				RelativePath=".\cpp\keywords.c"
 				>
 			</File>

@@ -155,9 +155,11 @@ static void on_macro_include(MLStr* filename, gboolean is_system_header, gint li
 }
 
 void cpp_parser_init(CppParser* env, gboolean enable_macro_replace) {
+	env->keywords_table = cpp_keywords_table_new();
+
 	env->rmacros_table = g_hash_table_new_full(g_str_hash, g_str_equal, 0, (GDestroyNotify)rmacro_free);
 	env->enable_macro_replace = enable_macro_replace;
-	env->keywords_table = cpp_keywords_table_new();
+
 	env->macro_environ.find_macro = (TFindMacroFn)find_macro;
 	env->macro_environ.on_macro_define = (TOnMacroDefineFn)on_macro_define;
 	env->macro_environ.on_macro_undef = (TOnMacroUndefFn)on_macro_undef;
@@ -175,20 +177,19 @@ void cpp_parser_final(CppParser* env) {
 static CppFile* cpp_parser_do_parse_in_include_path(CppParser* env, const gchar* filename, glong namelen) {
 	CppFile* file = 0;
 	gchar* filekey;
+	gchar* str;
+	GList* p;
 
-	/*
-	cpp::File* retval = 0;
-	std::string filekey;
-
-	StrVector::const_iterator it = include_paths_.begin();
-	StrVector::const_iterator end = include_paths_.end();
-	for( ; it!=end && retval==0; ++it ) {
-		// build file key
-		env_.pe_build_filekey(filekey, *it, filename);
-
-		retval = do_parse(filekey, os);
+	for( p=env->include_paths; !file && p; p=p->next ) {
+		str = g_build_filename( (gchar*)(p->data), filename, 0 );
+		if( str ) {
+			filekey = cpp_parser_filename_to_filekey(str, -1);
+			if( filekey )
+				file = cpp_parser_parse(env, filekey, -1);
+			g_free(str);
+		}
 	}
-	*/
+
 	return file;
 }
 
@@ -225,6 +226,53 @@ static void cpp_parser_do_parse(CppParser* env, CppFile* file, gchar* buf, gsize
 	spliter_final(&spliter);
 }
 
+static gboolean load_convert_text(gchar** text, gsize* len, const gchar* charset, GError** err) {
+	gsize bytes_written = 0;
+	gchar* result = g_convert(*text, *len, "UTF-8", charset, 0, &bytes_written, err);
+	if( result ) {
+		if( g_utf8_validate(result, bytes_written, 0) ) {
+			g_free(*text);
+			*text = result;
+			*len = bytes_written;
+			return TRUE;
+		}
+
+		g_free(result);
+	}
+
+	return FALSE;
+}
+
+gboolean cpp_parser_load_file(const gchar* filename, gchar** text, gsize* len) {
+	gchar** cs;
+	const gchar* locale = 0;
+	gchar* sbuf = 0;
+	gsize  slen = 0;
+
+	g_return_val_if_fail(filename && text && len , FALSE);
+	g_return_val_if_fail(*filename, FALSE);
+
+	if( !g_file_get_contents(filename, &sbuf, &slen, 0) )
+		return FALSE;
+
+	if( g_utf8_validate(sbuf, slen, 0) ) {
+		*text = sbuf;
+		*len = slen;
+		return TRUE;
+	}
+
+	if( !g_get_charset(&locale) ) {		// get locale charset, and not UTF-8
+		if( load_convert_text(&sbuf, &slen, locale, 0) ) {
+			*text = sbuf;
+			*len = slen;
+			return TRUE;
+		}
+	}
+
+	g_free(sbuf);
+	return FALSE;
+}
+
 CppFile* cpp_parser_parse(CppParser* env, const gchar* filekey, glong keylen) {
 	CppFile* file = 0;
 	time_t mtime = 0;
@@ -245,7 +293,7 @@ CppFile* cpp_parser_parse(CppParser* env, const gchar* filekey, glong keylen) {
 	if( file )
 		return cpp_file_ref(file);
 
-	if( !env->load_file(filekey, &buf, &len, 0) )
+	if( !cpp_parser_load_file(env, filekey, &buf, &len) )
 		return 0;
 
 	// need parse file
