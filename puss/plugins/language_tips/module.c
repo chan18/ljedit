@@ -217,13 +217,21 @@ static void outline_update(LanguageTips* self) {
 	GtkTextIter iter;
 
 	doc_panel = puss_get_doc_panel(self->app);
-	if( (num = gtk_notebook_get_current_page(doc_panel)) < 0
-		|| !(buf = self->app->doc_get_buffer_from_page_num(num))
-		|| !(url = self->app->doc_get_url(buf))
-		|| !(file = (CppFile*)g_hash_table_lookup(self->cpp_parser.parsed_files, url->str)) )
-	{
+	num = gtk_notebook_get_current_page(doc_panel);
+	if( num < 0 )
 		return;
-	}
+
+	buf = self->app->doc_get_buffer_from_page_num(num);
+	if( !buf )
+		return;
+
+	url = self->app->doc_get_url(buf);
+	if( !url )
+		return;
+
+	file = (CppFile*)g_hash_table_lookup(self->cpp_parser.parsed_files, url->str);
+	if( !file )
+		return;
 
 	gtk_text_buffer_get_iter_at_mark(buf, &iter, gtk_text_buffer_get_insert(buf));
 	num = gtk_text_iter_get_line(&iter);

@@ -6,7 +6,7 @@
 
 #define  tiny_str_mem_size(len) (sizeof(TinyStr) + len)
 
-TinyStr* tiny_str_new(gchar* buf, gshort len) {
+TinyStr* tiny_str_new(const gchar* buf, gshort len) {
 	//TinyStr* res = (TinyStr*)g_new(gchar, tiny_str_mem_size(len) );
 	TinyStr* res = (TinyStr*)g_slice_alloc( tiny_str_mem_size(len) );
 	res->len = len;
@@ -103,9 +103,10 @@ static gint cpp_elem_pos_compare(const CppElem* a, const CppElem* b) {
 }
 
 void cpp_scope_insert(CppElem* parent, CppElem* elem) {
-	parent->v_ncscope.scope = parent->v_ncscope.scope
-		? g_list_insert_sorted( &(parent->v_ncscope.scope), elem, cpp_elem_pos_compare )
-		: elem ;
+	if( parent->v_ncscope.scope )
+		parent->v_ncscope.scope = g_list_insert_sorted( parent->v_ncscope.scope, elem, cpp_elem_pos_compare );
+	else
+		parent->v_ncscope.scope = g_list_append(0, elem);
 }
 
 void cpp_file_clear(CppFile* file) {

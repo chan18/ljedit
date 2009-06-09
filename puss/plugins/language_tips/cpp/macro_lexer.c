@@ -181,7 +181,7 @@ static void cpp_parse_macro(MacroEnviron* env, CppLexer* lexer, gpointer tag) {
 			if( ch==es ) {
 				filename.len = (gsize)(frame->ps - filename.buf);
 				if( filename.len )
-					(*(env->on_macro_include))(&filename, ch=='<', tag);
+					(*(env->on_macro_include))(&filename, ch=='<', token.line, tag);
 				break;
 			}
 			FRAME_NEXT_CH();

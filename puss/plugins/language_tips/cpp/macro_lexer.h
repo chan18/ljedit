@@ -15,7 +15,7 @@ typedef struct {
 typedef RMacro*	(*TFindMacroFn)(MLStr* name, gpointer tag);
 typedef void	(*TOnMacroDefineFn)(MLStr* name, gint argc, MLStr* argv, MLStr* value, MLStr* comment, gpointer tag);
 typedef void	(*TOnMacroUndefFn)(MLStr* name, gpointer tag);
-typedef void	(*TOnMacroIncludeFn)(MLStr* filename, gboolean is_system_header, gpointer tag);
+typedef void	(*TOnMacroIncludeFn)(MLStr* filename, gboolean is_system_header, gint line, gpointer tag);
 
 typedef struct {
 	TFindMacroFn		find_macro;

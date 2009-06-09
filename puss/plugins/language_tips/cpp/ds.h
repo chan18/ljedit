@@ -12,7 +12,7 @@
 #define CPP_VIEW_PRIVATE	'R'
 
 
-#define CPP_ET_NCSCOPE		'S'	// namespace or class
+#define CPP_ET_NCSCOPE		'S'
 #define CPP_ET_KEYWORD		'K'
 #define CPP_ET_UNDEF		'U'
 #define CPP_ET_MACRO		'M'
@@ -34,7 +34,7 @@ typedef struct {
 	gchar	buf[1];
 } TinyStr;
 
-TinyStr* tiny_str_new(gchar* buf, gshort len);
+TinyStr* tiny_str_new(const gchar* buf, gshort len);
 void     tiny_str_free(TinyStr* str);
 #define  tiny_str_copy(str) tiny_str_new((str)->buf, (str)->len)
 gboolean tiny_str_equal(const TinyStr* a, const TinyStr* b);

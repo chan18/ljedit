@@ -9,6 +9,9 @@
 #include "cps.h"
 
 
+static CppFile* cpp_parser_do_parse_in_include_path(CppParser* env, const gchar* filename, glong namelen);
+
+
 static void __dump_block(Block* block) {
 	gchar ch;
 	gsize i;
@@ -105,9 +108,13 @@ static void on_macro_undef(MLStr* name, BlockTag* tag) {
 	name->buf[name->len] = ch;
 }
 
-static void on_macro_include(MLStr* filename, gboolean is_system_header, BlockTag* tag) {
+static void on_macro_include(MLStr* filename, gboolean is_system_header, gint line, BlockTag* tag) {
 	CppFile* incfile = 0;
 	gchar* filekey = 0;
+	gchar* path;
+	gchar* str;
+	CppElem* elem;
+
 	//if( stopsign_is_set() )
 	//	return;
 
@@ -116,24 +123,35 @@ static void on_macro_include(MLStr* filename, gboolean is_system_header, BlockTa
 			filekey = cpp_parser_filename_to_filekey(filename->buf, filename->len);
 
 		} else {
-
-			/*
-			std::string path;
-			env_.pe_get_path(path, inc.file.filename);
-			env_.pe_build_filekey(filekey, path, inc.filename);
-			*/
+			path = g_path_get_dirname(filename->buf);
+			str = g_build_filename(path, filename->buf, 0);
+			filekey = cpp_parser_filename_to_filekey(str, -1);
+			g_free(str);
+			g_free(path);
 		}
 
 		incfile = cpp_parser_parse(tag->env, filekey, -1);
 	}
 
-	/*
 	if( !incfile )
-		incfile = do_parse_in_include_path(inc.filename, os);
+		incfile = cpp_parser_do_parse_in_include_path(tag->env, filename->buf, filename->len);
 
-	if( incfile != 0 )
-		inc.include_file = incfile->filename;
-	*/
+	if( incfile ) {
+		elem = cpp_elem_new();
+		elem->type = CPP_ET_INCLUDE;
+		elem->name = tiny_str_new("_include_", -1);
+		elem->sline = line;
+		elem->eline = line;
+		elem->v_include.filename = tiny_str_new(filename->buf, filename->len);
+		elem->v_include.sys_header = is_system_header;
+		elem->v_include.include_file = tiny_str_copy(incfile->filename);
+
+		str = g_strdup_printf("#include %c%s%c", is_system_header?'<':'\"', filename->buf, is_system_header?'<':'\"');
+		elem->decl = tiny_str_new(str, strlen(str));
+		g_free(str);
+
+		cpp_scope_insert( &(tag->file->root_scope), elem );
+	}
 }
 
 void cpp_parser_init(CppParser* env, gboolean enable_macro_replace) {
@@ -154,6 +172,26 @@ void cpp_parser_final(CppParser* env) {
 	cpp_keywords_table_free(env->keywords_table);
 }
 
+static CppFile* cpp_parser_do_parse_in_include_path(CppParser* env, const gchar* filename, glong namelen) {
+	CppFile* file = 0;
+	gchar* filekey;
+
+	/*
+	cpp::File* retval = 0;
+	std::string filekey;
+
+	StrVector::const_iterator it = include_paths_.begin();
+	StrVector::const_iterator end = include_paths_.end();
+	for( ; it!=end && retval==0; ++it ) {
+		// build file key
+		env_.pe_build_filekey(filekey, *it, filename);
+
+		retval = do_parse(filekey, os);
+	}
+	*/
+	return file;
+}
+
 static CppFile* cpp_parser_check_parsed(CppParser* env, const gchar* filekey, time_t* mtime) {
 	CppFile* file;
 	struct stat filestat;
@@ -164,7 +202,7 @@ static CppFile* cpp_parser_check_parsed(CppParser* env, const gchar* filekey, ti
 
 	*mtime = filestat.st_mtime;
 	if( (file = (CppFile*)g_hash_table_lookup(env->parsed_files, filekey)) != 0 )
-		if( file->datetime != mtime )
+		if( file->datetime != *mtime )
 			file = 0;
 
 	return file;
@@ -197,13 +235,15 @@ CppFile* cpp_parser_parse(CppParser* env, const gchar* filekey, glong keylen) {
 		return file;
 
 	// check re-parsing
-	if( (file = (CppFile*)g_hash_table_lookup(env->parsing_files, filekey, &mtime)) != 0 )
+	file = (CppFile*)g_hash_table_lookup(env->parsing_files, filekey);
+	if( file )
 		return file;
 
 	// check already parsed and get file modify time
 	// 
-	if( (file = cpp_parser_check_parsed(env, filekey, &mtime)) != 0 )
-		return file;
+	file = cpp_parser_check_parsed(env, filekey, &mtime);
+	if( file )
+		return cpp_file_ref(file);
 
 	if( !env->load_file(filekey, &buf, &len, 0) )
 		return 0;
