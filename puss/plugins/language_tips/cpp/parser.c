@@ -155,13 +155,13 @@ void cpp_parser_final(CppParser* parser) {
 	g_static_rw_lock_free( &(parser->include_paths_lock) );
 }
 
-static CppFile* cpp_parser_do_parse_in_include_path(ParseEnv* env, const gchar* filename, glong namelen) {
+static CppFile* cpp_parser_do_parse_in_include_path(ParseEnv* env, const gchar* filename) {
 	CppFile* file = 0;
 	gchar* filekey;
 	gchar* str;
 	GList* p;
 
-	for( p=env->parser->include_paths; !file && p; p=p->next ) {
+	for( p=env->include_paths->paths; !file && p; p=p->next ) {
 		str = g_build_filename( (gchar*)(p->data), filename, 0 );
 		if( str ) {
 			filekey = cpp_parser_filename_to_filekey(str, -1);
@@ -281,8 +281,8 @@ static CppFile* parse_include_file(ParseEnv* env, MLStr* filename, gboolean is_s
 		incfile = cpp_parser_parse_use_menv(env, filekey);
 	}
 
-	if( !incfile )
-		incfile = cpp_parser_do_parse_in_include_path(env, filename->buf, filename->len);
+	if( !incfile && env->include_paths )
+		incfile = cpp_parser_do_parse_in_include_path(env, filename->buf);
 
 	return incfile;
 }
@@ -355,6 +355,12 @@ CppFile* cpp_parser_parse_use_menv(ParseEnv* env, const gchar* filekey) {
 		if( env->parser->enable_macro_replace ) {
 			env->rmacros_table = g_hash_table_new_full(g_str_hash, g_str_equal, 0, (GDestroyNotify)rmacro_free);
 			env->parse_include_file = parse_include_file;
+
+			g_static_rw_lock_reader_lock( &(env->parser->include_paths_lock) );
+			env->include_paths = env->parser->include_paths;
+			if( env->include_paths )
+				g_atomic_int_inc( &(env->include_paths->ref_count) );
+			g_static_rw_lock_reader_unlock( &(env->parser->include_paths_lock) );
 		}
 
 		// start parse
@@ -368,11 +374,20 @@ CppFile* cpp_parser_parse_use_menv(ParseEnv* env, const gchar* filekey) {
 }
 
 CppFile* cpp_parser_parse(CppParser* parser, const gchar* filekey) {
-	ParseEnv env = { parser, 0, 0, 0 };
-	CppFile* file = cpp_parser_parse_use_menv(&env, filekey);
+	ParseEnv env;
+	CppFile* file;
+
+	memset(&env, 0, sizeof(ParseEnv));
+
+	env->parser = parser;
+	file = cpp_parser_parse_use_menv(&env, filekey);
 
 	if( env.rmacros_table )
 		g_hash_table_destroy(env->rmacros_table);
+
+	if( env.include_paths )
+		if( g_atomic_int_dec_and_test(&(env.include_paths->ref_count)) )
+			g_list_free(env.include_paths->paths);
 
 	return file;
 }

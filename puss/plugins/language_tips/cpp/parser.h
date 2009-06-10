@@ -6,11 +6,16 @@
 #include "ds.h"
 
 typedef struct {
+	gint	ref_count;
+	GList*	paths;
+} IncludePaths;
+
+typedef struct {
 	gboolean		enable_macro_replace;
 	gpointer		keywords_table;
 
 	GStaticRWLock	include_paths_lock;
-	GList*			include_paths;
+	IncludePaths*	include_paths;
 
 	GStaticRWLock	files_lock;
 	GHashTable*		files;

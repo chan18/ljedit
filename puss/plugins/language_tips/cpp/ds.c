@@ -119,16 +119,13 @@ void cpp_file_clear(CppFile* file) {
 
 CppFile* cpp_file_ref(CppFile* file) {
 	g_assert( file );
-	g_atomic_int_add(&file->ref_count, 1);
+	g_atomic_int_inc(&(file->ref_count));
 	return file;
 }
 
 void cpp_file_unref(CppFile* file) {
 	g_assert( file );
-	g_atomic_int_add(&file->ref_count, -1);
-
-	g_assert( file->ref_count >= 0 );
-	if( file->ref_count==0 ) {
+	if( g_atomic_int_dec_and_test(&(file->ref_count)) ) {
 		cpp_file_clear(file);
 		g_free(file);
 	}
