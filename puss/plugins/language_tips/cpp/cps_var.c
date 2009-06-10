@@ -3,7 +3,7 @@
 
 #include "cps_utils.h"
 
-gboolean cps_var(Block* block, CppElem* parent) {
+gboolean cps_var(ParseEnv* env, Block* block) {
 	gboolean retval = FALSE;
 	gboolean need_parse_next = TRUE;
 	CppElem* elem = 0;
@@ -65,7 +65,7 @@ gboolean cps_var(Block* block, CppElem* parent) {
 			need_parse_next = TRUE;
 		}
 
-		cpp_scope_insert(parent, elem);
+		cpp_scope_insert(block->parent, elem);
 		elem = 0;
 	}
 

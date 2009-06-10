@@ -3,7 +3,7 @@
 
 #include "cps_utils.h"
 
-gboolean cps_namespace(Block* block, CppElem* parent) {
+gboolean cps_namespace(ParseEnv* env, Block* block) {
 	MLToken* ps = block->tokens;
 	MLToken* pe = ps + block->count;
 
@@ -30,14 +30,14 @@ gboolean cps_namespace(Block* block, CppElem* parent) {
 		memcpy(elem->decl->buf, "namesapce ", 10);
 		memcpy(elem->decl->buf + 8, name->buf, name->len);
 
-		cpp_scope_insert(parent, elem);
+		cpp_scope_insert(block->parent, elem);
 		parent = elem;
 	}
 
 	++ps;
 	err_return_false_if_not( ps < pe );
 
-	parse_scope(block->env, ps, (pe - ps), parent, FALSE);
+	parse_scope(env, ps, (pe - ps), block->parent, FALSE);
 	return TRUE;
 }
 

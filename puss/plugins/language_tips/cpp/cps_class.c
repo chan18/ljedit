@@ -3,7 +3,7 @@
 
 #include "cps_utils.h"
 
-gboolean cps_class(Block* block, CppElem* parent) {
+gboolean cps_class(ParseEnv* env, Block* block) {
 	MLToken* ps;
 	MLToken* pe;
 	CppElem* elem = 0;
@@ -51,7 +51,7 @@ gboolean cps_class(Block* block, CppElem* parent) {
 	elem->v_class.class_type = class_type==KW_STRUCT ? 's' : (class_type==KW_CLASS ? 'c' : (class_type==KW_UNION ? 'u' : '?'));
 	elem->decl = block_meger_tokens(block->tokens, ps, 0);
 
-	cpp_scope_insert(parent, elem);
+	cpp_scope_insert(block->parent, elem);
 
 	err_goto_finish_if_not( ps < pe );
 
@@ -90,11 +90,12 @@ gboolean cps_class(Block* block, CppElem* parent) {
 		err_goto_finish_if( ps->type!='{' );
 		++ps;
 
-		err_goto_finish_if( (ps = parse_scope(block->env, ps, (pe - ps), elem, TRUE))==0 );
+		ps = parse_scope(env, ps, (pe - ps), elem, TRUE)
+		err_goto_finish_if( ps==0 );
 		g_assert( (ps < pe) && ps->type=='}' );
 
 		if( ((ps+1) < pe) && (ps+1)->type!=';' ) {
-			Block var_block = { block->env, ps, (pe - ps), BLOCK_STYLE_LINE, block->scope };
+			Block var_block = { block->parent, ps, (pe - ps), BLOCK_STYLE_LINE, block->scope };
 			MLToken type_token = *ps;
 
 			ps->type = TK_ID;
@@ -102,7 +103,7 @@ gboolean cps_class(Block* block, CppElem* parent) {
 			ps->len = elem->name->len;
 			ps->line = (ps+1)->line;
 
-			cps_var(&var_block, parent);
+			cps_var(&var_block);
 			
 			*ps = type_token;
 		}

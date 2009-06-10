@@ -3,7 +3,7 @@
 
 #include "cps_utils.h"
 
-gboolean cps_using(Block* block, CppElem* parent) {
+gboolean cps_using(ParseEnv* env, Block* block) {
 	gboolean isns = FALSE;
 	TinyStr* nskey = 0;
 	MLToken* name;
@@ -30,7 +30,7 @@ gboolean cps_using(Block* block, CppElem* parent) {
 	elem->v_using.nskey = nskey;
 	nskey = 0;
 
-	cpp_scope_insert(parent, elem);
+	cpp_scope_insert(block->parent, elem);
 	return TRUE;
 
 __cps_finish__:

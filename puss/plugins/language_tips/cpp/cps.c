@@ -13,14 +13,13 @@
 // 
 //#define USE_COMMENT_TOKEN
 
-static MLToken* spliter_next_token(BlockSpliter* spliter, CppParser* env, gboolean skip_comment) {
+static MLToken* spliter_next_token(BlockSpliter* spliter, gboolean skip_comment) {
 	MLToken* token;
 	gsize count;
-	BlockTag tag = { env, spliter->file };
 
 	g_assert( spliter->pos < spliter->end );
 
-	if( spliter->policy==SPLITER_POLICY_USE_TEXT ) {
+	if( spliter->policy==SPLITER_POLICY_USE_LEXER ) {
 		while( (spliter->pos + 1)==spliter->end ) {
 			if( spliter->end >= spliter->cap ) {
 				count = spliter->cap ? spliter->cap * 2 : 32;
@@ -36,10 +35,11 @@ static MLToken* spliter_next_token(BlockSpliter* spliter, CppParser* env, gboole
 			token = spliter->tokens + spliter->end;
 
 #ifdef USE_COMMENT_TOKEN
-			cpp_macro_lexer_next(spliter->lexer, token, &(env->macro_environ), &tag);
+			cpp_macro_lexer_next(spliter->env, token);
+
 #else
 			for(;;) {
-				cpp_macro_lexer_next(spliter->lexer, token, &(env->macro_environ), &tag);
+				cpp_macro_lexer_next(spliter->env, token);
 				if( token->type==TK_BLOCK_COMMENT || token->type==TK_LINE_COMMENT )
 					continue;
 				break;
@@ -69,11 +69,11 @@ static MLToken* spliter_next_token(BlockSpliter* spliter, CppParser* env, gboole
 	return spliter->tokens + spliter->pos;
 }
 
-static gboolean spliter_skip_pair_round_brackets(BlockSpliter* spliter, CppParser* env) {
+static gboolean spliter_skip_pair_round_brackets(BlockSpliter* spliter) {
 	MLToken* token;
 	gint layer = 1;
 	while( layer > 0 ) {
-		if( (token = spliter_next_token(spliter, env, TRUE))==0 )
+		if( (token = spliter_next_token(spliter, TRUE))==0 )
 			return FALSE;
 
 		switch( token->type ) {
@@ -94,11 +94,11 @@ static gboolean spliter_skip_pair_round_brackets(BlockSpliter* spliter, CppParse
 	return TRUE;
 }
 
-static gboolean spliter_skip_pair_angle_bracket(BlockSpliter* spliter, CppParser* env) {
+static gboolean spliter_skip_pair_angle_bracket(BlockSpliter* spliter) {
 	MLToken* token;
  	gint layer = 1;
  	while( layer > 0 ) {
-		if( (token = spliter_next_token(spliter, env, TRUE))==0 )
+		if( (token = spliter_next_token(spliter, TRUE))==0 )
 			return FALSE;
 
 		switch( token->type ) {
@@ -109,7 +109,7 @@ static gboolean spliter_skip_pair_angle_bracket(BlockSpliter* spliter, CppParser
 			--layer;
 			break;
 		case '(':
-			spliter_skip_pair_round_brackets(spliter, env);
+			spliter_skip_pair_round_brackets(spliter);
 			break;
 		case '{':
 		case '}':
@@ -122,21 +122,18 @@ static gboolean spliter_skip_pair_angle_bracket(BlockSpliter* spliter, CppParser
 	return TRUE;
 }
 
-void spliter_init_with_text(BlockSpliter* spliter, CppFile* file, gchar* buf, gsize len, gint start_line) {
-	spliter->policy = SPLITER_POLICY_USE_TEXT;
-	spliter->file = file;
+void spliter_init(BlockSpliter* spliter, ParseEnv* env) {
+	spliter->policy = SPLITER_POLICY_USE_LEXER;
+	spliter->env = env;
 	spliter->tokens = 0;
 	spliter->cap = 0;
 	spliter->end = 0;
 	spliter->pos = 0;
-	spliter->lexer = g_slice_new(CppLexer);
-	cpp_lexer_init(spliter->lexer, buf, len, start_line);
 }
 
-void spliter_init_with_tokens(BlockSpliter* spliter, CppFile* file, MLToken* tokens, gint count) {
+void spliter_init_with_tokens(BlockSpliter* spliter, ParseEnv* env, MLToken* tokens, gint count) {
 	spliter->policy = SPLITER_POLICY_USE_TOKENS;
-	spliter->file = file;
-	spliter->lexer = 0;
+	spliter->env = env;
 	spliter->tokens = tokens;
 	spliter->cap = count;
 	spliter->end = count;
@@ -144,7 +141,7 @@ void spliter_init_with_tokens(BlockSpliter* spliter, CppFile* file, MLToken* tok
 }
 
 void spliter_final(BlockSpliter* spliter) {
-	if( spliter->policy==SPLITER_POLICY_USE_TEXT ) {
+	if( spliter->policy==SPLITER_POLICY_USE_LEXER ) {
 		cpp_lexer_final(spliter->lexer);
 		g_slice_free(CppLexer, spliter->lexer);
 		g_slice_free1(sizeof(MLToken)*spliter->cap, spliter->tokens);
@@ -156,43 +153,43 @@ void spliter_final(BlockSpliter* spliter) {
 
 // cps
 // 
-gboolean cps_var(Block* block, CppElem* parent);
-gboolean cps_fun(Block* block, CppElem* parent);
-gboolean cps_using(Block* block, CppElem* parent);
-gboolean cps_namespace(Block* block, CppElem* parent);
-gboolean cps_typedef(Block* block, CppElem* parent);
-gboolean cps_template(Block* block, CppElem* parent);
-gboolean cps_destruct(Block* block, CppElem* parent);
-gboolean cps_operator(Block* block, CppElem* parent);
-gboolean cps_extern_template(Block* block, CppElem* parent);
-gboolean cps_extern_scope(Block* block, CppElem* parent);
-gboolean cps_class(Block* block, CppElem* parent);
-gboolean cps_enum(Block* block, CppElem* parent);
-gboolean cps_block(Block* block, CppElem* parent);
-gboolean cps_impl_block(Block* block, CppElem* parent);
-gboolean cps_label(Block* block, CppElem* parent);
-gboolean cps_fun_or_var(Block* block, CppElem* parent);
-gboolean cps_breakout_block(Block* block, CppElem* parent);
-gboolean cps_skip_block(Block* block, CppElem* parent);
-gboolean cps_class_or_var(Block* block, CppElem* parent);
+gboolean cps_var(ParseEnv* env, Block* block);
+gboolean cps_fun(ParseEnv* env, Block* block);
+gboolean cps_using(ParseEnv* env, Block* block);
+gboolean cps_namespace(ParseEnv* env, Block* block);
+gboolean cps_typedef(ParseEnv* env, Block* block);
+gboolean cps_template(ParseEnv* env, Block* block);
+gboolean cps_destruct(ParseEnv* env, Block* block);
+gboolean cps_operator(ParseEnv* env, Block* block);
+gboolean cps_extern_template(ParseEnv* env, Block* block);
+gboolean cps_extern_scope(ParseEnv* env, Block* block);
+gboolean cps_class(ParseEnv* env, Block* block);
+gboolean cps_enum(ParseEnv* env, Block* block);
+gboolean cps_block(ParseEnv* env, Block* block);
+gboolean cps_impl_block(ParseEnv* env, Block* block);
+gboolean cps_label(ParseEnv* env, Block* block);
+gboolean cps_fun_or_var(ParseEnv* env, Block* block);
+gboolean cps_breakout_block(ParseEnv* env, Block* block);
+gboolean cps_skip_block(ParseEnv* env, Block* block);
+gboolean cps_class_or_var(ParseEnv* env, Block* block);
 
-gboolean cps_fun_or_var(Block* block, CppElem* parent) {
-	if( !cps_fun(block, parent) )
-		return cps_var(block, parent);
+gboolean cps_fun_or_var(ParseEnv* env, Block* block) {
+	if( !cps_fun(env, block, parent) )
+		return cps_var(env, block, parent);
 
 	return TRUE;
 }
 
-gboolean cps_class_or_var(Block* block, CppElem* parent) {
-	if( !cps_class(block, parent) )
-		return cps_var(block, parent);
+gboolean cps_class_or_var(ParseEnv* env, Block* block) {
+	if( !cps_class(env, block, parent) )
+		return cps_var(env, block, parent);
 
 	return TRUE;
 }
 
 // break-out sign
 // 
-gboolean CPS_BREAK_OUT_BLOCK(Block* block, CppElem* parent) { return TRUE; }
+gboolean CPS_BREAK_OUT_BLOCK(ParseEnv* env, Block* block) { return TRUE; }
 
 TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 	MLToken* token;
@@ -201,7 +198,7 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 	gboolean stop_with_blance = FALSE;
 
 	switch( spliter->policy ) {
-	case SPLITER_POLICY_USE_TEXT:
+	case SPLITER_POLICY_USE_LEXER:
 		spliter->end -= spliter->pos;
 		g_memmove( spliter->tokens, spliter->tokens + spliter->pos, sizeof(MLToken) * spliter->end);
 		break;
@@ -215,7 +212,7 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 	spliter->pos = -1;
 
 	while( fn==0 ) {
-		if( (token = spliter_next_token(spliter, block->env, TRUE))==0 )
+		if( (token = spliter_next_token(spliter, TRUE))==0 )
 			return 0;
 
 		switch( token->type ) {
@@ -232,7 +229,7 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 				fn = cps_skip_block;
 			break;
 		case '<':
-			if( !spliter_skip_pair_angle_bracket(spliter, block->env) )
+			if( !spliter_skip_pair_angle_bracket(spliter) )
 				fn = cps_skip_block;
 			break;
 		case KW_EXPLICIT:	fn = cps_fun;			stop_with_blance = TRUE;	break;
@@ -241,17 +238,17 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 		case KW_NAMESPACE:	fn = &cps_namespace;	stop_with_blance = TRUE;	break;
 		case KW_TEMPLATE:
 			use_template = TRUE;
-			if( (token = spliter_next_token(spliter, block->env, TRUE))==0 )
+			if( (token = spliter_next_token(spliter, TRUE))==0 )
 				return 0;
 			else if( token->type != '>' )
 				fn = cps_skip_block;
-			else if( !spliter_skip_pair_angle_bracket(spliter, block->env) )
+			else if( !spliter_skip_pair_angle_bracket(spliter) )
 				fn = cps_skip_block;
 			break;
 		case KW_OPERATOR:	fn = use_template ? cps_template : cps_operator;	stop_with_blance = TRUE;	break;
 		case KW_EXTERN:
 			{
-				if( (token = spliter_next_token(spliter, block->env, TRUE))==0 )
+				if( (token = spliter_next_token(spliter, TRUE))==0 )
 					return 0;
 
 				switch( token->type ) {
@@ -259,7 +256,7 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 					fn = cps_extern_template;
 					break;
 				case TK_STRING:
-					if( (token = spliter_next_token(spliter, block->env, TRUE))==0 )
+					if( (token = spliter_next_token(spliter, TRUE))==0 )
 						return 0;
 
 					if( token->type=='{' ) {
@@ -276,7 +273,7 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 			{
 				gsize mark = spliter->pos;
 				while( fn==0 ) {
-					if( (token = spliter_next_token(spliter, block->env, TRUE))==0 )
+					if( (token = spliter_next_token(spliter, TRUE))==0 )
 						return 0;
 
 					switch( token->type ) {
@@ -332,7 +329,7 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 			} else if( token->type==';' ) {
 				if( layer==0 ) {
 					layer = token->line;
-					if( (token = spliter_next_token(spliter, block->env, FALSE))==0 )
+					if( (token = spliter_next_token(spliter, FALSE))==0 )
 						break;
 					if( token->type==TK_BLOCK_COMMENT || token->type==TK_LINE_COMMENT )
 						if( token->line==layer )
@@ -342,7 +339,7 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 				}
 			}
 
-			if( (token = spliter_next_token(spliter, block->env, TRUE))==0 )
+			if( (token = spliter_next_token(spliter, TRUE))==0 )
 				break;
 		}
 	}
@@ -354,7 +351,7 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 	return fn;
 }
 
-MLToken* parse_scope(CppParser*	env, MLToken* tokens, gsize count, CppElem* parent, gboolean use_block_end) {
+MLToken* parse_scope(ParseEnv* env, MLToken* tokens, gsize count, CppElem* parent, gboolean use_block_end) {
 	MLToken* retval = 0;
 	TParseFn fn;
 	BlockSpliter spliter;
@@ -363,9 +360,9 @@ MLToken* parse_scope(CppParser*	env, MLToken* tokens, gsize count, CppElem* pare
 	g_assert( cpp_elem_has_subscope(parent) );
 
 	memset(&block, 0, sizeof(block));
-	block.env = env;
+	block->parent = parent;
 
-	spliter_init_with_tokens(&spliter, parent->file, tokens, count);
+	spliter_init_with_tokens(&spliter, env, tokens, count);
 
 	while( (fn = spliter_next_block(&spliter, &block)) != 0 ) {
 		if( fn==CPS_BREAK_OUT_BLOCK ) {
@@ -377,13 +374,13 @@ MLToken* parse_scope(CppParser*	env, MLToken* tokens, gsize count, CppElem* pare
 			}
 		}
 
-		(*fn)(&block, parent);
+		(*fn)(env, &block);
 	}
 
 	spliter_final(&spliter);
 	return retval;
 }
 
-void parse_impl_scope(Block* block, CppElem* parent) {
+void parse_impl_scope(Block* block) {
 }
 

@@ -3,9 +3,9 @@
 
 #include "cps_utils.h"
 
-gboolean cps_fun(Block* block, CppElem* parent);
+gboolean cps_fun(ParseEnv* env, Block* block);
 
-static gboolean cps_normal_typedef(Block* block, CppElem* parent) {
+static gboolean cps_normal_typedef(ParseEnv* env, Block* block) {
 	TinyStr* typekey;
 	gint dt = KD_UNK;
 	gint dtptr;
@@ -59,7 +59,7 @@ static gboolean cps_normal_typedef(Block* block, CppElem* parent) {
 			CppElem tpscope;
 			memset(&tpscope, 0, sizeof(tpscope));
 			tpscope.type = CPP_ET_NCSCOPE;
-			tpscope.file = parent->file;
+			tpscope.file = block->parent->file;
 
 			--(block->count);
 			++(block->tokens);
@@ -85,7 +85,7 @@ __cps_finish__:
 	return TRUE;
 }
 
-static gboolean cps_complex_typedef(Block* block, CppElem* parent) {
+static gboolean cps_complex_typedef(ParseEnv* env, Block* block) {
 	// typedef struct { ... } T, *PT;
 	TinyStr* str;
 	MLToken* name;
@@ -99,10 +99,11 @@ static gboolean cps_complex_typedef(Block* block, CppElem* parent) {
 	++ps;
 
 	memset( &tpscope, 0, sizeof(tpscope) );
-	tpscope.file = parent->file;
+	tpscope.file = block->parent->file;
 	tpscope.type = CPP_ET_NCSCOPE;
 
-	err_goto_finish_if( (ps = parse_scope(block->env, ps, (pe - ps), &tpscope, TRUE))==0 );
+	ps = parse_scope(env, ps, (pe - ps), &tpscope, TRUE)
+	err_goto_finish_if( ps==0 );
 	node = tpscope.v_ncscope.scope;
 	err_goto_finish_if( node==0 );
 
@@ -110,7 +111,7 @@ static gboolean cps_complex_typedef(Block* block, CppElem* parent) {
 	node->data = 0;
 	err_goto_finish_if( elem->type!=CPP_ET_CLASS && elem->type!=CPP_ET_ENUM );
 
-	cpp_scope_insert(parent, elem);
+	cpp_scope_insert(block->parent, elem);
 
 	node = g_list_next(node);
 	for( ; node; node = g_list_next(node) ) {
@@ -130,7 +131,7 @@ static gboolean cps_complex_typedef(Block* block, CppElem* parent) {
 		memcpy(elem->decl->buf + 8, str->buf, str->len);
 		tiny_str_free(str);
 
-		cpp_scope_insert(parent, elem);
+		cpp_scope_insert(block->parent, elem);
 	}
 
 __cps_finish__:
@@ -146,9 +147,9 @@ __cps_finish__:
 	return TRUE;
 }
 
-gboolean cps_typedef(Block* block, CppElem* parent) {
+gboolean cps_typedef(ParseEnv* env, Block* block) {
 	return block->style==BLOCK_STYLE_LINE
-		? cps_normal_typedef(block, parent)
-		: cps_complex_typedef(block, parent);
+		? cps_normal_typedef(env, block)
+		: cps_complex_typedef(env, block);
 }
 

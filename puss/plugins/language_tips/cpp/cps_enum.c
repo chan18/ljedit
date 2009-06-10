@@ -24,7 +24,7 @@ MLToken* parse_enum_iterms(MLToken* ps, MLToken* pe, CppElem* parent) {
 	return ps;
 }
 
-gboolean cps_enum(Block* block, CppElem* parent) {
+gboolean cps_enum(ParseEnv* env, Block* block) {
 	CppElem* elem = 0;
 	MLToken* ps = block->tokens;
 	MLToken* pe = ps + block->count;
@@ -45,7 +45,7 @@ gboolean cps_enum(Block* block, CppElem* parent) {
 
 	elem->decl = block_meger_tokens(block->tokens, ps, 0);
 
-	cpp_scope_insert(parent, elem);
+	cpp_scope_insert(block->parent, elem);
 
 	if( (ps < pe) && ps->type=='{' ) {
 		err_return_false_if( (ps = parse_enum_iterms(ps + 1, pe, elem))==0 );

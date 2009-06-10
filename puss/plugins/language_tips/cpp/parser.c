@@ -2,7 +2,6 @@
 // 
 
 #include "parser.h"
-
 #include <sys/stat.h>
 
 #include "keywords.h"
@@ -46,68 +45,6 @@ static void __dump_block(Block* block) {
 	g_print("\n--------------------------------------------------------\n");
 }
 
-static inline void mlstr_cpy(MLStr* dst, MLStr* src) {
-	if( src->buf ) {
-		dst->buf = g_slice_alloc(src->len + 1);
-		dst->len = src->len;
-		memcpy(dst->buf, src->buf, dst->len);
-		dst->buf[dst->len] = '\0';
-	}
-}
-
-static RMacro* rmacro_new(MLStr* name, gint argc, MLStr* argv, MLStr* value) {
-	RMacro* macro = g_slice_new0(RMacro);
-	mlstr_cpy( &(macro->name), name );
-
-	macro->argc = argc;
-	if( argc > 0 ) {
-		gint i;
-		macro->argv = g_slice_alloc(sizeof(MLStr) * argc);
-		for( i=0; i<argc; ++i )
-			mlstr_cpy(macro->argv + i, argv + i);
-	}
-
-	mlstr_cpy(&(macro->value), value);
-
-	return macro;
-}
-
-static void rmacro_free(RMacro* macro) {
-	if( macro ) {
-		g_slice_free1(macro->name.len + 1, macro->name.buf);
-		if( macro->argv ) {
-			gint i;
-			for( i=0; i<macro->argc; ++i )
-				g_slice_free1((macro->argv + i)->len + 1, (macro->argv + i)->buf);
-			g_slice_free1(sizeof(MLStr) * macro->argc, macro->argv);
-		}
-		g_slice_free1(macro->value.len + 1, macro->value.buf);
-
-		g_slice_free(RMacro, macro);
-	}
-}
-
-static RMacro* find_macro(MLStr* name, BlockTag* tag) {
-	RMacro* res;
-	gchar ch = name->buf[name->len];
-	name->buf[name->len] = '\0';
-	res = g_hash_table_lookup(tag->env->rmacros_table, name->buf);
-	name->buf[name->len] = ch;
-	return res;
-}
-
-static void on_macro_define(MLStr* name, gint argc, MLStr* argv, MLStr* value, MLStr* comment, BlockTag* tag) {
-	RMacro* node = rmacro_new(name, argc, argv, value);
-	g_hash_table_replace(tag->env->rmacros_table, node->name.buf, node);
-}
-
-static void on_macro_undef(MLStr* name, BlockTag* tag) {
-	gchar ch = name->buf[name->len];
-	name->buf[name->len] = '\0';
-	g_hash_table_remove(tag->env->rmacros_table, name->buf);
-	name->buf[name->len] = ch;
-}
-
 static void on_macro_include(MLStr* filename, gboolean is_system_header, gint line, BlockTag* tag) {
 	CppFile* incfile = 0;
 	gchar* filekey = 0;
@@ -130,7 +67,7 @@ static void on_macro_include(MLStr* filename, gboolean is_system_header, gint li
 			g_free(path);
 		}
 
-		incfile = cpp_parser_parse(tag->env, filekey, -1);
+		incfile = cpp_parser_parse_use_menv(tag->env, tag->menv, filekey, -1);
 	}
 
 	if( !incfile )
@@ -154,33 +91,24 @@ static void on_macro_include(MLStr* filename, gboolean is_system_header, gint li
 	}
 }
 
-void cpp_parser_init(CppParser* env, gboolean enable_macro_replace) {
-	env->keywords_table = cpp_keywords_table_new();
-
-	env->rmacros_table = g_hash_table_new_full(g_str_hash, g_str_equal, 0, (GDestroyNotify)rmacro_free);
-	env->enable_macro_replace = enable_macro_replace;
-
-	env->macro_environ.find_macro = (TFindMacroFn)find_macro;
-	env->macro_environ.on_macro_define = (TOnMacroDefineFn)on_macro_define;
-	env->macro_environ.on_macro_undef = (TOnMacroUndefFn)on_macro_undef;
-	env->macro_environ.on_macro_include = (TOnMacroIncludeFn)on_macro_include;
-
-	env->parsing_files = g_hash_table_new_full(g_str_hash, g_str_equal, 0, cpp_file_unref);
-	env->parsed_files  = g_hash_table_new_full(g_str_hash, g_str_equal, 0, cpp_file_unref);
+void cpp_parser_init(CppParser* parser, gboolean enable_macro_replace) {
+	parser->keywords_table = cpp_keywords_table_new();
+	parser->enable_macro_replace = enable_macro_replace;
+	parser->parsing_files = g_hash_table_new_full(g_str_hash, g_str_equal, 0, cpp_file_unref);
+	parser->parsed_files  = g_hash_table_new_full(g_str_hash, g_str_equal, 0, cpp_file_unref);
 }
 
-void cpp_parser_final(CppParser* env) {
-	g_hash_table_destroy(env->rmacros_table);
-	cpp_keywords_table_free(env->keywords_table);
+void cpp_parser_final(CppParser* parser) {
+	cpp_keywords_table_free(parser->keywords_table);
 }
 
-static CppFile* cpp_parser_do_parse_in_include_path(CppParser* env, const gchar* filename, glong namelen) {
+static CppFile* cpp_parser_do_parse_in_include_path(CppParser* parser, const gchar* filename, glong namelen) {
 	CppFile* file = 0;
 	gchar* filekey;
 	gchar* str;
 	GList* p;
 
-	for( p=env->include_paths; !file && p; p=p->next ) {
+	for( p=parser->include_paths; !file && p; p=p->next ) {
 		str = g_build_filename( (gchar*)(p->data), filename, 0 );
 		if( str ) {
 			filekey = cpp_parser_filename_to_filekey(str, -1);
@@ -193,7 +121,7 @@ static CppFile* cpp_parser_do_parse_in_include_path(CppParser* env, const gchar*
 	return file;
 }
 
-static CppFile* cpp_parser_check_parsed(CppParser* env, const gchar* filekey, time_t* mtime) {
+static CppFile* cpp_parser_check_parsed(CppParser* parser, const gchar* filekey, time_t* mtime) {
 	CppFile* file;
 	struct stat filestat;
 
@@ -202,25 +130,30 @@ static CppFile* cpp_parser_check_parsed(CppParser* env, const gchar* filekey, ti
 		return 0;
 
 	*mtime = filestat.st_mtime;
-	if( (file = (CppFile*)g_hash_table_lookup(env->parsed_files, filekey)) != 0 )
+	if( (file = (CppFile*)g_hash_table_lookup(parser->parsed_files, filekey)) != 0 )
 		if( file->datetime != *mtime )
 			file = 0;
 
 	return file;
 }
 
-static void cpp_parser_do_parse(CppParser* env, CppFile* file, gchar* buf, gsize len) {
+static void cpp_parser_do_parse(ParseEnv* env, gchar* buf, gsize len) {
+	CppLexer lexer;
 	Block block;
 	TParseFn fn;
 	BlockSpliter spliter;
+	
+	cpp_lexer_init(&lexer, buf, len, 1);
+	env->lexer = &lexer;
 
-	spliter_init_with_text(&spliter, file, buf, len, 1);
 	memset(&block, 0, sizeof(block));
-	block.env = env;
+	block.parent = &(env->file->root_scope);
+
+	spliter_init(&spliter, env);
 
 	while( (fn = spliter_next_block(&spliter, &block)) != 0 ) {
 		// __dump_block(&block);
-		fn(&block, &(file->root_scope));
+		fn(env, &block);
 	}
 
 	spliter_final(&spliter);
@@ -273,7 +206,7 @@ gboolean cpp_parser_load_file(const gchar* filename, gchar** text, gsize* len) {
 	return FALSE;
 }
 
-CppFile* cpp_parser_parse(CppParser* env, const gchar* filekey, glong keylen) {
+CppFile* cpp_parser_parse_use_menv(ParseEnv* env, const gchar* filekey, glong keylen) {
 	CppFile* file = 0;
 	time_t mtime = 0;
 	gchar* buf;
@@ -283,13 +216,13 @@ CppFile* cpp_parser_parse(CppParser* env, const gchar* filekey, glong keylen) {
 		return file;
 
 	// check re-parsing
-	file = (CppFile*)g_hash_table_lookup(env->parsing_files, filekey);
+	file = (CppFile*)g_hash_table_lookup(env->parser->parsing_files, filekey);
 	if( file )
 		return file;
 
 	// check already parsed and get file modify time
 	// 
-	file = cpp_parser_check_parsed(env, filekey, &mtime);
+	file = cpp_parser_check_parsed(env->parser, filekey, &mtime);
 	if( file )
 		return cpp_file_ref(file);
 
@@ -303,14 +236,31 @@ CppFile* cpp_parser_parse(CppParser* env, const gchar* filekey, glong keylen) {
 	file->filename = tiny_str_new(filekey, keylen==-1 ? strlen(filekey) : (gshort)keylen);
 	file->root_scope.type = CPP_ET_NCSCOPE;
 	file->root_scope.file = file;
+	env->file = file;
 
-	g_hash_table_insert(env->parsing_files, file->filename->buf, cpp_file_ref(file));
+	g_hash_table_insert(env->parser->parsing_files, file->filename->buf, cpp_file_ref(file));
+
+	// create macro environ if need
+	if( env->parser->enable_macro_replace ) {
+		env->rmacros_table = g_hash_table_new_full(g_str_hash, g_str_equal, 0, (GDestroyNotify)rmacro_free);
+		//menv.macro_environ.on_macro_include = (TOnMacroIncludeFn)on_macro_include;
+	}
 
 	// start parse
-	cpp_parser_do_parse(env, file, buf, len);
-	g_hash_table_insert(env->parsed_files, file->filename->buf, cpp_file_ref(file));
+	cpp_parser_do_parse(env, buf, len);
+	g_hash_table_insert(env->parser->parsed_files, file->filename->buf, cpp_file_ref(file));
 
-	g_hash_table_remove(env->parsing_files, file->filename->buf);
+	g_hash_table_remove(env->parser->parsing_files, file->filename->buf);
+
+	return file;
+}
+
+CppFile* cpp_parser_parse(CppParser* parser, const gchar* filekey, glong keylen) {
+	ParseEnv env = { parser, 0, 0, 0 };
+	CppFile* file = cpp_parser_parse_use_menv(&env, filekey, keylen);
+
+	if( env.rmacros_table )
+		g_hash_table_destroy(env->rmacros_table);
 
 	return file;
 }

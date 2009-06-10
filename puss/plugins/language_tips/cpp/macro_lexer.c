@@ -6,6 +6,56 @@
 #include <memory.h>
 
 
+static inline void mlstr_cpy(MLStr* dst, MLStr* src) {
+	if( src->buf ) {
+		dst->buf = g_slice_alloc(src->len + 1);
+		dst->len = src->len;
+		memcpy(dst->buf, src->buf, dst->len);
+		dst->buf[dst->len] = '\0';
+	}
+}
+
+static RMacro* rmacro_new(MLStr* name, gint argc, MLStr* argv, MLStr* value) {
+	RMacro* macro = g_slice_new0(RMacro);
+	mlstr_cpy( &(macro->name), name );
+
+	macro->argc = argc;
+	if( argc > 0 ) {
+		gint i;
+		macro->argv = g_slice_alloc(sizeof(MLStr) * argc);
+		for( i=0; i<argc; ++i )
+			mlstr_cpy(macro->argv + i, argv + i);
+	}
+
+	mlstr_cpy(&(macro->value), value);
+
+	return macro;
+}
+
+static void rmacro_free(RMacro* macro) {
+	if( macro ) {
+		g_slice_free1(macro->name.len + 1, macro->name.buf);
+		if( macro->argv ) {
+			gint i;
+			for( i=0; i<macro->argc; ++i )
+				g_slice_free1((macro->argv + i)->len + 1, (macro->argv + i)->buf);
+			g_slice_free1(sizeof(MLStr) * macro->argc, macro->argv);
+		}
+		g_slice_free1(macro->value.len + 1, macro->value.buf);
+
+		g_slice_free(RMacro, macro);
+	}
+}
+
+static RMacro* find_macro(MacroEnviron* env, MLStr* name) {
+	RMacro* res;
+	gchar ch = name->buf[name->len];
+	name->buf[name->len] = '\0';
+	res = g_hash_table_lookup(env->rmacros_table, name->buf);
+	name->buf[name->len] = ch;
+	return res;
+}
+
 static void ml_str_join(MLStr* out, MLStr* array, gint count) {
 	gint i;
 	gchar* p;
@@ -74,7 +124,19 @@ static void ml_str_join(MLStr* out, MLStr* array, gint count) {
 
 #define MACRO_ARGS_MAX 256
 
-static void cpp_parse_macro(MacroEnviron* env, CppLexer* lexer, gpointer tag) {
+static void on_macro_define(ParseEnv* env, MLStr* name, gint argc, MLStr* argv, MLStr* value, MLStr* comment, BlockTag* tag) {
+	RMacro* node = rmacro_new(name, argc, argv, value);
+	g_hash_table_replace(env->rmacros_table, node->name.buf, node);
+}
+
+static void on_macro_undef(ParseEnv* env, MLStr* name) {
+	gchar ch = name->buf[name->len];
+	name->buf[name->len] = '\0';
+	g_hash_table_remove(env->rmacros_table, name->buf);
+	name->buf[name->len] = ch;
+}
+
+static void cpp_parse_macro(ParseEnv* env, CppLexer* lexer, gpointer tag) {
 	gint ch;
 	CppFrame* frame;
 	MLToken token;
@@ -163,7 +225,17 @@ static void cpp_parse_macro(MacroEnviron* env, CppLexer* lexer, gpointer tag) {
 			}
 		}
 
-		(*(env->on_macro_define))(&name, argc, argv, &value, &comment, tag);
+		on_macro_define(env, &name, argc, argv, &value, &comment);
+
+	} else if( token.len==5 && memcmp(token.buf, "undef", 5)==0 ) {
+		MLStr name;
+		CPP_LEXER_NEXT_NOCOMMENT(lexer, &token);
+		if( token.type==TK_ID ) {
+			name.buf = token.buf;
+			name.len = token.len;
+
+			on_macro_undef(env, &name);
+		}
 
 	} else if( token.len==7 && memcmp(token.buf, "include", 7)==0 ) {
 		gchar ss, es;
@@ -181,20 +253,11 @@ static void cpp_parse_macro(MacroEnviron* env, CppLexer* lexer, gpointer tag) {
 			if( ch==es ) {
 				filename.len = (gsize)(frame->ps - filename.buf);
 				if( filename.len )
-					(*(env->on_macro_include))(&filename, ch=='<', token.line, tag);
+					;
+					//(*(env->on_macro_include))(&filename, ch=='<', token.line, tag);
 				break;
 			}
 			FRAME_NEXT_CH();
-		}
-
-	} else if( token.len==5 && memcmp(token.buf, "undef", 5)==0 ) {
-		MLStr name;
-		CPP_LEXER_NEXT_NOCOMMENT(lexer, &token);
-		if( token.type==TK_ID ) {
-			name.buf = token.buf;
-			name.len = token.len;
-
-			(*(env->on_macro_undef))(&name, tag);
 		}
 	}
 }
@@ -365,27 +428,27 @@ static void do_macro_replace(RMacro* macro, CppLexer* lexer, gint argc, MLArg ar
 	cpp_lexer_final(&rlexer);
 }
 
-static gboolean macro_replace(MacroEnviron* env, RMacro* macro, CppLexer* lexer, MLToken* token) {
+static gboolean macro_replace(ParseEnv* env, RMacro* macro, MLToken* token) {
 	// check in_use
 	gint i;
-	for( i=0; i<=lexer->top; ++i )
-		if( lexer->stack[i].tag==macro )
+	for( i=0; i<=env->lexer->top; ++i )
+		if( env->lexer->stack[i].tag==macro )
 			return FALSE;
 
 	if( macro->argc < 0 ) {
 		if( macro->value.len )
-			cpp_lexer_frame_push(lexer, &(macro->value), TRUE, FALSE, macro);
+			cpp_lexer_frame_push(env->lexer, &(macro->value), TRUE, FALSE, macro);
 
 	} else {
 		gint argc = -1;
 		MLArg argv[MACRO_ARGS_MAX];
-		gboolean res = cpp_parse_macro_args(lexer, token, &argc, argv);
+		gboolean res = cpp_parse_macro_args(env->lexer, token, &argc, argv);
 		if( res ) {
 			if( macro->value.len ) {
 				if( macro->argc==0 )
-					cpp_lexer_frame_push(lexer, &(macro->value), TRUE, FALSE, macro);
+					cpp_lexer_frame_push(env->lexer, &(macro->value), TRUE, FALSE, macro);
 				else
-					do_macro_replace(macro, lexer, argc, argv);
+					do_macro_replace(macro, env->lexer, argc, argv);
 			}
 		}
 
@@ -400,9 +463,14 @@ static gboolean macro_replace(MacroEnviron* env, RMacro* macro, CppLexer* lexer,
 	return TRUE;
 }
 
-void cpp_macro_lexer_next(CppLexer* lexer, MLToken* token, MacroEnviron* env, gpointer tag) {
+void cpp_macro_lexer_next(ParseEnv* env, MLToken* token) {
+	if( !env ) {
+		cpp_lexer_next(env->lexer, token);
+		return;
+	}
+
 	for(;;) {
-		cpp_lexer_next(lexer, token);
+		cpp_lexer_next(env->lexer, token);
 		if( token->type==TK_MACRO ) {
 			CppLexer mlexer;
 
@@ -414,12 +482,12 @@ void cpp_macro_lexer_next(CppLexer* lexer, MLToken* token, MacroEnviron* env, gp
 
 		if( token->type==TK_ID ) {
 			MLStr name = { token->buf, token->len };
-			RMacro* macro = (*(env->find_macro))(&name, tag);
+			RMacro* macro = find_macro(env, &name);
 
 			if( !macro )
 				break;
 
-			if( macro_replace(env, macro, lexer, token) )
+			if( macro_replace(env, macro, token) )
 				continue;
 		}
 

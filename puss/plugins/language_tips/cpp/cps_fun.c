@@ -131,7 +131,7 @@ __cps_finish__:
 	return retval;
 }
 
-static gboolean parse_function_common(Block* block, CppElem* parent, MLToken* start, TinyStr* typekey, TinyStr* nskey, MLToken* name) {
+static gboolean parse_function_common(Block* block, MLToken* start, TinyStr* typekey, TinyStr* nskey, MLToken* name) {
 	MLToken* ps = start;
 	MLToken* pe = block->tokens + block->count;
 	CppElem* elem = cpp_elem_new();
@@ -173,7 +173,7 @@ __cps_finish__:
 	return FALSE;
 }
 
-gboolean cps_fun(Block* block, CppElem* parent) {
+gboolean cps_fun(ParseEnv* env, Block* block) {
 	MLToken* ps = block->tokens;
 	MLToken* pe = ps + block->count;
 	TinyStr* typekey = 0;
@@ -250,10 +250,10 @@ gboolean cps_fun(Block* block, CppElem* parent) {
 		err_return_false_if( (ps = parse_id(ps, pe, &nskey, &name))==0 );
 	}
 
-	return parse_function_common(block, parent, ps, typekey, nskey, name);
+	return parse_function_common(block, ps, typekey, nskey, name);
 }
 
-gboolean cps_operator(Block* block, CppElem* parent) {
+gboolean cps_operator(ParseEnv* env, Block* block) {
 	if( !cps_fun(block, parent) ) {
 		err_trace("parse operator function failed!");
 		return FALSE;
@@ -261,7 +261,7 @@ gboolean cps_operator(Block* block, CppElem* parent) {
 	return TRUE;
 }
 
-gboolean cps_destruct(Block* block, CppElem* parent) {
+gboolean cps_destruct(ParseEnv* env, Block* block) {
 	MLToken* ps = block->tokens;
 	MLToken* pe = ps + block->count;
 	TinyStr* nskey = 0;
@@ -271,7 +271,7 @@ gboolean cps_destruct(Block* block, CppElem* parent) {
 
 	err_return_false_if( (ps = parse_id(ps, pe, &nskey, &name))==0 );
 
-	if( !parse_function_common(block, parent, ps, 0, nskey, name) ) {
+	if( !parse_function_common(block, ps, 0, nskey, name) ) {
 		err_trace("parse destruct function failed!");
 		return FALSE;
 	}
