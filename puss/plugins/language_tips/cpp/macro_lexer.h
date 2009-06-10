@@ -14,10 +14,12 @@ typedef struct {
 } RMacro;
 
 typedef struct {
-	CppParser*		parser;
-	GHashTable*		rmacros_table;
-	CppLexer*		lexer
-	CppFile*		file;
+	CppParser*	parser;
+	GHashTable*	rmacros_table;
+	CppLexer*	lexer;
+	CppFile*	file;
+
+	CppFile* 	(*parse_include_file)(ParseEnv* env, MLStr* filename, gboolean is_system_header);
 } ParseEnv;
 
 void cpp_macro_lexer_next(ParseEnv* env, MLToken* token);

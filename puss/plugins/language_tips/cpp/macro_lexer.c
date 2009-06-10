@@ -136,7 +136,38 @@ static void on_macro_undef(ParseEnv* env, MLStr* name) {
 	name->buf[name->len] = ch;
 }
 
-static void cpp_parse_macro(ParseEnv* env, CppLexer* lexer, gpointer tag) {
+static void on_macro_include(ParseEnv* env, MLStr* filename, gboolean is_system_header, gint line, BlockTag* tag) {
+	CppFile* incfile = 0;
+	gchar* filekey = 0;
+	gchar* path;
+	gchar* str;
+	CppElem* elem;
+
+	//if( stopsign_is_set() )
+	//	return;
+
+	elem = cpp_elem_new();
+	elem->type = CPP_ET_INCLUDE;
+	elem->name = tiny_str_new("_include_", -1);
+	elem->sline = line;
+	elem->eline = line;
+	elem->v_include.filename = tiny_str_new(filename->buf, filename->len);
+	elem->v_include.sys_header = is_system_header;
+
+	str = g_strdup_printf("#include %c%s%c", is_system_header?'<':'\"', filename->buf, is_system_header?'<':'\"');
+	elem->decl = tiny_str_new(str, strlen(str));
+	g_free(str);
+
+	cpp_scope_insert( &(env->file->root_scope), elem );
+
+	incfile = env->parse_include_file(env, filename, is_system_header);
+	if( incfile ) {
+		elem->v_include.include_file = tiny_str_copy(incfile->filename);
+		cpp_file_unref(incfile);
+	}
+}
+
+static void cpp_parse_macro(ParseEnv* env, CppLexer* lexer) {
 	gint ch;
 	CppFrame* frame;
 	MLToken token;
@@ -253,8 +284,7 @@ static void cpp_parse_macro(ParseEnv* env, CppLexer* lexer, gpointer tag) {
 			if( ch==es ) {
 				filename.len = (gsize)(frame->ps - filename.buf);
 				if( filename.len )
-					;
-					//(*(env->on_macro_include))(&filename, ch=='<', token.line, tag);
+					on_macro_include(env, &filename, ch=='<', token.line);
 				break;
 			}
 			FRAME_NEXT_CH();
@@ -475,7 +505,7 @@ void cpp_macro_lexer_next(ParseEnv* env, MLToken* token) {
 			CppLexer mlexer;
 
 			cpp_lexer_init(&mlexer, token->buf, token->len, token->line);
-			cpp_parse_macro(env, &mlexer, tag);
+			cpp_parse_macro(env, &mlexer);
 			cpp_lexer_final(&mlexer);
 			continue;
 		}
