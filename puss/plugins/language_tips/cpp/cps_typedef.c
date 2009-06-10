@@ -102,7 +102,7 @@ static gboolean cps_complex_typedef(ParseEnv* env, Block* block) {
 	tpscope.file = block->parent->file;
 	tpscope.type = CPP_ET_NCSCOPE;
 
-	ps = parse_scope(env, ps, (pe - ps), &tpscope, TRUE)
+	ps = parse_scope(env, ps, (pe - ps), &tpscope, TRUE);
 	err_goto_finish_if( ps==0 );
 	node = tpscope.v_ncscope.scope;
 	err_goto_finish_if( node==0 );

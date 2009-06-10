@@ -156,7 +156,7 @@ static gboolean parse_function_common(Block* block, MLToken* start, TinyStr* typ
 
 	elem->decl = block_meger_tokens(block->tokens, ps, 0);
 
-	cpp_scope_insert(parent, elem);
+	cpp_scope_insert(block->parent, elem);
 
 	if( block->style==BLOCK_STYLE_BLOCK ) {
 		while( (ps < pe) && ps->type!='{' )
@@ -219,7 +219,7 @@ gboolean cps_fun(ParseEnv* env, Block* block) {
 			// no return type function
 			err_return_false_if( typekey==0 || typekey->len==0 );
 
-			if( parent->type==CPP_ET_CLASS ) {
+			if( block->parent->type==CPP_ET_CLASS ) {
 				name = ps;
 
 			} else {
@@ -254,7 +254,7 @@ gboolean cps_fun(ParseEnv* env, Block* block) {
 }
 
 gboolean cps_operator(ParseEnv* env, Block* block) {
-	if( !cps_fun(block, parent) ) {
+	if( !cps_fun(env, block) ) {
 		err_trace("parse operator function failed!");
 		return FALSE;
 	}

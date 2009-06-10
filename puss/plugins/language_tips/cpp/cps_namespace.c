@@ -4,6 +4,8 @@
 #include "cps_utils.h"
 
 gboolean cps_namespace(ParseEnv* env, Block* block) {
+	CppElem* elem = 0;
+	MLToken* name;
 	MLToken* ps = block->tokens;
 	MLToken* pe = ps + block->count;
 
@@ -14,11 +16,10 @@ gboolean cps_namespace(ParseEnv* env, Block* block) {
 
 	if( ps->type=='{' ) {
 		// anonymous namespace
-		// do nothing
+		elem = block->parent;
 
 	} else {
-		CppElem* elem;
-		MLToken* name = ps;
+		name = ps;
 		err_return_false_if_not( name->type==TK_ID );
 
 		++ps;
@@ -31,13 +32,12 @@ gboolean cps_namespace(ParseEnv* env, Block* block) {
 		memcpy(elem->decl->buf + 8, name->buf, name->len);
 
 		cpp_scope_insert(block->parent, elem);
-		parent = elem;
 	}
 
 	++ps;
 	err_return_false_if_not( ps < pe );
 
-	parse_scope(env, ps, (pe - ps), block->parent, FALSE);
+	parse_scope(env, ps, (pe - ps), elem, FALSE);
 	return TRUE;
 }
 

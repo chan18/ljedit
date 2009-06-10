@@ -87,7 +87,7 @@ gboolean cps_template(ParseEnv* env, Block* block) {
 	// multi-template
 	// 
 	if( ps->type==KW_TEMPLATE ) {
-		Block subblock = { parent, ps, (pe - ps), block->style };
+		Block subblock = { block->parent, ps, (pe - ps), block->style };
 		for( i=0; i<targc; ++i ) {
 			tiny_str_free(targv[i].type);
 			tiny_str_free(targv[i].name);
@@ -96,7 +96,7 @@ gboolean cps_template(ParseEnv* env, Block* block) {
 		return cps_template(env, &subblock);
 	}
 
-	parse_scope(env, ps, (pe - ps), parent, TRUE);
+	parse_scope(env, ps, (pe - ps), block->parent, TRUE);
 	return TRUE;
 
 __cps_finish__:

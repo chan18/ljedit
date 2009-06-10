@@ -53,7 +53,7 @@ static MLToken* spliter_next_token(BlockSpliter* spliter, gboolean skip_comment)
 			++(spliter->end);
 
 			if( token->type==TK_ID )
-				cpp_keywords_check(token, env->keywords_table);
+				cpp_keywords_check(token, spliter->env->parser->keywords_table);
 			else if( skip_comment && (token->type==TK_LINE_COMMENT || token->type==TK_BLOCK_COMMENT) )
 				++(spliter->pos);
 		}
@@ -142,12 +142,10 @@ void spliter_init_with_tokens(BlockSpliter* spliter, ParseEnv* env, MLToken* tok
 
 void spliter_final(BlockSpliter* spliter) {
 	if( spliter->policy==SPLITER_POLICY_USE_LEXER ) {
-		cpp_lexer_final(spliter->lexer);
-		g_slice_free(CppLexer, spliter->lexer);
 		g_slice_free1(sizeof(MLToken)*spliter->cap, spliter->tokens);
 		spliter->tokens = 0;
 		spliter->cap = 0;
-		spliter->lexer = 0;
+		spliter->env->lexer = 0;
 	}
 }
 
@@ -174,15 +172,15 @@ gboolean cps_skip_block(ParseEnv* env, Block* block);
 gboolean cps_class_or_var(ParseEnv* env, Block* block);
 
 gboolean cps_fun_or_var(ParseEnv* env, Block* block) {
-	if( !cps_fun(env, block, parent) )
-		return cps_var(env, block, parent);
+	if( !cps_fun(env, block) )
+		return cps_var(env, block);
 
 	return TRUE;
 }
 
 gboolean cps_class_or_var(ParseEnv* env, Block* block) {
-	if( !cps_class(env, block, parent) )
-		return cps_var(env, block, parent);
+	if( !cps_class(env, block) )
+		return cps_var(env, block);
 
 	return TRUE;
 }
@@ -360,7 +358,6 @@ MLToken* parse_scope(ParseEnv* env, MLToken* tokens, gsize count, CppElem* paren
 	g_assert( cpp_elem_has_subscope(parent) );
 
 	memset(&block, 0, sizeof(block));
-	block->parent = parent;
 
 	spliter_init_with_tokens(&spliter, env, tokens, count);
 

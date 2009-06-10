@@ -4,7 +4,7 @@
 #include "macro_lexer.h"
 
 #include <memory.h>
-
+#include <string.h>
 
 static inline void mlstr_cpy(MLStr* dst, MLStr* src) {
 	if( src->buf ) {
@@ -45,15 +45,6 @@ static void rmacro_free(RMacro* macro) {
 
 		g_slice_free(RMacro, macro);
 	}
-}
-
-static RMacro* find_macro(MacroEnviron* env, MLStr* name) {
-	RMacro* res;
-	gchar ch = name->buf[name->len];
-	name->buf[name->len] = '\0';
-	res = g_hash_table_lookup(env->rmacros_table, name->buf);
-	name->buf[name->len] = ch;
-	return res;
 }
 
 static void ml_str_join(MLStr* out, MLStr* array, gint count) {
@@ -124,9 +115,76 @@ static void ml_str_join(MLStr* out, MLStr* array, gint count) {
 
 #define MACRO_ARGS_MAX 256
 
-static void on_macro_define(ParseEnv* env, MLStr* name, gint argc, MLStr* argv, MLStr* value, MLStr* comment, BlockTag* tag) {
-	RMacro* node = rmacro_new(name, argc, argv, value);
+static RMacro* find_macro(ParseEnv* env, MLStr* name) {
+	RMacro* res;
+	gchar ch = name->buf[name->len];
+	name->buf[name->len] = '\0';
+	res = g_hash_table_lookup(env->rmacros_table, name->buf);
+	name->buf[name->len] = ch;
+	return res;
+}
+
+static void on_macro_define(ParseEnv* env, gint line, MLStr* name, gint argc, MLStr* argv, MLStr* value, MLStr* comment) {
+	CppElem* elem;
+	RMacro* node;
+	
+	node = rmacro_new(name, argc, argv, value);
 	g_hash_table_replace(env->rmacros_table, node->name.buf, node);
+
+	/*
+	elem = cpp_elem_new();
+	elem->type = CPP_ET_MACRO;
+	elem->name = tiny_str_new(name->buf, name->len);
+	elem->sline = line;
+	elem->eline = line;
+	elem->v_define.
+
+	str = g_strdup_printf("#include %c%s%c", is_system_header?'<':'\"', filename->buf, is_system_header?'<':'\"');
+	elem->decl = tiny_str_new(str, strlen(str));
+	g_free(str);
+
+	cpp::Macro* macro = cpp::Element::create<cpp::Macro>(file_, name, line, line);
+
+	std::ostringstream oss;
+	oss << "#define " << name;
+	
+	if( has_args ) {
+		oss << '(';
+		if( args!=0 ) {
+			macro->args = new StrVector(*args);
+			if( macro->args==0 )
+				throw std::bad_alloc();
+				
+			StrVector::const_iterator it = args->begin();
+			StrVector::const_iterator end = args->end();
+			if( it!=end ) {
+				oss << *it;
+				for( ++it; it!=end; ++it )
+					oss << ", " << *it;
+			}
+
+		} else {
+			macro->set_empty_args();
+		}
+		oss << ')';
+	}
+
+	if( rvalue!=0 ) {
+		macro->value = "...";
+		oss << ' ' << macro->value;
+
+	} else if( value!=0 ) {
+		macro->value = *value;
+		if( macro->value.size() < 128 )
+			oss << ' ' << macro->value;
+		else
+			oss << ' ' << "...";
+	}
+
+	macro->decl = oss.str();
+	cpp::scope_insert(file_.scope, macro);
+	env_.macro_insert(macro, value, rvalue);
+	*/
 }
 
 static void on_macro_undef(ParseEnv* env, MLStr* name) {
@@ -136,10 +194,9 @@ static void on_macro_undef(ParseEnv* env, MLStr* name) {
 	name->buf[name->len] = ch;
 }
 
-static void on_macro_include(ParseEnv* env, MLStr* filename, gboolean is_system_header, gint line, BlockTag* tag) {
+static void on_macro_include(ParseEnv* env, MLStr* filename, gboolean is_system_header, gint line) {
 	CppFile* incfile = 0;
 	gchar* filekey = 0;
-	gchar* path;
 	gchar* str;
 	CppElem* elem;
 
@@ -160,7 +217,7 @@ static void on_macro_include(ParseEnv* env, MLStr* filename, gboolean is_system_
 
 	cpp_scope_insert( &(env->file->root_scope), elem );
 
-	incfile = env->parse_include_file(env, filename, is_system_header);
+	incfile = parse_include_file(env, filename, is_system_header);
 	if( incfile ) {
 		elem->v_include.include_file = tiny_str_copy(incfile->filename);
 		cpp_file_unref(incfile);
@@ -175,16 +232,20 @@ static void cpp_parse_macro(ParseEnv* env, CppLexer* lexer) {
 	frame = lexer->stack + lexer->top;
 	frame->is_new_line = FALSE;
 
+	FRAME_NEXT_CH();
 	CPP_LEXER_NEXT_NOCOMMENT(lexer, &token);
 	if( token.type!=TK_ID )
 		return;
 
 	if( token.len==6 && memcmp(token.buf, "define", 6)==0 ) {
+		gint line = token.line;
 		MLStr name = { 0, 0 };
 		gint  argc = -1;
 		MLStr argv[MACRO_ARGS_MAX];
 		MLStr value = { 0, 0 };
 		MLStr comment = { 0, 0 };
+		// TODO : desc use this
+		//MLStr desc = {}
 
 		// parse name
 		CPP_LEXER_NEXT_NOCOMMENT(lexer, &token);
@@ -256,7 +317,7 @@ static void cpp_parse_macro(ParseEnv* env, CppLexer* lexer) {
 			}
 		}
 
-		on_macro_define(env, &name, argc, argv, &value, &comment);
+		on_macro_define(env, line, &name, argc, argv, &value, &comment);
 
 	} else if( token.len==5 && memcmp(token.buf, "undef", 5)==0 ) {
 		MLStr name;
@@ -491,6 +552,18 @@ static gboolean macro_replace(ParseEnv* env, RMacro* macro, MLToken* token) {
 	}
 
 	return TRUE;
+}
+
+void cpp_macro_lexer_init(ParseEnv* env) {
+	if( env->parser->enable_macro_replace ) {
+		env->rmacros_table = g_hash_table_new_full(g_str_hash, g_str_equal, 0, (GDestroyNotify)rmacro_free);
+
+		g_static_rw_lock_reader_lock( &(env->parser->include_paths_lock) );
+		env->include_paths = env->parser->include_paths;
+		if( env->include_paths )
+			g_atomic_int_inc( &(env->include_paths->ref_count) );
+		g_static_rw_lock_reader_unlock( &(env->parser->include_paths_lock) );
+	}
 }
 
 void cpp_macro_lexer_next(ParseEnv* env, MLToken* token) {

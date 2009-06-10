@@ -24,7 +24,7 @@ typedef struct {
 void cpp_parser_init(CppParser* parser, gboolean enable_macro_replace);
 void cpp_parser_final(CppParser* parser);
 
-gchar* cpp_parser_filename_to_filekey(const gchar* filename, glong namelen);
+void cpp_parser_set_include_paths(CppParser* parser, GList* paths);
 CppFile* cpp_parser_find_parsed(CppParser* parser, const gchar* filekey);
 CppFile* cpp_parser_parse(CppParser* parser, const gchar* filekey);
 

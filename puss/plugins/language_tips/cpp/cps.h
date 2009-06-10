@@ -17,7 +17,7 @@
 
 typedef struct {
 	gint			policy;
-	ParseEnv*		env
+	ParseEnv*		env;
 	MLToken*		tokens;
 	gint			cap;
 	gint			end;

@@ -8,7 +8,7 @@
 
 #include "IPuss.h"
 
-#include "cpp/parser.h"
+#include "cpp/guide.h"
 
 #define TEXT_DOMAIN "language_tips"
 
@@ -17,7 +17,7 @@
 typedef struct {
 	Puss* app;
 
-	CppParser		cpp_parser;
+	CppGuide*		cpp_guide;
 
 	GAsyncQueue*	parse_queue;
 	GThread*		parse_thread;
@@ -61,6 +61,7 @@ static LanguageTips* g_self = 0;
 static gchar* PARSE_THREAD_EXIT_SIGN = "";
 
 static gpointer tips_parse_thread(gpointer args) {
+	CppFile* file;
 	gchar* filename = 0;
 	GAsyncQueue* queue = (GAsyncQueue*)args;
 	if( !queue )
@@ -68,7 +69,9 @@ static gpointer tips_parse_thread(gpointer args) {
 
 	while( (filename = (gchar*)g_async_queue_pop(queue)) != PARSE_THREAD_EXIT_SIGN ) {
 		// parse file
-		cpp_parser_parse(&(g_self->cpp_parser), filename, -1);
+		file = cpp_guide_parse(g_self->cpp_guide, filename, -1);
+		if( file )
+			cpp_file_unref(file);
 
 		g_free(filename);
 	}
@@ -229,7 +232,9 @@ static void outline_update(LanguageTips* self) {
 	if( !url )
 		return;
 
-	file = (CppFile*)g_hash_table_lookup(self->cpp_parser.parsed_files, url->str);
+	file = cpp_guide_parse(self->cpp_guide, url->str, url->len);
+
+	file = cpp_guide_find_parsed(self->cpp_guide, url->str, url->len);
 	if( !file )
 		return;
 
@@ -253,7 +258,7 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	g_self = g_new0(LanguageTips, 1);
 	g_self->app = app;
 
-	cpp_parser_init( &(g_self->cpp_parser), TRUE );
+	g_self->cpp_guide = cpp_guide_new(TRUE);
 
 	g_self->parse_queue = g_async_queue_new_full(g_free);
 	g_self->parse_thread = g_thread_create(tips_parse_thread, g_self->parse_queue, TRUE, 0);
@@ -284,7 +289,7 @@ PUSS_EXPORT void puss_plugin_destroy(void* ext) {
 		g_thread_join(g_self->parse_thread);
 	}
 
-	cpp_parser_final( &(g_self->cpp_parser) );
+	cpp_guide_free(g_self->cpp_guide);
 
 	g_free(g_self);
 	g_self = 0;

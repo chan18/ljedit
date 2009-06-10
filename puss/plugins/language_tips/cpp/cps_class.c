@@ -90,7 +90,7 @@ gboolean cps_class(ParseEnv* env, Block* block) {
 		err_goto_finish_if( ps->type!='{' );
 		++ps;
 
-		ps = parse_scope(env, ps, (pe - ps), elem, TRUE)
+		ps = parse_scope(env, ps, (pe - ps), elem, TRUE);
 		err_goto_finish_if( ps==0 );
 		g_assert( (ps < pe) && ps->type=='}' );
 

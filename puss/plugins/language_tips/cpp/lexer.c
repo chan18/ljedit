@@ -275,9 +275,9 @@ void cpp_lexer_next(CppLexer* lexer, MLToken* token) {
 	// parse macro
 	if( frame->is_new_line ) {
 		if( ch=='#' ) {
-			FRAME_NEXT_CH();
 			token->type = TK_MACRO;
 			token->buf = frame->ps;
+			FRAME_NEXT_CH();
 			while( FRAME_HAS_NEXT() ) {
 				ch = FRAME_GET_CH();
 				if( ch=='\r' || ch=='\n' )
