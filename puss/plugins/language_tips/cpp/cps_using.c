@@ -25,6 +25,8 @@ gboolean cps_using(ParseEnv* env, Block* block) {
 	elem = cpp_elem_new();
 	elem->type = CPP_ET_USING;
 	elem->name = tiny_str_new(name->buf, name->len);
+	elem->sline = name->line;
+	elem->eline = name->line;
 	elem->decl = block_meger_tokens(block->tokens, ps, 0);
 	elem->v_using.isns = isns;
 	elem->v_using.nskey = nskey;

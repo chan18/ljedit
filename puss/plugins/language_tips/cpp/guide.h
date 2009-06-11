@@ -3,6 +3,8 @@
 #ifndef PUSS_CPP_GUIDE_H
 #define PUSS_CPP_GUIDE_H
 
+#pragma warning( disable : 4244 )
+
 #include <glib.h>
 #include <memory.h>
 

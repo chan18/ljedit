@@ -40,6 +40,8 @@ gboolean cps_var(ParseEnv* env, Block* block) {
 			elem->name = tiny_str_new(name->buf, name->len);
 			elem->v_var.nskey = nskey;
 		}
+		elem->sline = name->line;
+		elem->eline = name->line;
 		elem->decl = block_meger_tokens(start, ps, dtdecl);
 		elem->v_var.typekey = typekey;
 

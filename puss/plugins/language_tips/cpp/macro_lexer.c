@@ -148,7 +148,7 @@ static void on_macro_include(ParseEnv* env, MLStr* filename, gboolean is_system_
 	elem->v_include.sys_header = is_system_header;
 
 	str = g_strdup_printf("#include %c%s%c", is_system_header?'<':'\"', filename->buf, is_system_header?'<':'\"');
-	elem->decl = tiny_str_new(str, strlen(str));
+	elem->decl = tiny_str_new(str, (gsize)strlen(str));
 	g_free(str);
 
 	cpp_scope_insert( &(env->file->root_scope), elem );

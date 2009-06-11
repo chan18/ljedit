@@ -39,6 +39,7 @@ static MLToken* parse_function_args(MLToken* ps, MLToken* pe, CppElem* fun, gboo
 	gint dt;
 	TinyStr* nskey = 0;
 	MLToken* name = 0;
+	CppElem* arg;
 
 	while( ps < pe ) {
 		if( ps->type==')' ) {
@@ -72,27 +73,21 @@ static MLToken* parse_function_args(MLToken* ps, MLToken* pe, CppElem* fun, gboo
 		if( ps->type!=',' && ps->type!=')' && ps->type!='=' )
 			err_goto_finish_if( (ps = parse_id(ps, pe, &nskey, &name))==0 );
 
-		if( need_save_args ) {
-			// TODO :
-			/*
-			Var* p;
-			size_t pos = name.find_last_of('.');
-			if( pos==name.npos ) {
-				p = create_element<Var>(lexer, name);
-			} else {
-				p = create_element<Var>(lexer, name.substr(pos));
-				name.erase(pos);
-				p->nskey = name;
-			}
-			p->typekey = ns;
+		if( need_save_args && name ) {
+			arg = cpp_elem_new();
+			arg->type = CPP_ET_VAR;
+			arg->name = tiny_str_new(name->buf, name->len);
+			arg->sline = name->line;
+			arg->eline = name->line;
+			arg->decl = block_meger_tokens(decl_start, ps, 0);
+			arg->v_var.nskey = nskey;
+			arg->v_var.typekey = typekey;
 
-			meger_tokens(lexer, start_pos, lexer.pos(), p->decl);
-			cpp_scope_insert(fun, elem);
-			*/
-			tiny_str_free(typekey);
-			tiny_str_free(nskey);
+			cpp_scope_insert(fun, arg);
+
 			typekey = 0;
 			nskey = 0;
+
 		} else {
 			tiny_str_free(typekey);
 			tiny_str_free(nskey);
@@ -136,6 +131,8 @@ static gboolean parse_function_common(Block* block, MLToken* start, TinyStr* typ
 	MLToken* pe = block->tokens + block->count;
 	CppElem* elem = cpp_elem_new();
 	elem->type = CPP_ET_FUN;
+	elem->sline = start->line;
+	elem->eline = start->line;
 	elem->v_fun.typekey = typekey;
 	typekey = 0;
 

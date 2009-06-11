@@ -6,7 +6,7 @@
 gboolean cps_fun(ParseEnv* env, Block* block);
 
 static gboolean cps_normal_typedef(ParseEnv* env, Block* block) {
-	TinyStr* typekey;
+	TinyStr* typekey = 0;
 	gint dt = KD_UNK;
 	gint dtptr;
 	MLToken* name;
@@ -40,14 +40,16 @@ static gboolean cps_normal_typedef(ParseEnv* env, Block* block) {
 				err_goto_finish_if( (ps = skip_pair_square_bracket(ps + 1, pe))==0 );
 
 			elem = cpp_elem_new();
+			elem->type = CPP_ET_TYPEDEF;
 			elem->name = tiny_str_new(ps->buf, ps->len);
+			elem->sline = name->line;
+			elem->eline = name->line;
 			elem->v_typedef.typekey = typekey;
 			elem->decl = block_meger_tokens(block->tokens, ps, 0);
 
 			typekey = 0;
-			
-			//scope_insert(scope, p);
-			cpp_elem_free(elem);
+
+			cpp_scope_insert(block->parent, elem);
 		}
 		break;
 
@@ -56,15 +58,16 @@ static gboolean cps_normal_typedef(ParseEnv* env, Block* block) {
 		// typedef (T::*TFn)(...);
 		err_goto_finish_if( ps->type!='(' );
 		{
-			/* TODO : 
 			CppElem tpscope;
+			CppElem* tpparent = block->parent;
 			memset(&tpscope, 0, sizeof(tpscope));
 			tpscope.type = CPP_ET_NCSCOPE;
 			tpscope.file = block->parent->file;
 
 			--(block->count);
 			++(block->tokens);
-			if( cps_fun(block, &tpscope) ) {
+			block->parent = &tpscope;
+			if( cps_fun(env, block) ) {
 				if( tpscope.v_ncscope.scope ) {
 					elem = tpscope.v_ncscope.scope->data;
 					tpscope.v_ncscope.scope->data = 0;
@@ -76,8 +79,8 @@ static gboolean cps_normal_typedef(ParseEnv* env, Block* block) {
 					}
 				}
 			}
+			block->parent = tpparent;
 			cpp_elem_clear(&tpscope);
-			*/
 		}
 		break;
 	}

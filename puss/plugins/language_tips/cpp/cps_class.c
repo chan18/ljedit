@@ -5,13 +5,17 @@
 
 gboolean cps_var(ParseEnv* env, Block* block);
 
+#define MAX_INHERS 256
+
 gboolean cps_class(ParseEnv* env, Block* block) {
-	MLToken* ps;
-	MLToken* pe;
 	CppElem* elem = 0;
 	TinyStr* nskey = 0;
 	MLToken* name = 0;
 	gint class_type = KD_UNK;
+	TinyStr* inhers[MAX_INHERS];
+	gint inhers_count = 0;
+	MLToken* ps;
+	MLToken* pe;
 
 	ps = block->tokens;
 	pe = ps + block->count;
@@ -78,15 +82,16 @@ gboolean cps_class(ParseEnv* env, Block* block) {
 				break;
 			}
 
-			err_goto_finish_if( (ps = parse_id(ps, pe, &nskey, 0))==0 );
-			// TODO :
-			// elem->v_class.inhers.push_back(nskey);
-			{
-				tiny_str_free(nskey);
-				nskey = 0;
-			}
-
+			err_goto_finish_if( (ps = parse_id(ps, pe, &(inhers[inhers_count]), 0))==0 );
+			++inhers_count;
 		} while( (ps < pe) && ps->type==',' );
+
+		if( inhers_count ) {
+			elem->v_class.inhers_count = inhers_count;
+			elem->v_class.inhers = g_memdup(inhers, sizeof(TinyStr*)*inhers_count);
+
+			inhers_count = 0;
+		}
 	}
 
 	err_goto_finish_if_not( ps < pe );
@@ -115,6 +120,8 @@ gboolean cps_class(ParseEnv* env, Block* block) {
 
 __cps_finish__:
 	tiny_str_free(nskey);
+	for( ; inhers_count>0; --inhers_count )
+		tiny_str_free(inhers[inhers_count-1]);
 	return TRUE;
 }
 
