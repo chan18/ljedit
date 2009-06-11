@@ -31,7 +31,7 @@ PUSS_LIBS += `pkg-config --libs gtksourceview-2.0` \
 # 
 PUSS_CFLAGS += -I../../bin/include
 
-SRCS = $(wildcard *.c)
+SRCS = $(wildcard *.c) $(wildcard cpp/*.c)
 
 OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)
 
@@ -47,6 +47,11 @@ $(TARGET).so : $(OBJS)
 
 $(TARGET).plugin : $(TARGET_NAME).plugin
 	cp -f $< $@
+
+clean :
+	rm -f $(TARGET).so
+	rm -f $(TARGET).plugin
+	rm -rf $(OBJPATH)
 
 $(OBJPATH)/%.o : %.c
 	@mkdir -p $(dir $@)

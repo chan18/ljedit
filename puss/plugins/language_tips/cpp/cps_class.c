@@ -3,6 +3,8 @@
 
 #include "cps_utils.h"
 
+gboolean cps_var(ParseEnv* env, Block* block);
+
 gboolean cps_class(ParseEnv* env, Block* block) {
 	MLToken* ps;
 	MLToken* pe;
@@ -105,7 +107,7 @@ gboolean cps_class(ParseEnv* env, Block* block) {
 			ps->len = elem->name->len;
 			ps->line = (ps+1)->line;
 
-			cps_var(&var_block);
+			cps_var(env, &var_block);
 			
 			*ps = type_token;
 		}

@@ -267,7 +267,7 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 
 	create_ui(g_self);
 
-	g_self->update_timer = g_timeout_add(500, on_update_timeout, g_self);
+	g_self->update_timer = g_timeout_add(500, (GSourceFunc)on_update_timeout, g_self);
 
 	return g_self;
 }

@@ -56,6 +56,7 @@ static gboolean cps_normal_typedef(ParseEnv* env, Block* block) {
 		// typedef (T::*TFn)(...);
 		err_goto_finish_if( ps->type!='(' );
 		{
+			/* TODO : 
 			CppElem tpscope;
 			memset(&tpscope, 0, sizeof(tpscope));
 			tpscope.type = CPP_ET_NCSCOPE;
@@ -76,6 +77,7 @@ static gboolean cps_normal_typedef(ParseEnv* env, Block* block) {
 				}
 			}
 			cpp_elem_clear(&tpscope);
+			*/
 		}
 		break;
 	}
@@ -88,7 +90,6 @@ __cps_finish__:
 static gboolean cps_complex_typedef(ParseEnv* env, Block* block) {
 	// typedef struct { ... } T, *PT;
 	TinyStr* str;
-	MLToken* name;
 	CppElem* elem = 0;
 	CppElem tpscope;
 	GList*  node;

@@ -109,7 +109,7 @@ static gint cpp_elem_pos_compare(const CppElem* a, const CppElem* b) {
 
 void cpp_scope_insert(CppElem* parent, CppElem* elem) {
 	if( parent->v_ncscope.scope )
-		parent->v_ncscope.scope = g_list_insert_sorted( parent->v_ncscope.scope, elem, cpp_elem_pos_compare );
+		parent->v_ncscope.scope = g_list_insert_sorted( parent->v_ncscope.scope, elem, (GCompareFunc)cpp_elem_pos_compare );
 	else
 		parent->v_ncscope.scope = g_list_append(0, elem);
 }

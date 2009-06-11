@@ -45,7 +45,7 @@ static void __dump_block(Block* block) {
 void cpp_parser_init(CppParser* parser, gboolean enable_macro_replace) {
 	parser->keywords_table = cpp_keywords_table_new();
 	parser->enable_macro_replace = enable_macro_replace;
-	parser->files  = g_hash_table_new_full(g_str_hash, g_str_equal, 0, cpp_file_unref);
+	parser->files  = g_hash_table_new_full(g_str_hash, g_str_equal, 0, (GDestroyNotify)cpp_file_unref);
 
 	g_static_rw_lock_init( &(parser->include_paths_lock) );
 	g_static_rw_lock_init( &(parser->files_lock) );

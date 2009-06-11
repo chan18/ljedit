@@ -133,7 +133,6 @@ static void on_macro_undef(ParseEnv* env, MLStr* name) {
 
 static void on_macro_include(ParseEnv* env, MLStr* filename, gboolean is_system_header, gint line) {
 	CppFile* incfile = 0;
-	gchar* filekey = 0;
 	gchar* str;
 	CppElem* elem;
 

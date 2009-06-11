@@ -56,6 +56,7 @@ CppFile* cpp_guide_parse(CppGuide* guide, const gchar* filename, gint namelen) {
 
 
 #ifdef G_OS_WIN32
+#define _WIN32_WINNT 0x0500
 #include <windows.h>
 #endif
 
@@ -80,7 +81,7 @@ gchar* cpp_filename_to_filekey(const gchar* filename, glong namelen) {
 
 		paths = g_new(gchar*, 256);
 		paths[0] = g_strdup("_:");
-		paths[0][0] = toupper(filename[0]);
+		paths[0][0] = g_ascii_toupper(filename[0]);
 		j = 1;
 
 		for( i=3; i<len; ++i ) {
