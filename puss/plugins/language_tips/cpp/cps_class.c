@@ -35,6 +35,8 @@ gboolean cps_class(ParseEnv* env, Block* block) {
 		err_goto_finish_if( (ps = parse_id(ps, pe, &nskey, &name))==0 );
 
 	elem = cpp_elem_new();
+	elem->type = CPP_ET_CLASS;
+	elem->file = env->file;
 	if( name ) {
 		if( name->len==nskey->len ) {
 			elem->name = nskey;

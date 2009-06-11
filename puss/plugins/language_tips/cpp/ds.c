@@ -6,9 +6,14 @@
 
 #define  tiny_str_mem_size(len) (sizeof(TinyStr) + len)
 
-TinyStr* tiny_str_new(const gchar* buf, gshort len) {
+TinyStr* tiny_str_new(const gchar* buf, gsize len) {
+	TinyStr* res;
+
+	if( len > 0x0000ffff )
+		len = 0x0000ffff;
+
 	//TinyStr* res = (TinyStr*)g_new(gchar, tiny_str_mem_size(len) );
-	TinyStr* res = (TinyStr*)g_slice_alloc( tiny_str_mem_size(len) );
+	res = (TinyStr*)g_slice_alloc( tiny_str_mem_size(len) );
 	res->len = len;
 	if( buf )
 		memcpy(res->buf, buf, len);
@@ -99,7 +104,7 @@ void cpp_elem_clear(CppElem* elem) {
 }
 
 static gint cpp_elem_pos_compare(const CppElem* a, const CppElem* b) {
-	return b->sline - a->sline;
+	return a->sline - b->sline;
 }
 
 void cpp_scope_insert(CppElem* parent, CppElem* elem) {

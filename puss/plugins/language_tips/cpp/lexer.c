@@ -612,7 +612,6 @@ static gint cpp_lexer_next_sign(CppLexer* lexer, CppFrame* frame) {
 					FRAME_NEXT_CH();
 					break;
 				}
-				FRAME_PREV_CH();
 			}
 			FRAME_PREV_CH();
 			type = '.';

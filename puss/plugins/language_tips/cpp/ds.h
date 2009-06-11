@@ -5,7 +5,7 @@
 
 #include "guide.h"
 
-TinyStr* tiny_str_new(const gchar* buf, gshort len);
+TinyStr* tiny_str_new(const gchar* buf, gsize len);
 void     tiny_str_free(TinyStr* str);
 #define  tiny_str_copy(str) tiny_str_new((str)->buf, (str)->len)
 gboolean tiny_str_equal(const TinyStr* a, const TinyStr* b);

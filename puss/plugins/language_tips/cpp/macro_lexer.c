@@ -205,7 +205,7 @@ static void on_macro_include(ParseEnv* env, MLStr* filename, gboolean is_system_
 
 	elem = cpp_elem_new();
 	elem->type = CPP_ET_INCLUDE;
-	elem->name = tiny_str_new("_include_", -1);
+	elem->name = tiny_str_new("_include_", 9);
 	elem->sline = line;
 	elem->eline = line;
 	elem->v_include.filename = tiny_str_new(filename->buf, filename->len);

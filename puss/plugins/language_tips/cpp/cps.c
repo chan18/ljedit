@@ -349,15 +349,18 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 	return fn;
 }
 
+#include <assert.h>
+
 MLToken* parse_scope(ParseEnv* env, MLToken* tokens, gsize count, CppElem* parent, gboolean use_block_end) {
 	MLToken* retval = 0;
 	TParseFn fn;
 	BlockSpliter spliter;
 	Block block;
 	
-	g_assert( cpp_elem_has_subscope(parent) );
+	assert( cpp_elem_has_subscope(parent) );
 
 	memset(&block, 0, sizeof(block));
+	block.parent = parent;
 
 	spliter_init_with_tokens(&spliter, env, tokens, count);
 

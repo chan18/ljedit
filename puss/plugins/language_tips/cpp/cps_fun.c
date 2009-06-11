@@ -139,7 +139,7 @@ static gboolean parse_function_common(Block* block, MLToken* start, TinyStr* typ
 	elem->v_fun.typekey = typekey;
 	typekey = 0;
 
-	if( nskey->len==name->len ) {
+	if( nskey && nskey->len==name->len ) {
 		elem->name = nskey;
 	} else {
 		elem->name = tiny_str_new(name->buf, name->len);
