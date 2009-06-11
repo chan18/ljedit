@@ -39,7 +39,9 @@ typedef struct {
 } CppKeyword;
 
 typedef struct {
-	gpointer	nouse;
+	gint		argc;
+	TinyStr**	argv;
+	TinyStr*	value;
 } CppMacroDefine;
 
 typedef struct {

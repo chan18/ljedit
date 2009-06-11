@@ -293,13 +293,7 @@ CppFile* cpp_parser_parse(CppParser* parser, const gchar* filekey) {
 
 	file = cpp_parser_parse_use_menv(&env, filekey);
 
-	if( env.rmacros_table )
-		g_hash_table_destroy(env.rmacros_table);
-
-	if( env.include_paths && g_atomic_int_dec_and_test(&(env.include_paths->ref_count)) ) {
-		g_list_free(env.include_paths->paths);
-		g_free(env.include_paths);
-	}
+	cpp_macro_lexer_final(&env);
 
 	return file;
 }
