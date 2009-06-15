@@ -6,11 +6,6 @@
 #include "ds.h"
 
 typedef struct {
-	gint	ref_count;
-	GList*	paths;
-} IncludePaths;
-
-typedef struct {
 	gboolean		enable_macro_replace;
 	gpointer		keywords_table;
 
@@ -24,7 +19,10 @@ typedef struct {
 void cpp_parser_init(CppParser* parser, gboolean enable_macro_replace);
 void cpp_parser_final(CppParser* parser);
 
-void cpp_parser_set_include_paths(CppParser* parser, GList* paths);
+void cpp_parser_include_paths_set(CppParser* parser, GList* paths);
+IncludePaths* cpp_parser_include_paths_ref(CppParser* parser);
+void cpp_parser_include_paths_unref(IncludePaths* paths);
+
 CppFile* cpp_parser_find_parsed(CppParser* parser, const gchar* filekey);
 CppFile* cpp_parser_parse(CppParser* parser, const gchar* filekey);
 

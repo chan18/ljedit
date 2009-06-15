@@ -500,12 +500,7 @@ static gboolean macro_replace(ParseEnv* env, CppElem* macro, MLToken* token) {
 void cpp_macro_lexer_init(ParseEnv* env) {
 	if( env->parser->enable_macro_replace ) {
 		env->rmacros_table = g_hash_table_new_full(g_str_hash, g_str_equal, 0, (GDestroyNotify)rmacro_free);
-
-		g_static_rw_lock_reader_lock( &(env->parser->include_paths_lock) );
-		env->include_paths = env->parser->include_paths;
-		if( env->include_paths )
-			g_atomic_int_inc( &(env->include_paths->ref_count) );
-		g_static_rw_lock_reader_unlock( &(env->parser->include_paths_lock) );
+		env->include_paths = cpp_parser_include_paths_ref(env->parser);
 	}
 }
 
@@ -513,10 +508,7 @@ void cpp_macro_lexer_final(ParseEnv* env) {
 	if( env->rmacros_table )
 		g_hash_table_destroy(env->rmacros_table);
 
-	if( env->include_paths && g_atomic_int_dec_and_test(&(env->include_paths->ref_count)) ) {
-		g_list_free(env->include_paths->paths);
-		g_free(env->include_paths);
-	}
+	cpp_parser_include_paths_unref(env->include_paths);
 }
 
 void cpp_macro_lexer_next(ParseEnv* env, MLToken* token) {

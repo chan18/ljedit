@@ -164,6 +164,11 @@ struct _CppFile {
 CppFile* cpp_file_ref(CppFile* file);
 void     cpp_file_unref(CppFile* file);
 
+typedef struct {
+	gint	ref_count;
+	GList*	path_list;
+} IncludePaths;
+
 typedef struct _CppGuide CppGuide;
 
 gchar* cpp_filename_to_filekey(const gchar* filename, glong namelen);
@@ -171,7 +176,10 @@ gchar* cpp_filename_to_filekey(const gchar* filename, glong namelen);
 CppGuide* cpp_guide_new(gboolean enable_macro_replace);
 void cpp_guide_free(CppGuide* guide);
 
-void cpp_guide_set_include_paths(CppGuide* guide, const gchar* paths);
+void cpp_guide_include_paths_set(CppGuide* guide, const gchar* paths);
+IncludePaths* cpp_guide_include_paths_ref(CppGuide* guide);
+void cpp_guide_include_paths_unref(IncludePaths* paths);
+
 CppFile* cpp_guide_find_parsed(CppGuide* guide, const gchar* filename, gint namelen);
 CppFile* cpp_guide_parse(CppGuide* guide, const gchar* filename, gint namelen);
 

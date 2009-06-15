@@ -22,7 +22,7 @@ void cpp_guide_free(CppGuide* guide) {
 	}
 }
 
-void cpp_guide_set_include_paths(CppGuide* guide, const gchar* paths) {
+void cpp_guide_include_paths_set(CppGuide* guide, const gchar* paths) {
 	gchar** p;
 	gchar** items;
 	GList* include_paths = 0;
@@ -37,7 +37,15 @@ void cpp_guide_set_include_paths(CppGuide* guide, const gchar* paths) {
 		g_strfreev(items);
 	}
 
-	cpp_parser_set_include_paths(&(guide->parser), include_paths);
+	cpp_parser_include_paths_set(&(guide->parser), include_paths);
+}
+
+IncludePaths* cpp_guide_include_paths_ref(CppGuide* guide) {
+	return cpp_parser_include_paths_ref( &(guide->parser) );
+}
+
+void cpp_guide_include_paths_unref(IncludePaths* paths) {
+	cpp_parser_include_paths_unref(paths);
 }
 
 CppFile* cpp_guide_find_parsed(CppGuide* guide, const gchar* filename, gint namelen) {

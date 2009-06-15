@@ -58,22 +58,40 @@ void cpp_parser_final(CppParser* parser) {
 	g_static_rw_lock_free( &(parser->include_paths_lock) );
 }
 
-void cpp_parser_set_include_paths(CppParser* parser, GList* paths) {
+void cpp_parser_include_paths_set(CppParser* parser, GList* paths) {
 	IncludePaths* include_paths;
 	IncludePaths* old;
 
-	old = parser->include_paths;
 	include_paths = g_new(IncludePaths, 1);
-	include_paths->paths = paths;
+	include_paths->path_list = paths;
 	include_paths->ref_count = 1;
 
 	g_static_rw_lock_writer_lock( &(parser->include_paths_lock) );
+	old = parser->include_paths;
 	parser->include_paths = include_paths;
 	g_static_rw_lock_writer_unlock( &(parser->include_paths_lock) );
 
 	if( g_atomic_int_dec_and_test(&(old->ref_count)) ) {
-		g_list_free(old->paths);
+		g_list_free(old->path_list);
 		g_free(old);
+	}
+}
+
+IncludePaths* cpp_parser_include_paths_ref(CppParser* parser) {
+	IncludePaths* paths;
+	g_static_rw_lock_reader_lock( &(parser->include_paths_lock) );
+	paths = parser->include_paths;
+	if( paths )
+		g_atomic_int_inc( &(paths->ref_count) );
+	g_static_rw_lock_reader_unlock( &(parser->include_paths_lock) );
+
+	return paths;
+}
+
+void cpp_parser_include_paths_unref(IncludePaths* paths) {
+	if( paths && g_atomic_int_dec_and_test(&(paths->ref_count)) ) {
+		g_list_free(paths->path_list);
+		g_free(paths);
 	}
 }
 
@@ -239,7 +257,7 @@ static CppFile* cpp_parser_do_parse_in_include_path(ParseEnv* env, const gchar* 
 	gchar* str;
 	GList* p;
 
-	for( p=env->include_paths->paths; !file && p; p=p->next ) {
+	for( p=env->include_paths->path_list; !file && p; p=p->next ) {
 		str = g_build_filename( (gchar*)(p->data), filename, 0 );
 		if( str ) {
 			filekey = cpp_filename_to_filekey(str, -1);
