@@ -23,8 +23,8 @@
         <!--tooltip-column use markup string, but need plain text.-->
         <!--property name="tooltip-column">2</property-->
         <property name="has-tooltip">true</property>
-        <signal handler="outline_page_cb_query_tooltip" name="query-tooltip"/>
-        <signal handler="outline_page_cb_row_activated" name="row-activated"/>
+        <signal handler="outline_cb_query_tooltip" name="query-tooltip"/>
+        <signal handler="outline_cb_row_activated" name="row-activated"/>
         <child>
           <object class="GtkTreeViewColumn" id="elem_column">
             <child>
@@ -51,7 +51,7 @@
       <object class="GtkHBox" id="hbox">
         <child>
           <object class="GtkButton" id="number_button">
-            <signal handler="preview_page_cb_number_button_clicked" name="clicked"/>
+            <signal handler="preview_cb_number_button_clicked" name="clicked"/>
             <property name="label">0/0</property>
             <property name="relief">GTK_RELIEF_HALF</property>
           </object>
@@ -62,7 +62,7 @@
         </child>
         <child>
           <object class="GtkButton" id="filename_button">
-            <signal handler="preview_page_cb_filename_button_clicked" name="clicked"/>
+            <signal handler="preview_cb_filename_button_clicked" name="clicked"/>
             <child>
               <object class="GtkHBox" id="filename_hbox">
                 <child>
@@ -190,7 +190,7 @@
                 <property name="model">list_store</property>
                 <property name="headers-visible">false</property>
                 <property name="has-tooltip">true</property>
-                <signal handler="tips_list_cb_query_tooltip" name="query-tooltip"/>
+                <signal handler="tips_cb_query_tooltip" name="query-tooltip"/>
                 <child>
                   <object class="GtkTreeViewColumn" id="list_column">
                     <child>

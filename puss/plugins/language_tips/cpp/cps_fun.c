@@ -76,6 +76,7 @@ static MLToken* parse_function_args(MLToken* ps, MLToken* pe, CppElem* fun, gboo
 		if( need_save_args && name ) {
 			arg = cpp_elem_new();
 			arg->type = CPP_ET_VAR;
+			arg->file = fun->file;
 			arg->name = tiny_str_new(name->buf, name->len);
 			arg->sline = name->line;
 			arg->eline = name->line;
@@ -131,6 +132,7 @@ static gboolean parse_function_common(Block* block, MLToken* start, TinyStr* typ
 	MLToken* pe = block->tokens + block->count;
 	CppElem* elem = cpp_elem_new();
 	elem->type = CPP_ET_FUN;
+	elem->file = block->parent->file;
 	elem->sline = start->line;
 	elem->eline = start->line;
 	elem->v_fun.typekey = typekey;

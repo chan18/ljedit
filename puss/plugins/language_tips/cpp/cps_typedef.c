@@ -41,6 +41,7 @@ static gboolean cps_normal_typedef(ParseEnv* env, Block* block) {
 
 			elem = cpp_elem_new();
 			elem->type = CPP_ET_TYPEDEF;
+			elem->file = block->parent->file;
 			elem->name = tiny_str_new(ps->buf, ps->len);
 			elem->sline = name->line;
 			elem->eline = name->line;

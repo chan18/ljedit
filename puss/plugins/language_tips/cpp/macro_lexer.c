@@ -107,6 +107,7 @@ static void on_macro_define(ParseEnv* env, gint line, MLStr* name, gint argc, ML
 	elem->name = tiny_str_new(name->buf, name->len);
 	elem->sline = line;
 	elem->eline = line;
+	elem->decl = tiny_str_new(desc->buf, desc->len);
 
 	elem->v_define.argc = argc;
 	if( argc > 0 ) {
@@ -141,6 +142,7 @@ static void on_macro_include(ParseEnv* env, MLStr* filename, gboolean is_system_
 
 	elem = cpp_elem_new();
 	elem->type = CPP_ET_INCLUDE;
+	elem->file = env->file;
 	elem->name = tiny_str_new("_include_", 9);
 	elem->sline = line;
 	elem->eline = line;

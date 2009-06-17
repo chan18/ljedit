@@ -24,6 +24,7 @@ gboolean cps_using(ParseEnv* env, Block* block) {
 
 	elem = cpp_elem_new();
 	elem->type = CPP_ET_USING;
+	elem->file = block->parent->file;
 	elem->name = tiny_str_new(name->buf, name->len);
 	elem->sline = name->line;
 	elem->eline = name->line;

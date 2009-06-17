@@ -291,7 +291,31 @@
 			>
 		</File>
 		<File
+			RelativePath=".\LanguageTips.h"
+			>
+		</File>
+		<File
 			RelativePath=".\module.c"
+			>
+		</File>
+		<File
+			RelativePath=".\OutlinePage.c"
+			>
+		</File>
+		<File
+			RelativePath=".\ParseThread.c"
+			>
+		</File>
+		<File
+			RelativePath=".\PreviewPage.c"
+			>
+		</File>
+		<File
+			RelativePath=".\UIBuilder.c"
+			>
+		</File>
+		<File
+			RelativePath=".\Utils.c"
 			>
 		</File>
 	</Files>
