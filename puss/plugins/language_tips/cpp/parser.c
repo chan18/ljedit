@@ -192,14 +192,16 @@ CppFile* cpp_parser_parse_use_menv(ParseEnv* env, const gchar* filekey) {
 	// 
 	memset(&filestat, 0, sizeof(filestat));
 	if( g_stat(filekey, &filestat)!=0 )
-		return 0;
-
-	file = cpp_parser_find_parsed(env->parser, filekey);
-	if( file && file->datetime!=filestat.st_mtime )
-		file = 0;
-
-	if( file )
 		return file;
+
+	if( !env->force_rebuild ) {
+		file = cpp_parser_find_parsed(env->parser, filekey);
+		if( file && file->datetime!=filestat.st_mtime )
+			file = 0;
+
+		if( file )
+			return file;
+	}
 
 	// need parse file
 	// 
@@ -300,13 +302,15 @@ CppFile* parse_include_file(ParseEnv* env, MLStr* filename, gboolean is_system_h
 	return incfile;
 }
 
-CppFile* cpp_parser_parse(CppParser* parser, const gchar* filekey) {
+CppFile* cpp_parser_parse(CppParser* parser, const gchar* filekey, gboolean force_rebuild) {
 	ParseEnv env;
 	CppFile* file;
 
 	memset(&env, 0, sizeof(ParseEnv));
 
+	env.force_rebuild = force_rebuild;
 	env.parser = parser;
+
 	cpp_macro_lexer_init(&env);
 
 	file = cpp_parser_parse_use_menv(&env, filekey);

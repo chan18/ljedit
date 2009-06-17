@@ -4,6 +4,9 @@
 #define PUSS_CPP_GUIDE_H
 
 #pragma warning( disable : 4244 )
+#pragma warning( disable : 4311 )
+#pragma warning( disable : 4312 )
+
 
 #include <glib.h>
 #include <memory.h>
@@ -181,7 +184,7 @@ IncludePaths* cpp_guide_include_paths_ref(CppGuide* guide);
 void cpp_guide_include_paths_unref(IncludePaths* paths);
 
 CppFile* cpp_guide_find_parsed(CppGuide* guide, const gchar* filename, gint namelen);
-CppFile* cpp_guide_parse(CppGuide* guide, const gchar* filename, gint namelen);
+CppFile* cpp_guide_parse(CppGuide* guide, const gchar* filename, gint namelen, gboolean force_rebuild);
 
 #endif//PUSS_CPP_GUIDE_H
 

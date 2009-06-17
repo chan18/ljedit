@@ -7,6 +7,7 @@
 #include "parser.h"
 
 typedef struct {
+	gboolean		force_rebuild;
 	CppParser*		parser;
 	GHashTable*		rmacros_table;
 	CppLexer*		lexer;

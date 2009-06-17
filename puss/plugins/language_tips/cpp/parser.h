@@ -24,7 +24,7 @@ IncludePaths* cpp_parser_include_paths_ref(CppParser* parser);
 void cpp_parser_include_paths_unref(IncludePaths* paths);
 
 CppFile* cpp_parser_find_parsed(CppParser* parser, const gchar* filekey);
-CppFile* cpp_parser_parse(CppParser* parser, const gchar* filekey);
+CppFile* cpp_parser_parse(CppParser* parser, const gchar* filekey, gboolean force_rebuild);
 
 #endif//PUSS_CPP_PARSER_H
 

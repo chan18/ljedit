@@ -55,9 +55,9 @@ CppFile* cpp_guide_find_parsed(CppGuide* guide, const gchar* filename, gint name
 	return file;
 }
 
-CppFile* cpp_guide_parse(CppGuide* guide, const gchar* filename, gint namelen) {
+CppFile* cpp_guide_parse(CppGuide* guide, const gchar* filename, gint namelen, gboolean force_rebuild) {
 	gchar* filekey = cpp_filename_to_filekey(filename, namelen);
-	CppFile* file = cpp_parser_parse(&(guide->parser), filekey);
+	CppFile* file = cpp_parser_parse(&(guide->parser), filekey, force_rebuild);
 	g_free(filekey);
 	return file;
 }
