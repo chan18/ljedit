@@ -408,14 +408,8 @@ static gboolean view_on_scroll(GtkTextView* view, GdkEventScroll* event, Languag
 }
 
 static void buf_on_modified_changed(GtkTextBuffer* buf, LanguageTips* self) {
-	gchar* filepath = 0;
-	GString* url;
-
-	url = self->app->doc_get_url(buf);
-	if( url )
-		filepath = g_strndup(url->str, url->len);
-
-	g_async_queue_push(self->parse_queue, filepath);
+	GString* url = self->app->doc_get_url(buf);
+	parse_thread_push(self, url ? url->str : 0, FALSE);
 }
 
 static void signals_connect(LanguageTips* self, GtkTextView* view) {
@@ -451,8 +445,7 @@ static void signals_connect(LanguageTips* self, GtkTextView* view) {
 		gtk_source_buffer_set_language(GTK_SOURCE_BUFFER(buf), cpp_lang);
 	}
 
-	filepath = g_strndup(url->str, url->len);
-	g_async_queue_push(self->parse_queue, filepath);
+	parse_thread_push(self, url->str, FALSE);
 }
 
 static void signals_disconnect(LanguageTips* self, GtkTextView* view) {

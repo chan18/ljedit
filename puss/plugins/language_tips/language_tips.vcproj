@@ -282,6 +282,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\cpp\searcher.c"
+				>
+			</File>
+			<File
+				RelativePath=".\cpp\searcher.h"
+				>
+			</File>
+			<File
 				RelativePath=".\cpp\token.h"
 				>
 			</File>

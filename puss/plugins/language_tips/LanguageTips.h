@@ -7,6 +7,7 @@
 #include "IPuss.h"
 
 #include "cpp/guide.h"
+#include "cpp/searcher.h"
 
 #include <libintl.h>
 
@@ -67,6 +68,7 @@ typedef struct {
 
 void parse_thread_init(LanguageTips* self);
 void parse_thread_final(LanguageTips* self);
+void parse_thread_push(LanguageTips* self, const gchar* filename, gboolean force_rebuild);
 
 void ui_create(LanguageTips* self);
 void ui_destroy(LanguageTips* self);

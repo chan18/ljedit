@@ -7,25 +7,30 @@ static gchar* PARSE_THREAD_EXIT_SIGN = "";
 
 static gpointer tips_parse_thread(LanguageTips* self) {
 	CppFile* file;
-	gchar* filename = 0;
+	gchar* str;
+	gchar rebuild_sign;
+	gchar* filename;
 	GAsyncQueue* queue = self->parse_queue;
 	if( !queue )
 		return 0;
 
 	for(;;) {
-		filename = (gchar*)g_async_queue_pop(queue);
-		if( filename==PARSE_THREAD_EXIT_SIGN )
+		str = (gchar*)g_async_queue_pop(queue);
+		if( str==PARSE_THREAD_EXIT_SIGN )
 			break;
 
-		if( !filename )
+		if( !str )
 			continue;
 
 		// parse file
-		file = cpp_guide_parse(self->cpp_guide, filename, -1, FALSE);
+		rebuild_sign = str[0];
+		filename = str + 1;
+
+		file = cpp_guide_parse(self->cpp_guide, filename, -1, rebuild_sign=='!');
 		if( file )
 			cpp_file_unref(file);
 
-		g_free(filename);
+		g_free(str);
 	}
 
 	g_async_queue_unref(queue);
@@ -47,6 +52,14 @@ void parse_thread_final(LanguageTips* self) {
 
 	if( self->parse_thread ) {
 		g_thread_join(self->parse_thread);
+	}
+}
+
+void parse_thread_push(LanguageTips* self, const gchar* filename, gboolean force_rebuild) {
+	gchar* filepath;
+	if( filename ) {
+		filepath = g_strdup_printf("%c%s", force_rebuild ? '!' : ' ', filename);
+		g_async_queue_push(self->parse_queue, filepath);
 	}
 }
 
