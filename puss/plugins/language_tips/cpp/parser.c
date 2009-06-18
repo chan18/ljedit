@@ -59,10 +59,10 @@ void cpp_parser_final(CppParser* parser) {
 }
 
 void cpp_parser_include_paths_set(CppParser* parser, GList* paths) {
-	IncludePaths* include_paths;
-	IncludePaths* old;
+	CppIncludePaths* include_paths;
+	CppIncludePaths* old;
 
-	include_paths = g_new(IncludePaths, 1);
+	include_paths = g_new(CppIncludePaths, 1);
 	include_paths->path_list = paths;
 	include_paths->ref_count = 1;
 
@@ -77,8 +77,8 @@ void cpp_parser_include_paths_set(CppParser* parser, GList* paths) {
 	}
 }
 
-IncludePaths* cpp_parser_include_paths_ref(CppParser* parser) {
-	IncludePaths* paths;
+CppIncludePaths* cpp_parser_include_paths_ref(CppParser* parser) {
+	CppIncludePaths* paths;
 	g_static_rw_lock_reader_lock( &(parser->include_paths_lock) );
 	paths = parser->include_paths;
 	if( paths )
@@ -88,7 +88,7 @@ IncludePaths* cpp_parser_include_paths_ref(CppParser* parser) {
 	return paths;
 }
 
-void cpp_parser_include_paths_unref(IncludePaths* paths) {
+void cpp_parser_include_paths_unref(CppIncludePaths* paths) {
 	if( paths && g_atomic_int_dec_and_test(&(paths->ref_count)) ) {
 		g_list_free(paths->path_list);
 		g_free(paths);

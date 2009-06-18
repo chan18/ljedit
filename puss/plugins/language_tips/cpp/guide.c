@@ -40,11 +40,11 @@ void cpp_guide_include_paths_set(CppGuide* guide, const gchar* paths) {
 	cpp_parser_include_paths_set(&(guide->parser), include_paths);
 }
 
-IncludePaths* cpp_guide_include_paths_ref(CppGuide* guide) {
+CppIncludePaths* cpp_guide_include_paths_ref(CppGuide* guide) {
 	return cpp_parser_include_paths_ref( &(guide->parser) );
 }
 
-void cpp_guide_include_paths_unref(IncludePaths* paths) {
+void cpp_guide_include_paths_unref(CppIncludePaths* paths) {
 	cpp_parser_include_paths_unref(paths);
 }
 

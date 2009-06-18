@@ -3,10 +3,11 @@
 #ifndef PUSS_CPP_GUIDE_H
 #define PUSS_CPP_GUIDE_H
 
+#ifdef _MSVCR
 #pragma warning( disable : 4244 )
 #pragma warning( disable : 4311 )
 #pragma warning( disable : 4312 )
-
+#endif//_MSVCR
 
 #include <glib.h>
 #include <memory.h>
@@ -167,10 +168,12 @@ struct _CppFile {
 CppFile* cpp_file_ref(CppFile* file);
 void     cpp_file_unref(CppFile* file);
 
+
+
 typedef struct {
 	gint	ref_count;
 	GList*	path_list;
-} IncludePaths;
+} CppIncludePaths;
 
 typedef struct _CppGuide CppGuide;
 
@@ -180,8 +183,8 @@ CppGuide* cpp_guide_new(gboolean enable_macro_replace);
 void cpp_guide_free(CppGuide* guide);
 
 void cpp_guide_include_paths_set(CppGuide* guide, const gchar* paths);
-IncludePaths* cpp_guide_include_paths_ref(CppGuide* guide);
-void cpp_guide_include_paths_unref(IncludePaths* paths);
+CppIncludePaths* cpp_guide_include_paths_ref(CppGuide* guide);
+void cpp_guide_include_paths_unref(CppIncludePaths* paths);
 
 CppFile* cpp_guide_find_parsed(CppGuide* guide, const gchar* filename, gint namelen);
 CppFile* cpp_guide_parse(CppGuide* guide, const gchar* filename, gint namelen, gboolean force_rebuild);

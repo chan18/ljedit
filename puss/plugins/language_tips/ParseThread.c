@@ -21,7 +21,7 @@ static gpointer tips_parse_thread(LanguageTips* self) {
 			continue;
 
 		// parse file
-		file = cpp_guide_parse(self->cpp_guide, filename, -1);
+		file = cpp_guide_parse(self->cpp_guide, filename, -1, FALSE);
 		if( file )
 			cpp_file_unref(file);
 

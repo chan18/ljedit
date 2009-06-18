@@ -71,7 +71,7 @@ static void open_include_file(LanguageTips* self, const gchar* filename, gboolea
 
 	if( !succeed ) {
 		GList* p;
-		IncludePaths* paths;
+		CppIncludePaths* paths;
 		paths = cpp_guide_include_paths_ref(self->cpp_guide);
 		for( p=paths->path_list; !succeed && p; p=p->next ) {
 			filepath = g_build_filename((gchar*)(p->data), filename, NULL);

@@ -7,13 +7,13 @@
 #include "parser.h"
 
 typedef struct {
-	gboolean		force_rebuild;
-	CppParser*		parser;
-	GHashTable*		rmacros_table;
-	CppLexer*		lexer;
-	CppFile*		file;
+	gboolean			force_rebuild;
+	CppParser*			parser;
+	GHashTable*			rmacros_table;
+	CppLexer*			lexer;
+	CppFile*			file;
 
-	IncludePaths*	include_paths;
+	CppIncludePaths*	include_paths;
 } ParseEnv;
 
 CppFile* parse_include_file(ParseEnv* env, MLStr* filename, gboolean is_system_header);
