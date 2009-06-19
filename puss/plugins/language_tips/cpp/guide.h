@@ -93,6 +93,11 @@ typedef struct {
 	CppNCScope	subscope;
 } CppNamespace;
 
+#define CPP_CLASS_TYPE_UNKNOWN	'?'
+#define CPP_CLASS_TYPE_STRUCT	's'
+#define CPP_CLASS_TYPE_CLASS	'c'
+#define CPP_CLASS_TYPE_UNION	'u'
+
 typedef struct {
 	CppNCScope	subscope;
 
@@ -168,7 +173,7 @@ struct _CppFile {
 CppFile* cpp_file_ref(CppFile* file);
 void     cpp_file_unref(CppFile* file);
 
-
+// parser
 
 typedef struct {
 	gint	ref_count;
@@ -179,7 +184,7 @@ typedef struct _CppGuide CppGuide;
 
 gchar* cpp_filename_to_filekey(const gchar* filename, glong namelen);
 
-CppGuide* cpp_guide_new(gboolean enable_macro_replace);
+CppGuide* cpp_guide_new(gboolean enable_macro_replace, gboolean enable_search);
 void cpp_guide_free(CppGuide* guide);
 
 void cpp_guide_include_paths_set(CppGuide* guide, const gchar* paths);
@@ -188,6 +193,16 @@ void cpp_guide_include_paths_unref(CppIncludePaths* paths);
 
 CppFile* cpp_guide_find_parsed(CppGuide* guide, const gchar* filename, gint namelen);
 CppFile* cpp_guide_parse(CppGuide* guide, const gchar* filename, gint namelen, gboolean force_rebuild);
+
+// searcher
+
+typedef struct {
+	gchar (*do_prev)(gpointer it);
+	gchar (*do_next)(gpointer it);
+} SearchIterEnv;
+
+gchar* cpp_find_key(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_startswith);
+gchar* cpp_parse_key(const gchar* text, gboolean find_startswith);
 
 #endif//PUSS_CPP_GUIDE_H
 

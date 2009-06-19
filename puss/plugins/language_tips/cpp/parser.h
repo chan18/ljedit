@@ -5,6 +5,9 @@
 
 #include "ds.h"
 
+typedef void (*FileInsertCallback)(CppFile* file, gpointer tag);
+typedef void (*FileRemoveCallback)(CppFile* file, gpointer tag);
+
 typedef struct {
 	gboolean			enable_macro_replace;
 	gpointer			keywords_table;
@@ -14,17 +17,22 @@ typedef struct {
 
 	GStaticRWLock		files_lock;
 	GHashTable*			files;
+
+	FileInsertCallback	cb_file_insert;
+	FileRemoveCallback	cb_file_remove;
+	gpointer			cb_tag;
 } CppParser;
 
-void cpp_parser_init(CppParser* parser, gboolean enable_macro_replace);
-void cpp_parser_final(CppParser* parser);
+void cpp_parser_init(CppParser* self, gboolean enable_macro_replace);
 
-void cpp_parser_include_paths_set(CppParser* parser, GList* paths);
-CppIncludePaths* cpp_parser_include_paths_ref(CppParser* parser);
+void cpp_parser_final(CppParser* self);
+
+void cpp_parser_include_paths_set(CppParser* self, GList* paths);
+CppIncludePaths* cpp_parser_include_paths_ref(CppParser* self);
 void cpp_parser_include_paths_unref(CppIncludePaths* paths);
 
-CppFile* cpp_parser_find_parsed(CppParser* parser, const gchar* filekey);
-CppFile* cpp_parser_parse(CppParser* parser, const gchar* filekey, gboolean force_rebuild);
+CppFile* cpp_parser_find_parsed(CppParser* self, const gchar* filekey);
+CppFile* cpp_parser_parse(CppParser* self, const gchar* filekey, gboolean force_rebuild);
 
 #endif//PUSS_CPP_PARSER_H
 

@@ -4,28 +4,29 @@
 #ifndef PUSS_CPP_SEARCHER_H
 #define PUSS_CPP_SEARCHER_H
 
-#include "guide.h"
+#include "parser.h"
+
+typedef struct _SNode SNode;
 
 typedef struct {
-	gchar (*do_prev)(gpointer it);
-	gchar (*do_next)(gpointer it);
-} SearchIterEnv;
+	GStaticRWLock	lock;
+	SNode*			root;
+} CppSTree;
 
-gchar* cpp_find_key(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_startswith);
-gchar* cpp_parse_key(const gchar* text, gboolean find_startswith);
+void cpp_stree_init(CppSTree* self);
+void cpp_stree_final(CppSTree* self);
+void cpp_stree_insert(CppSTree* self, CppFile* file);
+void cpp_stree_remove(CppSTree* self, CppFile* file);
 
-/*
 
 typedef void (*CppMatched)(CppElem* elem, gpointer* tag);
 
-void cpp_search( CppGuide* guide
+void cpp_search( CppSTree* stree
 	, const gchar* key
 	, CppMatched cb
 	, gpointer cb_tag
-	, CppSearchTree* stree
 	, CppFile* file
 	, gint line );
-*/
 
 #endif//PUSS_CPP_SEARCHER_H
 

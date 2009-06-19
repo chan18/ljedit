@@ -3,15 +3,31 @@
 #include "guide.h"
 
 #include "parser.h"
+#include "searcher.h"
 
 struct _CppGuide {
 	CppParser	parser;
+	CppSTree	stree;
 };
 
-CppGuide* cpp_guide_new(gboolean enable_macro_replace) {
+static void guide_on_file_insert(CppFile* file, CppGuide* self) {
+	cpp_stree_insert( &(self->stree), file );
+}
+
+static void guide_on_file_remove(CppFile* file, CppGuide* self) {
+	cpp_stree_remove( &(self->stree), file );
+}
+
+CppGuide* cpp_guide_new(gboolean enable_macro_replace, gboolean enable_search) {
 	CppGuide* guide = g_new0(CppGuide, 1);
 
-	cpp_parser_init(&(guide->parser), enable_macro_replace);
+	guide->parser.cb_tag = guide;
+	guide->parser.cb_file_insert = (FileInsertCallback)guide_on_file_insert;
+	guide->parser.cb_file_remove = (FileRemoveCallback)guide_on_file_remove;
+
+	cpp_parser_init( &(guide->parser), enable_macro_replace );
+
+	cpp_stree_init( &(guide->stree) );
 
 	return guide;
 }
@@ -19,6 +35,8 @@ CppGuide* cpp_guide_new(gboolean enable_macro_replace) {
 void cpp_guide_free(CppGuide* guide) {
 	if( guide ) {
 		cpp_parser_final( &(guide->parser) );
+
+		cpp_stree_final( &(guide->stree) );
 	}
 }
 

@@ -485,7 +485,7 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	self = g_new0(LanguageTips, 1);
 	self->app = app;
 
-	self->cpp_guide = cpp_guide_new(TRUE);
+	self->cpp_guide = cpp_guide_new(TRUE, TRUE);
 
 	parse_thread_init(self);
 

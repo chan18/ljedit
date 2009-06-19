@@ -56,7 +56,13 @@ gboolean cps_class(ParseEnv* env, Block* block) {
 		elem->name = tiny_str_new("@anonymous", 10);
 	}
 
-	elem->v_class.class_type = class_type==KW_STRUCT ? 's' : (class_type==KW_CLASS ? 'c' : (class_type==KW_UNION ? 'u' : '?'));
+	switch( class_type ) {
+	case KW_STRUCT:	elem->v_class.class_type = CPP_CLASS_TYPE_STRUCT;	break;
+	case KW_CLASS:	elem->v_class.class_type = CPP_CLASS_TYPE_CLASS;	break;
+	case KW_UNION:	elem->v_class.class_type = CPP_CLASS_TYPE_UNION;	break;
+	defalut:		elem->v_class.class_type = CPP_CLASS_TYPE_UNKNOWN;	break;
+	}
+
 	elem->decl = block_meger_tokens(block->tokens, ps, 0);
 
 	cpp_scope_insert(block->parent, elem);
