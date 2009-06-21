@@ -15,6 +15,7 @@ static gchar text_buffer_iter_do_next(GtkTextIter* pos) {
 		: '\0';
 }
 
+/*
 gchar* text_buffer_find_key( CppFile* file
 	, GtkTextIter* it
     , GtkTextIter* end
@@ -26,4 +27,5 @@ gchar* text_buffer_find_key( CppFile* file
 	key = cpp_find_key(&env, it, end, find_startswith);
 	return key;
 }
+*/
 

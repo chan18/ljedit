@@ -74,8 +74,9 @@ static gboolean cps_normal_typedef(ParseEnv* env, Block* block) {
 					tpscope.v_ncscope.scope->data = 0;
 					if( elem && elem->type==CPP_ET_FUN) {
 						TinyStr* str = elem->decl;
-						elem->decl = tiny_str_new("typedef ", 8 + str->len);
-						memcpy(elem->decl->buf + 8, str->buf, str->len);
+						gsize str_len = tiny_str_len(str);
+						elem->decl = tiny_str_new("typedef ", 8 + str_len);
+						memcpy(elem->decl->buf + 8, str->buf, str_len);
 						tiny_str_free(str);
 					}
 				}
@@ -131,9 +132,9 @@ static gboolean cps_complex_typedef(ParseEnv* env, Block* block) {
 		elem->v_typedef.typekey = str;
 
 		str = elem->decl;
-		elem->decl = tiny_str_new(0, 8 + str->len);
+		elem->decl = tiny_str_new(0, 8 + tiny_str_len(str));
 		memcpy(elem->decl->buf, "typedef ", 8);
-		memcpy(elem->decl->buf + 8, str->buf, str->len);
+		memcpy(elem->decl->buf + 8, str->buf, tiny_str_len(str));
 		tiny_str_free(str);
 
 		cpp_scope_insert(block->parent, elem);

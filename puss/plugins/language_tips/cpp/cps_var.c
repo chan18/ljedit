@@ -35,7 +35,7 @@ gboolean cps_var(ParseEnv* env, Block* block) {
 		elem = cpp_elem_new();
 		elem->type = CPP_ET_VAR;
 		elem->file = block->parent->file;
-		if( name->len==nskey->len ){
+		if( name->len==tiny_str_len(nskey) ){
 			elem->name = nskey;
 		} else {
 			elem->name = tiny_str_new(name->buf, name->len);

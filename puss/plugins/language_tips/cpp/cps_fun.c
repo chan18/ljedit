@@ -138,7 +138,7 @@ static gboolean parse_function_common(Block* block, MLToken* start, TinyStr* typ
 	elem->v_fun.typekey = typekey;
 	typekey = 0;
 
-	if( nskey && nskey->len==name->len ) {
+	if( nskey && name->len==tiny_str_len(nskey) ) {
 		elem->name = nskey;
 	} else {
 		elem->name = tiny_str_new(name->buf, name->len);
@@ -216,16 +216,19 @@ gboolean cps_fun(ParseEnv* env, Block* block) {
 	
 		} else {
 			// no return type function
-			err_return_false_if( typekey==0 || typekey->len==0 );
+			err_return_false_if( typekey==0 || tiny_str_len(typekey)==0 );
 
 			if( block->parent->type==CPP_ET_CLASS ) {
 				name = ps;
 
 			} else {
-				err_return_false_if_not( (gsize)(typekey->len) > ps->len );
-				err_return_false_if_not( typekey->buf[typekey->len - (ps->len + 1)]=='.' );
-				typekey->len -= (ps->len + 1);
-				typekey->buf[typekey->len] = '\0';
+				TinyStr* str;
+				gsize typekey_len = tiny_str_len(typekey);
+				err_return_false_if_not( typekey_len > ps->len );
+				err_return_false_if_not( typekey->buf[typekey_len - (ps->len + 1)]=='.' );
+				str = tiny_str_new(typekey->buf, typekey_len - (ps->len + 1));
+				tiny_str_free(typekey);
+				typekey = str;
 				name = ps;
 			}
 

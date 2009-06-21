@@ -14,7 +14,8 @@ TinyStr* tiny_str_new(const gchar* buf, gsize len) {
 
 	//TinyStr* res = (TinyStr*)g_new(gchar, tiny_str_mem_size(len) );
 	res = (TinyStr*)g_slice_alloc( tiny_str_mem_size(len) );
-	res->len = len;
+	res->len_hi = (gchar)(len >> 8);
+	res->len_lo = (gchar)(len & 0xff);
 	if( buf )
 		memcpy(res->buf, buf, len);
 	res->buf[len] = '\0';
@@ -26,14 +27,24 @@ void tiny_str_free(TinyStr* str) {
 		// !!! size = sizeof(short) + len + 1 = sizeof(TinyStr) + len
 		// 
 		//g_free(str);
-		g_slice_free1(tiny_str_mem_size(str->len), str);
+		g_slice_free1(tiny_str_mem_size(tiny_str_len(str)), str);
 	}
 }
 
 gboolean tiny_str_equal(const TinyStr* a, const TinyStr* b) {
-	return ( a->len==b->len )
-		? (memcmp(a->buf, b->buf, a->len)==0)
-		: FALSE;
+	if( a==b )
+		return TRUE;
+	if( a && b ) {
+		gsize len = tiny_str_len(a);
+		if( memcmp(a->buf, b->buf, len)==0 )
+			return TRUE;
+	}
+
+	return FALSE;
+}
+
+guint tiny_str_hash(const TinyStr* v) {
+	return g_str_hash(v->buf);
 }
 
 CppElem* cpp_elem_new() {

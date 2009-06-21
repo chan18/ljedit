@@ -45,65 +45,77 @@ void iter_skip_pair(SearchIterEnv* env, gpointer it, gchar sch, gchar ech) {
 	}
 }
 
-gboolean do_find_key(GString* out, SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_startswith) {
+GList* cpp_find_spath(Searcher* searcher, SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_startswith) {
 	gchar ch;
 	gboolean loop_sign;
-	gboolean no_word;
-
-	if( !find_startswith )
-		g_string_append_c(out, '$');
+	GList* spath = 0;
+	gchar tp;
+	GString* buf = g_string_sized_new(512);
 
 	ch = iter_prev(env, ps);
-	switch( ch ) {
-	case '\0':
-		return FALSE;
-	case '.':
-		if( iter_prev_char(env, ps)=='.' )
-			return FALSE;
-		break;
-	case '>':
-		if( iter_prev(env, ps)!='-' )
-			return FALSE;
-		g_string_append_c(out, ch);
-		ch = '-';
-		break;
-	case '(':
-	case '<':
-		break;
-	case ':':
-		if( iter_prev(env, ps)!=':' )
-			return FALSE;
-		g_string_append_c(out, ch);
-		break;
-	default:
-		if( ch <= 0 )
-			return FALSE;
 
-		if( ch!='_' && !g_ascii_isalnum(ch) )
-			return FALSE;
-	}
-	g_string_append_c(out, ch);
-
-	loop_sign = TRUE;
-	no_word = TRUE;
-	while( loop_sign && ((ch=iter_prev(env, ps)) != '\0') ) {
+	if( find_startswith ) {
 		switch( ch ) {
+		case '\0':
+			goto find_error;
+
 		case '.':
-			if( no_word )
-				return FALSE;
-			no_word = TRUE;
-			g_string_append_c(out, ch);
+			if( iter_prev_char(env, ps)=='.' )
+				goto find_error;
+			spath = g_list_prepend(spath, skey_new('S', "", 0));
+			ch = iter_prev(env, ps);
+			break;
+
+		case '>':
+			if( iter_prev(env, ps)!='-' )
+				goto find_error;
+			spath = g_list_prepend(spath, skey_new('S', "", 0));
+			ch = iter_prev(env, ps);
+			break;
+
+		case '(':
+		case '<':
 			break;
 
 		case ':':
-			if( no_word )
+			if( iter_prev(env, ps)!=':' )
+				goto find_error;
+			spath = g_list_prepend(spath, skey_new('S', "", 0));
+			ch = iter_prev(env, ps);
+			break;
+
+		default:
+			while( ch=='_' || g_ascii_isalnum(ch) ) {
+				g_string_append_c(buf, ch);
+				ch = iter_prev(env, ps);
+			}
+
+			if( buf->len==0 )
+				goto find_error;
+
+			spath = g_list_prepend(spath, skey_new('S', buf->str, buf->len));
+			g_string_assign(buf, "");
+		}
+	}
+
+	loop_sign = TRUE;
+	while( loop_sign && ((ch=iter_prev(env, ps)) != '\0') ) {
+		switch( ch ) {
+		case '.':
+			if( buf->len==0 )
 				return FALSE;
-			no_word = TRUE;
+			spath = g_list_prepend(spath, skey_new('S', buf->str, buf->len));
+			g_string_append_c(buf, ch);
+			break;
+
+		case ':':
+			if( buf->len==0 )
+				return FALSE;
 
 			if( iter_prev_char(env, ps)==':' ) {
 				iter_prev(env, ps);
-				g_string_append_c(out, ch);
-				g_string_append_c(out, ch);
+				spath = g_list_prepend(spath, skey_new('?', buf->str, buf->len));
+				g_string_append_c(buf, ch);
 			} else {
 				loop_sign = FALSE;
 			}
@@ -111,32 +123,29 @@ gboolean do_find_key(GString* out, SearchIterEnv* env, gpointer ps, gpointer pe,
 
 		case ']':
 			iter_skip_pair(env, ps, '[', ']');
-			g_string_append_c(out, ']');
-			g_string_append_c(out, '[');
+			spath = g_list_prepend(spath, skey_new('v', buf->str, buf->len));
+			g_string_append_c(buf, ch);
 			break;
 			
 		case ')':
 			iter_skip_pair(env, ps, '(', ')');
-			g_string_append_c(out, ')');
-			g_string_append_c(out, '(');
+			spath = g_list_prepend(spath, skey_new('f', buf->str, buf->len));
+			g_string_append_c(buf, ch);
 			break;
 			
 		case '>':
-			if( no_word ) {
+			if( buf->len==0 ) {
 				if( iter_prev_char(env, ps) != '>' ) {
 					iter_skip_pair(env, ps, '<', '>');
-					g_string_append_c(out, '>');
-					g_string_append_c(out, '<');
-				}
-				else {
+				} else {
 					loop_sign = FALSE;
 				}
 
 			} else {
 				if( iter_prev_char(env, ps)=='-' ) {
 					iter_prev(env, ps);
-					g_string_append_c(out, '>');
-					g_string_append_c(out, '-');
+					spath = g_list_prepend(spath, skey_new('v', buf->str, buf->len));
+					g_string_append_c(buf, ch);
 					
 				} else {
 					loop_sign = FALSE;
@@ -145,9 +154,11 @@ gboolean do_find_key(GString* out, SearchIterEnv* env, gpointer ps, gpointer pe,
 			break;
 			
 		default:
-			if( ch>0 && (g_ascii_isalnum(ch) || ch=='_') ) {
-				g_string_append_c(out, ch);
-				no_word = FALSE;
+			if( ch=='_' || g_ascii_isalnum(ch) ) {
+				do {
+					g_string_append_c(buf, ch);
+					ch = iter_prev(env, ps);
+				} while( ch=='_' || g_ascii_isalnum(ch) );
 			} else {
 				loop_sign = FALSE;
 			}
@@ -155,21 +166,15 @@ gboolean do_find_key(GString* out, SearchIterEnv* env, gpointer ps, gpointer pe,
 	}
 
 	iter_next(env, ps);
-	return TRUE;
-}
+	goto find_finish;
 
-gchar* cpp_find_key(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_startswith) {
-	GString* out;
-	gchar* retval = 0;
+find_error:
+	g_list_free(spath);
+	spath = 0;
 
-	out = g_string_sized_new(4096);
-
-	if( do_find_key(out, env, ps, pe, find_startswith) )
-		retval = g_strreverse(out->str);
-
-	g_string_free(out, !retval);
-
-	return retval;
+find_finish:
+	g_string_free(buf, TRUE);
+	return spath;
 }
 
 typedef struct {

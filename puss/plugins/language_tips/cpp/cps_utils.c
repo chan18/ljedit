@@ -15,12 +15,12 @@ TinyStr* block_meger_tokens(MLToken* ps, MLToken* pe, TinyStr* init) {
 	gchar last;
 
 	if( init ) {
-		if( init->len >= MAX_RESULT_LENGTH )
+		if( tiny_str_len(init) >= MAX_RESULT_LENGTH )
 			return 0;
 
-		memcpy(buf, init->buf, init->len);
-		p += init->len;
-		last = init->buf[init->len - 1];
+		memcpy(buf, init->buf, tiny_str_len(init));
+		p += tiny_str_len(init);
+		last = init->buf[tiny_str_len(init) - 1];
 	} else {
 		last = '\0';
 	}

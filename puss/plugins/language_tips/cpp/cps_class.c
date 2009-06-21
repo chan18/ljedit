@@ -44,7 +44,7 @@ gboolean cps_class(ParseEnv* env, Block* block) {
 	elem->type = CPP_ET_CLASS;
 	elem->file = env->file;
 	if( name ) {
-		if( name->len==nskey->len ) {
+		if( name->len == tiny_str_len(nskey) ) {
 			elem->name = nskey;
 		} else {
 			elem->name = tiny_str_new(name->buf, name->len);
@@ -60,7 +60,7 @@ gboolean cps_class(ParseEnv* env, Block* block) {
 	case KW_STRUCT:	elem->v_class.class_type = CPP_CLASS_TYPE_STRUCT;	break;
 	case KW_CLASS:	elem->v_class.class_type = CPP_CLASS_TYPE_CLASS;	break;
 	case KW_UNION:	elem->v_class.class_type = CPP_CLASS_TYPE_UNION;	break;
-	defalut:		elem->v_class.class_type = CPP_CLASS_TYPE_UNKNOWN;	break;
+	default:		elem->v_class.class_type = CPP_CLASS_TYPE_UNKNOWN;	break;
 	}
 
 	elem->decl = block_meger_tokens(block->tokens, ps, 0);
@@ -115,7 +115,7 @@ gboolean cps_class(ParseEnv* env, Block* block) {
 
 			ps->type = TK_ID;
 			ps->buf = elem->name->buf;
-			ps->len = elem->name->len;
+			ps->len = tiny_str_len(elem->name);
 			ps->line = (ps+1)->line;
 
 			cps_var(env, &var_block);

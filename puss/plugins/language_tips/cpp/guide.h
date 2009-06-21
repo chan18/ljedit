@@ -36,7 +36,8 @@ typedef struct _CppElem    CppElem;
 typedef struct _CppFile    CppFile;
 
 typedef struct {
-	gshort	len;
+	gchar	len_hi;
+	gchar	len_lo;
 	gchar	buf[1];
 } TinyStr;
 
@@ -193,16 +194,6 @@ void cpp_guide_include_paths_unref(CppIncludePaths* paths);
 
 CppFile* cpp_guide_find_parsed(CppGuide* guide, const gchar* filename, gint namelen);
 CppFile* cpp_guide_parse(CppGuide* guide, const gchar* filename, gint namelen, gboolean force_rebuild);
-
-// searcher
-
-typedef struct {
-	gchar (*do_prev)(gpointer it);
-	gchar (*do_next)(gpointer it);
-} SearchIterEnv;
-
-gchar* cpp_find_key(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_startswith);
-gchar* cpp_parse_key(const gchar* text, gboolean find_startswith);
 
 #endif//PUSS_CPP_GUIDE_H
 

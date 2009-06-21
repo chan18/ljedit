@@ -373,7 +373,7 @@ static gint get_macro_arg_pos(CppElem* macro, MLToken* token) {
 	gint i;
 	if( (token->type==TK_ID) && (macro->v_define.argc > 0) )
 		for( i=0; i<macro->v_define.argc; ++i )
-			if( (token->len==macro->v_define.argv[i]->len) && (memcmp(token->buf, macro->v_define.argv[i]->buf, token->len)==0) )
+			if( (token->len==tiny_str_len(macro->v_define.argv[i])) && (memcmp(token->buf, macro->v_define.argv[i]->buf, token->len)==0) )
 				return i;
 	return -1;
 }
@@ -390,7 +390,7 @@ static void do_macro_replace(CppElem* macro, CppLexer* lexer, gint argc, MLArg a
 	gint i;
 	gint pos;
 
-	cpp_lexer_init(&rlexer, def->value->buf, def->value->len, 0);
+	cpp_lexer_init(&rlexer, def->value->buf, tiny_str_len(def->value), 0);
 
 	do {
 		CPP_LEXER_NEXT_NOCOMMENT(&rlexer, &token);
@@ -400,7 +400,7 @@ static void do_macro_replace(CppElem* macro, CppLexer* lexer, gint argc, MLArg a
 				if( (pos < argc) && argv[pos].str.len > 0 ) {
 					if( pd + (1 + argv[pos].str.len + 1) < sbuf + MACRO_REPLACE_BUFFER_MAX ) {
 						*pd++ = '"';
-						for( i=0; i<(gint)def->argv[pos]->len; ++i )
+						for( i=0; i<tiny_str_len(def->argv[pos]); ++i )
 							*pd++ = def->argv[pos]->buf[i];
 						*pd++ = '"';
 						continue;
@@ -414,7 +414,7 @@ static void do_macro_replace(CppElem* macro, CppLexer* lexer, gint argc, MLArg a
 			if( (pos = get_macro_arg_pos(macro, &token)) >= 0 ) {
 				if( (pos < argc) && argv[pos].str.len > 0 ) {
 					if( pd + argv[pos].str.len < sbuf + MACRO_REPLACE_BUFFER_MAX ) {
-						for( i=0; i<(gint)def->argv[pos]->len; ++i )
+						for( i=0; i<tiny_str_len(def->argv[pos]); ++i )
 							*pd++ = def->argv[pos]->buf[i];
 						continue;
 					}
@@ -426,7 +426,7 @@ static void do_macro_replace(CppElem* macro, CppLexer* lexer, gint argc, MLArg a
 			if( (pos < argc) && argv[pos].str.len > 0 ) {
 				if( pd + (1 + argv[pos].str.len + 1) < sbuf + MACRO_REPLACE_BUFFER_MAX ) {
 					*pd++ = ' ';
-					for( i=0; i<(gint)def->argv[pos]->len; ++i )
+					for( i=0; i<tiny_str_len(def->argv[pos]); ++i )
 						*pd++ = def->argv[pos]->buf[i];
 					continue;
 				}
@@ -469,7 +469,7 @@ static gboolean macro_replace(ParseEnv* env, CppElem* macro, MLToken* token) {
 
 	if( def->argc < 0 ) {
 		if( def->value ) {
-			MLStr value = { def->value->buf, def->value->len };
+			MLStr value = { def->value->buf, tiny_str_len(def->value) };
 			cpp_lexer_frame_push(env->lexer, &value, TRUE, FALSE, macro);
 		}
 
@@ -480,7 +480,7 @@ static gboolean macro_replace(ParseEnv* env, CppElem* macro, MLToken* token) {
 		if( res ) {
 			if( def->value ) {
 				if( def->argc==0 ) {
-					MLStr value = { def->value->buf, def->value->len };
+					MLStr value = { def->value->buf, tiny_str_len(def->value) };
 					cpp_lexer_frame_push(env->lexer, &value, TRUE, FALSE, macro);
 				} else {
 					do_macro_replace(macro, env->lexer, argc, argv);
