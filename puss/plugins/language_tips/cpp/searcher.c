@@ -8,6 +8,24 @@ struct _SNode {
 	GHashTable*	sub;
 };
 
+static void __cpp_elem_dump(CppElem* elem) {
+	g_print("elem : name=%s\n", elem->name->buf);
+}
+
+static void __snode_dump(SNode* snode) {
+	g_print("==snode : elems======================\n");
+	g_list_foreach(snode->elems, __cpp_elem_dump, 0);
+	g_print("--snode : subs-----------------------\n");
+	if( snode->sub ) {
+		GHashTableIter iter;
+		TinyStr* sub_key = 0;
+		SNode* sub_node = 0;
+		g_hash_table_iter_init(&iter, snode->sub);
+		while( g_hash_table_iter_next(&iter, &sub_key, &sub_node) )
+			g_print("subnode : name=%s\n", sub_key->buf);
+	}
+}
+
 static SNode* snode_new() {
 	return g_slice_new0(SNode);
 }
@@ -20,19 +38,6 @@ static void snode_free(SNode* snode) {
 			g_hash_table_destroy(snode->sub);
 		g_slice_free(SNode, snode);
 	}
-}
-
-void cpp_stree_init(CppSTree* self) {
-	self->root = snode_new();
-
-	g_static_rw_lock_init( &(self->lock) );
-}
-
-void cpp_stree_final(CppSTree* self) {
-	snode_free(self->root);
-	self->root = 0;
-
-	g_static_rw_lock_free( &(self->lock) );
 }
 
 static SNode* find_sub_node(SNode* parent, const TinyStr* key) {
@@ -103,7 +108,7 @@ static SNode* snode_locate(SNode* parent, TinyStr* nskey, gboolean make_if_not_e
 	return snode;
 }
 
-static SNode* cpp_snode_sub_insert(SNode* parent, TinyStr* nskey, CppElem* elem) {
+static SNode* snode_sub_insert(SNode* parent, TinyStr* nskey, CppElem* elem) {
 	SNode* snode = 0;
 	SNode* scope_snode;
 
@@ -115,7 +120,7 @@ static SNode* cpp_snode_sub_insert(SNode* parent, TinyStr* nskey, CppElem* elem)
 	return snode;
 }
 
-static SNode* cpp_snode_sub_remove(SNode* parent, TinyStr* nskey, CppElem* elem) {
+static SNode* snode_sub_remove(SNode* parent, TinyStr* nskey, CppElem* elem) {
 	SNode* snode;
 	SNode* scope_snode;
 
@@ -129,63 +134,63 @@ static SNode* cpp_snode_sub_remove(SNode* parent, TinyStr* nskey, CppElem* elem)
 	return snode;
 }
 
-static void cpp_snode_insert(SNode* parent, CppElem* elem);
-static void cpp_snode_remove(SNode* node, CppElem* elem);
+static void snode_insert(SNode* parent, CppElem* elem);
+static void snode_remove(SNode* node, CppElem* elem);
 
-static void cpp_snode_insert_list(SNode* parent, GList* elems) {
+static void snode_insert_list(SNode* parent, GList* elems) {
 	GList* p;
 
 	for( p=elems; p; p=p->next )
-		cpp_snode_insert(parent, (CppElem*)(p->data));
+		snode_insert(parent, (CppElem*)(p->data));
 }
 
-static void cpp_snode_remove_list(SNode* parent, GList* elems) {
+static void snode_remove_list(SNode* parent, GList* elems) {
 	GList* p;
 
 	for( p=elems; p; p=p->next )
-		cpp_snode_remove(parent, (CppElem*)(p->data));
+		snode_remove(parent, (CppElem*)(p->data));
 }
 
-static void cpp_snode_insert(SNode* parent, CppElem* elem) {
+static void snode_insert(SNode* parent, CppElem* elem) {
 	switch( elem->type ) {
 	case CPP_ET_NCSCOPE:
-		cpp_snode_insert_list(parent, elem->v_ncscope.scope);
+		snode_insert_list(parent, elem->v_ncscope.scope);
 		break;
 		
 	case CPP_ET_VAR:
-		cpp_snode_sub_insert(parent, elem->v_var.nskey, elem);
+		snode_sub_insert(parent, elem->v_var.nskey, elem);
 		break;
 		
 	case CPP_ET_FUN:
-		cpp_snode_sub_insert(parent, elem->v_fun.nskey, elem);
+		snode_sub_insert(parent, elem->v_fun.nskey, elem);
 		break;
 		
 	case CPP_ET_MACRO:
 	case CPP_ET_TYPEDEF:
 	case CPP_ET_ENUMITEM:
-		cpp_snode_sub_insert(parent, 0, elem);
+		snode_sub_insert(parent, 0, elem);
 		break;
 		
 	case CPP_ET_ENUM:
 		{
 			if( elem->name->buf[0]!='@' ) {
-				SNode* snode = cpp_snode_sub_insert(parent, elem->v_enum.nskey, elem);
+				SNode* snode = snode_sub_insert(parent, elem->v_enum.nskey, elem);
 				if( snode )
-					cpp_snode_insert_list(snode, elem->v_ncscope.scope);
+					snode_insert_list(snode, elem->v_ncscope.scope);
 			}
-			cpp_snode_insert_list(parent, elem->v_ncscope.scope);
+			snode_insert_list(parent, elem->v_ncscope.scope);
 		}
 		break;
 		
 	case CPP_ET_CLASS:
 		{
 			if( elem->name->buf[0]!='@' ) {
-				SNode* snode = cpp_snode_sub_insert(parent, elem->v_enum.nskey, elem);
+				SNode* snode = snode_sub_insert(parent, elem->v_enum.nskey, elem);
 				if( snode )
-					cpp_snode_insert_list(snode, elem->v_ncscope.scope);
+					snode_insert_list(snode, elem->v_ncscope.scope);
 					
 			} else if( elem->v_class.class_type==CPP_CLASS_TYPE_UNION ) {
-				cpp_snode_insert_list(parent, elem->v_ncscope.scope);
+				snode_insert_list(parent, elem->v_ncscope.scope);
 			}
 		}
 		break;
@@ -195,61 +200,61 @@ static void cpp_snode_insert(SNode* parent, CppElem* elem) {
 			if( elem->v_using.isns )
 				; // scope.usings.push_back( (Using*)elem );
 			else
-				cpp_snode_sub_insert(parent, 0, elem);
+				snode_sub_insert(parent, 0, elem);
 		}
 		break;
 		
 	case CPP_ET_NAMESPACE:
 		{
 			if( elem->name->buf[0]!='@' )
-				parent = cpp_snode_sub_insert(parent, 0, elem);
+				parent = snode_sub_insert(parent, 0, elem);
 
-			cpp_snode_insert_list(parent, elem->v_ncscope.scope);
+			snode_insert_list(parent, elem->v_ncscope.scope);
 		}
 		break;
 	}
 }
 
-static void cpp_snode_remove(SNode* parent, CppElem* elem) {
+static void snode_remove(SNode* parent, CppElem* elem) {
 	switch( elem->type ) {
 	case CPP_ET_NCSCOPE:
-		cpp_snode_remove_list(parent, elem->v_ncscope.scope);
+		snode_remove_list(parent, elem->v_ncscope.scope);
 		break;
 		
 	case CPP_ET_VAR:
-		cpp_snode_sub_remove(parent, elem->v_var.nskey, elem);
+		snode_sub_remove(parent, elem->v_var.nskey, elem);
 		break;
 		
 	case CPP_ET_FUN:
-		cpp_snode_sub_remove(parent, elem->v_fun.nskey, elem);
+		snode_sub_remove(parent, elem->v_fun.nskey, elem);
 		break;
 		
 	case CPP_ET_MACRO:
 	case CPP_ET_TYPEDEF:
 	case CPP_ET_ENUMITEM:
-		cpp_snode_sub_remove(parent, 0, elem);
+		snode_sub_remove(parent, 0, elem);
 		break;
 		
 	case CPP_ET_ENUM:
 		{
 			if( elem->name->buf[0]!='@' ) {
-				SNode* snode = cpp_snode_sub_remove(parent, elem->v_enum.nskey, elem);
+				SNode* snode = snode_sub_remove(parent, elem->v_enum.nskey, elem);
 				if( snode )
-					cpp_snode_remove_list(snode, elem->v_ncscope.scope);
+					snode_remove_list(snode, elem->v_ncscope.scope);
 			}
-			cpp_snode_remove_list(parent, elem->v_ncscope.scope);
+			snode_remove_list(parent, elem->v_ncscope.scope);
 		}
 		break;
 		
 	case CPP_ET_CLASS:
 		{
 			if( elem->name->buf[0]!='@' ) {
-				SNode* snode = cpp_snode_sub_remove(parent, elem->v_enum.nskey, elem);
+				SNode* snode = snode_sub_remove(parent, elem->v_enum.nskey, elem);
 				if( snode )
-					cpp_snode_remove_list(snode, elem->v_ncscope.scope);
+					snode_remove_list(snode, elem->v_ncscope.scope);
 					
 			} else if( elem->v_class.class_type==CPP_CLASS_TYPE_UNION ) {
-				cpp_snode_remove_list(parent, elem->v_ncscope.scope);
+				snode_remove_list(parent, elem->v_ncscope.scope);
 			}
 		}
 		break;
@@ -259,30 +264,43 @@ static void cpp_snode_remove(SNode* parent, CppElem* elem) {
 			if( elem->v_using.isns )
 				; // scope.usings.push_back( (Using*)elem );
 			else
-				cpp_snode_sub_remove(parent, 0, elem);
+				snode_sub_remove(parent, 0, elem);
 		}
 		break;
 		
 	case CPP_ET_NAMESPACE:
 		{
 			if( elem->name->buf[0]!='@' )
-				parent = cpp_snode_sub_remove(parent, 0, elem);
+				parent = snode_sub_remove(parent, 0, elem);
 
-			cpp_snode_remove_list(parent, elem->v_ncscope.scope);
+			snode_remove_list(parent, elem->v_ncscope.scope);
 		}
 		break;
 	}
 }
 
-void cpp_stree_insert(CppSTree* self, CppFile* file) {
+void stree_init(CppSTree* self) {
+	self->root = snode_new();
+
+	g_static_rw_lock_init( &(self->lock) );
+}
+
+void stree_final(CppSTree* self) {
+	snode_free(self->root);
+	self->root = 0;
+
+	g_static_rw_lock_free( &(self->lock) );
+}
+
+void stree_insert(CppSTree* self, CppFile* file) {
 	g_static_rw_lock_writer_lock( &(self->lock) );
-	cpp_snode_insert( self->root, &(file->root_scope) );
+	snode_insert( self->root, &(file->root_scope) );
 	g_static_rw_lock_writer_unlock( &(self->lock) );
 }
 
-void cpp_stree_remove(CppSTree* self, CppFile* file) {
+void stree_remove(CppSTree* self, CppFile* file) {
 	g_static_rw_lock_writer_lock( &(self->lock) );
-	cpp_snode_remove( self->root, &(file->root_scope) );
+	snode_remove( self->root, &(file->root_scope) );
 	g_static_rw_lock_writer_unlock( &(self->lock) );
 }
 
@@ -370,15 +388,15 @@ void iter_skip_pair(SearchIterEnv* env, gpointer it, gchar sch, gchar ech) {
 	}
 }
 
-GList* cpp_spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_startswith) {
+GList* spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_startswith) {
 	gchar ch;
 	gboolean loop_sign;
 	GList* spath = 0;
 	GString* buf = g_string_sized_new(512);
 
-	ch = iter_prev(env, ps);
-
 	if( find_startswith ) {
+		ch = iter_prev(env, ps);
+
 		switch( ch ) {
 		case '\0':
 			goto find_error;
@@ -417,7 +435,7 @@ GList* cpp_spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean fin
 			if( buf->len==0 )
 				goto find_error;
 
-			spath = g_list_prepend(spath, skey_new('S', buf->str, buf->len));
+			spath = g_list_prepend(spath, skey_new('S', g_strreverse(buf->str), buf->len));
 			g_string_assign(buf, "");
 		}
 	}
@@ -428,7 +446,7 @@ GList* cpp_spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean fin
 		case '.':
 			if( buf->len==0 )
 				return FALSE;
-			spath = g_list_prepend(spath, skey_new('S', buf->str, buf->len));
+			spath = g_list_prepend(spath, skey_new('S', g_strreverse(buf->str), buf->len));
 			g_string_append_c(buf, ch);
 			break;
 
@@ -438,7 +456,7 @@ GList* cpp_spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean fin
 
 			if( iter_prev_char(env, ps)==':' ) {
 				iter_prev(env, ps);
-				spath = g_list_prepend(spath, skey_new('?', buf->str, buf->len));
+				spath = g_list_prepend(spath, skey_new('?', g_strreverse(buf->str), buf->len));
 				g_string_append_c(buf, ch);
 			} else {
 				loop_sign = FALSE;
@@ -447,13 +465,13 @@ GList* cpp_spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean fin
 
 		case ']':
 			iter_skip_pair(env, ps, '[', ']');
-			spath = g_list_prepend(spath, skey_new('v', buf->str, buf->len));
+			spath = g_list_prepend(spath, skey_new('v', g_strreverse(buf->str), buf->len));
 			g_string_append_c(buf, ch);
 			break;
 			
 		case ')':
 			iter_skip_pair(env, ps, '(', ')');
-			spath = g_list_prepend(spath, skey_new('f', buf->str, buf->len));
+			spath = g_list_prepend(spath, skey_new('f', g_strreverse(buf->str), buf->len));
 			g_string_append_c(buf, ch);
 			break;
 			
@@ -468,7 +486,7 @@ GList* cpp_spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean fin
 			} else {
 				if( iter_prev_char(env, ps)=='-' ) {
 					iter_prev(env, ps);
-					spath = g_list_prepend(spath, skey_new('v', buf->str, buf->len));
+					spath = g_list_prepend(spath, skey_new('v', g_strreverse(buf->str), buf->len));
 					g_string_append_c(buf, ch);
 					
 				} else {
@@ -489,7 +507,10 @@ GList* cpp_spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean fin
 		}
 	}
 
-	iter_next(env, ps);
+	if( ch=='\0' && buf->len > 0 ) {
+		spath = g_list_prepend(spath, skey_new('?', g_strreverse(buf->str), buf->len));
+	}
+
 	goto find_finish;
 
 find_error:
@@ -515,16 +536,16 @@ static gchar parse_key_do_next(ParseKeyIter* pos) {
 	return (pos->cur < pos->end) ? *(++(pos->cur)) : '\0';
 }
 
-GList* cpp_spath_parse(const gchar* text, gboolean find_startswith) {
+GList* spath_parse(const gchar* text, gboolean find_startswith) {
 	gint len = strlen(text);
 	ParseKeyIter ps = { text, text+len, text+len };
 	ParseKeyIter pe = { text, text+len, text+len };
 	SearchIterEnv env = { parse_key_do_prev, parse_key_do_next };
 
-	return cpp_spath_find(&env, &ps, &pe, find_startswith);
+	return spath_find(&env, &ps, &pe, find_startswith);
 }
 
-void cpp_spath_free(GList* spath) {
+void spath_free(GList* spath) {
 	g_list_foreach(spath, skey_free, 0);
 	g_list_free(spath);
 }
@@ -549,13 +570,13 @@ static gboolean spath_equal(GList* a, GList* b) {
 	return a==b;
 }
 
-struct _Searcher {
+typedef struct {
 	CppSTree*  stree;
 	GTree*     worked_nodes;
 	GList*     spaths;
 	CppMatched cb;
 	gpointer   cb_tag;
-};
+} Searcher;
 
 static void searcher_add_spath(Searcher* searcher, GList* spath) {
 	searcher->spaths = g_list_append(searcher->spaths, spath);
@@ -659,7 +680,7 @@ static GList* spath_replace_new(GList* start, GList* ps, GList* pe, GList* rep) 
 	}
 
 	if( !ok ) {
-		cpp_spath_free(spath);
+		spath_free(spath);
 		spath = 0;
 	}
 
@@ -685,7 +706,7 @@ static void loop_insert_typekey(Searcher* searcher, GList* spath, GList* pos, Ti
 		rep = parse_typekey_to_spath(typekey);
 		if( rep ) {
 			loop_insert(searcher, spath, pos, rep);
-			cpp_spath_free(rep);
+			spath_free(rep);
 		}
 	}
 }
@@ -696,7 +717,7 @@ static void loop_insert_nskey(Searcher* searcher, GList* spath, GList* pos, Tiny
 		rep = parse_nskey_to_spath(nskey);
 		if( rep ) {
 			loop_insert(searcher, spath, pos, rep);
-			cpp_spath_free(rep);
+			spath_free(rep);
 		}
 	}
 }
@@ -714,8 +735,9 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 	SNode* sub_node;
 	CppElem* elem;
 	TinyStr** pts;
+	gboolean next_sign;
 
-	if( !node || !node->elems )
+	if( !node )
 		return;
 
 	cur = ((SKey*)(pos->data));
@@ -770,8 +792,11 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 	}
 
 	sub_node = (node->sub) ? g_hash_table_lookup(node->sub, cur_key) : 0;
-	if( !sub_node )
+	if( !sub_node ) {
+		// debug, dump snode
+		// __snode_dump(node);
 		return;
+	}
 
 	for( ps=sub_node->elems; ps; ps=ps->next ) {
 		elem = ((CppElem*)(ps->data));
@@ -791,7 +816,7 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 			continue;
 		}
 
-		gboolean next_sign = FALSE;
+		next_sign = FALSE;
 
 		switch( elem->type ) {
 		case CPP_ET_NCSCOPE:
@@ -886,7 +911,7 @@ static gboolean searcher_do_locate(Searcher* searcher, GList* scope, gint line, 
 			{
 				if( cur->type!='L' ) {
 					SNode* impl_root = snode_new();
-					cpp_snode_insert_list(impl_root, elem->v_ncscope.scope);
+					snode_insert_list(impl_root, elem->v_ncscope.scope);
 					searcher_do_walk(searcher, impl_root, spath, pos);
 					snode_free(impl_root);
 				}
@@ -895,7 +920,7 @@ static gboolean searcher_do_locate(Searcher* searcher, GList* scope, gint line, 
 					rep = parse_typekey_to_spath(elem->v_fun.typekey);
 					if( rep ) {
 						new_spath = spath_replace_new(spath, ((SKey*)(rep->data))->type=='R' ? spath : pos, pos, rep);
-						cpp_spath_free(rep);
+						spath_free(rep);
 
 						searcher_add_spath(searcher, new_spath);
 					}
@@ -911,7 +936,7 @@ static gboolean searcher_do_locate(Searcher* searcher, GList* scope, gint line, 
 				rep = g_list_append(0, skey_tiny_str_new('t', elem->name));
 				if( rep ) {
 					new_spath = spath_replace_new(spath, pos, pos, rep);
-					cpp_spath_free(rep);
+					spath_free(rep);
 
 					rep = new_spath;
 					for( ps=spath; ps!=pos; ps=ps->next )
@@ -936,7 +961,7 @@ static gboolean searcher_do_locate(Searcher* searcher, GList* scope, gint line, 
 				rep = g_list_append(0, skey_tiny_str_new('n', elem->name));
 				if( rep ) {
 					new_spath = spath_replace_new(spath, pos, pos, rep);
-					cpp_spath_free(rep);
+					spath_free(rep);
 
 					rep = new_spath;
 					for( ps=spath; ps!=pos; ps=ps->next )
@@ -987,7 +1012,7 @@ static void searcher_start(Searcher* searcher, GList* spath, CppFile* file, gint
 	g_static_rw_lock_reader_unlock( &(searcher->stree->lock) );
 }
 
-void cpp_search( CppSTree* stree
+void searcher_search( CppSTree* stree
 	, GList* spath
 	, CppMatched cb
 	, gpointer cb_tag
@@ -1010,7 +1035,7 @@ void cpp_search( CppSTree* stree
 
 	for( p=s.spaths; p; p=p->next ) {
 		if( p->data!=(gpointer)spath )
-			cpp_spath_free(p);
+			spath_free(p);
 	}
 
 	g_tree_destroy(s.worked_nodes);

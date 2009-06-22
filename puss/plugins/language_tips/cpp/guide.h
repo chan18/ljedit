@@ -195,5 +195,22 @@ void cpp_guide_include_paths_unref(CppIncludePaths* paths);
 CppFile* cpp_guide_find_parsed(CppGuide* guide, const gchar* filename, gint namelen);
 CppFile* cpp_guide_parse(CppGuide* guide, const gchar* filename, gint namelen, gboolean force_rebuild);
 
+gpointer cpp_spath_find( gboolean find_startswith
+			, gchar (*do_prev)(gpointer it)
+			, gchar (*do_next)(gpointer it)
+			, gpointer start_iter
+			, gpointer end_iter );
+gpointer cpp_spath_parse(gboolean find_startswith, const gchar* text);
+void cpp_spath_free(gpointer spath);
+
+typedef void (*CppMatched)(CppElem* elem, gpointer* tag);
+
+void cpp_guide_search(CppGuide* guide
+			, gpointer spath
+			, CppMatched cb
+			, gpointer cb_tag
+			, CppFile* file
+			, gint line );
+
 #endif//PUSS_CPP_GUIDE_H
 

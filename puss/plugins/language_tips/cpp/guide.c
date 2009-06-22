@@ -11,11 +11,11 @@ struct _CppGuide {
 };
 
 static void guide_on_file_insert(CppFile* file, CppGuide* self) {
-	cpp_stree_insert( &(self->stree), file );
+	stree_insert( &(self->stree), file );
 }
 
 static void guide_on_file_remove(CppFile* file, CppGuide* self) {
-	cpp_stree_remove( &(self->stree), file );
+	stree_remove( &(self->stree), file );
 }
 
 CppGuide* cpp_guide_new(gboolean enable_macro_replace, gboolean enable_search) {
@@ -27,7 +27,7 @@ CppGuide* cpp_guide_new(gboolean enable_macro_replace, gboolean enable_search) {
 
 	cpp_parser_init( &(guide->parser), enable_macro_replace );
 
-	cpp_stree_init( &(guide->stree) );
+	stree_init( &(guide->stree) );
 
 	return guide;
 }
@@ -36,7 +36,7 @@ void cpp_guide_free(CppGuide* guide) {
 	if( guide ) {
 		cpp_parser_final( &(guide->parser) );
 
-		cpp_stree_final( &(guide->stree) );
+		stree_final( &(guide->stree) );
 	}
 }
 
@@ -78,6 +78,34 @@ CppFile* cpp_guide_parse(CppGuide* guide, const gchar* filename, gint namelen, g
 	CppFile* file = cpp_parser_parse(&(guide->parser), filekey, force_rebuild);
 	g_free(filekey);
 	return file;
+}
+
+gpointer cpp_spath_find( gboolean find_startswith
+			, gchar (*do_prev)(gpointer it)
+			, gchar (*do_next)(gpointer it)
+			, gpointer start_iter
+			, gpointer end_iter )
+{
+	SearchIterEnv env = { do_prev, do_next };
+	return spath_find(&env, start_iter, end_iter, find_startswith);
+}
+
+gpointer cpp_spath_parse(gboolean find_startswith, const gchar* text) {
+	return spath_parse(text, find_startswith);
+}
+
+void cpp_spath_free(gpointer spath) {
+	return spath_free((GList*)spath);
+}
+
+void cpp_guide_search(CppGuide* guide
+			, gpointer spath
+			, CppMatched cb
+			, gpointer cb_tag
+			, CppFile* file
+			, gint line )
+{
+	searcher_search(&(guide->stree), (GList*)spath, cb, cb_tag, file, line);
 }
 
 

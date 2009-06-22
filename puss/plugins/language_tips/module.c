@@ -81,7 +81,32 @@ static void open_include_file(LanguageTips* self, const gchar* filename, gboolea
 	}
 }
 
+static void print_matched(CppElem* elem, LanguageTips* self) {
+	g_print("print matched : %s\n", elem->name->buf);
+}
+
 static gboolean view_on_key_press(GtkTextView* view, GdkEventKey* event, LanguageTips* self) {
+	// test
+	if( event->state==(GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK) ) {
+		gpointer spath;
+		const gchar* text;
+		GtkDialog* dlg = (GtkDialog*)gtk_dialog_new_with_buttons("test"
+			, puss_get_main_window(self->app)
+			, GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT
+			, GTK_STOCK_OK, GTK_RESPONSE_OK, NULL);
+		GtkEntry* entry = (GtkEntry*)gtk_entry_new();
+		gtk_box_pack_start(dlg->vbox, entry, TRUE, TRUE, 0);
+		gtk_widget_show_all(dlg->vbox);
+		gtk_dialog_run(dlg);
+		text = gtk_entry_get_text(entry);
+		spath = cpp_spath_parse(TRUE, text);
+		if( spath ) {
+			cpp_guide_search(self->cpp_guide, spath, print_matched, self, 0, 0);
+			cpp_spath_free(spath);
+		}
+		gtk_widget_destroy(dlg);
+	}
+
 	/*
     if( event->state & (GDK_CONTROL_MASK | GDK_MOD1_MASK) ) {
 		tips_hide_all(self->tips);

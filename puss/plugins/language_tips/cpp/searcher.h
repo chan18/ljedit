@@ -13,25 +13,23 @@ typedef struct {
 	SNode*			root;
 } CppSTree;
 
-void cpp_stree_init(CppSTree* self);
-void cpp_stree_final(CppSTree* self);
-void cpp_stree_insert(CppSTree* self, CppFile* file);
-void cpp_stree_remove(CppSTree* self, CppFile* file);
+void stree_init(CppSTree* self);
+void stree_final(CppSTree* self);
+void stree_insert(CppSTree* self, CppFile* file);
+void stree_remove(CppSTree* self, CppFile* file);
 
 typedef struct {
 	gchar (*do_prev)(gpointer it);
 	gchar (*do_next)(gpointer it);
 } SearchIterEnv;
 
-typedef struct _Searcher Searcher;
-
-GList* cpp_spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_startswith);
-GList* cpp_spath_parse(const gchar* text, gboolean find_startswith);
-void   cpp_spath_free(GList* spath);
+GList* spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_startswith);
+GList* spath_parse(const gchar* text, gboolean find_startswith);
+void   spath_free(GList* spath);
 
 typedef void (*CppMatched)(CppElem* elem, gpointer* tag);
 
-void cpp_search( CppSTree* stree
+void searcher_search( CppSTree* stree
 	, GList* spath
 	, CppMatched cb
 	, gpointer cb_tag
