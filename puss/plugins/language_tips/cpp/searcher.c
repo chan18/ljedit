@@ -561,7 +561,7 @@ static void searcher_add_spath(Searcher* searcher, GList* spath) {
 	searcher->spaths = g_list_append(searcher->spaths, spath);
 }
 
-static GList* parse_nskey_to_spath(const TinyStr* nskey, gchar mtype, gchar etype) {
+static GList* do_parse_nskey_to_spath(const TinyStr* nskey, gchar mtype, gchar etype) {
 	GList* spath = 0;
 	gchar* ps = nskey->buf;
 	gchar* pe = 0;
@@ -586,7 +586,8 @@ static GList* parse_nskey_to_spath(const TinyStr* nskey, gchar mtype, gchar etyp
 	return spath;
 }
 
-#define parse_typekey_to_spath(typekey) parse_nskey_to_spath((typekey), '?', 't')
+#define parse_typekey_to_spath(s)	do_parse_nskey_to_spath((s), '?', 't')
+#define parse_nskey_to_spath(s)		do_parse_nskey_to_spath((s), 'n', 'n')
 
 // types:
 //    n : namespace
@@ -665,8 +666,44 @@ static GList* spath_replace_new(GList* start, GList* ps, GList* pe, GList* rep) 
 	return spath;
 }
 
+static void loop_insert(Searcher* searcher, GList* spath, GList* pos, GList* rep) {
+	GList* ps = ((SKey*)(rep->data))->type=='R' ? spath : pos;
+	GList* pe = pos->next;
+	GList* p;
+	GList* new_spath;
+
+	for( p=spath; p!=ps; p=p->next ) {
+		new_spath = spath_replace_new(p, ps, pe, rep);
+		if( new_spath )
+			searcher_add_spath(searcher, new_spath);
+	}
+}
+
+static void loop_insert_typekey(Searcher* searcher, GList* spath, GList* pos, TinyStr* typekey) {
+	GList* rep;
+	if( typekey && tiny_str_len(typekey) > 0 ) {
+		rep = parse_typekey_to_spath(typekey);
+		if( rep ) {
+			loop_insert(searcher, spath, pos, rep);
+			cpp_spath_free(rep);
+		}
+	}
+}
+
+static void loop_insert_nskey(Searcher* searcher, GList* spath, GList* pos, TinyStr* nskey) {
+	GList* rep;
+	if( nskey && tiny_str_len(nskey) > 0 ) {
+		rep = parse_nskey_to_spath(nskey);
+		if( rep ) {
+			loop_insert(searcher, spath, pos, rep);
+			cpp_spath_free(rep);
+		}
+	}
+}
+
 static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GList* pos) {
 	SKey* cur;
+	gchar cur_type;
 	TinyStr* cur_key;
 	gint cur_key_len;
 	GList* ps;
@@ -674,11 +711,15 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 	GHashTableIter it;
 	TinyStr* key;
 	SNode* value;
+	SNode* sub_node;
+	CppElem* elem;
+	TinyStr** pts;
 
 	if( !node || !node->elems )
 		return;
 
 	cur = ((SKey*)(pos->data));
+	
 	if( cur->type=='L' )
 		return;
 
@@ -706,10 +747,11 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 		}
     }
 
+	cur_type = cur->type;
 	cur_key = &(cur->value);
 	cur_key_len = tiny_str_len(cur_key);
 
-	if( cur->type=='S' ) {
+	if( cur_type=='S' ) {
 		// search start with
 		if( pos->next )
 			return;	// bad logic
@@ -726,97 +768,89 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 
 		return;
 	}
-/*
-	cpp::SMap::iterator snode_iter = smap.find(key);
-	if( snode_iter==smap.end() )
-		return;
-	cpp::SNode& sub_node = snode_iter->second;
 
-	cpp::ElementSet::iterator it = sub_node.elems().begin();
-	cpp::ElementSet::iterator end = sub_node.elems().end();
-	for( ; searching() && (it != end); ++it ) {
-		assert( *it != 0 );
-		cpp::Element& elem = **it;
-		if( !path.has_next() ) {
-			switch( elem.type ) {
-			case cpp::ET_USING:
-				if( type=='?' || type=='t' || type=='*' ) {
-					assert( !((cpp::Using&)elem).isns );
-					loop_insert_typekey(paths_, path, elem.name);
+	sub_node = (node->sub) ? g_hash_table_lookup(node->sub, cur_key) : 0;
+	if( !sub_node )
+		return;
+
+	for( ps=sub_node->elems; ps; ps=ps->next ) {
+		elem = ((CppElem*)(ps->data));
+		if( !pos->next ) {
+			if( elem->type==CPP_ET_USING ) {
+				switch( cur_type ) {
+				case '?':
+				case 't':
+				case '*':
+					loop_insert_typekey(searcher, spath, pos, elem->name);
+					break;
 				}
 				break;
 			}
-			
-			add_matched(&elem);
+
+			(*(searcher->cb))( elem, searcher->cb_tag );
 			continue;
 		}
 
-		bool next_sign = false;
+		gboolean next_sign = FALSE;
 
-		switch( elem.type ) {
-		case cpp::ET_NCSCOPE:
-			if( type=='?' || type=='t' || type=='n' )
-				next_sign = true;
+		switch( elem->type ) {
+		case CPP_ET_NCSCOPE:
+			if( cur_type=='?' || cur_type=='t' || cur_type=='n' )
+				next_sign = TRUE;
 			break;
-		case cpp::ET_CLASS:
-			if( type=='?' || type=='t' ) {
-				cpp::Class& r = (cpp::Class&)elem;
-				std::vector<std::string>::iterator ps = r.inhers.begin();
-				std::vector<std::string>::iterator pe = r.inhers.end();
-				for( ; ps != pe; ++ps ) {
-					path.cur().type = 't';
-					assert( !ps->empty() );
-					loop_insert_typekey(paths_, path, *ps);
-					path.cur().type = type;
-				}
+			
+		case CPP_ET_CLASS:
+			if( cur_type=='?' || cur_type=='t' ) {
+				cur->type = 't'; 
+				for( pts=elem->v_class.inhers; *pts; ++pts )
+					loop_insert_typekey(searcher, spath, pos, *pts);
+				cur->type = cur_type;
 
-				next_sign = true;
+				next_sign = TRUE;
 			}
 			break;
-		case cpp::ET_ENUM:
-			if( type=='?' || type=='t' ) {
-				next_sign = true;
-			}
+			
+		case CPP_ET_ENUM:
+			if( cur_type=='?' || cur_type=='t' )
+				next_sign = TRUE;
 			break;
-		case cpp::ET_NAMESPACE:
-			if( type=='?' || type=='n' ) {
-				next_sign = true;
-			}
+			
+		case CPP_ET_NAMESPACE:
+			if( cur_type=='?' || cur_type=='n' )
+				next_sign = TRUE;
 			break;
-		case cpp::ET_TYPEDEF:
-			if( type=='?' || type=='t' ) {
-				loop_insert_typekey(paths_, path, ((cpp::Typedef&)elem).typekey);
-			}
+			
+		case CPP_ET_TYPEDEF:
+			if( cur_type=='?' || cur_type=='t' )
+				loop_insert_typekey(searcher, spath, pos, elem->v_typedef.typekey);
 			break;
-		case cpp::ET_FUN:
-			if( type=='f' ) {
-				loop_insert_typekey(paths_, path, ((cpp::Function&)elem).typekey);
-			}
+			
+		case CPP_ET_FUN:
+			if( cur_type=='f' )
+				loop_insert_typekey(searcher, spath, pos, elem->v_fun.typekey);
 			break;
-		case cpp::ET_VAR:
-			if( type=='v' ) {
-				loop_insert_typekey(paths_, path, ((cpp::Var&)elem).typekey);
-			}
+			
+		case CPP_ET_VAR:
+			if( cur_type=='v' )
+				loop_insert_typekey(searcher, spath, pos, elem->v_var.typekey);
 			break;
-		case cpp::ET_USING:
-			if( type=='?' || type=='t' ) {
-				assert( !((cpp::Using&)elem).isns );
-				loop_insert_nskey(paths_, path, ((cpp::Using&)elem).nskey);
-			}
+			
+		case CPP_ET_USING:
+			if( cur_type=='?' || cur_type=='t' )
+				loop_insert_nskey(searcher, spath, pos, elem->v_using.nskey);
 			break;
 		}
 
 		if( next_sign ) {
-			size_t old = path.pos();
-			path.next();
-			if( elem.type==cpp::ET_CLASS && path.cur().type=='L' && path.has_next() )
-				path.next();
-					
-			do_walk(sub_node, path);
-			path.pos(old);
+			pos = pos->next;
+			if( pos ) {
+				if( elem->type==CPP_ET_CLASS && ((SKey*)(pos->data))->type=='L' && pos->next )
+					pos = pos->next;
+
+				searcher_do_walk(searcher, sub_node, spath, pos);
+			}
 		}
 	}
-*/
 }
 
 static void searcher_walk(Searcher* searcher, GList* spath) {
@@ -830,7 +864,6 @@ static gboolean searcher_do_locate(Searcher* searcher, GList* scope, gint line, 
 	GList* p;
 	CppElem* elem;
 	SKey* cur;
-	SKey* skey;
 	GList* rep;
 	GList* new_spath;
 	GList* ps;
@@ -861,7 +894,7 @@ static gboolean searcher_do_locate(Searcher* searcher, GList* scope, gint line, 
 				if( elem->v_fun.nskey ) {
 					rep = parse_typekey_to_spath(elem->v_fun.typekey);
 					if( rep ) {
-						new_spath = spath_replace_new(spath, ((SKey*)(rep->data))->type=='R' ? spath : pos, pos, rep, need_walk);
+						new_spath = spath_replace_new(spath, ((SKey*)(rep->data))->type=='R' ? spath : pos, pos, rep);
 						cpp_spath_free(rep);
 
 						searcher_add_spath(searcher, new_spath);
