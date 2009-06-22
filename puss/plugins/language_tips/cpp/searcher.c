@@ -185,7 +185,7 @@ static void snode_insert(SNode* parent, CppElem* elem) {
 	case CPP_ET_CLASS:
 		{
 			if( elem->name->buf[0]!='@' ) {
-				SNode* snode = snode_sub_insert(parent, elem->v_enum.nskey, elem);
+				SNode* snode = snode_sub_insert(parent, elem->v_class.nskey, elem);
 				if( snode )
 					snode_insert_list(snode, elem->v_ncscope.scope);
 					
@@ -501,13 +501,14 @@ GList* spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_st
 					g_string_append_c(buf, ch);
 					ch = iter_prev(env, ps);
 				} while( ch=='_' || g_ascii_isalnum(ch) );
+				iter_next(env, ps);
 			} else {
 				loop_sign = FALSE;
 			}
 		}
 	}
 
-	if( ch=='\0' && buf->len > 0 ) {
+	if( buf->len > 0 ) {
 		spath = g_list_prepend(spath, skey_new('?', g_strreverse(buf->str), buf->len));
 	}
 
@@ -984,7 +985,7 @@ static gboolean searcher_do_locate(Searcher* searcher, GList* scope, gint line, 
 static void searcher_locate(Searcher* searcher, CppFile* file, gint line, GList* spath) {
 	gboolean need_walk = TRUE;
 	if( file && line && spath && ((SKey*)(spath->data))->type!='R' )
-		need_walk = searcher_do_locate(searcher, file, line, spath, spath, need_walk);
+		need_walk = searcher_do_locate(searcher, file->root_scope.v_ncscope.scope, line, spath, spath, need_walk);
 
 	if( need_walk )
 		searcher_add_spath(searcher, spath);

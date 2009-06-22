@@ -205,10 +205,15 @@ void cpp_spath_free(gpointer spath);
 
 typedef void (*CppMatched)(CppElem* elem, gpointer* tag);
 
-void cpp_guide_search(CppGuide* guide
+void cpp_guide_search_with_callback( CppGuide* guide
 			, gpointer spath
 			, CppMatched cb
 			, gpointer cb_tag
+			, CppFile* file
+			, gint line );
+
+GSequence* cpp_guide_search( CppGuide* guide
+			, gpointer spath
 			, CppFile* file
 			, gint line );
 

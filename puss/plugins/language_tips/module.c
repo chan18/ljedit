@@ -81,32 +81,7 @@ static void open_include_file(LanguageTips* self, const gchar* filename, gboolea
 	}
 }
 
-static void print_matched(CppElem* elem, LanguageTips* self) {
-	g_print("print matched : %s\n", elem->name->buf);
-}
-
 static gboolean view_on_key_press(GtkTextView* view, GdkEventKey* event, LanguageTips* self) {
-	// test
-	if( event->state==(GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK) ) {
-		gpointer spath;
-		const gchar* text;
-		GtkDialog* dlg = (GtkDialog*)gtk_dialog_new_with_buttons("test"
-			, puss_get_main_window(self->app)
-			, GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT
-			, GTK_STOCK_OK, GTK_RESPONSE_OK, NULL);
-		GtkEntry* entry = (GtkEntry*)gtk_entry_new();
-		gtk_box_pack_start(dlg->vbox, entry, TRUE, TRUE, 0);
-		gtk_widget_show_all(dlg->vbox);
-		gtk_dialog_run(dlg);
-		text = gtk_entry_get_text(entry);
-		spath = cpp_spath_parse(TRUE, text);
-		if( spath ) {
-			cpp_guide_search(self->cpp_guide, spath, print_matched, self, 0, 0);
-			cpp_spath_free(spath);
-		}
-		gtk_widget_destroy(dlg);
-	}
-
 	/*
     if( event->state & (GDK_CONTROL_MASK | GDK_MOD1_MASK) ) {
 		tips_hide_all(self->tips);
@@ -297,11 +272,35 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 	return TRUE;
 }
 
+static gchar text_buffer_iter_do_prev(GtkTextIter* pos) {
+	return gtk_text_iter_backward_char(pos)
+		? (gchar)gtk_text_iter_get_char(pos)
+		: '\0';
+}
+
+static gchar text_buffer_iter_do_next(GtkTextIter* pos) {
+	return gtk_text_iter_forward_char(pos)
+		? (gchar)gtk_text_iter_get_char(pos)
+		: '\0';
+}
+
+static gchar* find_spath_in_text_buffer( CppFile* file
+	, GtkTextIter* it
+    , GtkTextIter* end
+	, gboolean find_startswith )
+{
+	return cpp_spath_find(find_startswith, text_buffer_iter_do_prev, text_buffer_iter_do_next, it, end);
+}
+
+static void print_matched(CppElem* elem, LanguageTips* self) {
+	g_print("print matched : %s\n", elem->name->buf);
+}
+
 static void do_button_release(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf, GdkEventButton* event, CppFile* file) {
 	GtkTextIter it;
 	GtkTextIter end;
 	gunichar ch;
-	size_t line;
+	gint line;
 
     // tag test
 	gtk_text_buffer_get_iter_at_mark(buf, &it, gtk_text_buffer_get_insert(buf));
@@ -367,7 +366,7 @@ static void do_button_release(LanguageTips* self, GtkTextView* view, GtkTextBuff
 
 	// find keys
 	end = it;
-	line = (size_t)gtk_text_iter_get_line(&it) + 1;
+	line = (gint)gtk_text_iter_get_line(&it) + 1;
 
 	// test CTRL state
 	if( event->state & GDK_CONTROL_MASK ) {
@@ -390,6 +389,15 @@ static void do_button_release(LanguageTips* self, GtkTextView* view, GtkTextBuff
 
 	} else {
 		// preview
+		gpointer spath = find_spath_in_text_buffer(file, &it, &end, FALSE);
+		if( spath ) {
+			GSequence* seq = cpp_guide_search(self->cpp_guide, spath, file, line);
+			if( seq ) {
+				g_sequence_foreach(seq, print_matched, self);
+				g_sequence_free(seq);
+			}
+			cpp_spath_free(spath);
+		}
 		/*
 		DocIter_Gtk ps(&it);
 		DocIter_Gtk pe(&end);
@@ -454,8 +462,8 @@ static void signals_connect(LanguageTips* self, GtkTextView* view) {
 	if( !check_cpp_files(self, url->str) )
 		return;
 
-	g_signal_connect(view, "key-press-event", G_CALLBACK(view_on_key_press), self);
-	g_signal_connect(view, "key-release-event", G_CALLBACK(view_on_key_release), self);
+	//g_signal_connect(view, "key-press-event", G_CALLBACK(view_on_key_press), self);
+	//g_signal_connect(view, "key-release-event", G_CALLBACK(view_on_key_release), self);
 
 	g_signal_connect(view, "button-release-event", G_CALLBACK(view_on_button_release), self);
 	g_signal_connect(view, "focus-out-event", G_CALLBACK(view_on_focus_out), self);

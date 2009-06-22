@@ -98,7 +98,7 @@ void cpp_spath_free(gpointer spath) {
 	return spath_free((GList*)spath);
 }
 
-void cpp_guide_search(CppGuide* guide
+void cpp_guide_search_with_callback( CppGuide* guide
 			, gpointer spath
 			, CppMatched cb
 			, gpointer cb_tag
@@ -108,6 +108,51 @@ void cpp_guide_search(CppGuide* guide
 	searcher_search(&(guide->stree), (GList*)spath, cb, cb_tag, file, line);
 }
 
+#define cpp_elem_ref(elem) cpp_file_ref(elem->file)
+
+static void cpp_elem_unref(CppElem* elem) { cpp_file_unref(elem->file); }
+
+static gint cpp_elem_cmp(CppElem* a, CppElem* b, gpointer tag) {
+	gint res;
+
+	if( a==b )
+		return 0;
+	if( a==0 )
+		return -1;
+	if( b==0 )
+		return 1;
+
+	res = g_strcasecmp(a->name->buf, b->name->buf);
+	if( res==0 ) {
+		res = (gint)(a->type) - (gint)(b->type);
+		if( res==0 )
+			res = (gint)a - (gint)b;
+	}
+
+	return res;
+}
+
+static void matched_into_sequence(CppElem* elem, GSequence* seq) {
+	GSequenceIter* it = g_sequence_search(seq, elem, cpp_elem_cmp, 0);
+	if( g_sequence_get(it)!=elem ) {
+		cpp_elem_ref(elem);
+		g_sequence_insert_sorted(seq, elem, cpp_elem_cmp, 0);
+	}
+}
+
+GSequence* cpp_guide_search( CppGuide* guide
+			, gpointer spath
+			, CppFile* file
+			, gint line )
+{
+	GSequence* seq = g_sequence_new(cpp_elem_unref);
+	cpp_guide_search_with_callback(guide, spath, matched_into_sequence, seq, file, line);
+	if( g_sequence_get_length(seq)==0 ) {
+		g_sequence_free(seq);
+		seq = 0;
+	}
+	return seq;
+}
 
 #ifdef G_OS_WIN32
 #define _WIN32_WINNT 0x0500
