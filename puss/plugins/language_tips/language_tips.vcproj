@@ -92,7 +92,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(ProjectDir)$(ProjectName).ui $(SolutionDir)bin\plugins\&#x0D;&#x0A;copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\&#x0D;&#x0A;"
+				CommandLine="copy $(ProjectDir)$(ProjectName).ui $(SolutionDir)bin\plugins\&#x0D;&#x0A;copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\&#x0D;&#x0A;mkdir $(SolutionDir)bin\plugins\$(ProjectName)_res&#x0D;&#x0A;copy $(ProjectDir)$(ProjectName)_res\*.* $(SolutionDir)bin\plugins\$(ProjectName)_res\&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -171,7 +171,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(ProjectDir)$(ProjectName).ui $(SolutionDir)bin\plugins\&#x0D;&#x0A;copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\&#x0D;&#x0A;"
+				CommandLine="copy $(ProjectDir)$(ProjectName).ui $(SolutionDir)bin\plugins\&#x0D;&#x0A;copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\&#x0D;&#x0A;mkdir $(SolutionDir)bin\plugins\$(ProjectName)_res&#x0D;&#x0A;copy $(ProjectDir)$(ProjectName)_res\*.* $(SolutionDir)bin\plugins\$(ProjectName)_res\&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -294,6 +294,50 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="res"
+			>
+			<File
+				RelativePath=".\language_tips_res\class.png"
+				>
+			</File>
+			<File
+				RelativePath=".\language_tips_res\enum.png"
+				>
+			</File>
+			<File
+				RelativePath=".\language_tips_res\enumitem.png"
+				>
+			</File>
+			<File
+				RelativePath=".\language_tips_res\fun.png"
+				>
+			</File>
+			<File
+				RelativePath=".\language_tips_res\keyword.png"
+				>
+			</File>
+			<File
+				RelativePath=".\language_tips_res\macro.png"
+				>
+			</File>
+			<File
+				RelativePath=".\language_tips_res\namespace.png"
+				>
+			</File>
+			<File
+				RelativePath=".\language_tips_res\typedef.png"
+				>
+			</File>
+			<File
+				RelativePath=".\language_tips_res\var.png"
+				>
+			</File>
+		</Filter>
+		<File
+			RelativePath=".\language_tips.plugin"
+			>
+		</File>
 		<File
 			RelativePath=".\language_tips.ui"
 			>

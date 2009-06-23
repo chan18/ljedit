@@ -18,19 +18,23 @@
 #define CPP_VIEW_PRIVATE	'R'
 
 
-#define CPP_ET_NCSCOPE		'S'
-#define CPP_ET_KEYWORD		'K'
-#define CPP_ET_UNDEF		'U'
-#define CPP_ET_MACRO		'M'
-#define CPP_ET_INCLUDE		'I'
-#define CPP_ET_VAR			'v'
-#define CPP_ET_FUN			'f'
-#define CPP_ET_ENUMITEM		'i'
-#define CPP_ET_ENUM			'e'
-#define CPP_ET_CLASS		'c'
-#define CPP_ET_USING		'u'
-#define CPP_ET_NAMESPACE	'n'
-#define CPP_ET_TYPEDEF		't'
+enum CppElemType {
+	  CPP_ET__FIRST
+	, CPP_ET_NCSCOPE
+	, CPP_ET_KEYWORD
+	, CPP_ET_UNDEF
+	, CPP_ET_MACRO
+	, CPP_ET_INCLUDE
+	, CPP_ET_VAR
+	, CPP_ET_FUN
+	, CPP_ET_ENUMITEM
+	, CPP_ET_ENUM
+	, CPP_ET_CLASS
+	, CPP_ET_USING
+	, CPP_ET_NAMESPACE
+	, CPP_ET_TYPEDEF
+	, CPP_ET__LAST
+};
 
 typedef struct _CppElem    CppElem;
 typedef struct _CppFile    CppFile;
@@ -203,7 +207,7 @@ gpointer cpp_spath_find( gboolean find_startswith
 gpointer cpp_spath_parse(gboolean find_startswith, const gchar* text);
 void cpp_spath_free(gpointer spath);
 
-typedef void (*CppMatched)(CppElem* elem, gpointer* tag);
+typedef void (*CppMatched)(CppElem* elem, gpointer tag);
 
 void cpp_guide_search_with_callback( CppGuide* guide
 			, gpointer spath
@@ -214,6 +218,7 @@ void cpp_guide_search_with_callback( CppGuide* guide
 
 GSequence* cpp_guide_search( CppGuide* guide
 			, gpointer spath
+			, gboolean match_keywords
 			, CppFile* file
 			, gint line );
 

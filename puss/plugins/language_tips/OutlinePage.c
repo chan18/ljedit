@@ -8,7 +8,7 @@
 #include <gtksourceview/gtksourcelanguagemanager.h>
 
 typedef struct {
-	GtkTreeStore*	store;
+	LanguageTips*	self;
 	GtkTreeIter*	iter;
 } AddItemTag;
 
@@ -18,9 +18,9 @@ static void outline_add_elem(CppElem* elem, AddItemTag* parent) {
 	if( elem->type==CPP_ET_INCLUDE || elem->type==CPP_ET_UNDEF )
 		return;
 
-	gtk_tree_store_append(parent->store, &iter, parent->iter);
-	gtk_tree_store_set( parent->store, &iter
-		//, 0, icons_->get_icon_from_elem(*elem)
+	gtk_tree_store_append(parent->self->outline_store, &iter, parent->iter);
+	gtk_tree_store_set( parent->self->outline_store, &iter
+		, 0, parent->self->icons[elem->type]
 		, 1, elem->name->buf
 		, 2, elem
 		, -1 );
@@ -31,7 +31,7 @@ static void outline_add_elem(CppElem* elem, AddItemTag* parent) {
 	case CPP_ET_NAMESPACE:
 	case CPP_ET_NCSCOPE:
 		{
-			AddItemTag tag = {parent->store, &iter};
+			AddItemTag tag = {parent->self, &iter};
 			g_list_foreach( cpp_elem_get_subscope(elem), (GFunc)outline_add_elem, &tag );
 		}
 		break;
@@ -49,7 +49,7 @@ static void outline_set_file(LanguageTips* self, CppFile* file, gint line) {
 		}
 
 		if( file ) {
-			AddItemTag tag = {self->outline_store, 0};
+			AddItemTag tag = {self, 0};
 
 			self->outline_file = cpp_file_ref(file);
 			g_list_foreach( file->root_scope.v_ncscope.scope, (GFunc)outline_add_elem, &tag );

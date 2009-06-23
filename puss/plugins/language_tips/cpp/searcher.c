@@ -3,6 +3,82 @@
 
 #include "searcher.h"
 
+// c++ keywords & macro keywords
+// 
+static const char* CPP_KEYWORDS[] = {
+	  "_Bool"
+	, "_Complex"
+	, "_Imaginary"
+	, "asm"
+	, "auto"
+	, "bool"
+	, "break"
+	, "case"
+	, "catch"
+	, "char"
+	, "class"
+	, "const"
+	, "const_cast"
+	, "continue"
+	, "default"
+	, "define"			// macro
+	, "delete"
+	, "do"
+	, "double"
+	, "dynamic_cast"
+	, "else"
+	, "endif"			// macro
+	, "enum"
+	, "explicit"
+	, "export"
+	, "extern"
+	, "false"
+	, "float"
+	, "for"
+	, "friend"
+	, "goto"
+	, "if"
+	, "ifdef"			// macro
+	, "ifndef"			// macro
+	, "include"			// macro
+	, "inline"
+	, "int"
+	, "long"
+	, "mutable"
+	, "namespace"
+	, "new"
+	, "operator"
+	, "private"
+	, "protected"
+	, "public"
+	, "register"
+	, "reinterpret_cast"
+	, "return"
+	, "short"
+	, "signed"
+	, "sizeof"
+	, "static"
+	, "static_cast"
+	, "struct"
+	, "switch"
+	, "template"
+	, "this"
+	, "throw"
+	, "true"
+	, "try"
+	, "typedef"
+	, "typeid"
+	, "typename"
+	, "union"
+	, "unsigned"
+	, "using"
+	, "virtual"
+	, "void"
+	, "volatile"
+	, "wchar_t"
+	, "while"
+};
+
 struct _SNode {
 	GList*		elems;
 	GHashTable*	sub;
@@ -165,6 +241,7 @@ static void snode_insert(SNode* parent, CppElem* elem) {
 		snode_sub_insert(parent, elem->v_fun.nskey, elem);
 		break;
 		
+	case CPP_ET_KEYWORD:
 	case CPP_ET_MACRO:
 	case CPP_ET_TYPEDEF:
 	case CPP_ET_ENUMITEM:
@@ -229,6 +306,7 @@ static void snode_remove(SNode* parent, CppElem* elem) {
 		snode_sub_remove(parent, elem->v_fun.nskey, elem);
 		break;
 		
+	case CPP_ET_KEYWORD:
 	case CPP_ET_MACRO:
 	case CPP_ET_TYPEDEF:
 	case CPP_ET_ENUMITEM:
@@ -280,14 +358,37 @@ static void snode_remove(SNode* parent, CppElem* elem) {
 }
 
 void stree_init(CppSTree* self) {
+	gint i;
+	CppElem* elem;
+
 	self->root = snode_new();
+
+	self->keywords_file.ref_count = 1;
+	self->keywords_file.filename = tiny_str_new("@keywords@", 10);
+	self->keywords_file.root_scope.type = CPP_ET_NCSCOPE;
+	self->keywords_file.root_scope.file = &self->keywords_file;
+
+	for( i=0; i<sizeof(CPP_KEYWORDS)/sizeof(gpointer); ++i ) {
+		elem = cpp_elem_new();
+		elem->type = CPP_ET_KEYWORD;
+		elem->file = &(self->keywords_file);
+		elem->name = tiny_str_new(CPP_KEYWORDS[i], strlen(CPP_KEYWORDS[i]));
+		elem->decl = tiny_str_copy(elem->name);
+		cpp_scope_insert(&(self->keywords_file.root_scope), elem);
+	}
+
+	stree_insert(self, &(self->keywords_file));
 
 	g_static_rw_lock_init( &(self->lock) );
 }
 
 void stree_final(CppSTree* self) {
+	stree_remove(self, &(self->keywords_file));
+
 	snode_free(self->root);
 	self->root = 0;
+
+	cpp_file_clear(&(self->keywords_file));
 
 	g_static_rw_lock_free( &(self->lock) );
 }
@@ -1015,7 +1116,7 @@ static void searcher_start(Searcher* searcher, GList* spath, CppFile* file, gint
 
 void searcher_search( CppSTree* stree
 	, GList* spath
-	, void (*cb)(CppElem* elem, gpointer* tag)
+	, void (*cb)(CppElem* elem, gpointer tag)
 	, gpointer cb_tag
 	, CppFile* file
 	, gint line )

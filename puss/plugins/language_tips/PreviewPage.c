@@ -58,7 +58,7 @@ static gpointer tips_preview_search_thread(LanguageTips* self) {
 		if( !key )
 			continue;
 
-		seq = cpp_guide_search(self->cpp_guide, key->spath, key->file, key->line);
+		seq = cpp_guide_search(self->cpp_guide, key->spath, TRUE, key->file, key->line);
 		search_key_free(key);
 
 		if( seq ) {
@@ -97,7 +97,8 @@ void preview_final(LanguageTips* self) {
 		g_thread_join(self->preview_search_thread);
 	}
 
-	g_sequence_free(self->preview_search_seq_result);
+	if( self->preview_search_seq_result )
+		g_sequence_free(self->preview_search_seq_result);
 }
 
 void preview_set(LanguageTips* self, gpointer spath, CppFile* file, gint line) {
@@ -121,7 +122,7 @@ static gboolean scroll_to_define_line(LanguageTips* self) {
 	CppElem* elem;
 
 	iter = g_sequence_get_iter_at_pos(self->preview_search_seq_result, self->preview_last_index);
-	elem = (iter && !g_sequence_iter_is_end(iter)) ? (CppElem*)g_sequence_get(iter) : 0;
+	elem = g_sequence_iter_is_end(iter) ? 0 : (CppElem*)g_sequence_get(iter);
 
 	if( elem ) {
 		buffer = gtk_text_view_get_buffer(self->preview_view);
@@ -160,7 +161,7 @@ static void preview_do_update(LanguageTips* self, gint index) {
 	num = g_sequence_get_length(self->preview_search_seq_result);
 	self->preview_last_index = index % num;
 	iter = g_sequence_get_iter_at_pos(self->preview_search_seq_result, self->preview_last_index);
-	elem = (iter && !g_sequence_iter_is_end(iter)) ? (CppElem*)g_sequence_get(iter) : 0;
+	elem = g_sequence_iter_is_end(iter) ? 0 : (CppElem*)g_sequence_get(iter);
 	if( !elem )
 		return;
 
@@ -204,7 +205,7 @@ SIGNAL_CALLBACK void preview_cb_filename_button_clicked(GtkButton* button, Langu
 	CppElem* elem;
 
 	iter = g_sequence_get_iter_at_pos(self->preview_search_seq_result, self->preview_last_index);
-	elem = (iter && !g_sequence_iter_is_end(iter)) ? (CppElem*)g_sequence_get(iter) : 0;
+	elem = g_sequence_iter_is_end(iter) ? 0 : (CppElem*)g_sequence_get(iter);
 
 	if( elem )
 		self->app->doc_open(elem->file->filename->buf, elem->sline-1, -1, FALSE);

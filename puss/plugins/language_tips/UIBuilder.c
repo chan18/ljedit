@@ -7,10 +7,48 @@
 #include <gtksourceview/gtksourcebuffer.h>
 #include <gtksourceview/gtksourcelanguagemanager.h>
 
+const gchar* ICONS_FILES[] = { 0
+	, 0
+	, "keyword.png"
+	, 0
+	, "macro.png"
+	, 0
+	, "var.png"
+	, "fun.png"
+	, "enumitem.png"
+	, "enum.png"
+	, "class.png"
+	, 0
+	, "namespace.png"
+	, "typedef.png"
+};
+
+static GdkPixbuf* tips_icon_load(const gchar* plugin_path, const gchar* name) {
+	gchar* filepath;
+	GdkPixbuf* icon = 0;
+
+	if( name ) {
+		filepath = g_build_filename(plugin_path, "language_tips_res", name, NULL);
+		icon = gdk_pixbuf_new_from_file(filepath, NULL);
+		if( !icon )
+			g_critical(_("* ERROR : language_tips load icon(%s) failed!\n"), filepath);
+		g_free(filepath);
+	}
+
+	return icon;
+}
+
+static void tips_icon_free(GdkPixbuf* icon) {
+	if( icon )
+		g_object_unref(G_OBJECT(icon));
+}
+
 void ui_create(LanguageTips* self) {
 	gchar* filepath;
+	const gchar* plugins_path;
 	GtkBuilder* builder;
 	GError* err = 0;
+	gint i;
 
 	builder = gtk_builder_new();
 	if( !builder )
@@ -73,9 +111,19 @@ void ui_create(LanguageTips* self) {
 	gtk_widget_show_all(GTK_WIDGET(gtk_builder_get_object(builder, "decl_panel")));
 
 	gtk_builder_connect_signals(builder, self);
+
+	// icons
+	plugins_path = self->app->get_plugins_path();
+	self->icons = g_new0(GdkPixbuf*, CPP_ET__LAST);
+	if( self->icons ) {
+		for( i=CPP_ET__FIRST; i<CPP_ET__LAST; ++i )
+			self->icons[i] = tips_icon_load(plugins_path, ICONS_FILES[i]);
+	}
 }
 
 void ui_destroy(LanguageTips* self) {
+	gint i;
+
 	if( !self->builder )
 		return;
 
@@ -83,5 +131,11 @@ void ui_destroy(LanguageTips* self) {
 	self->app->panel_remove(self->preview_panel);
 
 	g_object_unref(G_OBJECT(self->builder));
+
+	if( self->icons ) {
+		for( i=CPP_ET__FIRST; i<CPP_ET__LAST; ++i )
+			tips_icon_free(self->icons[i]);
+		g_free(self->icons);
+	}
 }
 

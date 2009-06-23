@@ -34,9 +34,11 @@ CppGuide* cpp_guide_new(gboolean enable_macro_replace, gboolean enable_search) {
 
 void cpp_guide_free(CppGuide* guide) {
 	if( guide ) {
+		stree_final( &(guide->stree) );
+
 		cpp_parser_final( &(guide->parser) );
 
-		stree_final( &(guide->stree) );
+		g_free(guide);
 	}
 }
 
@@ -95,7 +97,7 @@ gpointer cpp_spath_parse(gboolean find_startswith, const gchar* text) {
 }
 
 void cpp_spath_free(gpointer spath) {
-	return spath_free((GList*)spath);
+	spath_free((GList*)spath);
 }
 
 void cpp_guide_search_with_callback( CppGuide* guide
@@ -126,32 +128,45 @@ static gint cpp_elem_cmp(CppElem* a, CppElem* b, gpointer tag) {
 	if( res==0 ) {
 		res = (gint)(a->type) - (gint)(b->type);
 		if( res==0 )
-			res = (gint)a - (gint)b;
+			res = GPOINTER_TO_INT(a) - GPOINTER_TO_INT(b);
 	}
 
 	return res;
 }
 
-static void matched_into_sequence(CppElem* elem, GSequence* seq) {
-	GSequenceIter* it = g_sequence_search(seq, elem, cpp_elem_cmp, 0);
-	if( g_sequence_get(it)!=elem ) {
-		cpp_elem_ref(elem);
-		g_sequence_insert_sorted(seq, elem, cpp_elem_cmp, 0);
-	}
+typedef struct {
+	gboolean	match_keywords;
+	GSequence*	seq;
+} SeqMatched;
+
+static void matched_into_sequence(CppElem* elem, SeqMatched* tag) {
+	GSequenceIter* it;
+	if( elem->type==CPP_ET_KEYWORD && !tag->match_keywords )
+		return;
+
+	if( !tag->seq )
+		tag->seq = g_sequence_new(cpp_elem_unref);
+
+	if( !tag->seq )
+		return;
+
+	it = g_sequence_search(tag->seq, elem, cpp_elem_cmp, 0);
+	if( !g_sequence_iter_is_end(it) )
+		return;
+
+	cpp_elem_ref(elem);
+	g_sequence_insert_sorted(tag->seq, elem, cpp_elem_cmp, 0);
 }
 
 GSequence* cpp_guide_search( CppGuide* guide
 			, gpointer spath
+			, gboolean match_keywords
 			, CppFile* file
 			, gint line )
 {
-	GSequence* seq = g_sequence_new(cpp_elem_unref);
-	cpp_guide_search_with_callback(guide, spath, matched_into_sequence, seq, file, line);
-	if( g_sequence_get_length(seq)==0 ) {
-		g_sequence_free(seq);
-		seq = 0;
-	}
-	return seq;
+	SeqMatched tag = { match_keywords, 0 };
+	cpp_guide_search_with_callback(guide, spath, matched_into_sequence, &tag, file, line);
+	return tag.seq;
 }
 
 #ifdef G_OS_WIN32

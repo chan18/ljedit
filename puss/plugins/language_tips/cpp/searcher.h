@@ -11,6 +11,7 @@ typedef struct _SNode SNode;
 typedef struct {
 	GStaticRWLock	lock;
 	SNode*			root;
+	CppFile			keywords_file;
 } CppSTree;
 
 void stree_init(CppSTree* self);
@@ -29,7 +30,7 @@ void   spath_free(GList* spath);
 
 void searcher_search( CppSTree* stree
 	, GList* spath
-	, void (*cb)(CppElem* elem, gpointer* tag)
+	, void (*cb)(CppElem* elem, gpointer tag)
 	, gpointer cb_tag
 	, CppFile* file
 	, gint line );

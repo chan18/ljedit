@@ -25,6 +25,9 @@ typedef struct {
 
 	GtkBuilder*		builder;
 
+	// icons
+	GdkPixbuf**		icons;
+
 	// outline window
 	GtkWidget*		outline_panel;
 	GtkTreeView*	outline_view;

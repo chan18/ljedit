@@ -534,7 +534,7 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 
 	self->re_include = g_regex_new("^[ \t]*#[ \t]*include[ \t]*(.*)", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
 	self->re_include_tip = g_regex_new("([\"<])(.*)", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
-	self-> re_include_info = g_regex_new("([\"<])([^\">]*)[\">].*", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
+	self->re_include_info = g_regex_new("([\"<])([^\">]*)[\">].*", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
 
 	ui_create(self);
 
@@ -554,15 +554,30 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 }
 
 PUSS_EXPORT void puss_plugin_destroy(void* ext) {
+	gint i;
+	gint page_count;
+	GtkNotebook* doc_panel;
 	LanguageTips* self = (LanguageTips*)ext;
 	if( !self )
 		return;
 
 	g_source_remove(self->update_timer);
 
+	doc_panel = puss_get_doc_panel(self->app);
+	g_signal_handler_disconnect(doc_panel, self->page_added_handler_id);
+	g_signal_handler_disconnect(doc_panel, self->page_removed_handler_id);
+
+	page_count = gtk_notebook_get_n_pages(doc_panel);
+	for( i=0; i<page_count; ++i )
+		signals_disconnect( self, self->app->doc_get_view_from_page_num(i) );
+
 	preview_final(self);
 
 	ui_destroy(self);
+
+	g_regex_unref(self->re_include);
+	g_regex_unref(self->re_include_tip);
+	g_regex_unref(self->re_include_info);
 
 	parse_thread_final(self);
 
