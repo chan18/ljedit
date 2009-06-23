@@ -38,6 +38,13 @@ typedef struct {
 	GtkButton*		preview_number_button;
 	GtkTextView*	preview_view;
 
+	gpointer		preview_search_key;
+	GAsyncQueue*	preview_search_queue;
+	GThread*		preview_search_thread;
+	GSequence*		preview_search_seq_result;
+	gint			preview_last_index;
+	CppFile*		preview_last_file;
+
 	// tips window
 	GtkWidget*		tips_include_window;
 	GtkTreeView*	tips_include_view;
@@ -75,7 +82,9 @@ void ui_destroy(LanguageTips* self);
 
 void outline_update(LanguageTips* self);
 
-void preview_set(LanguageTips* self, const gchar* key, const gchar* key_text, CppFile* file, gint line);
+void preview_init(LanguageTips* self);
+void preview_final(LanguageTips* self);
+void preview_set(LanguageTips* self, gpointer spath, CppFile* file, gint line);
 void preview_update(LanguageTips* self);
 
 #endif//PUSS_PLUGIN_INC_LANGUAGE_TIPS_H

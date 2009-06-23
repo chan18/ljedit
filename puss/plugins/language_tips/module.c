@@ -3,9 +3,31 @@
 
 #include "LanguageTips.h"
 
+#include <string.h>
+
 #include <gdk/gdkkeysyms.h>
 #include <gtksourceview/gtksourcebuffer.h>
 #include <gtksourceview/gtksourcelanguagemanager.h>
+
+static gchar text_buffer_iter_do_prev(GtkTextIter* pos) {
+	return gtk_text_iter_backward_char(pos)
+		? (gchar)gtk_text_iter_get_char(pos)
+		: '\0';
+}
+
+static gchar text_buffer_iter_do_next(GtkTextIter* pos) {
+	return gtk_text_iter_forward_char(pos)
+		? (gchar)gtk_text_iter_get_char(pos)
+		: '\0';
+}
+
+static gchar* find_spath_in_text_buffer( CppFile* file
+	, GtkTextIter* it
+    , GtkTextIter* end
+	, gboolean find_startswith )
+{
+	return cpp_spath_find(find_startswith, text_buffer_iter_do_prev, text_buffer_iter_do_next, it, end);
+}
 
 static gboolean check_cpp_files(LanguageTips* self, const gchar* filename) {
 	gboolean retval = FALSE;
@@ -81,6 +103,109 @@ static void open_include_file(LanguageTips* self, const gchar* filename, gboolea
 	}
 }
 
+static void show_current_in_preview(LanguageTips* self, GtkTextView* view) {
+	GtkTextBuffer* buf;
+	GString* url;
+	CppFile* file;
+	GtkTextIter it;
+	GtkTextIter end;
+	gunichar ch;
+	gint line;
+
+	buf = gtk_text_view_get_buffer(view);
+	url = self->app->doc_get_url(buf);
+	if( !url )
+		return;
+
+	file = cpp_guide_find_parsed(self->cpp_guide, url->str, url->len);
+	if( !file )
+		return;
+
+	gtk_text_buffer_get_iter_at_mark(buf, &it, gtk_text_buffer_get_insert(buf));
+
+	ch = gtk_text_iter_get_char(&it);
+	if( !g_unichar_isalnum(ch) && ch!='_' )
+		return;
+
+	// find key end position
+	while( gtk_text_iter_forward_char(&it) ) {
+		ch = gtk_text_iter_get_char(&it);
+		if( !g_unichar_isalnum(ch) && ch!='_' )
+			break;
+	}
+
+	// find keys
+	end = it;
+	line = gtk_text_iter_get_line(&it) + 1;
+
+	preview_set(self, find_spath_in_text_buffer(file, &it, &end, FALSE), file, line);
+}
+
+static gboolean open_include_file_at_current(LanguageTips* self, GtkTextView* view) {
+	GtkTextBuffer* buf;
+	CppFile* file;
+	GtkTextIter it;
+
+	gchar* str;
+	GMatchInfo* inc_info;
+	gboolean is_include_line;
+	gchar* inc_info_text;
+	GtkTextIter ps;
+	GtkTextIter pe;
+	GMatchInfo* info = 0;
+
+	gchar* sign;
+	gchar* filename;
+	GString* url;
+
+    // include test
+	buf = gtk_text_view_get_buffer(view);
+
+	// tips_hide_all(self->tips);
+	// tag test
+	gtk_text_buffer_get_iter_at_mark(buf, &it, gtk_text_buffer_get_insert(buf));
+	if( is_in_comment(&it) )
+		return FALSE;
+
+	ps = it;
+	pe = it;
+
+	gtk_text_iter_set_line_offset(&ps, 0);
+	if( !gtk_text_iter_ends_line(&pe) )
+		gtk_text_iter_forward_to_line_end(&pe);
+
+	str = gtk_text_iter_get_text(&ps, &pe);
+	inc_info = 0;
+	is_include_line = g_regex_match(self->re_include, str, (GRegexMatchFlags)0, &inc_info);
+
+	if( is_include_line ) {
+		inc_info_text = g_match_info_fetch(inc_info, 1);
+		if( g_regex_match(self->re_include_info, inc_info_text, (GRegexMatchFlags)0, &info) ) {
+			sign = g_match_info_fetch(info, 1);
+			filename = g_match_info_fetch(info, 2);
+			url = self->app->doc_get_url(buf);
+			if( url ) {
+				file = cpp_guide_find_parsed(self->cpp_guide, url->str, url->len);
+				if( file ) {
+					open_include_file(self, filename, *sign=='<', file->filename->buf);
+				} else {
+					GString* filepath = self->app->doc_get_url(buf);
+					if( filepath )
+						open_include_file(self, filename, *sign=='<', filepath->str);
+				}
+			}
+			g_free(sign);
+			g_free(filename);
+		}
+		g_free(inc_info_text);
+		g_match_info_free(info);
+	}
+	g_match_info_free(inc_info);
+	g_free(str);
+
+	return is_include_line;
+}
+
 static gboolean view_on_key_press(GtkTextView* view, GdkEventKey* event, LanguageTips* self) {
 	/*
     if( event->state & (GDK_CONTROL_MASK | GDK_MOD1_MASK) ) {
@@ -134,6 +259,15 @@ static gboolean view_on_key_press(GtkTextView* view, GdkEventKey* event, Languag
 }
 
 static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, LanguageTips* self) {
+	/*
+	// test
+	if( event->keyval==GDK_space ) {
+		if( event->state & (GDK_CONTROL_MASK | GDK_MOD1_MASK) )
+			show_current_in_preview(self, view);
+		return TRUE;
+	}
+	*/
+
 	/*
 	GtkTextIter iter;
 	GtkTextIter end;
@@ -272,101 +406,12 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 	return TRUE;
 }
 
-static gchar text_buffer_iter_do_prev(GtkTextIter* pos) {
-	return gtk_text_iter_backward_char(pos)
-		? (gchar)gtk_text_iter_get_char(pos)
-		: '\0';
-}
-
-static gchar text_buffer_iter_do_next(GtkTextIter* pos) {
-	return gtk_text_iter_forward_char(pos)
-		? (gchar)gtk_text_iter_get_char(pos)
-		: '\0';
-}
-
-static gchar* find_spath_in_text_buffer( CppFile* file
-	, GtkTextIter* it
-    , GtkTextIter* end
-	, gboolean find_startswith )
-{
-	return cpp_spath_find(find_startswith, text_buffer_iter_do_prev, text_buffer_iter_do_next, it, end);
-}
-
-static void print_matched(CppElem* elem, LanguageTips* self) {
-	g_print("print matched : %s\n", elem->name->buf);
-}
-
-static void do_button_release(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf, GdkEventButton* event, CppFile* file) {
-	GtkTextIter it;
-	GtkTextIter end;
-	gunichar ch;
-	gint line;
-
-    // tag test
-	gtk_text_buffer_get_iter_at_mark(buf, &it, gtk_text_buffer_get_insert(buf));
-	if( is_in_comment(&it) )
-		return;
-
+static gboolean view_on_button_release(GtkTextView* view, GdkEventButton* event, LanguageTips* self) {
     // include test
 	if( event->state & GDK_CONTROL_MASK ) {
-		gchar* str;
-		GMatchInfo* inc_info;
-		gboolean is_include_line;
-		gchar* inc_info_text;
-		GtkTextIter ps = it;
-		GtkTextIter pe = it;
-
-		gtk_text_iter_set_line_offset(&ps, 0);
-		if( !gtk_text_iter_ends_line(&pe) )
-			gtk_text_iter_forward_to_line_end(&pe);
-
-		str = gtk_text_iter_get_text(&ps, &pe);
-		inc_info = 0;
-		is_include_line = g_regex_match(self->re_include, str, (GRegexMatchFlags)0, &inc_info);
-
-		if( is_include_line ) {
-			GMatchInfo* info = 0;
-			inc_info_text = g_match_info_fetch(inc_info, 1);
-			if( g_regex_match(self->re_include_info, inc_info_text, (GRegexMatchFlags)0, &info) ) {
-				gchar* sign = g_match_info_fetch(info, 1);
-				gchar* filename = g_match_info_fetch(info, 2);
-				if( file ) {
-					open_include_file(self, filename, *sign=='<', file->filename->buf);
-				} else {
-					GString* filepath = self->app->doc_get_url(buf);
-					if( filepath )
-						open_include_file(self, filename, *sign=='<', filepath->str);
-				}
-				g_free(sign);
-				g_free(filename);
-			}
-			g_free(inc_info_text);
-			g_match_info_free(info);
-		}
-		g_match_info_free(inc_info);
-		g_free(str);
-
-		if( is_include_line )
-			return;
+		if( open_include_file_at_current(self, view) )
+			return FALSE;
 	}
-
-	if( !file )
-		return;
-
-	ch = gtk_text_iter_get_char(&it);
-    if( !g_unichar_isalnum(ch) && ch!='_' )
-		return;
-
-	// find key end position
-	while( gtk_text_iter_forward_char(&it) ) {
-        ch = gtk_text_iter_get_char(&it);
-        if( !g_unichar_isalnum(ch) && ch!='_' )
-            break;
-    }
-
-	// find keys
-	end = it;
-	line = (gint)gtk_text_iter_get_line(&it) + 1;
 
 	// test CTRL state
 	if( event->state & GDK_CONTROL_MASK ) {
@@ -389,43 +434,9 @@ static void do_button_release(LanguageTips* self, GtkTextView* view, GtkTextBuff
 
 	} else {
 		// preview
-		gpointer spath = find_spath_in_text_buffer(file, &it, &end, FALSE);
-		if( spath ) {
-			GSequence* seq = cpp_guide_search(self->cpp_guide, spath, file, line);
-			if( seq ) {
-				g_sequence_foreach(seq, print_matched, self);
-				g_sequence_free(seq);
-			}
-			cpp_spath_free(spath);
-		}
-		/*
-		DocIter_Gtk ps(&it);
-		DocIter_Gtk pe(&end);
-		std::string key;
-		if( !find_key(key, ps, pe, false) )
-			return;
-
-		gchar* key_text = gtk_text_iter_get_text(&it, &end);
-		preview_page_preview(preview_page, key.c_str(), key_text, *file, line);
-		g_free(key_text);
-		*/
+		show_current_in_preview(self, view);
 	}
-}
 
-static gboolean view_on_button_release(GtkTextView* view, GdkEventButton* event, LanguageTips* self) {
-	GtkTextBuffer* buf;
-	GString* url;
-	CppFile* file;
-	// tips_hide_all(self->tips);
-
-	buf = gtk_text_view_get_buffer(view);
-	url = self->app->doc_get_url(buf);
-	if( url ) {
-		file = cpp_guide_find_parsed(self->cpp_guide, url->str, url->len);
-		do_button_release(self, view, buf, event, file);
-		if( file )
-			cpp_file_unref(file);
-	}
 
     return FALSE;
 }
@@ -446,7 +457,6 @@ static void buf_on_modified_changed(GtkTextBuffer* buf, LanguageTips* self) {
 }
 
 static void signals_connect(LanguageTips* self, GtkTextView* view) {
-	gchar* filepath;
 	GString* url;
 	GtkTextBuffer* buf;
 	GtkSourceLanguage* lang;
@@ -462,8 +472,8 @@ static void signals_connect(LanguageTips* self, GtkTextView* view) {
 	if( !check_cpp_files(self, url->str) )
 		return;
 
-	//g_signal_connect(view, "key-press-event", G_CALLBACK(view_on_key_press), self);
-	//g_signal_connect(view, "key-release-event", G_CALLBACK(view_on_key_release), self);
+	g_signal_connect(view, "key-press-event", G_CALLBACK(view_on_key_press), self);
+	g_signal_connect(view, "key-release-event", G_CALLBACK(view_on_key_release), self);
 
 	g_signal_connect(view, "button-release-event", G_CALLBACK(view_on_button_release), self);
 	g_signal_connect(view, "focus-out-event", G_CALLBACK(view_on_focus_out), self);
@@ -528,6 +538,8 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 
 	ui_create(self);
 
+	preview_init(self);
+
 	doc_panel = puss_get_doc_panel(app);
 	self->page_added_handler_id = g_signal_connect(doc_panel, "page-added",   G_CALLBACK(on_doc_page_added), self);
 	self->page_removed_handler_id = g_signal_connect(doc_panel, "page-removed", G_CALLBACK(on_doc_page_removed), self);
@@ -547,6 +559,8 @@ PUSS_EXPORT void puss_plugin_destroy(void* ext) {
 		return;
 
 	g_source_remove(self->update_timer);
+
+	preview_final(self);
 
 	ui_destroy(self);
 

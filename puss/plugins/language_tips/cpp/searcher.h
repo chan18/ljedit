@@ -27,11 +27,9 @@ GList* spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_st
 GList* spath_parse(const gchar* text, gboolean find_startswith);
 void   spath_free(GList* spath);
 
-typedef void (*CppMatched)(CppElem* elem, gpointer* tag);
-
 void searcher_search( CppSTree* stree
 	, GList* spath
-	, CppMatched cb
+	, void (*cb)(CppElem* elem, gpointer* tag)
 	, gpointer cb_tag
 	, CppFile* file
 	, gint line );
