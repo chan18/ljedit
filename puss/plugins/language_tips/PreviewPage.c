@@ -58,11 +58,7 @@ static gpointer tips_preview_search_thread(LanguageTips* self) {
 		if( !key )
 			continue;
 
-<<<<<<< .mine
 		seq = cpp_guide_search(self->cpp_guide, key->spath, FALSE, key->file, key->line);
-=======
-		seq = cpp_guide_search(self->cpp_guide, key->spath, TRUE, key->file, key->line);
->>>>>>> .r601
 		search_key_free(key);
 
 		if( seq ) {
