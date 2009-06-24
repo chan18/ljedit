@@ -9,6 +9,25 @@
 #include <gtksourceview/gtksourcebuffer.h>
 #include <gtksourceview/gtksourcelanguagemanager.h>
 
+static void calc_tip_pos(GtkTextView* view, gint* px, gint* py) {
+	GtkTextIter iter;
+	GdkRectangle rect;
+	GtkTextBuffer* buf;
+	GdkWindow* gdkwin;
+
+	buf = gtk_text_view_get_buffer(view);
+	gdkwin = gtk_text_view_get_window(view, GTK_TEXT_WINDOW_TEXT);
+	gdk_window_get_origin(gdkwin, px, py);
+
+	gtk_text_buffer_get_iter_at_mark(buf, &iter, gtk_text_buffer_get_insert(buf));
+
+	gtk_text_view_get_iter_location(view, &iter, &rect);
+	gtk_text_view_buffer_to_window_coords(view, GTK_TEXT_WINDOW_TEXT, rect.x, rect.y, &rect.x, &rect.y);
+
+	*px += rect.x;
+	*py += (rect.y + rect.height + 2);
+}
+
 static gchar text_buffer_iter_do_prev(GtkTextIter* pos) {
 	return gtk_text_iter_backward_char(pos)
 		? (gchar)gtk_text_iter_get_char(pos)
@@ -138,10 +157,7 @@ static void show_current_in_preview(LanguageTips* self, GtkTextView* view) {
 	file = cpp_guide_find_parsed(self->cpp_guide, url->str, url->len);
 	if( file ) {
 		spath = find_spath_in_text_buffer(file, &it, &end, FALSE);
-		if( spath ) {
-			preview_set(self, spath, file, line);
-			cpp_spath_free(spath);
-		}
+		preview_set(self, spath, file, line);
 		cpp_file_unref(file);
 	}
 }
@@ -166,7 +182,7 @@ static gboolean open_include_file_at_current(LanguageTips* self, GtkTextView* vi
     // include test
 	buf = gtk_text_view_get_buffer(view);
 
-	// tips_hide_all(self->tips);
+	tips_hide_all(self);
 	// tag test
 	gtk_text_buffer_get_iter_at_mark(buf, &it, gtk_text_buffer_get_insert(buf));
 	if( is_in_comment(&it) )
@@ -211,11 +227,97 @@ static gboolean open_include_file_at_current(LanguageTips* self, GtkTextView* vi
 	return is_include_line;
 }
 
+#ifdef G_OS_WIN32
+	#define IS_DIR_SEPERATOR(ch) ((ch)=='\\' || (ch)=='/')
+#else
+	#define IS_DIR_SEPERATOR(ch) (ch)==G_DIR_SEPARATOR
+#endif
+
+static GList* search_include_files_in_dir(GList* files, gchar* inc_path, gchar* subpath, gchar* starts) {
+	const gchar* fname;
+	gchar* dirname = inc_path;
+	GDir* dir;
+
+	if( subpath )
+		dirname = g_build_path(G_DIR_SEPARATOR_S, inc_path, subpath, 0);
+
+	dir = g_dir_open(dirname, 0, 0);
+	while(dir) {
+		fname = g_dir_read_name(dir);
+		if( !fname )
+			break;
+		if( *starts=='\0' || g_strrstr(fname, starts)==fname )
+			files = g_list_append(files, g_strdup(fname));
+	}
+	g_dir_close(dir);
+
+	if( subpath )
+		g_free(dirname);
+
+	return files;
+}
+
+static GList* search_include_files(CppGuide* guide, gchar* startswith, GString* current_url) {
+	GList* files = 0;
+	gint len;
+	gchar* key;
+	gchar* path;
+	gchar* dirname;
+	GList* p;
+
+	g_assert( startswith );
+	len = (gint)strlen(startswith);
+	key = startswith;
+	path = 0;
+
+	if( len ) {
+		for( key = startswith + len - 1; key>startswith; --key ) {
+			if( IS_DIR_SEPERATOR(*key) ) {
+				if( key!=startswith )
+					path = startswith;
+
+				*key = '\0';
+				++key;
+				break;
+			}
+		}
+	}
+
+	if( current_url ) {
+		dirname = g_path_get_dirname(current_url->str);
+		files = search_include_files_in_dir(files, dirname, path, key);
+		g_free(dirname);
+
+	} else {
+		CppIncludePaths* paths = cpp_guide_include_paths_ref(guide);
+		if( paths ) {
+			for( p=paths->path_list; p; p=p->next )
+				files = search_include_files_in_dir(files, (gchar*)(p->data), path, key);
+			cpp_guide_include_paths_unref(paths);
+		}
+	}
+
+	return files;
+}
+
+static void show_include_hint(LanguageTips* self, GtkTextView* view, gchar* startswith, GString* current_url) {
+	gint x = 0;
+	gint y = 0;
+	GList* files = search_include_files(self->cpp_guide, startswith, current_url);
+	if( files ) {
+		calc_tip_pos(view, &x, &y);
+		tips_include_tip_show(self, x, y, files);
+	} else {
+		tips_include_tip_hide(self);
+	}
+}
+
 static gboolean show_include_files_tips(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf, GtkTextIter* iter, gint keyval) {
 	gchar* line;
 	gchar* inc_info_text;
 	gchar* sign;
 	gchar* filename;
+	GString* url;
 	GMatchInfo* inc_info;
 	GMatchInfo* info;
 	gboolean is_start;
@@ -240,7 +342,8 @@ static gboolean show_include_files_tips(LanguageTips* self, GtkTextView* view, G
 			if( filename[0]=='\0' )
 				is_start = TRUE;
 
-			//self->show_include_hint(filename, *sign=='<', view);
+			url = (*sign=='<') ? 0 : self->app->doc_get_url(buf);
+			show_include_hint(self, view, filename, url);
 
 			g_free(sign);
 			g_free(filename);
@@ -257,7 +360,7 @@ static gboolean show_include_files_tips(LanguageTips* self, GtkTextView* view, G
 			if( is_start )
 				break;
 		case '>':
-			//tips_include_tip_hide(self->tips);
+			tips_include_tip_hide(self);
 			break;
 		}
 
@@ -267,8 +370,80 @@ static gboolean show_include_files_tips(LanguageTips* self, GtkTextView* view, G
 	return FALSE;
 }
 
-static void print_matched(CppElem* elem, LanguageTips* self) {
-	g_print("matched : %s\n", elem->name->buf);
+static void auto_complete(LanguageTips* self, GtkTextView* view) {
+	CppElem* elem;
+	const gchar* str;
+	GtkTextBuffer* buf;
+	GtkTextIter ps;
+	GtkTextIter pe;
+	gunichar ch;
+
+	if( tips_list_is_visible(self) ) {
+		elem = tips_list_get_selected(self);
+		if( !elem )
+			return;
+
+		buf = gtk_text_view_get_buffer(view);
+		gtk_text_buffer_get_iter_at_mark(buf, &ps, gtk_text_buffer_get_insert(buf));
+		pe = ps;
+
+		ch = 0;
+
+		// range start
+		while( gtk_text_iter_backward_char(&ps) ) {
+			ch = gtk_text_iter_get_char(&ps);
+			if( g_unichar_isalnum(ch) || ch=='_' )
+				continue;
+
+			gtk_text_iter_forward_char(&ps);
+			break;
+		}
+
+		// range end
+		do {
+			ch = gtk_text_iter_get_char(&pe);
+			if( g_unichar_isalnum(ch) || ch=='_' )
+				continue;
+			break;
+		} while( gtk_text_iter_forward_char(&pe) );
+
+		gtk_text_buffer_delete(buf, &ps, &pe);
+		gtk_text_buffer_insert_at_cursor(buf, elem->name->buf, tiny_str_len(elem->name));
+		tips_list_tip_hide(self);
+
+	} else if( tips_include_is_visible(self) ) {
+		str = tips_include_get_selected(self);
+		if( !str )
+			return;
+
+		buf = gtk_text_view_get_buffer(view);
+		gtk_text_buffer_get_iter_at_mark(buf, &ps, gtk_text_buffer_get_insert(buf));
+		pe = ps;
+
+		ch = 0;
+
+		// range start
+		while( gtk_text_iter_backward_char(&ps) ) {
+			ch = gtk_text_iter_get_char(&ps);
+			if( ch!='/' && ch!='\\' && ch!='<' && ch!='"' )
+				continue;
+
+			gtk_text_iter_forward_char(&ps);
+			break;
+		}
+
+		// range end
+		do {
+			ch = gtk_text_iter_get_char(&pe);
+			if( g_unichar_isalnum(ch) || ch=='_' )
+				continue;
+			break;
+		} while( gtk_text_iter_forward_char(&pe) );
+
+		gtk_text_buffer_delete(buf, &ps, &pe);
+		gtk_text_buffer_insert_at_cursor(buf, str, -1);
+		tips_include_tip_hide(self);
+	}
 }
 
 static void show_hint(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf, GtkTextIter* it, GtkTextIter* end, gchar tag) {
@@ -279,8 +454,8 @@ static void show_hint(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf,
 	gpointer spath;
 	GSequence* seq;
 
-	//if( tag=='f' )
-	//	tips_list_tip_hide(tips);
+	if( tag=='f' )
+		tips_list_tip_hide(self);
 
 	//kill_show_hint_timer();
 
@@ -301,13 +476,10 @@ static void show_hint(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf,
 
 			seq = cpp_guide_search( self->cpp_guide, spath, flag, file, line);
 			if( seq ) {
-				//gint x = 0;
-				//gint y = 0;
-				//calc_tip_pos(view, x, y);
-				// tips_list_tip_show(tips, x, y, mset.elems());
-
-				g_sequence_foreach(seq, print_matched, self);
-				g_sequence_free(seq);
+				gint x = 0;
+				gint y = 0;
+				calc_tip_pos(view, &x, &y);
+				tips_list_tip_show(self, x, y, seq);
 			}
 
 			cpp_spath_free(spath);
@@ -317,53 +489,51 @@ static void show_hint(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf,
 }
 
 static gboolean view_on_key_press(GtkTextView* view, GdkEventKey* event, LanguageTips* self) {
-	/*
     if( event->state & (GDK_CONTROL_MASK | GDK_MOD1_MASK) ) {
-		tips_hide_all(self->tips);
+		tips_hide_all(self);
         return FALSE;
     }
 
 	switch( event->keyval ) {
 	case GDK_Tab:
-		if( tips_list_is_visible(self->tips) || tips_include_is_visible(self->tips) ) {
-			self->auto_complete(view);
+		if( tips_list_is_visible(self) || tips_include_is_visible(self) ) {
+			auto_complete(self, view);
 			return TRUE;
 		}
 		break;
 
 	case GDK_Return:
-		if( tips_list_is_visible(self->tips) || tips_include_is_visible(self->tips) ) {
-			tips_hide_all(self->tips);
-			self->auto_complete(view);
+		if( tips_list_is_visible(self) || tips_include_is_visible(self) ) {
+			tips_hide_all(self);
+			auto_complete(self, view);
 			return TRUE;
 		}
 		break;
 
 	case GDK_Up:
-		if( tips_list_is_visible(self->tips) || tips_include_is_visible(self->tips) ) {
-			tips_select_prev(self->tips);
+		if( tips_list_is_visible(self) || tips_include_is_visible(self) ) {
+			// tips_select_prev(self);
 			return TRUE;
 		}
 
-		if( tips_decl_is_visible(self->tips) )
-			tips_decl_tip_hide(self->tips);
+		if( tips_decl_is_visible(self) )
+			tips_decl_tip_hide(self);
 		break;
 
 	case GDK_Down:
-		if( tips_list_is_visible(self->tips) || tips_include_is_visible(self->tips) ) {
-			tips_select_next(self->tips);
+		if( tips_list_is_visible(self) || tips_include_is_visible(self) ) {
+			// tips_select_next(self);
 			return TRUE;
 		}
 
-		if( tips_decl_is_visible(self->tips) )
-			tips_decl_tip_hide(self->tips);
+		if( tips_decl_is_visible(self) )
+			tips_decl_tip_hide(self);
 		break;
 
 	case GDK_Escape:
-		tips_hide_all(self->tips);
+		tips_hide_all(self);
 		return TRUE;
 	}
-	*/
 
 	return FALSE;
 }
@@ -383,7 +553,7 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 	GtkTextBuffer* buf;
 
     if( event->state & (GDK_CONTROL_MASK | GDK_MOD1_MASK) ) {
-        //tips_hide_all(self->tips);
+        //tips_hide_all(self);
         return FALSE;
     }
 
@@ -440,7 +610,7 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 		break;
 
 	case ')':
-		//tips_decl_tip_hide(self->tips);
+		//tips_decl_tip_hide(self);
 		break;
 
 	case '<':
@@ -456,14 +626,14 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 			show_hint(self, view, buf, &iter, &end, 's');
 
 		} else {
-			//tips_decl_tip_hide(self->tips);
+			tips_decl_tip_hide(self);
 		}
 		break;
 
 	default:
 		if( (event->keyval <= 0x7f) && g_ascii_isalnum(event->keyval) || event->keyval=='_' ) {
 			/*
-			if( tips_list_is_visible(self->tips) ) {
+			if( tips_list_is_visible(self) ) {
 				self->locate_sub_hint(view);
 
 			} else {
@@ -473,7 +643,7 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 			show_hint(self, view, buf, &iter, &end, 's');
 
 		} else {
-			//tips_list_tip_hide(self->tips);
+			tips_list_tip_hide(self);
 		}
 		break;
 	}
@@ -517,12 +687,12 @@ static gboolean view_on_button_release(GtkTextView* view, GdkEventButton* event,
 }
 
 static gboolean view_on_focus_out(GtkTextView* view, GdkEventFocus* event, LanguageTips* self) {
-    //tips_hide_all(self->tips);
+	tips_hide_all(self);
 	return FALSE;
 }
 
 static gboolean view_on_scroll(GtkTextView* view, GdkEventScroll* event, LanguageTips* self) {
-    //tips_hide_all(self->tips);
+	tips_hide_all(self);
 	return FALSE;
 }
 

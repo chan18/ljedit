@@ -52,7 +52,7 @@ typedef struct {
 	GtkWidget*		tips_include_window;
 	GtkTreeView*	tips_include_view;
 	GtkTreeModel*	tips_include_model;
-	//StringSet*		tips_include_files;
+	GList*			tips_include_files;
 
 	GtkWidget*		tips_list_window;
 	GtkTreeView*	tips_list_view;
@@ -62,6 +62,7 @@ typedef struct {
 	GtkWidget*		tips_decl_window;
 	GtkTextView*	tips_decl_view;
 	GtkTextBuffer*	tips_decl_buffer;
+	GSequence*		tips_decl_seq;
 
 	// signal handlers
 	gulong			page_added_handler_id;
@@ -96,13 +97,17 @@ void preview_update(LanguageTips* self);
 
 #define tips_include_is_visible(self)	GTK_WIDGET_VISIBLE(self->tips_include_window)
 #define tips_include_tip_hide(self)	gtk_widget_hide(self->tips_include_window)
+void tips_include_tip_show(LanguageTips* self, gint x, gint y, GList* files);
+const gchar* tips_include_get_selected(LanguageTips* self);
 
 #define tips_list_is_visible(self)	GTK_WIDGET_VISIBLE(self->tips_list_window)
 #define tips_list_tip_hide(self)	gtk_widget_hide(self->tips_list_window)
 void tips_list_tip_show(LanguageTips* self, gint x, gint y, GSequence* seq);
+CppElem* tips_list_get_selected(LanguageTips* self);
 
 #define tips_decl_is_visible(self)	GTK_WIDGET_VISIBLE(self->tips_decl_window)
 #define tips_decl_tip_hide(self)	gtk_widget_hide(self->tips_decl_window)
+void tips_decl_tip_show(LanguageTips* self, gint x, gint y, GSequence* seq);
 
 #define tips_hide_all(self ) {   \
 	tips_include_tip_hide(self); \

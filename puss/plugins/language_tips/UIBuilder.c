@@ -94,13 +94,13 @@ void ui_create(LanguageTips* self) {
 
 	self->tips_include_window = GTK_WIDGET(gtk_builder_get_object(builder, "include_window"));
 	self->tips_include_view = GTK_TREE_VIEW(gtk_builder_get_object(builder, "include_view"));
-	self->tips_include_model = GTK_TREE_MODEL(gtk_builder_get_object(builder, "include_store"));
+	self->tips_include_model = GTK_TREE_MODEL(g_object_ref(gtk_builder_get_object(builder, "include_store")));
 	g_assert( self->tips_include_window && self->tips_include_view && self->tips_include_model );
 	gtk_widget_show_all(GTK_WIDGET(gtk_builder_get_object(builder, "include_panel")));
 
 	self->tips_list_window = GTK_WIDGET(gtk_builder_get_object(builder, "list_window"));
 	self->tips_list_view = GTK_TREE_VIEW(gtk_builder_get_object(builder, "list_view"));
-	self->tips_list_model = GTK_TREE_MODEL(gtk_builder_get_object(builder, "list_store"));
+	self->tips_list_model = GTK_TREE_MODEL(g_object_ref(gtk_builder_get_object(builder, "list_store")));
 	g_assert( self->tips_list_window && self->tips_list_view && self->tips_list_model );
 	gtk_widget_show_all(GTK_WIDGET(gtk_builder_get_object(builder, "list_panel")));
 
@@ -130,6 +130,9 @@ void ui_destroy(LanguageTips* self) {
 	self->app->panel_remove(self->outline_panel);
 	self->app->panel_remove(self->preview_panel);
 
+	g_object_unref(G_OBJECT(self->outline_store));
+	g_object_unref(G_OBJECT(self->tips_include_model));
+	g_object_unref(G_OBJECT(self->tips_list_model));
 	g_object_unref(G_OBJECT(self->builder));
 
 	if( self->icons ) {

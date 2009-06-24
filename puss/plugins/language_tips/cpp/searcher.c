@@ -1137,7 +1137,7 @@ void searcher_search( CppSTree* stree
 
 	for( p=s.spaths; p; p=p->next ) {
 		if( p->data!=(gpointer)spath )
-			spath_free(p);
+			spath_free(p->data);
 	}
 
 	g_tree_destroy(s.worked_nodes);
