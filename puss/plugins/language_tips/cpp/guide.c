@@ -114,7 +114,7 @@ void cpp_guide_search_with_callback( CppGuide* guide
 
 static void cpp_elem_unref(CppElem* elem) { cpp_file_unref(elem->file); }
 
-static gint cpp_elem_cmp(CppElem* a, CppElem* b, gpointer tag) {
+static gint cpp_elem_cmp(CppElem* a, CppElem* b, gint use_unique_id) {
 	gint res;
 
 	if( a==b )
@@ -124,8 +124,8 @@ static gint cpp_elem_cmp(CppElem* a, CppElem* b, gpointer tag) {
 	if( b==0 )
 		return 1;
 
-	res = g_strcasecmp(a->name->buf, b->name->buf);
-	if( res==0 ) {
+	res = g_strcmp0(a->name->buf, b->name->buf);
+	if( res==0 && !use_unique_id ) {
 		res = (gint)(a->type) - (gint)(b->type);
 		if( res==0 )
 			res = GPOINTER_TO_INT(a) - GPOINTER_TO_INT(b);
@@ -135,14 +135,19 @@ static gint cpp_elem_cmp(CppElem* a, CppElem* b, gpointer tag) {
 }
 
 typedef struct {
-	gboolean	match_keywords;
+	gint		flag;
 	GSequence*	seq;
 } SeqMatched;
 
 static void matched_into_sequence(CppElem* elem, SeqMatched* tag) {
-	GSequenceIter* it;
-	if( elem->type==CPP_ET_KEYWORD && !tag->match_keywords )
-		return;
+	CppElem* p;
+	GSequenceIter* ps;
+	GSequenceIter* pe;
+	gint use_unique_id = 0;
+
+	if( elem->type==CPP_ET_KEYWORD )
+		if( !(tag->flag & CPP_GUIDE_SEARCH_FLAG_WITH_KEYWORDS) )
+			return;
 
 	if( !tag->seq )
 		tag->seq = g_sequence_new(cpp_elem_unref);
@@ -150,9 +155,25 @@ static void matched_into_sequence(CppElem* elem, SeqMatched* tag) {
 	if( !tag->seq )
 		return;
 
-	it = g_sequence_search(tag->seq, elem, cpp_elem_cmp, 0);
-	if( !g_sequence_iter_is_end(it) )
-		return;
+	if( tag->flag & CPP_GUIDE_SEARCH_FLAG_USE_UNIQUE_ID )
+		use_unique_id = 1;
+
+	pe = g_sequence_search(tag->seq, elem, cpp_elem_cmp, use_unique_id);
+	if( !g_sequence_iter_is_begin(pe) ) {
+		ps = pe;
+		do {
+			ps=g_sequence_iter_prev(ps);
+			p = g_sequence_get(ps);
+			if( p==elem )
+				return;
+
+			if( cpp_elem_cmp(elem, p, use_unique_id)!=0 )
+				break;
+			else if( use_unique_id )
+				return;
+
+		} while( !g_sequence_iter_is_begin(ps) );
+	}
 
 	cpp_elem_ref(elem);
 	g_sequence_insert_sorted(tag->seq, elem, cpp_elem_cmp, 0);
@@ -160,11 +181,11 @@ static void matched_into_sequence(CppElem* elem, SeqMatched* tag) {
 
 GSequence* cpp_guide_search( CppGuide* guide
 			, gpointer spath
-			, gboolean match_keywords
+			, gint flag
 			, CppFile* file
 			, gint line )
 {
-	SeqMatched tag = { match_keywords, 0 };
+	SeqMatched tag = { flag, 0 };
 	cpp_guide_search_with_callback(guide, spath, matched_into_sequence, &tag, file, line);
 	return tag.seq;
 }
@@ -195,7 +216,8 @@ gchar* cpp_filename_to_filekey(const gchar* filename, glong namelen) {
 
 		paths = g_new(gchar*, 256);
 		paths[0] = g_strdup("_:");
-		paths[0][0] = g_ascii_toupper(filename[0]);
+		if( g_ascii_isalpha(filename[0]) )
+			paths[0][0] = g_ascii_toupper(filename[0]);
 		j = 1;
 
 		for( i=3; i<len; ++i ) {

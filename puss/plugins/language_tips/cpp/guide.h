@@ -216,9 +216,12 @@ void cpp_guide_search_with_callback( CppGuide* guide
 			, CppFile* file
 			, gint line );
 
+#define CPP_GUIDE_SEARCH_FLAG_WITH_KEYWORDS	0x0001
+#define CPP_GUIDE_SEARCH_FLAG_USE_UNIQUE_ID	0x0002
+
 GSequence* cpp_guide_search( CppGuide* guide
 			, gpointer spath
-			, gboolean match_keywords
+			, gint flag
 			, CppFile* file
 			, gint line );
 

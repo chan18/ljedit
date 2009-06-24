@@ -335,6 +335,10 @@
 			</File>
 		</Filter>
 		<File
+			RelativePath=".\Controls.c"
+			>
+		</File>
+		<File
 			RelativePath=".\language_tips.plugin"
 			>
 		</File>
@@ -360,6 +364,10 @@
 		</File>
 		<File
 			RelativePath=".\PreviewPage.c"
+			>
+		</File>
+		<File
+			RelativePath=".\Tips.c"
 			>
 		</File>
 		<File

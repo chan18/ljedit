@@ -44,7 +44,7 @@ typedef struct {
 	gpointer		preview_search_key;
 	GAsyncQueue*	preview_search_queue;
 	GThread*		preview_search_thread;
-	GSequence*		preview_search_seq_result;
+	GSequence*		preview_search_seq;
 	gint			preview_last_index;
 	CppFile*		preview_last_file;
 
@@ -57,6 +57,7 @@ typedef struct {
 	GtkWidget*		tips_list_window;
 	GtkTreeView*	tips_list_view;
 	GtkTreeModel*	tips_list_model;
+	GSequence*		tips_list_seq;
 
 	GtkWidget*		tips_decl_window;
 	GtkTextView*	tips_decl_view;
@@ -83,12 +84,31 @@ void parse_thread_push(LanguageTips* self, const gchar* filename, gboolean force
 void ui_create(LanguageTips* self);
 void ui_destroy(LanguageTips* self);
 
+void controls_init(LanguageTips* self);
+void controls_final(LanguageTips* self);
+
 void outline_update(LanguageTips* self);
 
 void preview_init(LanguageTips* self);
 void preview_final(LanguageTips* self);
 void preview_set(LanguageTips* self, gpointer spath, CppFile* file, gint line);
 void preview_update(LanguageTips* self);
+
+#define tips_include_is_visible(self)	GTK_WIDGET_VISIBLE(self->tips_include_window)
+#define tips_include_tip_hide(self)	gtk_widget_hide(self->tips_include_window)
+
+#define tips_list_is_visible(self)	GTK_WIDGET_VISIBLE(self->tips_list_window)
+#define tips_list_tip_hide(self)	gtk_widget_hide(self->tips_list_window)
+void tips_list_tip_show(LanguageTips* self, gint x, gint y, GSequence* seq);
+
+#define tips_decl_is_visible(self)	GTK_WIDGET_VISIBLE(self->tips_decl_window)
+#define tips_decl_tip_hide(self)	gtk_widget_hide(self->tips_decl_window)
+
+#define tips_hide_all(self ) {   \
+	tips_include_tip_hide(self); \
+	tips_list_tip_hide(self);    \
+	tips_decl_tip_hide(self);    \
+	}
 
 #endif//PUSS_PLUGIN_INC_LANGUAGE_TIPS_H
 
