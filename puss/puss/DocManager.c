@@ -505,11 +505,16 @@ gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 	return page_num;
 }
 
-gint doc_open_file( const gchar* filename, gint line, gint line_offset, gboolean show_message_if_open_failed ) {
+static gint doc_open_file( const gchar* filename, FindLocation fun, gpointer tag, gboolean show_message_if_open_failed ) {
 	ModifyInfo mi;
 	GtkTextView* view;
+	GtkSourceBuffer* buf;
+	GtkTextBuffer* tbuf;
 	gchar* url = puss_format_filename(filename);
 	gint page_num = puss_doc_find_page_from_url(url);
+	gboolean is_new_file = FALSE;
+	gint line;
+	gint offset;
 
 	if( page_num < 0 ) {
 		gchar* text = 0;
@@ -518,8 +523,8 @@ gint doc_open_file( const gchar* filename, gint line, gint line_offset, gboolean
 
 		if( puss_load_file(url, &text, &len, &charset) ) {
 			// create text buffer & set text
-			GtkSourceBuffer* buf = gtk_source_buffer_new(0);
-			GtkTextBuffer* tbuf = GTK_TEXT_BUFFER(buf);
+			buf = gtk_source_buffer_new(0);
+			tbuf = GTK_TEXT_BUFFER(buf);
 			gtk_source_buffer_begin_not_undoable_action(buf);
 			gtk_text_buffer_set_text(tbuf, text, len);
 			gtk_source_buffer_end_not_undoable_action(buf);
@@ -542,8 +547,7 @@ gint doc_open_file( const gchar* filename, gint line, gint line_offset, gboolean
 			// create text view
 			page_num = doc_open_page(buf, TRUE);
 
-			if( line < 0 )
-				line = 0;
+			is_new_file = TRUE;
 		}
 
 	} else {
@@ -551,6 +555,7 @@ gint doc_open_file( const gchar* filename, gint line, gint line_offset, gboolean
 		if( view ) {
 			gtk_notebook_set_current_page(puss_app->doc_panel, page_num);
 			gtk_widget_grab_focus(GTK_WIDGET(view));
+			tbuf = gtk_text_view_get_buffer(view);
 		}
 	}
 	g_free(url);
@@ -567,10 +572,16 @@ gint doc_open_file( const gchar* filename, gint line, gint line_offset, gboolean
 			gtk_dialog_run(GTK_DIALOG(dlg));
 			gtk_widget_destroy(dlg);
 		}
+	}
 
-	} else if( line >= 0 ) {
-		doc_locate_page_line(page_num, line, line_offset);
-		puss_pos_locate_add(page_num, line, line_offset);
+	(*fun)(tbuf, &line, &offset, tag);
+
+	if( is_new_file && line < 0 )
+		line = 0;
+
+	if( line >= 0 ) {
+		doc_locate_page_line(page_num, line, offset);
+		puss_pos_locate_add(page_num, line, offset);
 	}
 
 	return page_num;
@@ -820,8 +831,7 @@ void puss_doc_new() {
 	page_num = doc_open_page(buf, TRUE);
 	puss_pos_locate_add(page_num, 0, 0);
 }
-
-gboolean puss_doc_open( const gchar* url, gint line, gint line_offset, gboolean show_message_if_open_failed ) {
+gboolean puss_doc_open_locate( const gchar* url, FindLocation fun, gpointer tag, gboolean show_message_if_open_failed ) {
 	gint res;
 	GtkWidget* dlg;
 	GtkTextBuffer* buffer;
@@ -831,7 +841,7 @@ gboolean puss_doc_open( const gchar* url, gint line, gint line_offset, gboolean 
 	puss_pos_locate_add_current_pos();
 
 	if( url ) {
-		page_num = doc_open_file(url, line, line_offset, show_message_if_open_failed);
+		page_num = doc_open_file(url, fun, tag, show_message_if_open_failed);
 		if( page_num < 0 )
 			return FALSE;
 
@@ -859,8 +869,7 @@ gboolean puss_doc_open( const gchar* url, gint line, gint line_offset, gboolean 
 		res = gtk_dialog_run(GTK_DIALOG(dlg));
 		if( res == GTK_RESPONSE_ACCEPT ) {
 			filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dlg));
-			page_num = doc_open_file(filename, line, line_offset, show_message_if_open_failed);
-			line = -1;
+			page_num = doc_open_file(filename, fun, tag, show_message_if_open_failed);
 			g_free(filename);
 		}
 
@@ -868,6 +877,21 @@ gboolean puss_doc_open( const gchar* url, gint line, gint line_offset, gboolean 
 	}
 
 	return TRUE;
+}
+
+typedef struct {
+	gint line;
+	gint offset;
+} DirectLocationTag;
+
+static void doc_direct_locate(GtkTextBuffer* buf, gint* pline, gint* poffset, gpointer tag) {
+	*pline = ((DirectLocationTag*)tag)->line;
+	*poffset = ((DirectLocationTag*)tag)->offset;
+}
+
+gboolean puss_doc_open(const gchar* url, gint line, gint line_offset, gboolean show_message_if_open_failed) {
+	DirectLocationTag tag = { line, line_offset };
+	return puss_doc_open_locate(url, doc_direct_locate, &tag, show_message_if_open_failed);
 }
 
 gboolean puss_doc_locate( gint page_num, gint line, gint line_offset, gboolean add_pos_locate ) {

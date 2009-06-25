@@ -138,7 +138,6 @@ struct _CppElem {
 	TinyStr*	name;
 	gint		sline;
 	gint		eline;
-	gint		offset;
 	TinyStr*	decl;
 
 	union {

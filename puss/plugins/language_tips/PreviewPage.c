@@ -206,8 +206,6 @@ SIGNAL_CALLBACK void preview_cb_filename_button_clicked(GtkButton* button, Langu
 
 	iter = g_sequence_get_iter_at_pos(self->preview_search_seq, self->preview_last_index);
 	elem = g_sequence_iter_is_end(iter) ? 0 : (CppElem*)g_sequence_get(iter);
-
-	if( elem )
-		self->app->doc_open(elem->file->filename->buf, elem->sline-1, -1, FALSE);
+	open_and_locate_elem(self, elem);
 }
 

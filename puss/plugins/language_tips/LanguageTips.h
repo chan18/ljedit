@@ -64,6 +64,10 @@ typedef struct {
 	GtkTextBuffer*	tips_decl_buffer;
 	GSequence*		tips_decl_seq;
 
+	// sourceview operator
+	GSequence*		jump_to_seq;
+	gint			jump_to_index;
+
 	// signal handlers
 	gulong			page_added_handler_id;
 	gulong			page_removed_handler_id;
@@ -114,6 +118,13 @@ void tips_decl_tip_show(LanguageTips* self, gint x, gint y, GSequence* seq);
 	tips_list_tip_hide(self);    \
 	tips_decl_tip_hide(self);    \
 	}
+
+void tips_select_next(LanguageTips* self);
+void tips_select_prev(LanguageTips* self);
+
+gboolean tips_locate_sub(LanguageTips* self, gint x, gint y, const gchar* key);
+
+gboolean open_and_locate_elem(LanguageTips* self, CppElem* elem);
 
 #endif//PUSS_PLUGIN_INC_LANGUAGE_TIPS_H
 

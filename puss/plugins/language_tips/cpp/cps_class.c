@@ -16,6 +16,7 @@ gboolean cps_class(ParseEnv* env, Block* block) {
 	gint inhers_count = 0;
 	MLToken* ps;
 	MLToken* pe;
+	gint line;
 
 	ps = block->tokens;
 	pe = ps + block->count;
@@ -37,12 +38,14 @@ gboolean cps_class(ParseEnv* env, Block* block) {
 
 	err_goto_finish_if_not( ps < pe );
 
+	line = ps->line;
 	if( ps->type==TK_ID )
 		err_goto_finish_if( (ps = parse_id(ps, pe, &nskey, &name))==0 );
 
 	elem = cpp_elem_new();
 	elem->type = CPP_ET_CLASS;
 	elem->file = env->file;
+	elem->sline = line;
 	if( name ) {
 		if( name->len == tiny_str_len(nskey) ) {
 			elem->name = nskey;

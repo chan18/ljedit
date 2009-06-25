@@ -141,6 +141,7 @@ static void init_puss_c_api(Puss* api) {
 	api->doc_find_page_from_url = &puss_doc_find_page_from_url;
 
 	api->doc_new = &puss_doc_new;
+	api->doc_open_locate = &puss_doc_open_locate;
 	api->doc_open = &puss_doc_open;
 	api->doc_locate = &puss_doc_locate;
 	api->doc_save_current = &puss_doc_save_current;

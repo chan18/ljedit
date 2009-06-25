@@ -97,6 +97,8 @@ static gboolean is_in_comment(GtkTextIter* it) {
     return FALSE;
 }
 
+static void show_hint(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf, GtkTextIter* it, GtkTextIter* end, gchar tag);
+
 static void open_include_file(LanguageTips* self, const gchar* filename, gboolean system_header, const gchar* owner_path) {
 	gboolean succeed = FALSE;
 	gchar* filepath;
@@ -122,26 +124,23 @@ static void open_include_file(LanguageTips* self, const gchar* filename, gboolea
 	}
 }
 
-static void show_current_in_preview(LanguageTips* self, GtkTextView* view) {
+static gboolean search_current(LanguageTips* self, GtkTextView* view, gpointer* out_spath, CppFile** out_file, gint* out_line) {
 	GtkTextBuffer* buf;
 	GString* url;
-	CppFile* file;
 	GtkTextIter it;
 	GtkTextIter end;
 	gunichar ch;
-	gint line;
-	gpointer spath;
 
 	buf = gtk_text_view_get_buffer(view);
 	url = self->app->doc_get_url(buf);
 	if( !url )
-		return;
+		return FALSE;
 
 	gtk_text_buffer_get_iter_at_mark(buf, &it, gtk_text_buffer_get_insert(buf));
 
 	ch = gtk_text_iter_get_char(&it);
 	if( !g_unichar_isalnum(ch) && ch!='_' )
-		return;
+		return FALSE;
 
 	// find key end position
 	while( gtk_text_iter_forward_char(&it) ) {
@@ -152,11 +151,69 @@ static void show_current_in_preview(LanguageTips* self, GtkTextView* view) {
 
 	// find keys
 	end = it;
-	line = gtk_text_iter_get_line(&it) + 1;
+	*out_line = gtk_text_iter_get_line(&it) + 1;
 
-	file = cpp_guide_find_parsed(self->cpp_guide, url->str, url->len);
-	if( file ) {
-		spath = find_spath_in_text_buffer(file, &it, &end, FALSE);
+	*out_file = cpp_guide_find_parsed(self->cpp_guide, url->str, url->len);
+	if( *out_file ) {
+		*out_spath = find_spath_in_text_buffer(*out_file, &it, &end, FALSE);
+		if( *out_spath )
+			return TRUE;
+		cpp_file_unref(*out_spath);
+		*out_spath = 0;
+	}
+
+	return FALSE;
+}
+
+static void jump_to_current(LanguageTips* self, GtkTextView* view) {
+	CppFile* file;
+	gint line;
+	gpointer spath;
+	GSequence* seq;
+	gboolean is_last;
+	gint index;
+	CppElem* elem;
+
+	if( search_current(self, view, &spath, &file, &line) ) {
+		seq = cpp_guide_search(self->cpp_guide, spath, 0, file, line);
+		cpp_file_unref(file);
+
+		if( !seq )
+			return;
+
+		is_last = self->jump_to_seq
+			&& g_sequence_get_length(seq)==g_sequence_get_length(self->jump_to_seq)
+			&& g_sequence_get(g_sequence_get_begin_iter(seq))==g_sequence_get(g_sequence_get_begin_iter(self->jump_to_seq));
+
+		if( is_last ) {
+			g_sequence_free(seq);
+			seq = self->jump_to_seq;
+			index = (self->jump_to_index + 1) % g_sequence_get_length(seq);
+		} else {
+			if( self->jump_to_seq )
+				g_sequence_free(self->jump_to_seq);
+			index = 0;
+		}
+
+		elem = (CppElem*)g_sequence_get( g_sequence_get_iter_at_pos(seq, index) );
+
+		// skip current line elem
+		if( elem->file==file && elem->sline==line )
+			index = (index + 1) % g_sequence_get_length(seq);
+
+		self->jump_to_seq = seq;
+		self->jump_to_index = index;
+
+		open_and_locate_elem(self, elem);
+	}
+}
+
+static void show_current_in_preview(LanguageTips* self, GtkTextView* view) {
+	CppFile* file;
+	gint line;
+	gpointer spath;
+
+	if( search_current(self, view, &spath, &file, &line) ) {
 		preview_set(self, spath, file, line);
 		cpp_file_unref(file);
 	}
@@ -370,6 +427,76 @@ static gboolean show_include_files_tips(LanguageTips* self, GtkTextView* view, G
 	return FALSE;
 }
 
+gboolean on_show_hint_timeout(GtkTextView* view, LanguageTips* self) {
+	GtkNotebook* doc_panel;
+	gint page_num;
+	GtkTextBuffer* buf;
+	GtkTextIter iter;
+	GtkTextIter end;
+
+	g_assert( view );
+
+	//if( show_hint_tag_!=tag )
+	//	return false;
+
+	doc_panel = puss_get_doc_panel(self->app);
+	page_num = gtk_notebook_get_current_page(doc_panel);
+	if( page_num < 0 || self->app->doc_get_view_from_page_num(page_num) != view )
+		return FALSE;
+
+	buf = gtk_text_view_get_buffer(view);
+	gtk_text_buffer_get_iter_at_mark(buf, &iter, gtk_text_buffer_get_insert(buf));
+	end = iter;
+	show_hint(self, view, buf, &iter, &end, 's');
+
+	return FALSE;
+}
+
+static void kill_show_hint_timer(LanguageTips* self) {
+	//show_hint_timer_.disconnect();
+}
+
+static void set_show_hint_timer(LanguageTips* self, GtkTextView* view) {
+	kill_show_hint_timer(self);
+
+	//++show_hint_tag_;
+	//show_hint_timer_ = Glib::signal_timeout().connect( sigc::bind(sigc::mem_fun(this, &LJCS::on_show_hint_timeout), &page, show_hint_tag_), 200 );
+
+	on_show_hint_timeout(view, self);
+}
+
+static void locate_sub_hint(LanguageTips* self, GtkTextView* view) {
+	GtkTextBuffer* buf;
+	GtkTextIter iter;
+	GtkTextIter end;
+	gunichar ch;
+	gchar* text;
+	gint x;
+	gint y;
+
+	buf = gtk_text_view_get_buffer(view);
+	gtk_text_buffer_get_iter_at_mark(buf, &iter, gtk_text_buffer_get_insert(buf));
+	end = iter;
+
+	while( gtk_text_iter_backward_char(&iter) ) {
+		ch = gtk_text_iter_get_char(&iter);
+		if( g_unichar_isalnum(ch) || ch=='_' )
+			continue;
+
+		gtk_text_iter_forward_char(&iter);
+		break;
+	}
+
+	text = gtk_text_iter_get_text(&iter, &end);
+	x = 0;
+	y = 0;
+	calc_tip_pos(view, &x, &y);
+	if( !tips_locate_sub(self, x, y, text) )
+		set_show_hint_timer(self, view);
+
+	g_free(text);
+}
+
 static void auto_complete(LanguageTips* self, GtkTextView* view) {
 	CppElem* elem;
 	const gchar* str;
@@ -457,7 +584,7 @@ static void show_hint(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf,
 	if( tag=='f' )
 		tips_list_tip_hide(self);
 
-	//kill_show_hint_timer();
+	kill_show_hint_timer(self);
 
 	url = self->app->doc_get_url(buf);
 	if( !url )
@@ -479,7 +606,11 @@ static void show_hint(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf,
 				gint x = 0;
 				gint y = 0;
 				calc_tip_pos(view, &x, &y);
-				tips_list_tip_show(self, x, y, seq);
+
+				if( tag=='s' )
+					tips_list_tip_show(self, x, y, seq);
+				else
+					tips_decl_tip_show(self, x, y, seq);
 			}
 
 			cpp_spath_free(spath);
@@ -512,7 +643,7 @@ static gboolean view_on_key_press(GtkTextView* view, GdkEventKey* event, Languag
 
 	case GDK_Up:
 		if( tips_list_is_visible(self) || tips_include_is_visible(self) ) {
-			// tips_select_prev(self);
+			tips_select_prev(self);
 			return TRUE;
 		}
 
@@ -522,7 +653,7 @@ static gboolean view_on_key_press(GtkTextView* view, GdkEventKey* event, Languag
 
 	case GDK_Down:
 		if( tips_list_is_visible(self) || tips_include_is_visible(self) ) {
-			// tips_select_next(self);
+			tips_select_next(self);
 			return TRUE;
 		}
 
@@ -551,9 +682,10 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 	GtkTextIter iter;
 	GtkTextIter end;
 	GtkTextBuffer* buf;
+	gboolean sign;
 
     if( event->state & (GDK_CONTROL_MASK | GDK_MOD1_MASK) ) {
-        //tips_hide_all(self);
+        tips_hide_all(self);
         return FALSE;
     }
 
@@ -566,6 +698,9 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 	case GDK_Shift_L:
 	case GDK_Shift_R:
         return FALSE;
+	case GDK_F12:
+		jump_to_current(self, view);
+		return FALSE;
     }
 
 	//printf("%d - %s\n", event->keyval, event->string);
@@ -578,8 +713,7 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 
 	// include test
 	//
-	//if( include_tips.visible )
-	if( FALSE ) {
+	if( tips_include_is_visible(self) ) {
 		if( show_include_files_tips(self, view, buf, &iter, event->keyval) )
 			return FALSE;
 
@@ -592,6 +726,7 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 			break;
 		}
 	}
+
 	end = iter;
 	switch( event->keyval ) {
 	case '.':
@@ -610,7 +745,7 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 		break;
 
 	case ')':
-		//tips_decl_tip_hide(self);
+		tips_decl_tip_hide(self);
 		break;
 
 	case '<':
@@ -631,19 +766,34 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 		break;
 
 	default:
-		if( (event->keyval <= 0x7f) && g_ascii_isalnum(event->keyval) || event->keyval=='_' ) {
-			/*
-			if( tips_list_is_visible(self) ) {
-				self->locate_sub_hint(view);
+		{
+			sign = FALSE;
+
+			switch( event->keyval ) {
+			case '_':
+			case GDK_BackSpace:
+			case GDK_Delete:
+			case GDK_Left:
+			case GDK_Right:
+				sign = TRUE;
+				break;
+			default:
+				if( (event->keyval <= 0x7f) && g_ascii_isalnum(event->keyval) )
+					sign = TRUE;
+				break;
+			}
+
+			if( sign ) {
+				if( tips_list_is_visible(self) ) {
+					locate_sub_hint(self, view);
+
+				} else {
+					set_show_hint_timer(self, view);
+				}
 
 			} else {
-				self->set_show_hint_timer(view);
+				tips_list_tip_hide(self);
 			}
-			*/
-			show_hint(self, view, buf, &iter, &end, 's');
-
-		} else {
-			tips_list_tip_hide(self);
 		}
 		break;
 	}
@@ -659,29 +809,10 @@ static gboolean view_on_button_release(GtkTextView* view, GdkEventButton* event,
 	}
 
 	// test CTRL state
-	if( event->state & GDK_CONTROL_MASK ) {
-		// jump to
-		/*
-		StrVector keys;
-		if( !find_keys(keys, &it, &end, file, FALSE) )
-			return;
-
-		MatchedSet mset(env);
-		if( env.stree().reader_try_lock() ) {
-			::search_keys(keys, mset, env.stree().ref(), file, line);
-			env.stree().reader_unlock();
-
-			cpp::Element* elem = find_best_matched_element(mset.elems());
-			if( elem )
-				app->doc_open(elem->file.filename.c_str(), int(elem->sline - 1), 0, FALSE);
-		}
-		*/
-
-	} else {
-		// preview
+	if( event->state & GDK_CONTROL_MASK )
+		jump_to_current(self, view);
+	else
 		show_current_in_preview(self, view);
-	}
-
 
     return FALSE;
 }

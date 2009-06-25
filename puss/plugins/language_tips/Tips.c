@@ -193,3 +193,97 @@ CppElem* tips_list_get_selected(LanguageTips* self) {
 	return result;
 }
 
+void tips_select_next(LanguageTips* self) {
+	GtkTreeSelection* sel;
+	GtkTreeIter iter;
+	GtkTreeModel* model;
+	GtkTreeView* view = 0;
+
+	if( tips_list_is_visible(self) )
+		view = self->tips_list_view;
+	else if( tips_include_is_visible(self) )
+		view = self->tips_include_view;
+
+	if( !view )
+		return;
+
+	model = gtk_tree_view_get_model(view);
+	sel = gtk_tree_view_get_selection(view);
+
+	if( gtk_tree_selection_get_selected(sel, &model, &iter) ) {
+		if( !gtk_tree_model_iter_next(model, &iter) )
+			return;
+
+	} else if( !gtk_tree_model_iter_children(model, &iter, NULL) ) {
+		return;
+	}
+
+	gtk_tree_selection_select_iter(sel, &iter);
+	gtk_tree_view_scroll_to_cell(view, gtk_tree_model_get_path(model, &iter), NULL, FALSE, 0.0f, 0.0f);
+}
+
+void tips_select_prev(LanguageTips* self) {
+	gint count;
+	GtkTreePath* path;
+	GtkTreeSelection* sel;
+	GtkTreeIter iter;
+	GtkTreeModel* model;
+	GtkTreeView* view = 0;
+
+	if( tips_list_is_visible(self) )
+		view = self->tips_list_view;
+	else if( tips_include_is_visible(self) )
+		view = self->tips_include_view;
+
+	if( !view )
+		return;
+
+	model = gtk_tree_view_get_model(view);
+	sel = gtk_tree_view_get_selection(view);
+
+	if( gtk_tree_selection_get_selected(sel, &model, &iter) ) {
+		path = gtk_tree_model_get_path(model, &iter);
+		if( !gtk_tree_path_prev(path) )
+			return;
+
+		if( !gtk_tree_model_get_iter(model, &iter, path) )
+			return;
+
+	} else {
+		count = gtk_tree_model_iter_n_children(model, &iter);
+		if( count <= 0 || !gtk_tree_model_iter_nth_child(model, &iter, NULL, (count-1)) )
+			return;
+	}
+
+	gtk_tree_selection_select_iter(sel, &iter);
+	gtk_tree_view_scroll_to_cell(view, gtk_tree_model_get_path(model, &iter), NULL, FALSE, 0.0f, 0.0f);
+}
+
+gboolean tips_locate_sub(LanguageTips* self, gint x, gint y, const gchar* key) {
+	CppElem* elem;
+	GtkTreeSelection* sel;
+	GtkTreePath* path;
+	GtkTreeIter iter;
+
+	if( !gtk_tree_model_iter_children(self->tips_list_model, &iter, NULL) )
+		return FALSE;
+
+	do {
+		gtk_tree_model_get(self->tips_list_model, &iter, 2, &elem, -1);
+		g_assert( elem );
+
+		if( g_str_has_prefix(elem->name->buf, key) ) {
+			sel = gtk_tree_view_get_selection(self->tips_list_view);
+			gtk_tree_selection_select_iter(sel, &iter);
+			path = gtk_tree_model_get_path(self->tips_list_model, &iter);
+			gtk_tree_view_scroll_to_cell(self->tips_list_view, path, NULL, FALSE, 0.0f, 0.0f);
+			return TRUE;
+		}
+
+	} while( gtk_tree_model_iter_next(self->tips_list_model, &iter) );
+
+	sel = gtk_tree_view_get_selection(self->tips_list_view);
+	gtk_tree_selection_unselect_all(sel);
+	return FALSE;
+}
+

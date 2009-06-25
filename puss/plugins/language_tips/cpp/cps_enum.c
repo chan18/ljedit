@@ -9,6 +9,7 @@ MLToken* parse_enum_iterms(MLToken* ps, MLToken* pe, CppElem* parent) {
 		elem = cpp_elem_new();
 		elem->type = CPP_ET_ENUMITEM;
 		elem->file = parent->file;
+		elem->sline = ps->line;
 		elem->name = tiny_str_new(ps->buf, ps->len);
 		elem->decl = tiny_str_new(ps->buf, ps->len);
 
@@ -40,6 +41,7 @@ gboolean cps_enum(ParseEnv* env, Block* block) {
 	elem = cpp_elem_new();
 	elem->type = CPP_ET_ENUM;
 	elem->file = block->parent->file;
+	elem->sline = ps->line;
 
 	if( ps->type==TK_ID ) {
 		elem->name = tiny_str_new(ps->buf, ps->len);

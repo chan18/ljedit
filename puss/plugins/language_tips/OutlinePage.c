@@ -128,9 +128,6 @@ SIGNAL_CALLBACK void outline_cb_row_activated(GtkTreeView* tree_view, GtkTreePat
 		return;
 
 	gtk_tree_model_get(GTK_TREE_MODEL(self->outline_store), &iter, 2, &elem, -1);
-	if( !elem )
-		return;
-
-	self->app->doc_open(elem->file->filename->buf, elem->sline - 1, -1, FALSE);
+	open_and_locate_elem(self, elem);
 }
 
