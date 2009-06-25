@@ -269,7 +269,7 @@ static gint puss_text_view_button_press_event(GtkWidget *widget, GdkEventButton 
 			}
 		}
 
-		gtk_text_buffer_select_range(buf, &ps, &pe);
+		gtk_text_buffer_select_range(buf, &pe, &ps);
 	}
 
 	return res;
@@ -309,7 +309,7 @@ gboolean doc_close_page( gint page_num );
 
 const gchar* scroll_mark_name = "scroll-to-pos-mark";
 
-gboolean doc_scroll_to_pos( GtkTextView* view ) {
+static gboolean doc_scroll_to_pos( GtkTextView* view ) {
 	GtkTextBuffer* buf = gtk_text_view_get_buffer(view);
 	GtkTextMark* mark = gtk_text_buffer_get_mark(buf, scroll_mark_name);
 	if( mark ) {
@@ -319,7 +319,7 @@ gboolean doc_scroll_to_pos( GtkTextView* view ) {
     return FALSE;
 }
 
-void doc_locate_page_line( gint page_num, gint line, gint offset ) {
+static void doc_locate_page_line( gint page_num, gint line, gint offset, gboolean need_move_cursor ) {
 	GtkTextView* view;
 	GtkTextBuffer* buf;
 	GtkTextMark* mark;
@@ -353,7 +353,8 @@ void doc_locate_page_line( gint page_num, gint line, gint offset ) {
 			gtk_text_iter_forward_to_line_end(&iter);
 	}
 
-	gtk_text_buffer_place_cursor(buf, &iter);
+	if( need_move_cursor )
+		gtk_text_buffer_place_cursor(buf, &iter);
 
 	mark = gtk_text_buffer_get_mark(buf, scroll_mark_name);
 	if( mark )
@@ -513,6 +514,7 @@ static gint doc_open_file( const gchar* filename, FindLocation fun, gpointer tag
 	gchar* url = puss_format_filename(filename);
 	gint page_num = puss_doc_find_page_from_url(url);
 	gboolean is_new_file = FALSE;
+	gboolean need_move_cursor;
 	gint line;
 	gint offset;
 
@@ -574,13 +576,13 @@ static gint doc_open_file( const gchar* filename, FindLocation fun, gpointer tag
 		}
 	}
 
-	(*fun)(tbuf, &line, &offset, tag);
+	need_move_cursor = (*fun)(tbuf, &line, &offset, tag);
 
 	if( is_new_file && line < 0 )
 		line = 0;
 
 	if( line >= 0 ) {
-		doc_locate_page_line(page_num, line, offset);
+		doc_locate_page_line(page_num, line, offset, need_move_cursor);
 		puss_pos_locate_add(page_num, line, offset);
 	}
 
@@ -884,9 +886,10 @@ typedef struct {
 	gint offset;
 } DirectLocationTag;
 
-static void doc_direct_locate(GtkTextBuffer* buf, gint* pline, gint* poffset, gpointer tag) {
+static gboolean doc_direct_locate(GtkTextBuffer* buf, gint* pline, gint* poffset, gpointer tag) {
 	*pline = ((DirectLocationTag*)tag)->line;
 	*poffset = ((DirectLocationTag*)tag)->offset;
+	return TRUE;
 }
 
 gboolean puss_doc_open(const gchar* url, gint line, gint line_offset, gboolean show_message_if_open_failed) {
@@ -902,7 +905,7 @@ gboolean puss_doc_locate( gint page_num, gint line, gint line_offset, gboolean a
 		puss_pos_locate_add_current_pos();
 
 	if( line >= 0 ) {
-		doc_locate_page_line(page_num, line, line_offset);
+		doc_locate_page_line(page_num, line, line_offset, TRUE);
 
 		if( add_pos_locate )
 			puss_pos_locate_add(page_num, line, line_offset);

@@ -21,6 +21,7 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	self->re_include_info = g_regex_new("([\"<])([^\">]*)[\">].*", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
 
 	ui_create(self);
+	tips_init(self);
 	preview_init(self);
 	controls_init(self);
 
@@ -34,6 +35,7 @@ PUSS_EXPORT void puss_plugin_destroy(void* ext) {
 
 	controls_final(self);
 	preview_final(self);
+	tips_final(self);
 	ui_destroy(self);
 
 	g_regex_unref(self->re_include);
@@ -41,6 +43,9 @@ PUSS_EXPORT void puss_plugin_destroy(void* ext) {
 	g_regex_unref(self->re_include_info);
 
 	parse_thread_final(self);
+
+	if( self->jump_to_seq )
+		g_sequence_free(self->jump_to_seq);
 
 	cpp_guide_free(self->cpp_guide);
 

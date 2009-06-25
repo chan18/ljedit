@@ -4,6 +4,23 @@
 #include "LanguageTips.h"
 
 
+void tips_init(LanguageTips* self) {
+}
+
+void tips_final(LanguageTips* self) {
+	if( self->tips_include_files ) {
+		gtk_list_store_clear(GTK_LIST_STORE(self->tips_include_model));
+		g_list_foreach(self->tips_include_files, g_free, 0);
+		g_list_free(self->tips_include_files);
+	}
+
+	if( self->tips_list_seq )
+		g_sequence_free(self->tips_list_seq);
+
+	if( self->tips_decl_seq )
+		g_sequence_free(self->tips_decl_seq);
+}
+
 void tips_include_tip_show(LanguageTips* self, gint x, gint y, GList* files) {
 	GList* p;
 	GtkTreeIter iter;

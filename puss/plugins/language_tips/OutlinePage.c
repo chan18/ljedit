@@ -38,6 +38,37 @@ static void outline_add_elem(CppElem* elem, AddItemTag* parent) {
 	}
 }
 
+static void locate_line(LanguageTips* self, size_t line, GtkTreeIter* parent) {
+	CppElem* elem;
+	GtkTreePath* path;
+	GtkTreeSelection* sel;
+	GtkTreeIter iter;
+
+	if( !gtk_tree_model_iter_children(GTK_TREE_MODEL(self->outline_store), &iter, parent) )
+		return;
+
+	do {
+		gtk_tree_model_get(GTK_TREE_MODEL(self->outline_store), &iter, 2, &elem, -1);
+		g_assert( elem );
+
+		if( line < elem->sline )
+			break;
+
+		else if( line > elem->eline )
+			continue;
+
+		sel = gtk_tree_view_get_selection(self->outline_view);
+		gtk_tree_selection_select_iter(sel, &iter);
+		path = gtk_tree_model_get_path(GTK_TREE_MODEL(self->outline_store), &iter);
+		gtk_tree_view_expand_to_path(self->outline_view, path);
+		gtk_tree_view_scroll_to_cell(self->outline_view, path, NULL, FALSE, 0.0f, 0.0f);
+		if( gtk_tree_model_iter_has_child(GTK_TREE_MODEL(self->outline_store), &iter) )
+			locate_line(self, line, &iter);
+		break;
+
+	} while( gtk_tree_model_iter_next(GTK_TREE_MODEL(self->outline_store), &iter) );
+}
+
 static void outline_set_file(LanguageTips* self, CppFile* file, gint line) {
 	if( file != self->outline_file ) {
 		gtk_tree_view_set_model(self->outline_view, 0);
@@ -62,7 +93,7 @@ static void outline_set_file(LanguageTips* self, CppFile* file, gint line) {
 		self->outline_pos = line;
 		gtk_tree_selection_unselect_all( gtk_tree_view_get_selection(self->outline_view) );
 
-		// locate_line( (size_t)line + 1, 0 );
+		locate_line(self, line + 1, 0);
 	}
 }
 

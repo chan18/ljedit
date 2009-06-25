@@ -880,6 +880,9 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 		if( pos->next )
 			return;	// bad logic
 
+		if( !node->sub )
+			return;
+
 		g_hash_table_iter_init(&it, node->sub);
 		while( g_hash_table_iter_next(&it, &key, &value) ) {
 			if( tiny_str_len(key) < cur_key_len )

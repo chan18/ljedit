@@ -8,7 +8,7 @@
 
 typedef struct _Puss Puss;
 
-typedef void (*FindLocation)(GtkTextBuffer* buf, gint* pline, gint* poffset, gpointer tag);
+typedef gboolean	(*FindLocation)(GtkTextBuffer* buf, gint* pline, gint* poffset, gpointer tag);
 
 typedef gpointer	(*PluginLoader)(const gchar* plugin_id, GKeyFile* keyfile, gpointer tag);
 typedef void		(*PluginUnloader)(gpointer plugin, gpointer tag);

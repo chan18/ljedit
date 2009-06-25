@@ -3,7 +3,7 @@
 
 #include "LanguageTips.h"
 
-static void search_elem_locate(GtkTextBuffer* buf, gint* pline, gint* poffset, CppElem* elem) {
+static gboolean search_elem_locate(GtkTextBuffer* buf, gint* pline, gint* poffset, CppElem* elem) {
 	GtkTextIter iter;
 	GtkTextIter limit;
 	GtkTextIter ps;
@@ -16,8 +16,14 @@ static void search_elem_locate(GtkTextBuffer* buf, gint* pline, gint* poffset, C
 	limit = iter;
 	gtk_text_iter_forward_to_line_end(&limit);
 
-	if( gtk_text_iter_forward_search(&iter, elem->name->buf, 0, &ps, &pe, &limit) )
-		*poffset = gtk_text_iter_get_line_offset(&ps);
+	if( gtk_text_iter_forward_search(&iter, elem->name->buf, 0, &ps, &pe, &limit) ) {
+		*poffset = gtk_text_iter_get_line_offset(&pe);
+		gtk_text_buffer_select_range(buf, &pe, &ps);
+
+		return FALSE; // means : do not need move cursor
+	}
+
+	return TRUE;
 }
 
 gboolean open_and_locate_elem(LanguageTips* self, CppElem* elem) {

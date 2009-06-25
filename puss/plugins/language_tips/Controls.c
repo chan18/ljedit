@@ -139,8 +139,13 @@ static gboolean search_current(LanguageTips* self, GtkTextView* view, gpointer* 
 	gtk_text_buffer_get_iter_at_mark(buf, &it, gtk_text_buffer_get_insert(buf));
 
 	ch = gtk_text_iter_get_char(&it);
-	if( !g_unichar_isalnum(ch) && ch!='_' )
-		return FALSE;
+	if( !g_unichar_isalnum(ch) && ch!='_' ) {
+		if( !gtk_text_iter_backward_char(&it) )
+			return FALSE;
+		ch = gtk_text_iter_get_char(&it);
+		if( !g_unichar_isalnum(ch) && ch!='_' )
+			return FALSE;
+	}
 
 	// find key end position
 	while( gtk_text_iter_forward_char(&it) ) {
@@ -591,7 +596,7 @@ static void show_hint(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf,
 		return;
 
 	// find keys
-	line = gtk_text_iter_get_line(it) + 1;
+	line = gtk_text_iter_get_line(it);
 
 	file = cpp_guide_find_parsed(self->cpp_guide, url->str, url->len);
 	if( file ) {
@@ -601,12 +606,13 @@ static void show_hint(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf,
 			if( tag=='s' )
 				flag |= CPP_GUIDE_SEARCH_FLAG_WITH_KEYWORDS;
 
-			seq = cpp_guide_search( self->cpp_guide, spath, flag, file, line);
+			seq = cpp_guide_search( self->cpp_guide, spath, flag, file, line + 1);
 			if( seq ) {
 				gint x = 0;
 				gint y = 0;
 				calc_tip_pos(view, &x, &y);
 
+				self->tips_list_last_line = line;
 				if( tag=='s' )
 					tips_list_tip_show(self, x, y, seq);
 				else
@@ -769,18 +775,19 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 		{
 			sign = FALSE;
 
-			switch( event->keyval ) {
-			case '_':
-			case GDK_BackSpace:
-			case GDK_Delete:
-			case GDK_Left:
-			case GDK_Right:
+			if( event->keyval=='_' || (event->keyval <= 0x7f) && g_ascii_isalnum(event->keyval) )
 				sign = TRUE;
-				break;
-			default:
-				if( (event->keyval <= 0x7f) && g_ascii_isalnum(event->keyval) )
-					sign = TRUE;
-				break;
+
+			if( !sign && tips_list_is_visible(self) ) {
+				switch( event->keyval ) {
+				case GDK_Delete:
+				case GDK_Left:
+				case GDK_Right:
+				case GDK_BackSpace:
+					if( gtk_text_iter_get_line(&iter)==self->tips_list_last_line )
+						sign = TRUE;
+					break;
+				}
 			}
 
 			if( sign ) {
@@ -802,17 +809,15 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 }
 
 static gboolean view_on_button_release(GtkTextView* view, GdkEventButton* event, LanguageTips* self) {
+	tips_hide_all(self);
+
     // include test
 	if( event->state & GDK_CONTROL_MASK ) {
 		if( open_include_file_at_current(self, view) )
 			return FALSE;
 	}
 
-	// test CTRL state
-	if( event->state & GDK_CONTROL_MASK )
-		jump_to_current(self, view);
-	else
-		show_current_in_preview(self, view);
+	show_current_in_preview(self, view);
 
     return FALSE;
 }

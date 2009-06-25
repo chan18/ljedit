@@ -6,7 +6,7 @@
 
 #include <gtk/gtk.h>
 
-typedef void (*FindLocation)(GtkTextBuffer* buf, gint* pline, gint* poffset, gpointer tag);
+typedef gboolean (*FindLocation)(GtkTextBuffer* buf, gint* pline, gint* poffset, gpointer tag);
 
 // doc & view
 void			puss_doc_set_url( GtkTextBuffer* buffer, const gchar* url );
