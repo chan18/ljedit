@@ -71,7 +71,7 @@ void cpp_parser_include_paths_set(CppParser* self, GList* paths) {
 	self->include_paths = include_paths;
 	g_static_rw_lock_writer_unlock( &(self->include_paths_lock) );
 
-	if( g_atomic_int_dec_and_test(&(old->ref_count)) ) {
+	if( old && g_atomic_int_dec_and_test(&(old->ref_count)) ) {
 		g_list_free(old->path_list);
 		g_free(old);
 	}

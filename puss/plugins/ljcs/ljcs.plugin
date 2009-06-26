@@ -1,7 +1,0 @@
-# puss plugin
-# 
-
-[plugin]
-name = c/c++ language tip
-engine = so
-description = c/c++ language tip

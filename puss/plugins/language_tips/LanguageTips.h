@@ -81,6 +81,12 @@ typedef struct {
 	GRegex*			re_include_tip;
 	GRegex*			re_include_info;
 
+	// option
+	gpointer		option_font_change_handler;
+	gpointer		option_style_change_handler;
+
+	gpointer		option_path_change_handler;
+
 } LanguageTips;
 
 void parse_thread_init(LanguageTips* self);
