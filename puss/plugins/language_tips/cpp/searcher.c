@@ -836,8 +836,8 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 	SNode* value;
 	SNode* sub_node;
 	CppElem* elem;
-	TinyStr** pts;
 	gboolean next_sign;
+	gint i;
 
 	if( !node )
 		return;
@@ -931,9 +931,9 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 			
 		case CPP_ET_CLASS:
 			if( cur_type=='?' || cur_type=='t' ) {
-				cur->type = 't'; 
-				for( pts=elem->v_class.inhers; *pts; ++pts )
-					loop_insert_typekey(searcher, spath, pos, *pts);
+				cur->type = 't';
+				for( i=0; i<elem->v_class.inhers_count; ++i )
+					loop_insert_typekey(searcher, spath, pos, elem->v_class.inhers[i]);
 				cur->type = cur_type;
 
 				next_sign = TRUE;

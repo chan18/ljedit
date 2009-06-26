@@ -9,6 +9,16 @@
 #include <gtksourceview/gtksourcebuffer.h>
 #include <gtksourceview/gtksourcelanguagemanager.h>
 
+struct _ControlsPriv {
+	// ui
+	guint		merge_id;
+	GtkAction*	show_function_action;
+
+	// view signal handlers
+	gulong		page_added_handler_id;
+	gulong		page_removed_handler_id;
+};
+
 static void calc_tip_pos(GtkTextView* view, gint* px, gint* py) {
 	GtkTextIter iter;
 	GdkRectangle rect;
@@ -116,6 +126,9 @@ static void open_include_file(LanguageTips* self, const gchar* filename, gboolea
 		GList* p;
 		CppIncludePaths* paths;
 		paths = cpp_guide_include_paths_ref(self->cpp_guide);
+		if( !paths )
+			return;
+
 		for( p=paths->path_list; !succeed && p; p=p->next ) {
 			filepath = g_build_filename((gchar*)(p->data), filename, NULL);
 			succeed = self->app->doc_open(filepath, -1, -1, FALSE);
@@ -583,6 +596,7 @@ static void show_hint(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf,
 	gint flag;
 	CppFile* file;
 	gint line;
+	gint offset;
 	gpointer spath;
 	GSequence* seq;
 
@@ -597,10 +611,11 @@ static void show_hint(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf,
 
 	// find keys
 	line = gtk_text_iter_get_line(it);
+	offset = gtk_text_iter_get_line_offset(it);
 
 	file = cpp_guide_find_parsed(self->cpp_guide, url->str, url->len);
 	if( file ) {
-		spath = find_spath_in_text_buffer(file, it, end, TRUE);
+		spath = find_spath_in_text_buffer(file, it, end, tag!='f');
 		if( spath ) {
 			flag = CPP_GUIDE_SEARCH_FLAG_USE_UNIQUE_ID;
 			if( tag=='s' )
@@ -612,11 +627,13 @@ static void show_hint(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf,
 				gint y = 0;
 				calc_tip_pos(view, &x, &y);
 
-				self->tips_list_last_line = line;
-				if( tag=='s' )
+				if( tag=='s' ) {
 					tips_list_tip_show(self, x, y, seq);
-				else
+					self->tips_last_line = line;
+				} else {
 					tips_decl_tip_show(self, x, y, seq);
+					self->tips_last_offset = offset;
+				}
 			}
 
 			cpp_spath_free(spath);
@@ -626,7 +643,7 @@ static void show_hint(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf,
 }
 
 static gboolean view_on_key_press(GtkTextView* view, GdkEventKey* event, LanguageTips* self) {
-    if( event->state & (GDK_CONTROL_MASK | GDK_MOD1_MASK) ) {
+    if( event->state & GDK_MOD1_MASK ) {
 		tips_hide_all(self);
         return FALSE;
     }
@@ -676,21 +693,11 @@ static gboolean view_on_key_press(GtkTextView* view, GdkEventKey* event, Languag
 }
 
 static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, LanguageTips* self) {
-	/*
-	// test
-	if( event->keyval==GDK_space ) {
-		if( event->state & (GDK_CONTROL_MASK | GDK_MOD1_MASK) )
-			show_current_in_preview(self, view);
-		return TRUE;
-	}
-	*/
-
 	GtkTextIter iter;
 	GtkTextIter end;
 	GtkTextBuffer* buf;
-	gboolean sign;
 
-    if( event->state & (GDK_CONTROL_MASK | GDK_MOD1_MASK) ) {
+    if( event->state & GDK_MOD1_MASK ) {
         tips_hide_all(self);
         return FALSE;
     }
@@ -703,6 +710,8 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
     case GDK_Escape:
 	case GDK_Shift_L:
 	case GDK_Shift_R:
+	case GDK_Control_L:
+	case GDK_Control_R:
         return FALSE;
 	case GDK_F12:
 		jump_to_current(self, view);
@@ -733,6 +742,7 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 		}
 	}
 
+	gtk_text_iter_backward_char(&iter);
 	end = iter;
 	switch( event->keyval ) {
 	case '.':
@@ -740,8 +750,8 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 		break;
 
 	case ':':
-		if( gtk_text_iter_backward_chars(&iter, 2) && gtk_text_iter_get_char(&iter)==':' ) {
-			gtk_text_iter_forward_chars(&iter, 2);
+		if( gtk_text_iter_backward_char(&iter) && gtk_text_iter_get_char(&iter)==':' ) {
+			gtk_text_iter_forward_char(&iter);
 			show_hint(self, view, buf, &iter, &end, 's');
 		}
 		break;
@@ -755,15 +765,15 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 		break;
 
 	case '<':
-		if( gtk_text_iter_backward_chars(&iter, 2) && gtk_text_iter_get_char(&iter)!='<' ) {
-			gtk_text_iter_forward_chars(&iter, 2);
+		if( gtk_text_iter_backward_char(&iter) && gtk_text_iter_get_char(&iter)!='<' ) {
+			gtk_text_iter_forward_char(&iter);
 			show_hint(self, view, buf, &iter, &end, 'f');
 		}
 		break;
 
 	case '>':
-		if( gtk_text_iter_backward_chars(&iter, 2) && gtk_text_iter_get_char(&iter)=='-' ) {
-			gtk_text_iter_forward_chars(&iter, 2);
+		if( gtk_text_iter_backward_char(&iter) && gtk_text_iter_get_char(&iter)=='-' ) {
+			gtk_text_iter_forward_char(&iter);
 			show_hint(self, view, buf, &iter, &end, 's');
 
 		} else {
@@ -772,8 +782,42 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 		break;
 
 	default:
-		{
-			sign = FALSE;
+		if( tips_decl_is_visible(self) ) {
+			gboolean sign = FALSE;
+			gint layer = 1;
+
+			while( !sign && layer > 0 ) {
+				gunichar ch = gtk_text_iter_get_char(&iter);
+				switch(ch) {
+				case '(':
+					--layer;
+					break;
+				case ')':
+					++layer;
+					break;
+				case ';':
+				case '{':
+				case '}':
+					sign = TRUE;
+					break;
+				}
+
+				if( !gtk_text_iter_backward_char(&iter) )
+					sign = TRUE;
+			}
+
+			if( layer > 0 )
+				sign = TRUE;
+
+			if( !sign )
+				if( self->tips_last_offset != (gtk_text_iter_get_line_offset(&iter)+1) )
+					sign = TRUE;
+
+			if( sign )
+				tips_decl_tip_hide(self);
+
+		} else {
+			gboolean sign = FALSE;
 
 			if( event->keyval=='_' || (event->keyval <= 0x7f) && g_ascii_isalnum(event->keyval) )
 				sign = TRUE;
@@ -784,7 +828,7 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 				case GDK_Left:
 				case GDK_Right:
 				case GDK_BackSpace:
-					if( gtk_text_iter_get_line(&iter)==self->tips_list_last_line )
+					if( gtk_text_iter_get_line(&iter)==self->tips_last_line )
 						sign = TRUE;
 					break;
 				}
@@ -896,14 +940,101 @@ static gboolean on_update_timeout(LanguageTips* self) {
 	return TRUE;
 }
 
+static const gchar* ui_info =
+	"<ui>"
+	"  <menubar name='main_menubar'>"
+	"     <menu action='edit_menu'>"
+	"      <placeholder name='edit_menu_plugins_place'>"
+	"        <menuitem action='cpp_guide_show_function_action'/>"
+	"      </placeholder>"
+	"    </menu>"
+	"  </menubar>"
+	"</ui>"
+	;
+
+static void show_function_action(GtkAction* action, LanguageTips* self) {
+	gboolean res = FALSE;
+	gint page_num;
+	GtkTextView* view;
+	GtkWidget* actived;
+	GtkTextBuffer* buf;
+	GtkTextIter iter;
+	GtkTextIter end;
+	gint layer;
+	gunichar ch;
+
+	page_num = gtk_notebook_get_current_page(puss_get_doc_panel(self->app));
+	if( page_num < 0 )
+		return;
+
+	view = self->app->doc_get_view_from_page_num(page_num);
+	actived = gtk_window_get_focus(puss_get_main_window(self->app));
+	if( GTK_WIDGET(view)!=actived )
+		gtk_widget_grab_focus(GTK_WIDGET(view));
+
+	buf = gtk_text_view_get_buffer(view);
+	if( !buf )
+		return;
+
+	gtk_text_buffer_get_iter_at_mark(buf, &iter, gtk_text_buffer_get_insert(buf));
+
+	layer = 1;
+	while( layer > 0 && gtk_text_iter_backward_char(&iter) ) {
+		ch = gtk_text_iter_get_char(&iter);
+		switch(ch) {
+		case '(':
+			--layer;
+			break;
+		case ')':
+			++layer;
+			break;
+		case ';':
+		case '{':
+		case '}':
+			return;
+		}
+	}
+
+	if( layer==0 ) {
+		end = iter;
+		show_hint(self, view, buf, &iter, &end, 'f');
+	}
+}
+
 void controls_init(LanguageTips* self) {
+	ControlsPriv* priv;
 	GtkNotebook* doc_panel;
 	gint i;
 	gint page_count;
 
+	GtkActionGroup* main_action_group;
+	GtkUIManager* ui_mgr;
+	GError* err;
+
+	priv = g_new0(ControlsPriv, 1);
+	self->controls_priv = priv;
+
+	priv->show_function_action = gtk_action_new("cpp_guide_show_function_action", _("function tip"), _("show function args tip."), GTK_STOCK_FIND);
+	g_signal_connect(priv->show_function_action, "activate", show_function_action, self);
+
+	main_action_group = GTK_ACTION_GROUP(gtk_builder_get_object(self->app->get_ui_builder(), "main_action_group"));
+	gtk_action_group_add_action_with_accel(main_action_group, priv->show_function_action, "<Control><Shift>space");
+
+	ui_mgr = GTK_UI_MANAGER(gtk_builder_get_object(self->app->get_ui_builder(), "main_ui_manager"));
+
+	err = 0;
+	priv->merge_id = gtk_ui_manager_add_ui_from_string(ui_mgr, ui_info, -1, &err);
+
+	if( err ) {
+		g_printerr("ERROR(language tips) : %s", err->message);
+		g_error_free(err);
+	}
+
+	gtk_ui_manager_ensure_update(ui_mgr);
+
 	doc_panel = puss_get_doc_panel(self->app);
-	self->page_added_handler_id = g_signal_connect(doc_panel, "page-added",   G_CALLBACK(on_doc_page_added), self);
-	self->page_removed_handler_id = g_signal_connect(doc_panel, "page-removed", G_CALLBACK(on_doc_page_removed), self);
+	priv->page_added_handler_id = g_signal_connect(doc_panel, "page-added",   G_CALLBACK(on_doc_page_added), self);
+	priv->page_removed_handler_id = g_signal_connect(doc_panel, "page-removed", G_CALLBACK(on_doc_page_removed), self);
 
 	page_count = gtk_notebook_get_n_pages(doc_panel);
 	for( i=0; i<page_count; ++i )
@@ -913,18 +1044,30 @@ void controls_init(LanguageTips* self) {
 }
 
 void controls_final(LanguageTips* self) {
+	ControlsPriv* priv;
+	GtkUIManager* ui_mgr;
+	GtkActionGroup* group;
+
 	gint i;
 	gint page_count;
 	GtkNotebook* doc_panel;
 
+	priv = self->controls_priv;
 	g_source_remove(self->update_timer);
 
 	doc_panel = puss_get_doc_panel(self->app);
-	g_signal_handler_disconnect(doc_panel, self->page_added_handler_id);
-	g_signal_handler_disconnect(doc_panel, self->page_removed_handler_id);
+	g_signal_handler_disconnect(doc_panel, priv->page_added_handler_id);
+	g_signal_handler_disconnect(doc_panel, priv->page_removed_handler_id);
 
 	page_count = gtk_notebook_get_n_pages(doc_panel);
 	for( i=0; i<page_count; ++i )
 		signals_disconnect( self, self->app->doc_get_view_from_page_num(i) );
+
+	group = GTK_ACTION_GROUP( gtk_builder_get_object(self->app->get_ui_builder(), "main_action_group") );
+	ui_mgr = GTK_UI_MANAGER( gtk_builder_get_object(self->app->get_ui_builder(), "main_ui_manager") );
+
+	gtk_ui_manager_remove_ui(ui_mgr, priv->merge_id);
+	gtk_action_group_remove_action(group, priv->show_function_action);
+	g_object_unref(priv->show_function_action);
 }
 

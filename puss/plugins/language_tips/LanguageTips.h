@@ -15,6 +15,8 @@
 
 #define _(str) dgettext(TEXT_DOMAIN, str)
 
+typedef struct _ControlsPriv ControlsPriv;
+
 typedef struct {
 	Puss* app;
 
@@ -49,6 +51,9 @@ typedef struct {
 	CppFile*		preview_last_file;
 
 	// tips window
+	gint			tips_last_line;
+	gint			tips_last_offset;
+
 	GtkWidget*		tips_include_window;
 	GtkTreeView*	tips_include_view;
 	GtkTreeModel*	tips_include_model;
@@ -58,7 +63,6 @@ typedef struct {
 	GtkTreeView*	tips_list_view;
 	GtkTreeModel*	tips_list_model;
 	GSequence*		tips_list_seq;
-	gint			tips_list_last_line;
 
 	GtkWidget*		tips_decl_window;
 	GtkTextView*	tips_decl_view;
@@ -69,9 +73,8 @@ typedef struct {
 	GSequence*		jump_to_seq;
 	gint			jump_to_index;
 
-	// signal handlers
-	gulong			page_added_handler_id;
-	gulong			page_removed_handler_id;
+	// controls implement
+	ControlsPriv*	controls_priv;
 
 	// update timer
 	guint			update_timer;
