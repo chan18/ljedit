@@ -189,6 +189,7 @@ gboolean cps_fun(ParseEnv* env, Block* block) {
 	err_return_false_if( (ps = parse_ptr_ref(ps, pe, &prdt))==0 );
 
 	err_return_false_if_not( ps < pe );
+
 	if( ps->type=='(' ) {
 		// try parse function pointer
 		MLToken* fptrypos = ps;
@@ -248,6 +249,22 @@ gboolean cps_fun(ParseEnv* env, Block* block) {
 		}
 
 	} else {
+		// ignore defined like XXX_EXPORT
+		//		XXX_EXPORT void foo();
+		// 
+		if( (ps+1) && (ps+1)->type==TK_ID ) {
+			if( typekey ) {
+				tiny_str_free(typekey);
+				typekey = 0;
+			}
+			dt = KD_UNK;
+
+			err_return_false_if( (ps = parse_datatype(ps, pe, &typekey, &dt))==0 );
+			prdt = dt;
+			err_return_false_if( (ps = parse_ptr_ref(ps, pe, &prdt))==0 );
+			err_return_false_if_not( ps < pe );
+		}
+
 		// normal function
 		err_return_false_if( (ps = parse_id(ps, pe, &nskey, &name))==0 );
 	}

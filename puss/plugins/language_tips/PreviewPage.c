@@ -36,7 +36,8 @@ static gboolean preview_show(PreviewIdleArg* arg) {
 		preview_update(arg->self);
 
 	} else {
-		g_sequence_free(arg->seq);
+		if( arg->seq )
+			g_sequence_free(arg->seq);
 	}
 
 	g_free(arg);

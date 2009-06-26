@@ -510,7 +510,7 @@ static gint doc_open_file( const gchar* filename, FindLocation fun, gpointer tag
 	ModifyInfo mi;
 	GtkTextView* view;
 	GtkSourceBuffer* buf;
-	GtkTextBuffer* tbuf;
+	GtkTextBuffer* tbuf = 0;
 	gchar* url = puss_format_filename(filename);
 	gint page_num = puss_doc_find_page_from_url(url);
 	gboolean is_new_file = FALSE;
@@ -576,14 +576,16 @@ static gint doc_open_file( const gchar* filename, FindLocation fun, gpointer tag
 		}
 	}
 
-	need_move_cursor = (*fun)(tbuf, &line, &offset, tag);
+	if( tbuf ) {
+		need_move_cursor = (*fun)(tbuf, &line, &offset, tag);
 
-	if( is_new_file && line < 0 )
-		line = 0;
+		if( is_new_file && line < 0 )
+			line = 0;
 
-	if( line >= 0 ) {
-		doc_locate_page_line(page_num, line, offset, need_move_cursor);
-		puss_pos_locate_add(page_num, line, offset);
+		if( line >= 0 ) {
+			doc_locate_page_line(page_num, line, offset, need_move_cursor);
+			puss_pos_locate_add(page_num, line, offset);
+		}
 	}
 
 	return page_num;

@@ -51,9 +51,6 @@ typedef struct {
 	CppFile*		preview_last_file;
 
 	// tips window
-	gint			tips_last_line;
-	gint			tips_last_offset;
-
 	GtkWidget*		tips_include_window;
 	GtkTreeView*	tips_include_view;
 	GtkTreeModel*	tips_include_model;
@@ -131,6 +128,7 @@ void tips_select_prev(LanguageTips* self);
 
 gboolean tips_locate_sub(LanguageTips* self, gint x, gint y, const gchar* key);
 
+// utils
 gboolean open_and_locate_elem(LanguageTips* self, CppElem* elem);
 
 #endif//PUSS_PLUGIN_INC_LANGUAGE_TIPS_H

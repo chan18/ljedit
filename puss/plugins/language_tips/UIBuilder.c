@@ -43,6 +43,19 @@ static void tips_icon_free(GdkPixbuf* icon) {
 		g_object_unref(G_OBJECT(icon));
 }
 
+static GtkTextBuffer* set_cpp_lang_to_source_view(GtkTextView* source_view) {
+	GtkSourceLanguageManager* lm = gtk_source_language_manager_get_default();
+	GtkSourceLanguage* lang = gtk_source_language_manager_get_language(lm, "cpp");
+
+	GtkSourceBuffer* source_buffer = gtk_source_buffer_new_with_language(lang);
+	GtkTextBuffer* retval = GTK_TEXT_BUFFER(source_buffer);
+	gtk_text_view_set_buffer(source_view, retval);
+	gtk_source_buffer_set_max_undo_levels(source_buffer, 0);
+	g_object_unref(G_OBJECT(source_buffer));
+
+	return retval;
+}
+
 void ui_create(LanguageTips* self) {
 	gchar* filepath;
 	const gchar* plugins_path;
@@ -86,9 +99,9 @@ void ui_create(LanguageTips* self) {
 	self->preview_panel = GTK_WIDGET(gtk_builder_get_object(builder, "preview_panel"));
 	self->preview_filename_label = GTK_LABEL(gtk_builder_get_object(builder, "filename_label"));
 	self->preview_number_button = GTK_BUTTON(gtk_builder_get_object(builder, "number_button"));
-	self->preview_view           = GTK_TEXT_VIEW(gtk_builder_get_object(builder, "preview_view"));
+	self->preview_view = GTK_TEXT_VIEW(gtk_builder_get_object(builder, "preview_view"));
 	g_assert( self->preview_panel && self->preview_filename_label && self->preview_number_button && self->preview_view );
-
+	set_cpp_lang_to_source_view(self->preview_view);
 	gtk_widget_show_all(self->preview_panel);
 	self->app->panel_append(self->preview_panel, gtk_label_new(_("Preview")), "dev_preview", PUSS_PANEL_POS_BOTTOM);
 
@@ -106,6 +119,7 @@ void ui_create(LanguageTips* self) {
 
 	self->tips_decl_window = GTK_WIDGET(gtk_builder_get_object(builder, "decl_window"));
 	self->tips_decl_view = GTK_TEXT_VIEW(gtk_builder_get_object(builder, "decl_view"));
+	set_cpp_lang_to_source_view(self->tips_decl_view);
 	self->tips_decl_buffer = GTK_TEXT_BUFFER(gtk_text_view_get_buffer(self->tips_decl_view));
 	g_assert( self->tips_decl_window && self->tips_decl_view && self->tips_decl_buffer );
 	gtk_widget_show_all(GTK_WIDGET(gtk_builder_get_object(builder, "decl_panel")));

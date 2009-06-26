@@ -17,6 +17,11 @@ struct _ControlsPriv {
 	// view signal handlers
 	gulong		page_added_handler_id;
 	gulong		page_removed_handler_id;
+
+	// tips priv
+	gint			tips_last_line;
+	gint			tips_last_offset;
+
 };
 
 static void calc_tip_pos(GtkTextView* view, gint* px, gint* py) {
@@ -464,6 +469,7 @@ gboolean on_show_hint_timeout(GtkTextView* view, LanguageTips* self) {
 
 	buf = gtk_text_view_get_buffer(view);
 	gtk_text_buffer_get_iter_at_mark(buf, &iter, gtk_text_buffer_get_insert(buf));
+	gtk_text_iter_backward_char(&iter);
 	end = iter;
 	show_hint(self, view, buf, &iter, &end, 's');
 
@@ -629,10 +635,10 @@ static void show_hint(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf,
 
 				if( tag=='s' ) {
 					tips_list_tip_show(self, x, y, seq);
-					self->tips_last_line = line;
+					self->controls_priv->tips_last_line = line;
 				} else {
 					tips_decl_tip_show(self, x, y, seq);
-					self->tips_last_offset = offset;
+					self->controls_priv->tips_last_offset = offset;
 				}
 			}
 
@@ -810,7 +816,7 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 				sign = TRUE;
 
 			if( !sign )
-				if( self->tips_last_offset != (gtk_text_iter_get_line_offset(&iter)+1) )
+				if( self->controls_priv->tips_last_offset != (gtk_text_iter_get_line_offset(&iter)+1) )
 					sign = TRUE;
 
 			if( sign )
@@ -828,7 +834,7 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 				case GDK_Left:
 				case GDK_Right:
 				case GDK_BackSpace:
-					if( gtk_text_iter_get_line(&iter)==self->tips_last_line )
+					if( gtk_text_iter_get_line(&iter)==self->controls_priv->tips_last_line )
 						sign = TRUE;
 					break;
 				}

@@ -496,6 +496,7 @@ GList* spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_st
 	GString* buf = g_string_sized_new(512);
 
 	if( find_startswith ) {
+		ch = iter_next(env, ps);
 		ch = iter_prev(env, ps);
 
 		switch( ch ) {
@@ -506,14 +507,12 @@ GList* spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_st
 			if( iter_prev_char(env, ps)=='.' )
 				goto find_error;
 			spath = g_list_prepend(spath, skey_new('S', "", 0));
-			ch = iter_prev(env, ps);
 			break;
 
 		case '>':
 			if( iter_prev(env, ps)!='-' )
 				goto find_error;
 			spath = g_list_prepend(spath, skey_new('S', "", 0));
-			ch = iter_prev(env, ps);
 			break;
 
 		case '(':
@@ -524,7 +523,6 @@ GList* spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_st
 			if( iter_prev(env, ps)!=':' )
 				goto find_error;
 			spath = g_list_prepend(spath, skey_new('S', "", 0));
-			ch = iter_prev(env, ps);
 			break;
 
 		default:
@@ -538,6 +536,7 @@ GList* spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_st
 
 			spath = g_list_prepend(spath, skey_new('S', g_strreverse(buf->str), buf->len));
 			g_string_assign(buf, "");
+			iter_next(env, ps);
 		}
 	}
 
@@ -545,20 +544,19 @@ GList* spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_st
 	while( loop_sign && ((ch=iter_prev(env, ps)) != '\0') ) {
 		switch( ch ) {
 		case '.':
-			if( buf->len==0 )
-				return FALSE;
-			spath = g_list_prepend(spath, skey_new('S', g_strreverse(buf->str), buf->len));
-			g_string_append_c(buf, ch);
+			if( buf->len ) {
+				spath = g_list_prepend(spath, skey_new('S', g_strreverse(buf->str), buf->len));
+				g_string_assign(buf, "");
+			}
 			break;
 
 		case ':':
-			if( buf->len==0 )
-				return FALSE;
-
 			if( iter_prev_char(env, ps)==':' ) {
 				iter_prev(env, ps);
-				spath = g_list_prepend(spath, skey_new('?', g_strreverse(buf->str), buf->len));
-				g_string_append_c(buf, ch);
+				if( buf->len ) {
+					spath = g_list_prepend(spath, skey_new('?', g_strreverse(buf->str), buf->len));
+					g_string_assign(buf, "");
+				}
 			} else {
 				loop_sign = FALSE;
 			}
