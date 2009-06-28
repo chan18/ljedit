@@ -10,9 +10,9 @@ TinyStr* block_meger_tokens(MLToken* ps, MLToken* pe, TinyStr* init) {
 	gchar* p = buf;
 	gchar* end = buf + MAX_RESULT_LENGTH;
 
-	gboolean need_space;
-	gchar first;
-	gchar last;
+	gboolean need_space = FALSE;
+	gchar first = '\0';
+	gchar last  = init ? init->buf[tiny_str_len(init)-1] : '\0';
 
 	if( init ) {
 		if( tiny_str_len(init) >= MAX_RESULT_LENGTH )

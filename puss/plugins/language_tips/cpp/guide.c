@@ -52,7 +52,7 @@ void cpp_guide_include_paths_set(CppGuide* guide, const gchar* paths) {
 		for( p=items; *p; ++p ) {
 			if( *p[0]=='\0' )
 				continue;
-			include_paths = g_list_append(include_paths, *p);
+			include_paths = g_list_append(include_paths, g_strdup(*p));
 		}
 		g_strfreev(items);
 	}

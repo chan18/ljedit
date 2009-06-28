@@ -180,7 +180,8 @@ gboolean cpp_parser_load_file(const gchar* filename, gchar** text, gsize* len) {
 
 CppFile* cpp_parser_parse_use_menv(ParseEnv* env, const gchar* filekey) {
 	CppFile* file = 0;
-	CppFile* last;
+	CppFile* last_file;
+	CppLexer* last_lexer;
 	struct stat filestat;
 	gchar* buf;
 	gsize  len;
@@ -240,25 +241,32 @@ CppFile* cpp_parser_parse_use_menv(ParseEnv* env, const gchar* filekey) {
 
 	g_static_rw_lock_writer_unlock( &(env->parser->files_lock) );
 
-	if( file && file->status!=(gint)env ) {
+	if( !file )
+		return file;
+
+	if( file->status!=(gint)env ) {
 		while( file->status!=0 )
 			g_usleep(500);
-		return file;
+
+	} else {
+		if( cpp_parser_load_file(filekey, &buf, &len) ) {
+			last_file = env->file;
+			last_lexer = env->lexer;
+
+			env->file = file;
+			env->lexer = 0;
+
+			// start parse
+			cpp_parser_do_parse(env, buf, len);
+
+			env->file = last_file;
+			env->lexer = last_lexer;
+		}
+
+		file->status = 0;
+		if( env->parser->cb_file_insert )
+			(*(env->parser->cb_file_insert))(file, env->parser->cb_tag);
 	}
-
-	if( cpp_parser_load_file(filekey, &buf, &len) ) {
-		last = env->file;
-		env->file = file;
-
-		// start parse
-		cpp_parser_do_parse(env, buf, len);
-
-		env->file = last;
-	}
-
-	file->status = 0;
-	if( env->parser->cb_file_insert )
-		(*(env->parser->cb_file_insert))(file, env->parser->cb_tag);
 
 	return file;
 }
@@ -287,6 +295,10 @@ CppFile* parse_include_file(ParseEnv* env, MLStr* filename, gboolean is_system_h
 	gchar* filekey;
 	gchar* path;
 	gchar* str;
+	gchar ch;
+
+	ch = filename->buf[filename->len];
+	filename->buf[filename->len] = '\0';
 
 	//if( stopsign_is_set() )
 	//	return;
@@ -296,7 +308,7 @@ CppFile* parse_include_file(ParseEnv* env, MLStr* filename, gboolean is_system_h
 			filekey = cpp_filename_to_filekey(filename->buf, filename->len);
 
 		} else {
-			path = g_path_get_dirname(filename->buf);
+			path = g_path_get_dirname(env->file->filename->buf);
 			str = g_build_filename(path, filename->buf, 0);
 			filekey = cpp_filename_to_filekey(str, -1);
 			g_free(str);
@@ -308,6 +320,8 @@ CppFile* parse_include_file(ParseEnv* env, MLStr* filename, gboolean is_system_h
 
 	if( !incfile && env->include_paths )
 		incfile = cpp_parser_do_parse_in_include_path(env, filename->buf);
+
+	filename->buf[filename->len] = ch;
 
 	return incfile;
 }

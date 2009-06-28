@@ -149,7 +149,7 @@ static void on_macro_include(ParseEnv* env, MLStr* filename, gboolean is_system_
 	elem->v_include.filename = tiny_str_new(filename->buf, filename->len);
 	elem->v_include.sys_header = is_system_header;
 
-	str = g_strdup_printf("#include %c%s%c", is_system_header?'<':'\"', filename->buf, is_system_header?'<':'\"');
+	str = g_strdup_printf("#include %c%s%c", is_system_header?'<':'\"', elem->v_include.filename->buf, is_system_header?'<':'\"');
 	elem->decl = tiny_str_new(str, (gsize)strlen(str));
 	g_free(str);
 
@@ -272,10 +272,17 @@ static void cpp_parse_macro(ParseEnv* env, CppLexer* lexer) {
 		gchar ss, es;
 		MLStr filename;
 
-		CPP_LEXER_NEXT_NOCOMMENT(lexer, &token);
-		if( token.type!='<' && token.type!='"' )
+		while( FRAME_HAS_NEXT() ) {
+			ch = FRAME_GET_CH();
+			FRAME_NEXT_CH();
+			if( ch=='<' || ch=='"' )
+				break;
+		}
+
+		if( ch!='<' && ch!='"' )
 			return;
-		ss = token.buf[0];
+
+		ss = ch;
 		es = (ss=='<') ? '>' : '"';
 
 		filename.buf = frame->ps;
@@ -284,7 +291,7 @@ static void cpp_parse_macro(ParseEnv* env, CppLexer* lexer) {
 			if( ch==es ) {
 				filename.len = (gsize)(frame->ps - filename.buf);
 				if( filename.len )
-					on_macro_include(env, &filename, ch=='<', token.line);
+					on_macro_include(env, &filename, ss=='<', token.line);
 				break;
 			}
 			FRAME_NEXT_CH();

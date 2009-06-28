@@ -154,6 +154,8 @@ static gboolean parse_function_common(Block* block, MLToken* start, TinyStr* typ
 		++ps;
 
 	elem->decl = block_meger_tokens(block->tokens, ps, 0);
+	if( elem->decl->len_lo < 0 )
+		return TRUE;
 
 	cpp_scope_insert(block->parent, elem);
 
@@ -164,6 +166,7 @@ static gboolean parse_function_common(Block* block, MLToken* start, TinyStr* typ
 		if( ps < pe )
 			;//parse_impl_scope(lexer, p->impl);
 	}
+
 	return TRUE;
 
 __cps_finish__:

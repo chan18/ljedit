@@ -75,6 +75,8 @@ static gboolean cps_normal_typedef(ParseEnv* env, Block* block) {
 					if( elem && elem->type==CPP_ET_FUN) {
 						TinyStr* str = elem->decl;
 						gsize str_len = tiny_str_len(str);
+						if( elem->decl->len_lo < 0 )
+							str = elem->decl;
 						elem->decl = tiny_str_new("typedef ", 8 + str_len);
 						memcpy(elem->decl->buf + 8, str->buf, str_len);
 						tiny_str_free(str);

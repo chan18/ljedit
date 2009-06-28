@@ -111,8 +111,10 @@ static void fill_list_store(LanguageTips* self, GSequence* seq) {
 
 static void clear_list_store(LanguageTips* self) {
 	gtk_list_store_clear(GTK_LIST_STORE(self->tips_list_model));
-	g_sequence_free(self->tips_list_seq);
-	self->tips_list_seq = 0;
+	if( self->tips_list_seq ) {
+		g_sequence_free(self->tips_list_seq);
+		self->tips_list_seq = 0;
+	}
 }
 
 void tips_list_tip_show(LanguageTips* self, gint x, gint y, GSequence* seq) {

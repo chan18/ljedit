@@ -4,7 +4,7 @@
 #include "lexer.h"
 
 #include <memory.h>
-
+#include <assert.h>
 
 struct _MLStrNode {
 	MLStr		str;
@@ -134,10 +134,7 @@ label_cpp_lexer_start:
 	// skip ws
 	while( FRAME_HAS_NEXT() ) {
 		ch = FRAME_GET_CH();
-		if( ch==' ' || ch=='\t' ) {
-			FRAME_NEXT_CH();
-
-		} else if( ch=='\r' ) {
+		if( ch=='\r' ) {
 			FRAME_NEXT_CH();
 			INC_LINE();
 			frame->is_new_line = TRUE;
@@ -152,6 +149,9 @@ label_cpp_lexer_start:
 			FRAME_NEXT_CH();
 			INC_LINE();
 			frame->is_new_line = TRUE;
+
+		} else if( g_ascii_isspace(ch) ) {
+			FRAME_NEXT_CH();
 
 		} else {
 			break;
@@ -267,7 +267,7 @@ void cpp_lexer_next(CppLexer* lexer, MLToken* token) {
 
 	frame = &(lexer->stack[lexer->top]);
 	ch = FRAME_GET_CH();
-	g_assert( !g_ascii_isspace(ch) );
+	assert( !g_ascii_isspace(ch) );
 
 	token->line = line;
 	token->buf = frame->ps;
