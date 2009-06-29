@@ -60,6 +60,9 @@ TinyStr* block_meger_tokens(MLToken* ps, MLToken* pe, TinyStr* init) {
 		last = *(p-1);
 	}
 
+	if( (p - buf) > 0xffff || (p-buf) < 0 )
+		p = p;
+
 	return tiny_str_new(buf, (p - buf));
 }
 

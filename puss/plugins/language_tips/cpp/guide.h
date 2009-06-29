@@ -40,8 +40,8 @@ typedef struct _CppElem    CppElem;
 typedef struct _CppFile    CppFile;
 
 typedef struct {
-	gchar	len_hi;
-	gchar	len_lo;
+	guchar	len_hi;
+	guchar	len_lo;
 	gchar	buf[1];
 } TinyStr;
 

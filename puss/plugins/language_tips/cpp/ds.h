@@ -7,7 +7,7 @@
 
 TinyStr* tiny_str_new(const gchar* buf, gsize len);
 void     tiny_str_free(TinyStr* str);
-#define  tiny_str_len(str) ((((gint)(str)->len_hi)<<8) + ((str)->len_lo))
+#define  tiny_str_len(str) ((((guint)(str)->len_hi)<<8) + (guint)((str)->len_lo))
 #define  tiny_str_copy(str) tiny_str_new((str)->buf, tiny_str_len(str))
 gboolean tiny_str_equal(const TinyStr* a, const TinyStr* b);
 guint    tiny_str_hash(const TinyStr* v);

@@ -115,7 +115,13 @@ void cpp_elem_clear(CppElem* elem) {
 }
 
 static gint cpp_elem_pos_compare(const CppElem* a, const CppElem* b) {
-	return a->sline - b->sline;
+	if( a==b )
+		return 0;
+
+	if( a && b )
+		return a->sline - b->sline;
+
+	return a ? 1 : -1;
 }
 
 void cpp_scope_insert(CppElem* parent, CppElem* elem) {

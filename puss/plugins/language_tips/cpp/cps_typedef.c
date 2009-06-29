@@ -17,9 +17,9 @@ static gboolean cps_normal_typedef(ParseEnv* env, Block* block) {
 	err_goto_finish_if_not( (ps < pe) && ps->type==KW_TYPEDEF );
 	++ps;
 
-	err_goto_finish_if( (ps = parse_datatype(ps, pe, &typekey, &dt))==0 );
-	dtptr = dt;
-	err_goto_finish_if( (ps = parse_ptr_ref(ps, pe, &dtptr))==0 );
+	//err_goto_finish_if( (ps = parse_datatype(ps, pe, &typekey, &dt))==0 );
+	//dtptr = dt;
+	//err_goto_finish_if( (ps = parse_ptr_ref(ps, pe, &dtptr))==0 );
 
 	err_goto_finish_if_not( ps < pe );
 	switch( ps->type ) {
@@ -73,13 +73,23 @@ static gboolean cps_normal_typedef(ParseEnv* env, Block* block) {
 					elem = tpscope.v_ncscope.scope->data;
 					tpscope.v_ncscope.scope->data = 0;
 					if( elem && elem->type==CPP_ET_FUN) {
-						TinyStr* str = elem->decl;
-						gsize str_len = tiny_str_len(str);
-						if( elem->decl->len_lo < 0 )
-							str = elem->decl;
-						elem->decl = tiny_str_new("typedef ", 8 + str_len);
-						memcpy(elem->decl->buf + 8, str->buf, str_len);
-						tiny_str_free(str);
+						// TODO : use elem directly
+						CppElem* tpelem = cpp_elem_new();
+						tpelem->type = CPP_ET_TYPEDEF;
+						tpelem->file = block->parent->file;
+						tpelem->sline = elem->sline;
+						tpelem->eline = elem->eline;
+
+						tpelem->name = elem->name;
+						elem->name = 0;
+
+						tpelem->decl = tiny_str_new("typedef ", 8 + tiny_str_len(elem->decl));
+						memcpy(tpelem->decl->buf + 8, elem->decl->buf, tiny_str_len(elem->decl));
+
+						tpelem->v_typedef.typekey = elem->v_fun.typekey;
+						elem->v_fun.typekey = 0;
+
+						cpp_scope_insert(block->parent, tpelem);
 					}
 				}
 			}
