@@ -17,11 +17,6 @@ static gboolean cps_normal_typedef(ParseEnv* env, Block* block) {
 	err_goto_finish_if_not( (ps < pe) && ps->type==KW_TYPEDEF );
 	++ps;
 
-	//err_goto_finish_if( (ps = parse_datatype(ps, pe, &typekey, &dt))==0 );
-	//dtptr = dt;
-	//err_goto_finish_if( (ps = parse_ptr_ref(ps, pe, &dtptr))==0 );
-
-	err_goto_finish_if_not( ps < pe );
 	switch( ps->type ) {
 	case KW_STRUCT:
 	case KW_CLASS:
@@ -29,7 +24,15 @@ static gboolean cps_normal_typedef(ParseEnv* env, Block* block) {
 		// typedef struct A B;
 		++ps;
 		err_goto_finish_if_not( (ps < pe) && ps->type==TK_ID );
+		break;
+	}
 
+	err_goto_finish_if( (ps = parse_datatype(ps, pe, &typekey, &dt))==0 );
+	dtptr = dt;
+	err_goto_finish_if( (ps = parse_ptr_ref(ps, pe, &dtptr))==0 );
+
+	err_goto_finish_if_not( ps < pe );
+	switch( ps->type ) {
 	case TK_ID:
 		{
 			// typedef A B;
@@ -42,7 +45,7 @@ static gboolean cps_normal_typedef(ParseEnv* env, Block* block) {
 			elem = cpp_elem_new();
 			elem->type = CPP_ET_TYPEDEF;
 			elem->file = block->parent->file;
-			elem->name = tiny_str_new(ps->buf, ps->len);
+			elem->name = tiny_str_new(name->buf, name->len);
 			elem->sline = name->line;
 			elem->eline = name->line;
 			elem->v_typedef.typekey = typekey;
@@ -89,7 +92,7 @@ static gboolean cps_normal_typedef(ParseEnv* env, Block* block) {
 						tpelem->v_typedef.typekey = elem->v_fun.typekey;
 						elem->v_fun.typekey = 0;
 
-						cpp_scope_insert(block->parent, tpelem);
+						cpp_scope_insert(tpparent, tpelem);
 					}
 				}
 			}
@@ -121,7 +124,7 @@ static gboolean cps_complex_typedef(ParseEnv* env, Block* block) {
 	tpscope.type = CPP_ET_NCSCOPE;
 
 	ps = parse_scope(env, ps, (pe - ps), &tpscope, TRUE);
-	err_goto_finish_if( ps==0 );
+	//err_goto_finish_if( ps==0 );
 	node = tpscope.v_ncscope.scope;
 	err_goto_finish_if( node==0 );
 

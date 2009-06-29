@@ -651,6 +651,11 @@ static void show_hint(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf,
 static gboolean view_on_key_press(GtkTextView* view, GdkEventKey* event, LanguageTips* self) {
     if( event->state & GDK_MOD1_MASK ) {
 		tips_hide_all(self);
+		if( event->keyval==GDK_g ) {
+			jump_to_current(self, view);
+			return TRUE;
+		}
+
         return FALSE;
     }
 
@@ -693,6 +698,7 @@ static gboolean view_on_key_press(GtkTextView* view, GdkEventKey* event, Languag
 	case GDK_Escape:
 		tips_hide_all(self);
 		return TRUE;
+		break;
 	}
 
 	return FALSE;

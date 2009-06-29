@@ -133,8 +133,8 @@ static gboolean parse_function_common(Block* block, MLToken* start, TinyStr* typ
 	CppElem* elem = cpp_elem_new();
 	elem->type = CPP_ET_FUN;
 	elem->file = block->parent->file;
-	elem->sline = start->line;
-	elem->eline = start->line;
+	elem->sline = name->line;
+	elem->eline = name->line;
 	elem->v_fun.typekey = typekey;
 	typekey = 0;
 
@@ -154,8 +154,6 @@ static gboolean parse_function_common(Block* block, MLToken* start, TinyStr* typ
 		++ps;
 
 	elem->decl = block_meger_tokens(block->tokens, ps, 0);
-	if( elem->decl->len_lo < 0 )
-		return TRUE;
 
 	cpp_scope_insert(block->parent, elem);
 

@@ -600,7 +600,10 @@ GList* spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_st
 					g_string_append_c(buf, ch);
 					ch = iter_prev(env, ps);
 				} while( ch=='_' || g_ascii_isalnum(ch) );
-				iter_next(env, ps);
+
+				if( ch )
+					iter_next(env, ps);
+
 			} else {
 				loop_sign = FALSE;
 			}
