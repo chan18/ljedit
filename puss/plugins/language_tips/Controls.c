@@ -13,6 +13,7 @@ struct _ControlsPriv {
 	// ui
 	guint		merge_id;
 	GtkAction*	show_function_action;
+	GtkAction*	jump_to_define_action;
 
 	// view signal handlers
 	gulong		page_added_handler_id;
@@ -651,11 +652,6 @@ static void show_hint(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf,
 static gboolean view_on_key_press(GtkTextView* view, GdkEventKey* event, LanguageTips* self) {
     if( event->state & GDK_MOD1_MASK ) {
 		tips_hide_all(self);
-		if( event->keyval==GDK_g ) {
-			jump_to_current(self, view);
-			return TRUE;
-		}
-
         return FALSE;
     }
 
@@ -958,13 +954,14 @@ static const gchar* ui_info =
 	"     <menu action='edit_menu'>"
 	"      <placeholder name='edit_menu_plugins_place'>"
 	"        <menuitem action='cpp_guide_show_function_action'/>"
+	"        <menuitem action='cpp_guide_jump_to_define_action'/>"
 	"      </placeholder>"
 	"    </menu>"
 	"  </menubar>"
 	"</ui>"
 	;
 
-static void show_function_action(GtkAction* action, LanguageTips* self) {
+static void on_show_function_action(GtkAction* action, LanguageTips* self) {
 	gboolean res = FALSE;
 	gint page_num;
 	GtkTextView* view;
@@ -1013,6 +1010,47 @@ static void show_function_action(GtkAction* action, LanguageTips* self) {
 	}
 }
 
+static void on_jump_to_define_action(GtkAction* action, LanguageTips* self) {
+	gboolean res = FALSE;
+	gint page_num;
+	GtkTextView* view;
+	GtkWidget* actived;
+
+	page_num = gtk_notebook_get_current_page(puss_get_doc_panel(self->app));
+	if( page_num < 0 )
+		return;
+
+	view = self->app->doc_get_view_from_page_num(page_num);
+	actived = gtk_window_get_focus(puss_get_main_window(self->app));
+	if( GTK_WIDGET(view)!=actived )
+		gtk_widget_grab_focus(GTK_WIDGET(view));
+
+	jump_to_current(self, view);
+}
+
+SIGNAL_CALLBACK gboolean tips_cb_query_tooltip( GtkTreeView* tree_view
+	, gint x
+	, gint y
+	, gboolean keyboard_mode
+	, GtkTooltip* tooltip
+	, LanguageTips* self )
+{
+	CppElem* elem;
+	GtkTreeModel* model;
+	GtkTreePath* path;
+	GtkTreeIter iter;
+	if( gtk_tree_view_get_tooltip_context(tree_view, &x, &y, keyboard_mode, &model, &path, &iter) ) {
+		elem = 0;
+		gtk_tree_model_get(model, &iter, 2, &elem, -1);
+		if( elem ) {
+			gtk_tooltip_set_text(tooltip, elem->decl->buf);
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
 void controls_init(LanguageTips* self) {
 	ControlsPriv* priv;
 	GtkNotebook* doc_panel;
@@ -1027,10 +1065,13 @@ void controls_init(LanguageTips* self) {
 	self->controls_priv = priv;
 
 	priv->show_function_action = gtk_action_new("cpp_guide_show_function_action", _("function tip"), _("show function args tip."), GTK_STOCK_FIND);
-	g_signal_connect(priv->show_function_action, "activate", show_function_action, self);
+	priv->jump_to_define_action = gtk_action_new("cpp_guide_jump_to_define_action", _("jump to define"), _("jump to define."), GTK_STOCK_JUMP_TO);
+	g_signal_connect(priv->show_function_action, "activate", on_show_function_action, self);
+	g_signal_connect(priv->jump_to_define_action, "activate", on_jump_to_define_action, self);
 
 	main_action_group = GTK_ACTION_GROUP(gtk_builder_get_object(self->app->get_ui_builder(), "main_action_group"));
 	gtk_action_group_add_action_with_accel(main_action_group, priv->show_function_action, "<Control><Shift>space");
+	gtk_action_group_add_action_with_accel(main_action_group, priv->jump_to_define_action, "<Alt>g");
 
 	ui_mgr = GTK_UI_MANAGER(gtk_builder_get_object(self->app->get_ui_builder(), "main_ui_manager"));
 
