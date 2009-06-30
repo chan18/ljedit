@@ -701,58 +701,66 @@ static gboolean view_on_key_press(GtkTextView* view, GdkEventKey* event, Languag
 }
 
 static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, LanguageTips* self) {
-	GtkTextIter iter;
-	GtkTextIter end;
-	GtkTextBuffer* buf;
-
     if( event->state & GDK_MOD1_MASK ) {
         tips_hide_all(self);
         return FALSE;
     }
 
     switch( event->keyval ) {
-    case GDK_Tab:
-    case GDK_Return:
-    case GDK_Up:
-    case GDK_Down:
-    case GDK_Escape:
-	case GDK_Shift_L:
-	case GDK_Shift_R:
-	case GDK_Control_L:
-	case GDK_Control_R:
-        return FALSE;
 	case GDK_F12:
 		jump_to_current(self, view);
 		return FALSE;
+
+	case GDK_Alt_L:
+	case GDK_Alt_R:
+		show_current_in_preview(self, view);
+        return FALSE;
     }
 
-	//printf("%d - %s\n", event->keyval, event->string);
+	return TRUE;
+}
 
+static void view_on_im_commit(GtkIMContext *cxt, gchar* str, LanguageTips* self) {
+	gint page_num;
+	GtkTextView* view;
+	GtkTextBuffer* buf;
+	GtkTextIter iter;
+	GtkTextIter end;
+	gunichar last_input;
+
+	page_num = gtk_notebook_get_current_page(puss_get_doc_panel(self->app));
+	if( page_num < 0 )
+		return;
+
+	view = self->app->doc_get_view_from_page_num(page_num);
 	buf = gtk_text_view_get_buffer(view);
 	gtk_text_buffer_get_iter_at_mark(buf, &iter, gtk_text_buffer_get_insert(buf));
+	gtk_text_iter_backward_char(&iter);
+	last_input = gtk_text_iter_get_char(&iter);
+
+	// g_print("cur : %d %s\n", gtk_text_iter_get_char(&iter), str);
 
 	if( is_in_comment(&iter) )
-		return FALSE;
+		return;
 
 	// include test
 	//
 	if( tips_include_is_visible(self) ) {
-		if( show_include_files_tips(self, view, buf, &iter, event->keyval) )
-			return FALSE;
+		if( show_include_files_tips(self, view, buf, &iter, last_input) )
+			return;
 
 	} else {
-		switch( event->keyval ) {
+		switch( last_input ) {
 		case '\"':
 		case '<':
-			if( show_include_files_tips(self, view, buf, &iter, event->keyval) )
-				return FALSE;
+			if( show_include_files_tips(self, view, buf, &iter, last_input) )
+				return;
 			break;
 		}
 	}
 
-	gtk_text_iter_backward_char(&iter);
 	end = iter;
-	switch( event->keyval ) {
+	switch( last_input ) {
 	case '.':
 		show_hint(self, view, buf, &iter, &end, 's');
 		break;
@@ -827,11 +835,11 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 		} else {
 			gboolean sign = FALSE;
 
-			if( event->keyval=='_' || (event->keyval <= 0x7f) && g_ascii_isalnum(event->keyval) )
+			if( last_input=='_' || g_unichar_isalnum(last_input) )
 				sign = TRUE;
 
 			if( !sign && tips_list_is_visible(self) ) {
-				switch( event->keyval ) {
+				switch( last_input ) {
 				case GDK_Delete:
 				case GDK_Left:
 				case GDK_Right:
@@ -856,8 +864,6 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 		}
 		break;
 	}
-
-	return TRUE;
 }
 
 static gboolean view_on_button_release(GtkTextView* view, GdkEventButton* event, LanguageTips* self) {
@@ -907,6 +913,8 @@ static void signals_connect(LanguageTips* self, GtkTextView* view) {
 
 	g_signal_connect(view, "key-press-event", G_CALLBACK(view_on_key_press), self);
 	g_signal_connect(view, "key-release-event", G_CALLBACK(view_on_key_release), self);
+
+	g_signal_connect(view->im_context, "commit", G_CALLBACK(view_on_im_commit), self);
 
 	g_signal_connect(view, "button-release-event", G_CALLBACK(view_on_button_release), self);
 	g_signal_connect(view, "focus-out-event", G_CALLBACK(view_on_focus_out), self);
@@ -1066,8 +1074,8 @@ void controls_init(LanguageTips* self) {
 
 	priv->show_function_action = gtk_action_new("cpp_guide_show_function_action", _("function tip"), _("show function args tip."), GTK_STOCK_FIND);
 	priv->jump_to_define_action = gtk_action_new("cpp_guide_jump_to_define_action", _("jump to define"), _("jump to define."), GTK_STOCK_JUMP_TO);
-	g_signal_connect(priv->show_function_action, "activate", on_show_function_action, self);
-	g_signal_connect(priv->jump_to_define_action, "activate", on_jump_to_define_action, self);
+	g_signal_connect(priv->show_function_action, "activate", G_CALLBACK(on_show_function_action), self);
+	g_signal_connect(priv->jump_to_define_action, "activate", G_CALLBACK(on_jump_to_define_action), self);
 
 	main_action_group = GTK_ACTION_GROUP(gtk_builder_get_object(self->app->get_ui_builder(), "main_action_group"));
 	gtk_action_group_add_action_with_accel(main_action_group, priv->show_function_action, "<Control><Shift>space");

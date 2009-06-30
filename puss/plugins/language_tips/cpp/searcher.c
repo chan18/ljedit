@@ -489,11 +489,24 @@ void iter_skip_pair(SearchIterEnv* env, gpointer it, gchar sch, gchar ech) {
 	}
 }
 
+// types:
+//    n : namespace
+//    ? : namespace or type(class or enum or typedef)
+//    t : type
+//    f : function return type
+//    v : var datatype
+//    R : root node
+//    L : this
+//    S : search startswith
+//    
 GList* spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_startswith) {
 	gchar ch;
+	gchar type;
 	gboolean loop_sign;
 	GList* spath = 0;
 	GString* buf = g_string_sized_new(512);
+
+	type = '*';
 
 	if( find_startswith ) {
 		ch = iter_next(env, ps);
@@ -507,12 +520,14 @@ GList* spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_st
 			if( iter_prev_char(env, ps)=='.' )
 				goto find_error;
 			spath = g_list_prepend(spath, skey_new('S', "", 0));
+			type = 'v';
 			break;
 
 		case '>':
 			if( iter_prev(env, ps)!='-' )
 				goto find_error;
 			spath = g_list_prepend(spath, skey_new('S', "", 0));
+			type = 'v';
 			break;
 
 		case '(':
@@ -523,6 +538,7 @@ GList* spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_st
 			if( iter_prev(env, ps)!=':' )
 				goto find_error;
 			spath = g_list_prepend(spath, skey_new('S', "", 0));
+			type = '?';
 			break;
 
 		default:
@@ -545,8 +561,9 @@ GList* spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_st
 		switch( ch ) {
 		case '.':
 			if( buf->len ) {
-				spath = g_list_prepend(spath, skey_new('S', g_strreverse(buf->str), buf->len));
+				spath = g_list_prepend(spath, skey_new(type, g_strreverse(buf->str), buf->len));
 				g_string_assign(buf, "");
+				type = 'v';
 			}
 			break;
 
@@ -554,8 +571,9 @@ GList* spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_st
 			if( iter_prev_char(env, ps)==':' ) {
 				iter_prev(env, ps);
 				if( buf->len ) {
-					spath = g_list_prepend(spath, skey_new('?', g_strreverse(buf->str), buf->len));
+					spath = g_list_prepend(spath, skey_new(type, g_strreverse(buf->str), buf->len));
 					g_string_assign(buf, "");
+					type = '?';
 				}
 			} else {
 				loop_sign = FALSE;
@@ -564,14 +582,16 @@ GList* spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_st
 
 		case ']':
 			iter_skip_pair(env, ps, '[', ']');
-			spath = g_list_prepend(spath, skey_new('v', g_strreverse(buf->str), buf->len));
+			spath = g_list_prepend(spath, skey_new(type, g_strreverse(buf->str), buf->len));
 			g_string_append_c(buf, ch);
+			type = 'v';
 			break;
 			
 		case ')':
 			iter_skip_pair(env, ps, '(', ')');
-			spath = g_list_prepend(spath, skey_new('f', g_strreverse(buf->str), buf->len));
-			g_string_append_c(buf, ch);
+			spath = g_list_prepend(spath, skey_new(type, g_strreverse(buf->str), buf->len));
+			g_string_assign(buf, "");
+			type = 'f';
 			break;
 			
 		case '>':
@@ -585,8 +605,9 @@ GList* spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_st
 			} else {
 				if( iter_prev_char(env, ps)=='-' ) {
 					iter_prev(env, ps);
-					spath = g_list_prepend(spath, skey_new('v', g_strreverse(buf->str), buf->len));
-					g_string_append_c(buf, ch);
+					spath = g_list_prepend(spath, skey_new(type, g_strreverse(buf->str), buf->len));
+					g_string_assign(buf, "");
+					type = 'v';
 					
 				} else {
 					loop_sign = FALSE;
@@ -611,7 +632,7 @@ GList* spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_st
 	}
 
 	if( buf->len > 0 ) {
-		spath = g_list_prepend(spath, skey_new('?', g_strreverse(buf->str), buf->len));
+		spath = g_list_prepend(spath, skey_new(type, g_strreverse(buf->str), buf->len));
 	}
 
 	goto find_finish;
@@ -713,16 +734,6 @@ static GList* do_parse_nskey_to_spath(const TinyStr* nskey, gchar mtype, gchar e
 #define parse_typekey_to_spath(s)	do_parse_nskey_to_spath((s), '?', 't')
 #define parse_nskey_to_spath(s)		do_parse_nskey_to_spath((s), 'n', 'n')
 
-// types:
-//    n : namespace
-//    ? : namespace or type(class or enum or typedef)
-//    t : type
-//    f : function return type
-//    v : var datatype
-//    R : root node
-//    L : this
-//    S : search startswith
-//    
 gboolean follow_type_check(gchar* last, gchar cur) {
 	switch(*last) {
 	case 't':
@@ -796,10 +807,17 @@ static void loop_insert(Searcher* searcher, GList* spath, GList* pos, GList* rep
 	GList* p;
 	GList* new_spath;
 
-	for( p=spath; p!=ps; p=p->next ) {
-		new_spath = spath_replace_new(p, ps, pe, rep);
+	if( spath==ps ) {
+		new_spath = spath_replace_new(ps, ps, pe, rep);
 		if( new_spath )
 			searcher_add_spath(searcher, new_spath);
+
+	} else {
+		for( p=spath; p!=ps; p=p->next ) {
+			new_spath = spath_replace_new(p, ps, pe, rep);
+			if( new_spath )
+				searcher_add_spath(searcher, new_spath);
+		}
 	}
 }
 
