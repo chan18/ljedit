@@ -717,6 +717,35 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
         return FALSE;
     }
 
+	if( tips_is_visible(self) ) {
+		switch( event->keyval ) {
+		case GDK_Delete:
+		case GDK_Left:
+		case GDK_Right:
+		case GDK_BackSpace:
+		case GDK_Return:
+		case GDK_KP_Enter:
+			{
+				GtkTextBuffer* buf;
+				GtkTextIter iter;
+				buf = gtk_text_view_get_buffer(view);
+				gtk_text_buffer_get_iter_at_mark(buf, &iter, gtk_text_buffer_get_insert(buf));
+
+				if( gtk_text_iter_get_line(&iter)==self->controls_priv->tips_last_line ) {
+					if( tips_list_is_visible(self) ) {
+						locate_sub_hint(self, view);
+
+					} else {
+						set_show_hint_timer(self, view);
+					}
+				} else {
+					tips_hide_all(self);
+				}
+			}
+			break;
+		}
+	}
+
 	return TRUE;
 }
 
@@ -738,7 +767,7 @@ static void view_on_im_commit(GtkIMContext *cxt, gchar* str, LanguageTips* self)
 	gtk_text_iter_backward_char(&iter);
 	last_input = gtk_text_iter_get_char(&iter);
 
-	// g_print("cur : %d %s\n", gtk_text_iter_get_char(&iter), str);
+	//g_print("cur : %d %s\n", gtk_text_iter_get_char(&iter), str);
 
 	if( is_in_comment(&iter) )
 		return;
@@ -837,18 +866,6 @@ static void view_on_im_commit(GtkIMContext *cxt, gchar* str, LanguageTips* self)
 
 			if( last_input=='_' || g_unichar_isalnum(last_input) )
 				sign = TRUE;
-
-			if( !sign && tips_list_is_visible(self) ) {
-				switch( last_input ) {
-				case GDK_Delete:
-				case GDK_Left:
-				case GDK_Right:
-				case GDK_BackSpace:
-					if( gtk_text_iter_get_line(&iter)==self->controls_priv->tips_last_line )
-						sign = TRUE;
-					break;
-				}
-			}
 
 			if( sign ) {
 				if( tips_list_is_visible(self) ) {

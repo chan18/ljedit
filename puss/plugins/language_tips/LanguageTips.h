@@ -123,6 +123,8 @@ CppElem* tips_list_get_selected(LanguageTips* self);
 #define tips_decl_tip_hide(self)	gtk_widget_hide(self->tips_decl_window)
 void    tips_decl_tip_show(LanguageTips* self, gint x, gint y, GSequence* seq);
 
+#define tips_is_visible(self) (tips_include_is_visible(self) || tips_list_is_visible(self) || tips_decl_is_visible(self))
+
 #define tips_hide_all(self ) {   \
 	tips_include_tip_hide(self); \
 	tips_list_tip_hide(self);    \
