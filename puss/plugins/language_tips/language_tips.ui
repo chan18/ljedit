@@ -190,7 +190,7 @@
                 <property name="model">list_store</property>
                 <property name="headers-visible">false</property>
                 <property name="has-tooltip">true</property>
-                <signal handler="tips_cb_query_tooltip" name="query-tooltip"/>
+                <signal handler="tips_list_cb_query_tooltip" name="query-tooltip"/>
                 <child>
                   <object class="GtkTreeViewColumn" id="list_column">
                     <child>

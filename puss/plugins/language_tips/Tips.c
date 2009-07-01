@@ -3,6 +3,9 @@
 
 #include "LanguageTips.h"
 
+// TODO : use tooltip replace tips_decl_window
+//		since gtk-2.12, tooltip can use markup language
+// 
 
 void tips_init(LanguageTips* self) {
 }
@@ -10,7 +13,7 @@ void tips_init(LanguageTips* self) {
 void tips_final(LanguageTips* self) {
 	if( self->tips_include_files ) {
 		gtk_list_store_clear(GTK_LIST_STORE(self->tips_include_model));
-		g_list_foreach(self->tips_include_files, g_free, 0);
+		g_list_foreach(self->tips_include_files, (GFunc)g_free, 0);
 		g_list_free(self->tips_include_files);
 	}
 
@@ -31,7 +34,7 @@ void tips_include_tip_show(LanguageTips* self, gint x, gint y, GList* files) {
 
 	if( self->tips_include_files ) {
 		gtk_list_store_clear(GTK_LIST_STORE(self->tips_include_model));
-		g_list_foreach(self->tips_include_files, g_free, 0);
+		g_list_foreach(self->tips_include_files, (GFunc)g_free, 0);
 		g_list_free(self->tips_include_files);
 	}
 
@@ -296,6 +299,7 @@ gboolean tips_locate_sub(LanguageTips* self, gint x, gint y, const gchar* key) {
 			gtk_tree_selection_select_iter(sel, &iter);
 			path = gtk_tree_model_get_path(self->tips_list_model, &iter);
 			gtk_tree_view_scroll_to_cell(self->tips_list_view, path, NULL, FALSE, 0.0f, 0.0f);
+			//gtk_widget_trigger_tooltip_query(GTK_WIDGET(self->tips_list_view));	// TODO : no effect, need test
 			return TRUE;
 		}
 

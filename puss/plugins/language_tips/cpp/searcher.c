@@ -464,7 +464,7 @@ inline gchar iter_next_char(SearchIterEnv* env, gpointer it) {
 	return ch;
 }
 
-void iter_skip_pair(SearchIterEnv* env, gpointer it, gchar sch, gchar ech) {
+gboolean iter_skip_pair(SearchIterEnv* env, gpointer it, gchar sch, gchar ech) {
 	gchar ch = '\0';
 	gint layer = 1;
 	while( layer > 0 ) {
@@ -474,10 +474,10 @@ void iter_skip_pair(SearchIterEnv* env, gpointer it, gchar sch, gchar ech) {
 		case ';':
 		case '{':
 		case '}':
-			return;
+			return FALSE;
 		case ':':
 			if( iter_prev_char(env, it)!=':' )
-				return;
+				return FALSE;
 			break;
 		default:
 			if( ch==ech )
@@ -485,8 +485,10 @@ void iter_skip_pair(SearchIterEnv* env, gpointer it, gchar sch, gchar ech) {
 			else if( ch==sch )
 				--layer;
 			break;
-		}	
+		}
 	}
+
+	return TRUE;
 }
 
 // types:
@@ -563,56 +565,73 @@ GList* spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_st
 			if( buf->len ) {
 				spath = g_list_prepend(spath, skey_new(type, g_strreverse(buf->str), buf->len));
 				g_string_assign(buf, "");
-				type = 'v';
 			}
+
+			type = 'v';
 			break;
 
 		case ':':
 			if( iter_prev_char(env, ps)==':' ) {
 				iter_prev(env, ps);
-				if( buf->len ) {
+				if( buf->len > 0 ) {
 					spath = g_list_prepend(spath, skey_new(type, g_strreverse(buf->str), buf->len));
 					g_string_assign(buf, "");
-					type = '?';
 				}
+				type = '?';
 			} else {
 				loop_sign = FALSE;
 			}
 			break;
 
 		case ']':
-			iter_skip_pair(env, ps, '[', ']');
-			spath = g_list_prepend(spath, skey_new(type, g_strreverse(buf->str), buf->len));
-			g_string_append_c(buf, ch);
+			if( buf->len > 0 ) {
+				spath = g_list_prepend(spath, skey_new(type, g_strreverse(buf->str), buf->len));
+				g_string_assign(buf, "");
+				loop_sign = FALSE;
+				break;
+			}
+
+			if( !iter_skip_pair(env, ps, '[', ']') ) {
+				loop_sign = FALSE;
+				break;
+			}
+
 			type = 'v';
 			break;
 			
 		case ')':
-			iter_skip_pair(env, ps, '(', ')');
-			spath = g_list_prepend(spath, skey_new(type, g_strreverse(buf->str), buf->len));
-			g_string_assign(buf, "");
+			if( buf->len > 0 ) {
+				spath = g_list_prepend(spath, skey_new(type, g_strreverse(buf->str), buf->len));
+				g_string_assign(buf, "");
+				loop_sign = FALSE;
+				break;
+			}
+
+			if( !iter_skip_pair(env, ps, '(', ')') ) {
+				loop_sign = FALSE;
+				break;
+			}
+
 			type = 'f';
 			break;
 			
 		case '>':
-			if( buf->len==0 ) {
-				if( iter_prev_char(env, ps) != '>' ) {
-					iter_skip_pair(env, ps, '<', '>');
-				} else {
-					loop_sign = FALSE;
-				}
-
-			} else {
-				if( iter_prev_char(env, ps)=='-' ) {
-					iter_prev(env, ps);
+			if( iter_prev_char(env, ps)=='-' ) {
+				iter_prev(env, ps);
+				if( buf->len > 0 ) {
 					spath = g_list_prepend(spath, skey_new(type, g_strreverse(buf->str), buf->len));
 					g_string_assign(buf, "");
-					type = 'v';
-					
-				} else {
-					loop_sign = FALSE;
 				}
+				type = 'v';
+				break;	
 			}
+
+			if( iter_skip_pair(env, ps, '<', '>') ) {
+				type = 't';
+				break;
+			}
+
+			loop_sign = FALSE;
 			break;
 			
 		default:
@@ -692,6 +711,14 @@ static gboolean spath_equal(GList* a, GList* b) {
 	}
 
 	return a==b;
+}
+
+static void spath_print(GList* spath) {
+	while( spath ) {
+		SKey* skey = (SKey*)(spath->data);
+		g_print(" %c:%s", skey->type, skey->value.buf);
+		spath = spath->next;
+	}
 }
 
 typedef struct {
@@ -802,7 +829,7 @@ static GList* spath_replace_new(GList* start, GList* ps, GList* pe, GList* rep) 
 }
 
 static void loop_insert(Searcher* searcher, GList* spath, GList* pos, GList* rep) {
-	GList* ps = ((SKey*)(rep->data))->type=='R' ? spath : pos;
+	GList* ps = ((SKey*)(rep->data))->type=='R' ? pos : spath;
 	GList* pe = pos->next;
 	GList* p;
 	GList* new_spath;
@@ -1003,6 +1030,10 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 }
 
 static void searcher_walk(Searcher* searcher, GList* spath) {
+	g_print("WALK ");
+	spath_print(spath);
+	g_print("\n");
+
 	if( g_list_length(spath) > 8 )
 		return;
 

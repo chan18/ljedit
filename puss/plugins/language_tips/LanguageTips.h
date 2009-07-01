@@ -110,26 +110,21 @@ void tips_init(LanguageTips* self);
 void tips_final(LanguageTips* self);
 
 #define tips_include_is_visible(self)	GTK_WIDGET_VISIBLE(self->tips_include_window)
-#define tips_include_tip_hide(self)	gtk_widget_hide(self->tips_include_window)
-void    tips_include_tip_show(LanguageTips* self, gint x, gint y, GList* files);
-const gchar* tips_include_get_selected(LanguageTips* self);
-
-#define tips_list_is_visible(self)	GTK_WIDGET_VISIBLE(self->tips_list_window)
-#define tips_list_tip_hide(self)	gtk_widget_hide(self->tips_list_window)
-void    tips_list_tip_show(LanguageTips* self, gint x, gint y, GSequence* seq);
-CppElem* tips_list_get_selected(LanguageTips* self);
-
-#define tips_decl_is_visible(self)	GTK_WIDGET_VISIBLE(self->tips_decl_window)
-#define tips_decl_tip_hide(self)	gtk_widget_hide(self->tips_decl_window)
-void    tips_decl_tip_show(LanguageTips* self, gint x, gint y, GSequence* seq);
-
+#define tips_list_is_visible(self)		GTK_WIDGET_VISIBLE(self->tips_list_window)
+#define tips_decl_is_visible(self)		GTK_WIDGET_VISIBLE(self->tips_decl_window)
 #define tips_is_visible(self) (tips_include_is_visible(self) || tips_list_is_visible(self) || tips_decl_is_visible(self))
 
-#define tips_hide_all(self ) {   \
-	tips_include_tip_hide(self); \
-	tips_list_tip_hide(self);    \
-	tips_decl_tip_hide(self);    \
-	}
+#define tips_include_tip_hide(self)		gtk_widget_hide(self->tips_include_window)
+#define tips_list_tip_hide(self)		gtk_widget_hide(self->tips_list_window)
+#define tips_decl_tip_hide(self)		gtk_widget_hide(self->tips_decl_window)
+#define tips_hide_all(self ) { tips_include_tip_hide(self); tips_list_tip_hide(self); tips_decl_tip_hide(self); }
+
+void    tips_include_tip_show(LanguageTips* self, gint x, gint y, GList* files);
+void    tips_list_tip_show(LanguageTips* self, gint x, gint y, GSequence* seq);
+void    tips_decl_tip_show(LanguageTips* self, gint x, gint y, GSequence* seq);
+
+const gchar* tips_include_get_selected(LanguageTips* self);
+CppElem*	 tips_list_get_selected(LanguageTips* self);
 
 void tips_select_next(LanguageTips* self);
 void tips_select_prev(LanguageTips* self);

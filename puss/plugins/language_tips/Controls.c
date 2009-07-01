@@ -1053,7 +1053,7 @@ static void on_jump_to_define_action(GtkAction* action, LanguageTips* self) {
 	jump_to_current(self, view);
 }
 
-SIGNAL_CALLBACK gboolean tips_cb_query_tooltip( GtkTreeView* tree_view
+SIGNAL_CALLBACK gboolean tips_list_cb_query_tooltip( GtkTreeView* tree_view
 	, gint x
 	, gint y
 	, gboolean keyboard_mode
