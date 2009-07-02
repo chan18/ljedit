@@ -30,10 +30,12 @@ void   spath_free(GList* spath);
 
 void searcher_search( CppSTree* stree
 	, GList* spath
-	, void (*cb)(CppElem* elem, gpointer tag)
+	, gboolean (*cb)(CppElem* elem, gpointer tag)
 	, gpointer cb_tag
 	, CppFile* file
-	, gint line );
+	, gint line
+	, gint limit_num
+	, gint limit_time );
 
 #endif//PUSS_CPP_SEARCHER_H
 

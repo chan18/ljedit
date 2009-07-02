@@ -105,9 +105,11 @@ void cpp_guide_search_with_callback( CppGuide* guide
 			, CppMatched cb
 			, gpointer cb_tag
 			, CppFile* file
-			, gint line )
+			, gint line
+			, gint limit_num
+			, gint limit_time )
 {
-	searcher_search(&(guide->stree), (GList*)spath, cb, cb_tag, file, line);
+	searcher_search(&(guide->stree), (GList*)spath, cb, cb_tag, file, line, limit_num, limit_time);
 }
 
 #define cpp_elem_ref(elem) cpp_file_ref(elem->file)
@@ -139,7 +141,7 @@ typedef struct {
 	GSequence*	seq;
 } SeqMatched;
 
-static void matched_into_sequence(CppElem* elem, SeqMatched* tag) {
+static gboolean matched_into_sequence(CppElem* elem, SeqMatched* tag) {
 	CppElem* p;
 	GSequenceIter* ps;
 	GSequenceIter* pe;
@@ -147,13 +149,13 @@ static void matched_into_sequence(CppElem* elem, SeqMatched* tag) {
 
 	if( elem->type==CPP_ET_KEYWORD )
 		if( !(tag->flag & CPP_GUIDE_SEARCH_FLAG_WITH_KEYWORDS) )
-			return;
+			return FALSE;
 
 	if( !tag->seq )
 		tag->seq = g_sequence_new(cpp_elem_unref);
 
 	if( !tag->seq )
-		return;
+		return FALSE;
 
 	if( tag->flag & CPP_GUIDE_SEARCH_FLAG_USE_UNIQUE_ID )
 		use_unique_id = 1;
@@ -165,28 +167,31 @@ static void matched_into_sequence(CppElem* elem, SeqMatched* tag) {
 			ps=g_sequence_iter_prev(ps);
 			p = g_sequence_get(ps);
 			if( p==elem )
-				return;
+				return FALSE;
 
 			if( cpp_elem_cmp(elem, p, use_unique_id)!=0 )
 				break;
 			else if( use_unique_id )
-				return;
+				return FALSE;
 
 		} while( !g_sequence_iter_is_begin(ps) );
 	}
 
 	cpp_elem_ref(elem);
 	g_sequence_insert_sorted(tag->seq, elem, cpp_elem_cmp, 0);
+	return TRUE;
 }
 
 GSequence* cpp_guide_search( CppGuide* guide
 			, gpointer spath
 			, gint flag
 			, CppFile* file
-			, gint line )
+			, gint line
+			, gint limit_num
+			, gint limit_time )
 {
 	SeqMatched tag = { flag, 0 };
-	cpp_guide_search_with_callback(guide, spath, matched_into_sequence, &tag, file, line);
+	cpp_guide_search_with_callback(guide, spath, matched_into_sequence, &tag, file, line, limit_num, limit_time);
 	return tag.seq;
 }
 

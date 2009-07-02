@@ -199,7 +199,7 @@ static void jump_to_current(LanguageTips* self, GtkTextView* view) {
 	CppElem* elem;
 
 	if( search_current(self, view, &spath, &file, &line) ) {
-		seq = cpp_guide_search(self->cpp_guide, spath, 0, file, line);
+		seq = cpp_guide_search(self->cpp_guide, spath, 0, file, line, -1, -1);
 		cpp_file_unref(file);
 
 		if( !seq )
@@ -628,7 +628,9 @@ static void show_hint(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf,
 			if( tag=='s' )
 				flag |= CPP_GUIDE_SEARCH_FLAG_WITH_KEYWORDS;
 
-			seq = cpp_guide_search( self->cpp_guide, spath, flag, file, line + 1);
+			// TODO if len(seq) < 100 then when press key search more
+			// 
+			seq = cpp_guide_search( self->cpp_guide, spath, flag, file, line + 1, 100, 200);
 			if( seq ) {
 				gint x = 0;
 				gint y = 0;

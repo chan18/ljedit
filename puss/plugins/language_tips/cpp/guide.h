@@ -206,14 +206,16 @@ gpointer cpp_spath_find( gboolean find_startswith
 gpointer cpp_spath_parse(gboolean find_startswith, const gchar* text);
 void cpp_spath_free(gpointer spath);
 
-typedef void (*CppMatched)(CppElem* elem, gpointer tag);
+typedef gboolean (*CppMatched)(CppElem* elem, gpointer tag);
 
 void cpp_guide_search_with_callback( CppGuide* guide
 			, gpointer spath
 			, CppMatched cb
 			, gpointer cb_tag
 			, CppFile* file
-			, gint line );
+			, gint line
+			, gint limit_num
+			, gint limit_time );
 
 #define CPP_GUIDE_SEARCH_FLAG_WITH_KEYWORDS	0x0001
 #define CPP_GUIDE_SEARCH_FLAG_USE_UNIQUE_ID	0x0002
@@ -222,7 +224,9 @@ GSequence* cpp_guide_search( CppGuide* guide
 			, gpointer spath
 			, gint flag
 			, CppFile* file
-			, gint line );
+			, gint line
+			, gint limit_num
+			, gint limit_time );
 
 #endif//PUSS_CPP_GUIDE_H
 
