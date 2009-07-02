@@ -713,13 +713,19 @@ static gboolean spath_equal(GList* a, GList* b) {
 	return a==b;
 }
 
-static void spath_print(GList* spath) {
-	while( spath ) {
-		SKey* skey = (SKey*)(spath->data);
-		g_print(" %c:%s", skey->type, skey->value.buf);
-		spath = spath->next;
+#ifdef _DEBUG
+	static void spath_trace(GList* spath) {
+		g_printerr("WALK ");
+		while( spath ) {
+			SKey* skey = (SKey*)(spath->data);
+			g_printerr(" %c:%s", skey->type, skey->value.buf);
+			spath = spath->next;
+		}
+		g_printerr("\n");
 	}
-}
+#else
+	#define spath_trace(spath)
+#endif
 
 typedef struct {
 	CppSTree*  stree;
@@ -728,6 +734,14 @@ typedef struct {
 	CppMatched cb;
 	gpointer   cb_tag;
 } Searcher;
+
+static inline void search_call_cb(Searcher* searcher, CppElem* elem) {
+	#ifdef _DEBUG
+		g_printerr("\tfind : %s\n", elem->name->buf);
+	#endif
+
+	(*(searcher->cb))( elem, searcher->cb_tag );
+}
 
 static void searcher_add_spath(Searcher* searcher, GList* spath) {
 	searcher->spaths = g_list_append(searcher->spaths, spath);
@@ -936,7 +950,7 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 
 			if( g_str_has_prefix(key->buf, cur_key->buf) )
 				for(ps=value->elems; ps; ps=ps->next )
-					(*(searcher->cb))( (CppElem*)(ps->data), searcher->cb_tag );
+					search_call_cb(searcher, (CppElem*)(ps->data));
 		}
 
 		return;
@@ -963,7 +977,7 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 				break;
 			}
 
-			(*(searcher->cb))( elem, searcher->cb_tag );
+			search_call_cb(searcher, elem);
 			continue;
 		}
 
@@ -1018,24 +1032,22 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 		}
 
 		if( next_sign ) {
-			pos = pos->next;
-			if( pos ) {
-				if( elem->type==CPP_ET_CLASS && ((SKey*)(pos->data))->type=='L' && pos->next )
+			if( pos->next ) {
+				if( elem->type==CPP_ET_CLASS && ((SKey*)(pos->data))->type=='L' && pos->next->next )
 					pos = pos->next;
-
-				searcher_do_walk(searcher, sub_node, spath, pos);
+				searcher_do_walk(searcher, sub_node, spath, pos->next);
 			}
 		}
 	}
 }
 
 static void searcher_walk(Searcher* searcher, GList* spath) {
-	g_print("WALK ");
-	spath_print(spath);
-	g_print("\n");
+	spath_trace(spath);
 
 	if( g_list_length(spath) > 8 )
 		return;
+
+	// TODO : clear searcher->walked_nodes
 
 	searcher_do_walk(searcher, searcher->stree->root, spath, spath);
 }
@@ -1185,6 +1197,10 @@ void searcher_search( CppSTree* stree
 	s.spaths = 0;
 	s.cb = cb;
 	s.cb_tag = cb_tag;
+
+#ifdef _DEBUG
+	g_printerr("-----------------------\n");
+#endif
 
 	searcher_start(&s, spath, file, line);
 

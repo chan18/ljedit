@@ -184,6 +184,7 @@ gboolean cps_fun(ParseEnv* env, Block* block) {
 
 	err_return_false_if( (ps = parse_function_prefix(ps, pe))==0 );
 
+	name = ps;
 	err_return_false_if( (ps = parse_datatype(ps, pe, &typekey, &dt))==0 );
 
 	prdt = dt;
@@ -220,10 +221,7 @@ gboolean cps_fun(ParseEnv* env, Block* block) {
 			// no return type function
 			err_return_false_if( typekey==0 || tiny_str_len(typekey)==0 );
 
-			if( block->parent->type==CPP_ET_CLASS ) {
-				name = ps;
-
-			} else {
+			if( block->parent->type!=CPP_ET_CLASS ) {
 				TinyStr* str;
 				gsize typekey_len = tiny_str_len(typekey);
 				err_return_false_if_not( typekey_len > ps->len );
