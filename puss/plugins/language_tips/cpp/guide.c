@@ -8,6 +8,8 @@
 struct _CppGuide {
 	CppParser	parser;
 	CppSTree	stree;
+	
+	GRegex*		re_pkg_config_include;
 };
 
 static void guide_on_file_insert(CppFile* file, CppGuide* self) {
@@ -29,11 +31,13 @@ CppGuide* cpp_guide_new(gboolean enable_macro_replace, gboolean enable_search) {
 
 	stree_init( &(guide->stree) );
 
+	guide->re_pkg_config_include = g_regex_new("-I(.*?)\\s", 0, 0, 0);
 	return guide;
 }
 
 void cpp_guide_free(CppGuide* guide) {
 	if( guide ) {
+		g_regex_unref(guide->re_pkg_config_include);
 		stree_final( &(guide->stree) );
 
 		cpp_parser_final( &(guide->parser) );
@@ -42,20 +46,79 @@ void cpp_guide_free(CppGuide* guide) {
 	}
 }
 
+static GList* guide_append_pkg_config_cflags(CppGuide* guide, GList* include_paths, const gchar* cmd) {
+	gchar* p;
+	gchar* path;
+	gchar* std_output = 0;
+	gint exit_status = 0;
+	GMatchInfo* match_info = 0;
+	GList* pl;
+
+	if( !g_spawn_command_line_sync(cmd, &std_output, 0, &exit_status, 0) )
+		return include_paths;
+
+	if( exit_status!=0 || !std_output )
+		return include_paths;
+
+	if( !g_regex_match(guide->re_pkg_config_include, std_output, 0, &match_info) )
+		return include_paths;
+
+	do {
+		p = g_match_info_fetch(match_info, 1);
+		if( p ) {
+			path = cpp_filename_to_filekey(p, strlen(p));
+			g_free(p);
+
+			for( pl=include_paths; path && pl; pl=pl->next ) {
+				if( g_str_equal(pl->data, path) ) {
+					g_free(path);
+					path = 0;
+				}
+			}
+
+			if( path )
+				include_paths = g_list_append(include_paths, path);
+		}
+	} while( g_match_info_next(match_info, 0) );
+
+	g_match_info_free(match_info);
+
+	return include_paths;
+}
+
 void cpp_guide_include_paths_set(CppGuide* guide, const gchar* paths) {
+	gchar* path;
 	gchar** p;
 	gchar** items;
 	GList* include_paths = 0;
+	GList* pl;
 
-	if( paths ) {
-		items = g_strsplit_set(paths, ";\r\n", 0);
-		for( p=items; *p; ++p ) {
-			if( *p[0]=='\0' )
-				continue;
-			include_paths = g_list_append(include_paths, g_strdup(*p));
+	if( !paths )
+		return;
+
+	items = g_strsplit_set(paths, ";\r\n", 0);
+	for( p=items; *p; ++p ) {
+		if( *p[0]=='\0' )
+			continue;
+
+		if( *p[0]=='$' ) {
+			include_paths = guide_append_pkg_config_cflags(guide, include_paths, (*p)+1);
+
+		} else {
+			path = cpp_filename_to_filekey(*p, strlen(*p));
+
+			for( pl=include_paths; path && pl; pl=pl->next ) {
+				if( g_str_equal(pl->data, path) ) {
+					g_free(path);
+					path = 0;
+				}
+			}
+
+			if( path )
+				include_paths = g_list_append(include_paths, path);
 		}
-		g_strfreev(items);
 	}
+	g_strfreev(items);
 
 	cpp_parser_include_paths_set(&(guide->parser), include_paths);
 }

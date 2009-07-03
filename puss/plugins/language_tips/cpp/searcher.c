@@ -966,9 +966,11 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 					// use limit_num enought
 					// 
 					// g_get_current_time(&tm);
-					// if( searcher->limit_time > abs(tm.tv_sec - searcher->start_time.tv_sec)*1000 + (tm.tv_usec - searcher->start_time.tv_usec)/1000 ) {
-					// 	searcher->run_sign = FALSE;
-					// 	break;
+					// if( searcher->limit_time > 0 ) {
+					//	if( searcher->limit_time < abs((tm.tv_sec - searcher->start_time.tv_sec)*1000 + (tm.tv_usec - searcher->start_time.tv_usec)/1000) ) {
+					// 		searcher->run_sign = FALSE;
+					// 		break;
+					//	}
 					// }
 				}
 			}
@@ -986,9 +988,11 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 
 	for( ps=sub_node->elems; searcher->run_sign && ps; ps=ps->next ) {
 		g_get_current_time(&tm);
-		if( searcher->limit_time > abs(tm.tv_sec - searcher->start_time.tv_sec)*1000 + (tm.tv_usec - searcher->start_time.tv_usec)/1000 ) {
-			searcher->run_sign = FALSE;
-			break;
+		if( searcher->limit_time > 0 ) {
+			if( searcher->limit_time < abs((tm.tv_sec - searcher->start_time.tv_sec)*1000 + (tm.tv_usec - searcher->start_time.tv_usec)/1000) ) {
+				searcher->run_sign = FALSE;
+				break;
+			}
 		}
 
 		elem = ((CppElem*)(ps->data));

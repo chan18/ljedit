@@ -207,7 +207,7 @@ static void option_monitor_init(LanguageTips* self) {
 		self->option_style_change_handler = self->app->option_monitor_reg(option, (OptionChanged)parse_editor_style_option, self, 0);
 	}
 
-	option = self->app->option_reg("language_tips_cpp", "include_path", "/usr/include\n/usr/include/c++/4.0\n");
+	option = self->app->option_reg("language_tips_cpp", "include_path", "/usr/include\n/usr/include/c++/4.0\n$pkg-config --cflags gtk+-2.0\n");
 	self->option_path_change_handler = self->app->option_monitor_reg(option, (OptionChanged)parse_include_path_option, self, 0);
 	parse_include_path_option(option, 0, self);
 	

@@ -164,7 +164,6 @@ gboolean cps_extern_scope(ParseEnv* env, Block* block);
 gboolean cps_class(ParseEnv* env, Block* block);
 gboolean cps_enum(ParseEnv* env, Block* block);
 gboolean cps_block(ParseEnv* env, Block* block);
-gboolean cps_impl_block(ParseEnv* env, Block* block);
 gboolean cps_label(ParseEnv* env, Block* block);
 gboolean cps_fun_or_var(ParseEnv* env, Block* block);
 gboolean cps_breakout_block(ParseEnv* env, Block* block);
@@ -379,8 +378,5 @@ MLToken* parse_scope(ParseEnv* env, MLToken* tokens, gsize count, CppElem* paren
 
 	spliter_final(&spliter);
 	return retval;
-}
-
-void parse_impl_scope(Block* block) {
 }
 

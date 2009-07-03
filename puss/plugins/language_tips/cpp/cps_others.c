@@ -23,22 +23,6 @@ gboolean cps_extern_scope(ParseEnv* env, Block* block) {
 	return cps_block(env, block);
 }
 
-gboolean cps_impl_block(ParseEnv* env, Block* block) {
-	MLToken* ps = block->tokens;
-	MLToken* pe = ps + block->count;
-	while( (ps < pe) && (ps->type != '{') )
-		++ps;
-	++ps;
-
-	if( ps < pe ) {
-		block->tokens = ps;
-		block->count = pe - ps;
-		parse_impl_scope(block);
-	}
-
-	return TRUE;
-}
-
 gboolean cps_label(ParseEnv* env, Block* block) {
 	assert( block->count > 0 );
 

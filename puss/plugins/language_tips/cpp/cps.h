@@ -40,7 +40,6 @@ void spliter_final(BlockSpliter* spliter);
 TParseFn spliter_next_block(BlockSpliter* spliter, Block* block);
 
 MLToken* parse_scope(ParseEnv* env, MLToken* tokens, gsize count, CppElem* parent, gboolean use_block_end);
-void parse_impl_scope(Block* block);
 
 #endif//PUSS_CPP_CPS_H
 
