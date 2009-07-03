@@ -628,8 +628,6 @@ static void show_hint(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf,
 			if( tag=='s' )
 				flag |= CPP_GUIDE_SEARCH_FLAG_WITH_KEYWORDS;
 
-			// TODO if len(seq) < 100 then when press key search more
-			// 
 			seq = cpp_guide_search( self->cpp_guide, spath, flag, file, line + 1, 100, 200);
 			if( seq ) {
 				gint x = 0;

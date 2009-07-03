@@ -733,20 +733,24 @@ typedef struct {
 	GList*		spaths;
 	CppMatched	cb;
 	gpointer	cb_tag;
+	gboolean	run_sign;
 	gint		limit_num;
 	gint		limit_time;
+	GTimeVal	start_time;
 } Searcher;
 
 static inline void search_call_cb(Searcher* searcher, CppElem* elem) {
-	gboolean succeed;
-
 	#ifdef _DEBUG
 		g_printerr("\tfind : %s\n", elem->name->buf);
 	#endif
 
-	succeed = (*(searcher->cb))( elem, searcher->cb_tag );
-	if( succeed && searcher->limit_num > 0 )
-		--searcher->limit_num;
+	if( (*(searcher->cb))( elem, searcher->cb_tag ) ) {
+		if( searcher->limit_num > 0 ) {
+			--searcher->limit_num;
+			if( searcher->limit_num==0 )
+				searcher->run_sign = FALSE;
+		}
+	}	
 }
 
 static void searcher_add_spath(Searcher* searcher, GList* spath) {
@@ -904,6 +908,7 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 	CppElem* elem;
 	gboolean next_sign;
 	gint i;
+	GTimeVal tm;
 
 	if( !node )
 		return;
@@ -954,9 +959,19 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 			if( tiny_str_len(key) < cur_key_len )
 				continue;
 
-			if( g_str_has_prefix(key->buf, cur_key->buf) )
-				for(ps=value->elems; ps; ps=ps->next )
+			if( g_str_has_prefix(key->buf, cur_key->buf) ) {
+				for(ps=value->elems; searcher->run_sign && ps; ps=ps->next ) {
 					search_call_cb(searcher, (CppElem*)(ps->data));
+
+					// use limit_num enought
+					// 
+					// g_get_current_time(&tm);
+					// if( searcher->limit_time > abs(tm.tv_sec - searcher->start_time.tv_sec)*1000 + (tm.tv_usec - searcher->start_time.tv_usec)/1000 ) {
+					// 	searcher->run_sign = FALSE;
+					// 	break;
+					// }
+				}
+			}
 		}
 
 		return;
@@ -969,7 +984,13 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 		return;
 	}
 
-	for( ps=sub_node->elems; ps; ps=ps->next ) {
+	for( ps=sub_node->elems; searcher->run_sign && ps; ps=ps->next ) {
+		g_get_current_time(&tm);
+		if( searcher->limit_time > abs(tm.tv_sec - searcher->start_time.tv_sec)*1000 + (tm.tv_usec - searcher->start_time.tv_usec)/1000 ) {
+			searcher->run_sign = FALSE;
+			break;
+		}
+
 		elem = ((CppElem*)(ps->data));
 		if( !pos->next ) {
 			if( elem->type==CPP_ET_USING ) {
@@ -1053,9 +1074,9 @@ static void searcher_walk(Searcher* searcher, GList* spath) {
 	if( g_list_length(spath) > 8 )
 		return;
 
-	// TODO : clear searcher->walked_nodes
-
+	searcher->worked_nodes = g_tree_new(g_direct_equal);
 	searcher_do_walk(searcher, searcher->stree->root, spath, spath);
+	g_tree_destroy(searcher->worked_nodes);
 }
 
 static gboolean searcher_do_locate(Searcher* searcher, GList* scope, gint line, GList* spath, GList* pos, gboolean need_walk) {
@@ -1156,8 +1177,11 @@ static gboolean searcher_do_locate(Searcher* searcher, GList* scope, gint line, 
 
 static void searcher_locate(Searcher* searcher, CppFile* file, gint line, GList* spath) {
 	gboolean need_walk = TRUE;
-	if( file && line && spath && ((SKey*)(spath->data))->type!='R' )
+	if( file && line && spath && ((SKey*)(spath->data))->type!='R' ) {
+		searcher->worked_nodes = g_tree_new(g_direct_equal);
 		need_walk = searcher_do_locate(searcher, file->root_scope.v_ncscope.scope, line, spath, spath, need_walk);
+		g_tree_destroy(searcher->worked_nodes);
+	}
 
 	if( need_walk )
 		searcher_add_spath(searcher, spath);
@@ -1167,17 +1191,14 @@ static void searcher_start(Searcher* searcher, GList* spath, CppFile* file, gint
 	GList* p;
 	GList* worked;
 
+	searcher->run_sign = TRUE;
+	g_get_current_time( &(searcher->start_time) );
+
 	g_static_rw_lock_reader_lock( &(searcher->stree->lock) );
 
 	searcher_locate(searcher, file, line, spath);
 
-	for( p=searcher->spaths; p; p=p->next ) {
-		if( searcher->limit_num==0 )
-			break;
-
-		//if( now() - searcher->prev_time > searcher->limit_time )
-		//	break;
-
+	for( p=searcher->spaths; searcher->run_sign && p; p=p->next ) {
 		spath = (GList*)(p->data);
 
 		for( worked=searcher->spaths; worked!=p; worked=worked->next )
@@ -1202,13 +1223,15 @@ void searcher_search( CppSTree* stree
 {
 	GList* p;
 	Searcher s;
+	memset(&s, 0, sizeof(Searcher));
 
 	if( !spath )
 		return;
 
+	if( limit_num==0 || limit_time==0 )
+		return;
+
 	s.stree = stree;
-	s.worked_nodes = g_tree_new(g_direct_equal);
-	s.spaths = 0;
 	s.cb = cb;
 	s.cb_tag = cb_tag;
 	s.limit_num = limit_num;
@@ -1224,7 +1247,5 @@ void searcher_search( CppSTree* stree
 		if( p->data!=(gpointer)spath )
 			spath_free(p->data);
 	}
-
-	g_tree_destroy(s.worked_nodes);
 }
 

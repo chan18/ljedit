@@ -92,7 +92,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(ProjectDir)$(ProjectName).ui $(SolutionDir)bin\plugins\&#x0D;&#x0A;copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\&#x0D;&#x0A;mkdir $(SolutionDir)bin\plugins\$(ProjectName)_res&#x0D;&#x0A;copy $(ProjectDir)$(ProjectName)_res\*.* $(SolutionDir)bin\plugins\$(ProjectName)_res\&#x0D;&#x0A;"
+				CommandLine="copy $(ProjectDir)*.ui $(SolutionDir)bin\plugins\&#x0D;&#x0A;copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\&#x0D;&#x0A;mkdir $(SolutionDir)bin\plugins\$(ProjectName)_res&#x0D;&#x0A;copy $(ProjectDir)$(ProjectName)_res\*.* $(SolutionDir)bin\plugins\$(ProjectName)_res\&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -344,6 +344,10 @@
 		</File>
 		<File
 			RelativePath=".\language_tips.ui"
+			>
+		</File>
+		<File
+			RelativePath=".\language_tips_setup.ui"
 			>
 		</File>
 		<File

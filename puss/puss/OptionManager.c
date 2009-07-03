@@ -99,8 +99,7 @@ void option_manager_save() {
 }
 
 void puss_option_manager_destroy() {
-	if( puss_option_manager && puss_option_manager->modified )
-		option_manager_save();
+	puss_option_manager_save();
 
 	if( puss_option_manager ) {
 		g_key_file_free(puss_option_manager->keyfile);
@@ -110,6 +109,11 @@ void puss_option_manager_destroy() {
 		g_free(puss_option_manager);
 		puss_option_manager = 0;
 	}
+}
+
+void puss_option_manager_save() {
+	if( puss_option_manager && puss_option_manager->modified )
+		option_manager_save();
 }
 
 const Option* puss_option_manager_option_reg( const gchar* group, const gchar* key, const gchar* default_value ) {

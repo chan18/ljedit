@@ -88,76 +88,6 @@ static void parse_include_path_option(const Option* option, const gchar* old, La
 	cpp_guide_include_paths_set(self->cpp_guide, option->value);
 }
 
-const gchar* setup_ui_info =
-	"<interface>"
-	"  <object class='GtkTable' id='main_panel'>"
-	"    <property name='visible'>True</property>"
-	"    <property name='n_rows'>2</property>"
-	"    <property name='n_columns'>3</property>"
-	"    <property name='column_spacing'>5</property>"
-	"    <property name='row_spacing'>5</property>"
-	"    <child>"
-	"      <object class='GtkScrolledWindow' id='scrolled_window'>"
-	"        <property name='visible'>True</property>"
-	"        <property name='can_focus'>True</property>"
-	"        <property name='hscrollbar_policy'>GTK_POLICY_AUTOMATIC</property>"
-	"        <property name='vscrollbar_policy'>GTK_POLICY_AUTOMATIC</property>"
-	"        <child>"
-	"          <object class='GtkTextView' id='path_text_view'>"
-	"            <property name='visible'>True</property>"
-	"            <property name='can_focus'>True</property>"
-	"          </object>"
-	"        </child>"
-	"      </object>"
-	"      <packing>"
-	"        <property name='right_attach'>3</property>"
-	"      </packing>"
-	"    </child>"
-	"    <child>"
-	"      <object class='GtkButton' id='apply_button'>"
-	"        <property name='visible'>True</property>"
-	"        <property name='can_focus'>True</property>"
-	"        <property name='receives_default'>True</property>"
-	"        <property name='label' translatable='yes'>apply</property>"
-	"     </object>"
-	"      <packing>"
-	"        <property name='left_attach'>2</property>"
-	"        <property name='right_attach'>3</property>"
-	"        <property name='top_attach'>1</property>"
-	"        <property name='bottom_attach'>2</property>"
-	"        <property name='y_options'>GTK_FILL</property>"
-	"      </packing>"
-	"    </child>"
-	"    <child>"
-	"      <object class='GtkFileChooserButton' id='path_choose_button'>"
-	"        <property name='visible'>True</property>"
-	"        <property name='action'>GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER</property>"
-	"      </object>"
-	"      <packing>"
-	"        <property name='top_attach'>1</property>"
-	"        <property name='bottom_attach'>2</property>"
-	"        <property name='y_options'>GTK_FILL</property>"
-	"      </packing>"
-	"    </child>"
-	"    <child>"
-	"      <object class='GtkButton' id='add_button'>"
-	"        <property name='visible'>True</property>"
-	"        <property name='can_focus'>True</property>"
-	"        <property name='receives_default'>True</property>"
-	"        <property name='label' translatable='yes'>add</property>"
-	"     </object>"
-	"      <packing>"
-	"        <property name='left_attach'>1</property>"
-	"        <property name='right_attach'>2</property>"
-	"        <property name='top_attach'>1</property>"
-	"        <property name='bottom_attach'>2</property>"
-	"        <property name='y_options'>GTK_FILL</property>"
-	"      </packing>"
-	"    </child>"
-	"  </object>"
-	"</interface>"
-	;
-
 static const gchar* TARGET_OPTION_KEY = "target_option";
 static const gchar* TEXT_VIEW_KEY = "text_view";
 static const gchar* FILE_BUTTON_KEY = "file_button";
@@ -216,6 +146,11 @@ static GtkWidget* create_setup_ui(LanguageTips* self) {
 	GtkTextBuffer* buf;
 	GError* err = 0;
 	const Option* option;
+	gchar* setup_filename;
+
+	setup_filename = g_build_filename(self->app->get_plugins_path(), "language_tips_setup.ui", NULL);
+	if( !setup_filename )
+		return 0;
 
 	// create UI
 	builder = gtk_builder_new();
@@ -223,9 +158,9 @@ static GtkWidget* create_setup_ui(LanguageTips* self) {
 		return 0;
 	gtk_builder_set_translation_domain(builder, TEXT_DOMAIN);
 
-	gtk_builder_add_from_string(builder, setup_ui_info, -1, &err);
+	gtk_builder_add_from_file(builder, setup_filename, &err);
 	if( err ) {
-		g_printerr("ERROR(gtk_doc_helper): %s\n", err->message);
+		g_printerr("ERROR(language_tips): %s\n", err->message);
 		g_error_free(err);
 		g_object_unref(G_OBJECT(builder));
 		return 0;

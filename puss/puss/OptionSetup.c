@@ -182,5 +182,7 @@ void puss_option_setup_show_dialog(const gchar* filter) {
 	gtk_dialog_run(GTK_DIALOG(dlg));
 
 	gtk_widget_destroy(dlg);
+
+	puss_option_manager_save();
 }
 

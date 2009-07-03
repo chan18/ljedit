@@ -59,7 +59,7 @@ static gpointer tips_preview_search_thread(LanguageTips* self) {
 		if( !key )
 			continue;
 
-		seq = cpp_guide_search(self->cpp_guide, key->spath, 0, key->file, key->line);
+		seq = cpp_guide_search(self->cpp_guide, key->spath, 0, key->file, key->line, -1, -1);
 		search_key_free(key);
 
 		if( seq ) {

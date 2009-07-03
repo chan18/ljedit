@@ -8,6 +8,7 @@
 
 gboolean		puss_option_manager_create();
 void			puss_option_manager_destroy();
+void			puss_option_manager_save();
 
 /*
 void			puss_option_manager_active();
