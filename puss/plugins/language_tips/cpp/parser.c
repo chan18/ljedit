@@ -98,6 +98,9 @@ void cpp_parser_include_paths_unref(CppIncludePaths* paths) {
 CppFile* cpp_parser_find_parsed(CppParser* self, const gchar* filekey) {
 	CppFile* file;
 
+	if( !filekey )
+		return 0;
+
 	g_static_rw_lock_reader_lock( &(self->files_lock) );
 	file = (CppFile*)g_hash_table_lookup(self->files, filekey);
 	if( file && file->status==0 )
@@ -192,7 +195,11 @@ CppFile* cpp_parser_parse_use_menv(ParseEnv* env, const gchar* filekey) {
 	// check already parsed and get file modify time
 	// 
 	memset(&filestat, 0, sizeof(filestat));
-	if( g_stat(filekey, &filestat)!=0 )
+
+	// TODO : g_stat a/m/c time error, maybe a bug in win32, I need try in linux!!!
+	// 
+	//if( g_stat(filekey, &filestat)!=0 )
+	if( stat(filekey, &filestat)!=0 )
 		return file;
 
 	if( !env->force_rebuild ) {
@@ -237,6 +244,7 @@ CppFile* cpp_parser_parse_use_menv(ParseEnv* env, const gchar* filekey) {
 		file->root_scope.file = file;
 
 		g_hash_table_insert(env->parser->files, file->filename->buf, cpp_file_ref(file));
+		g_hash_table_insert(env->used_files, cpp_file_ref(file), 0);
 	}
 
 	g_static_rw_lock_writer_unlock( &(env->parser->files_lock) );

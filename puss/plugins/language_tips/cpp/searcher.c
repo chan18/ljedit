@@ -327,7 +327,7 @@ static void snode_remove(SNode* parent, CppElem* elem) {
 	case CPP_ET_CLASS:
 		{
 			if( elem->name->buf[0]!='@' ) {
-				SNode* snode = snode_sub_remove(parent, elem->v_enum.nskey, elem);
+				SNode* snode = snode_sub_remove(parent, elem->v_class.nskey, elem);
 				if( snode )
 					snode_remove_list(snode, elem->v_ncscope.scope);
 					

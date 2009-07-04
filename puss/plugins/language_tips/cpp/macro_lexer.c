@@ -15,11 +15,6 @@ static inline void mlstr_cpy(MLStr* dst, MLStr* src) {
 	}
 }
 
-static void rmacro_free(CppElem* macro) {
-	if( macro )
-		cpp_file_unref(macro->file);
-}
-
 static void ml_str_join(MLStr* out, MLStr* array, gint count) {
 	gint i;
 	gchar* p;
@@ -97,6 +92,38 @@ static CppElem* find_macro(ParseEnv* env, MLStr* name) {
 	return res;
 }
 
+static void insert_rmacros_into_env(ParseEnv* env, CppFile* file) {
+	GList* p;
+	CppElem* elem;
+	CppFile* incfile;
+
+	if( g_hash_table_lookup(env->used_files, file) )
+		return;
+
+	g_hash_table_insert(env->used_files, cpp_file_ref(file), file);
+
+	for( p=file->root_scope.v_ncscope.scope; p; p=p->next ) {
+		elem = (CppElem*)(p->data);
+		switch( elem->type ) {
+		case CPP_ET_MACRO:
+			g_hash_table_replace(env->rmacros_table, elem->name->buf, elem);
+			break;
+
+		case CPP_ET_UNDEF:
+			g_hash_table_remove(env->rmacros_table, elem->name->buf);
+			break;
+
+		case CPP_ET_INCLUDE:
+			incfile = cpp_parser_find_parsed(env->parser, elem->v_include.include_file);
+			if( incfile ) {
+				insert_rmacros_into_env(env, incfile);
+				cpp_file_unref(incfile);
+			}
+			break;
+		}
+	}
+}
+
 static void on_macro_define(ParseEnv* env, gint line, MLStr* name, gint argc, MLStr* argv, MLStr* value, MLStr* comment, MLStr* desc) {
 	CppElem* elem;
 	gint i;
@@ -121,15 +148,25 @@ static void on_macro_define(ParseEnv* env, gint line, MLStr* name, gint argc, ML
 
 	cpp_scope_insert(&(env->file->root_scope), elem);
 
-	cpp_file_ref(elem->file);
 	g_hash_table_replace(env->rmacros_table, elem->name->buf, elem);
 }
 
-static void on_macro_undef(ParseEnv* env, MLStr* name) {
-	gchar ch = name->buf[name->len];
-	name->buf[name->len] = '\0';
+static void on_macro_undef(ParseEnv* env, gint line, MLStr* name) {
+	CppElem* elem;
+	
+	elem = cpp_elem_new();
+	elem->type = CPP_ET_UNDEF;
+	elem->file = env->file;
+	elem->name = tiny_str_new(name->buf, name->len);
+	elem->sline = line;
+	elem->eline = line;
+	elem->decl = tiny_str_new(0, 7 + name->len);
+	memcpy(elem->decl->buf, "#undef ", 7);
+	memcpy(elem->decl->buf+7, name->buf, name->len);
+
+	cpp_scope_insert(&(env->file->root_scope), elem);
+
 	g_hash_table_remove(env->rmacros_table, name->buf);
-	name->buf[name->len] = ch;
 }
 
 static void on_macro_include(ParseEnv* env, MLStr* filename, gboolean is_system_header, gint line) {
@@ -157,7 +194,8 @@ static void on_macro_include(ParseEnv* env, MLStr* filename, gboolean is_system_
 
 	incfile = parse_include_file(env, filename, is_system_header);
 	if( incfile ) {
-		elem->v_include.include_file = tiny_str_copy(incfile->filename);
+		elem->v_include.include_file = g_strdup(incfile->filename->buf);
+		insert_rmacros_into_env(env, incfile);
 		cpp_file_unref(incfile);
 	}
 }
@@ -265,7 +303,7 @@ static void cpp_parse_macro(ParseEnv* env, CppLexer* lexer) {
 			name.buf = token.buf;
 			name.len = token.len;
 
-			on_macro_undef(env, &name);
+			on_macro_undef(env, token.line, &name);
 		}
 
 	} else if( token.len==7 && memcmp(token.buf, "include", 7)==0 ) {
@@ -433,8 +471,8 @@ static void do_macro_replace(CppElem* macro, CppLexer* lexer, gint argc, MLArg a
 			if( (pos < argc) && argv[pos].str.len > 0 ) {
 				if( pd + (1 + argv[pos].str.len + 1) < sbuf + MACRO_REPLACE_BUFFER_MAX ) {
 					*pd++ = ' ';
-					for( i=0; i<tiny_str_len(def->argv[pos]); ++i )
-						*pd++ = def->argv[pos]->buf[i];
+					for( i=0; i<argv[pos].str.len; ++i )
+						*pd++ = argv[pos].str.buf[i];
 					continue;
 				}
 			}
@@ -508,7 +546,8 @@ static gboolean macro_replace(ParseEnv* env, CppElem* macro, MLToken* token) {
 
 void cpp_macro_lexer_init(ParseEnv* env) {
 	if( env->parser->enable_macro_replace ) {
-		env->rmacros_table = g_hash_table_new_full(g_str_hash, g_str_equal, 0, (GDestroyNotify)rmacro_free);
+		env->rmacros_table = g_hash_table_new(g_str_hash, g_str_equal);
+		env->used_files = g_hash_table_new_full(g_direct_hash, g_direct_equal, (GDestroyNotify)cpp_file_unref, 0);
 		env->include_paths = cpp_parser_include_paths_ref(env->parser);
 	}
 }
@@ -516,7 +555,8 @@ void cpp_macro_lexer_init(ParseEnv* env) {
 void cpp_macro_lexer_final(ParseEnv* env) {
 	if( env->rmacros_table )
 		g_hash_table_destroy(env->rmacros_table);
-
+	if( env->used_files )
+		g_hash_table_destroy(env->used_files);
 	cpp_parser_include_paths_unref(env->include_paths);
 }
 

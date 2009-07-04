@@ -281,6 +281,8 @@ gchar* cpp_filename_to_filekey(const gchar* filename, glong namelen) {
 		len = GetFullPathNameW(wfname, 32768, wbuf, 0);
 		len = GetLongPathNameW(wbuf, wbuf, 32768);
 		g_free(wfname);
+		if( len==0 )
+			return res;
 
 		paths = g_new(gchar*, 256);
 		paths[0] = g_strdup("_:");

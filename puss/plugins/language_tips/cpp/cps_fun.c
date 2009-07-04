@@ -77,11 +77,10 @@ static MLToken* parse_function_args(MLToken* ps, MLToken* pe, CppElem* fun, gboo
 			arg = cpp_elem_new();
 			arg->type = CPP_ET_VAR;
 			arg->file = fun->file;
-			arg->name = tiny_str_new(name->buf, name->len);
+			arg->name = nskey;
 			arg->sline = name->line;
 			arg->eline = name->line;
 			arg->decl = block_meger_tokens(decl_start, ps, 0);
-			arg->v_var.nskey = nskey;
 			arg->v_var.typekey = typekey;
 
 			cpp_scope_insert(fun, arg);

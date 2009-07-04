@@ -62,7 +62,7 @@ typedef struct {
 typedef struct {
 	gboolean	sys_header;
 	TinyStr*	filename;
-	TinyStr*	include_file;
+	gchar*		include_file;
 } CppMacroInclude;
 
 typedef struct {
