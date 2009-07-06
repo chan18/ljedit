@@ -6,6 +6,7 @@
 #include "Puss.h"
 #include "Utils.h"
 #include "GlobalOptions.h"
+#include "OptionManager.h"
 
 typedef struct _SetupNode SetupNode;
 
@@ -29,16 +30,12 @@ static void setup_node_free(SetupNode* node) {
 	}
 }
 
-static SetupNode*	puss_main_setup = 0;
 static GHashTable*	puss_setup_panels = 0;
 
 gboolean puss_option_setup_create() {
-	puss_main_setup = g_new0(SetupNode, 1);
 	puss_setup_panels = g_hash_table_new_full(g_str_hash, g_str_equal, 0, (GDestroyNotify)setup_node_free);
-	if( puss_main_setup && puss_setup_panels ) {
-		puss_main_setup->id = g_strdup( "puss" );
-		puss_main_setup->name = g_strdup( _("puss") );
-		puss_main_setup->creator = puss_create_global_options_setup_widget;
+	if( puss_setup_panels ) {
+		puss_option_setup_reg("\x01", _("puss"), puss_create_global_options_setup_widget, 0, 0);
 		return TRUE;
 	}
 
@@ -47,9 +44,6 @@ gboolean puss_option_setup_create() {
 
 void puss_option_setup_destroy() {
 	g_hash_table_destroy(puss_setup_panels);
-
-	setup_node_free(puss_main_setup);
-	puss_main_setup = 0;
 }
 
 gboolean puss_option_setup_reg(const gchar* id, const gchar* name, CreateSetupWidget creator, gpointer tag, GDestroyNotify tag_destroy) {
@@ -73,15 +67,44 @@ void puss_option_setup_unreg(const gchar* id) {
 }
 
 typedef struct {
-	GtkListStore* store;
+	GtkTreeStore* store;
 	const gchar* filter;
 } FillListTag;
 
-static gboolean do_fill_list(gchar* key, SetupNode* value, FillListTag* tag) {
-	GtkTreeIter iter;
+static gboolean fill_option_list(const gchar* key, FillListTag* tag) {
+	GtkTreeIter iter, subiter;
+	GtkTreeIter* parent;
+	GtkTreeModel* model;
+	SetupNode* value;
+	gchar** path;
+	gchar** p;
 
-	gtk_list_store_append(tag->store, &iter);
-	gtk_list_store_set( tag->store, &iter
+	if( !g_str_has_prefix(key, tag->filter) )
+		return FALSE;
+
+	model = GTK_TREE_MODEL(tag->store);
+	parent = 0;
+
+	if( gtk_tree_model_get_iter_first(model, &iter) ) {
+		path = g_strsplit(key, ".", 0);
+		for( p=path; *(p+1); ++p ) {
+			do {
+				gtk_tree_model_get(model, &iter, 1, &value, -1);
+				if( g_str_equal(value->id, *p) ) {
+					parent = &iter;
+					if( gtk_tree_model_iter_children(model, &subiter, &iter) )
+						iter = subiter;
+					break;
+				}
+			} while( gtk_tree_model_iter_next(model, &iter) );
+		}
+		g_strfreev(path);
+	}
+
+	value = g_hash_table_lookup(puss_setup_panels, key);
+
+	gtk_tree_store_append(tag->store, &subiter, parent);
+	gtk_tree_store_set( tag->store, &subiter
 		, 0, value->name
 		, 1, value
 		, -1 );
@@ -89,12 +112,16 @@ static gboolean do_fill_list(gchar* key, SetupNode* value, FillListTag* tag) {
 	return FALSE;
 }
 
-static void option_setup_fill_list(GtkListStore* store, const gchar* filter) {
-	FillListTag tag = { store, filter };
+static void option_setup_fill_list(GtkTreeStore* store, const gchar* filter) {
+	FillListTag tag = { store, (filter ? filter : "") };
+	GList* keys;
 
-	do_fill_list(puss_main_setup->id, puss_main_setup, &tag);
-
-	g_hash_table_foreach(puss_setup_panels, (GHFunc)do_fill_list, &tag);
+	keys = g_hash_table_get_keys(puss_setup_panels);
+	if( keys ) {
+		keys = g_list_sort(keys, g_strcmp0);
+		g_list_foreach(keys, fill_option_list, &tag);
+		g_list_free(keys);
+	}
 }
 
 SIGNAL_CALLBACK void cb_option_setup_changed(GtkTreeView* tree_view, GtkContainer* frame) {
@@ -131,7 +158,7 @@ void puss_option_setup_show_dialog(const gchar* filter) {
 	GtkWidget* dlg;
 	GtkWidget* frame;
 	GtkTreeView* view;
-	GtkListStore* store;
+	GtkTreeStore* store;
 	GError* err = 0;
 	GtkTreePath* path;
 	GtkTreeIter  iter;
@@ -162,7 +189,7 @@ void puss_option_setup_show_dialog(const gchar* filter) {
 	dlg = GTK_WIDGET(gtk_builder_get_object(builder, "puss_option_dialog"));
 	frame = GTK_WIDGET(gtk_builder_get_object(builder, "option_setup_panel"));
 	view = GTK_TREE_VIEW(gtk_builder_get_object(builder, "option_treeview"));
-	store = GTK_LIST_STORE(gtk_builder_get_object(builder, "option_store"));
+	store = GTK_TREE_STORE(gtk_builder_get_object(builder, "option_store"));
 	gtk_builder_connect_signals(builder, frame);
 	g_object_unref(G_OBJECT(builder));
 

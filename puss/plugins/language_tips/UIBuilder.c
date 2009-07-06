@@ -212,6 +212,7 @@ static void option_monitor_init(LanguageTips* self) {
 	parse_include_path_option(option, 0, self);
 	
 	self->app->option_setup_reg("language_tips", _("language tips"), (CreateSetupWidget)create_setup_ui, self, 0);
+	self->app->option_setup_reg("language_tips.vv", _("vv"), (CreateSetupWidget)create_setup_ui, self, 0);
 }
 
 static void option_monitor_final(LanguageTips* self) {

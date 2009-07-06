@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <interface>
-  <object class="GtkListStore" id="option_store">
+  <object class="GtkTreeStore" id="option_store">
     <!-- name, setup_node -->
     <columns>
       <column type="gchararray"/>
