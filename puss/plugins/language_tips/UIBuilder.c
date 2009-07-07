@@ -91,6 +91,7 @@ static void parse_include_path_option(const Option* option, const gchar* old, La
 static const gchar* TARGET_OPTION_KEY = "target_option";
 static const gchar* TEXT_VIEW_KEY = "text_view";
 static const gchar* FILE_BUTTON_KEY = "file_button";
+static const gchar* BUILDER_KEY = "builder";
 
 static void cb_add_button_changed(GtkButton* w, LanguageTips* self) {
 	GtkTextIter iter;
@@ -138,7 +139,86 @@ static void cb_apply_button_changed(GtkButton* w, LanguageTips* self) {
 	g_free(text);
 }
 
-static GtkWidget* create_setup_ui(LanguageTips* self) {
+static void cb_normal_apply_button_changed(GtkButton* w, LanguageTips* self) {
+	GtkBuilder* builder;
+	const Option* option;
+	GtkEntry* entry;
+	const gchar* text;
+
+	builder = (GtkBuilder*)g_object_get_data(G_OBJECT(w), BUILDER_KEY);
+
+	option = self->app->option_find("language_tips", "hint_max_num");
+	entry = GTK_ENTRY(gtk_builder_get_object(builder, "hint_max_num_entry"));
+	self->app->option_set(option, gtk_entry_get_text(entry));
+
+	option = self->app->option_find("language_tips", "hint_max_time");
+	entry = GTK_ENTRY(gtk_builder_get_object(builder, "hint_max_time_entry"));
+	self->app->option_set(option, gtk_entry_get_text(entry));
+
+	option = self->app->option_find("language_tips", "jump_max_num");
+	entry = GTK_ENTRY(gtk_builder_get_object(builder, "jump_max_num_entry"));
+	self->app->option_set(option, gtk_entry_get_text(entry));
+
+	option = self->app->option_find("language_tips", "jump_max_time");
+	entry = GTK_ENTRY(gtk_builder_get_object(builder, "jump_max_time_entry"));
+	self->app->option_set(option, gtk_entry_get_text(entry));
+}
+
+static GtkWidget* create_setup_normal_ui(LanguageTips* self) {
+	const Option* option;
+	GtkBuilder* builder;
+	GtkWidget* panel;
+	GError* err = 0;
+	GtkEntry* entry;
+	GtkButton* button;
+	gchar* setup_filename;
+
+	setup_filename = g_build_filename(self->app->get_plugins_path(), "language_tips_res", "setup_normal.ui", NULL);
+	if( !setup_filename )
+		return 0;
+
+	// create UI
+	builder = gtk_builder_new();
+	if( !builder )
+		return 0;
+	gtk_builder_set_translation_domain(builder, TEXT_DOMAIN);
+
+	gtk_builder_add_from_file(builder, setup_filename, &err);
+	if( err ) {
+		g_printerr("ERROR(language_tips): %s\n", err->message);
+		g_error_free(err);
+		g_object_unref(G_OBJECT(builder));
+		return 0;
+	}
+
+	panel = GTK_WIDGET(g_object_ref(gtk_builder_get_object(builder, "main_panel")));
+
+	option = self->app->option_find("language_tips", "hint_max_num");
+	entry = GTK_ENTRY(gtk_builder_get_object(builder, "hint_max_num_entry"));
+	gtk_entry_set_text(entry, option->value);
+
+	option = self->app->option_find("language_tips", "hint_max_time");
+	entry = GTK_ENTRY(gtk_builder_get_object(builder, "hint_max_time_entry"));
+	gtk_entry_set_text(entry, option->value);
+
+	option = self->app->option_find("language_tips", "jump_max_num");
+	entry = GTK_ENTRY(gtk_builder_get_object(builder, "jump_max_num_entry"));
+	gtk_entry_set_text(entry, option->value);
+
+	option = self->app->option_find("language_tips", "jump_max_time");
+	entry = GTK_ENTRY(gtk_builder_get_object(builder, "jump_max_time_entry"));
+	gtk_entry_set_text(entry, option->value);
+
+	button = GTK_BUTTON(gtk_builder_get_object(builder, "apply_button"));
+	g_object_set_data_full(G_OBJECT(button), BUILDER_KEY, g_object_ref(builder), g_object_unref);
+	g_signal_connect(button, "clicked", G_CALLBACK(cb_normal_apply_button_changed), self);
+
+	g_object_unref(G_OBJECT(builder));
+
+	return panel;
+}
+
+static GtkWidget* create_setup_path_ui(LanguageTips* self) {
 	GtkBuilder* builder;
 	GtkWidget* panel;
 	GtkWidget* w;
@@ -148,7 +228,7 @@ static GtkWidget* create_setup_ui(LanguageTips* self) {
 	const Option* option;
 	gchar* setup_filename;
 
-	setup_filename = g_build_filename(self->app->get_plugins_path(), "language_tips_setup.ui", NULL);
+	setup_filename = g_build_filename(self->app->get_plugins_path(), "language_tips_res", "setup_path.ui", NULL);
 	if( !setup_filename )
 		return 0;
 
@@ -173,14 +253,14 @@ static GtkWidget* create_setup_ui(LanguageTips* self) {
 		view = GTK_TEXT_VIEW(gtk_builder_get_object(builder, "path_text_view"));
 
 		w = GTK_WIDGET(gtk_builder_get_object(builder, "add_button"));
-		g_object_set_data(G_OBJECT(w), "target_option", (gpointer)option);
-		g_object_set_data(G_OBJECT(w), "text_view", view);
-		g_object_set_data(G_OBJECT(w), "file_button", gtk_builder_get_object(builder, "path_choose_button"));
+		g_object_set_data(G_OBJECT(w), TARGET_OPTION_KEY, (gpointer)option);
+		g_object_set_data(G_OBJECT(w), TEXT_VIEW_KEY, view);
+		g_object_set_data(G_OBJECT(w), FILE_BUTTON_KEY, gtk_builder_get_object(builder, "path_choose_button"));
 		g_signal_connect(w, "clicked", G_CALLBACK(cb_add_button_changed), self);
 
 		w = GTK_WIDGET(gtk_builder_get_object(builder, "apply_button"));
-		g_object_set_data(G_OBJECT(w), "target_option", (gpointer)option);
-		g_object_set_data(G_OBJECT(w), "text_view", view);
+		g_object_set_data(G_OBJECT(w), TARGET_OPTION_KEY, (gpointer)option);
+		g_object_set_data(G_OBJECT(w), TEXT_VIEW_KEY, view);
 		g_signal_connect(w, "clicked", G_CALLBACK(cb_apply_button_changed), self);
 
 		buf = gtk_text_view_get_buffer(view);
@@ -210,9 +290,10 @@ static void option_monitor_init(LanguageTips* self) {
 	option = self->app->option_reg("language_tips_cpp", "include_path", "/usr/include\n/usr/include/c++/4.0\n$pkg-config --cflags gtk+-2.0\n");
 	self->option_path_change_handler = self->app->option_monitor_reg(option, (OptionChanged)parse_include_path_option, self, 0);
 	parse_include_path_option(option, 0, self);
-	
-	self->app->option_setup_reg("language_tips", _("language tips"), (CreateSetupWidget)create_setup_ui, self, 0);
-	self->app->option_setup_reg("language_tips.vv", _("vv"), (CreateSetupWidget)create_setup_ui, self, 0);
+
+	self->app->option_setup_reg("language_tips", _("language tips"), (CreateSetupWidget)create_setup_normal_ui, self, 0);
+	self->app->option_setup_reg("language_tips._", _("tips limit"), (CreateSetupWidget)create_setup_normal_ui, self, 0);
+	self->app->option_setup_reg("language_tips.path", _("c++ paths"), (CreateSetupWidget)create_setup_path_ui, self, 0);
 }
 
 static void option_monitor_final(LanguageTips* self) {
@@ -242,7 +323,7 @@ void ui_create(LanguageTips* self) {
 
 	gtk_builder_set_translation_domain(builder, TEXT_DOMAIN);
 
-	filepath = g_build_filename(self->app->get_plugins_path(), "language_tips.ui", NULL);
+	filepath = g_build_filename(self->app->get_plugins_path(), "language_tips_res", "main.ui", NULL);
 	if( !filepath ) {
 		g_printerr("ERROR(language_tips) : build ui filepath failed!\n");
 		g_object_unref(G_OBJECT(builder));

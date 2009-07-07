@@ -91,6 +91,17 @@ SIGNAL_CALLBACK void view_menu_active_edit_page( GtkAction* action ) {
 	gtk_widget_grab_focus(GTK_WIDGET(view));
 }
 
+SIGNAL_CALLBACK void view_menu_doc_page_n( GtkRadioAction* action ) {
+	gint action_value = 0;
+	gint page_num = 0;
+
+	g_object_get(action, "value", &action_value, NULL);
+	page_num = gtk_radio_action_get_current_value(action);
+
+	if( page_num==action_value && page_num <= gtk_notebook_get_n_pages(puss_app->doc_panel) )
+		gtk_notebook_set_current_page(puss_app->doc_panel, page_num-1);
+}
+
 SIGNAL_CALLBACK void view_menu_left_panel( GtkAction* action ) {
 	gboolean active = gtk_toggle_action_get_active(GTK_TOGGLE_ACTION(action));
 	if( active )

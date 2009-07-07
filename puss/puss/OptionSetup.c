@@ -72,7 +72,7 @@ typedef struct {
 } FillListTag;
 
 static gboolean fill_option_list(const gchar* key, FillListTag* tag) {
-	GtkTreeIter iter, subiter;
+	GtkTreeIter iter, subiter, parent_iter;
 	GtkTreeIter* parent;
 	GtkTreeModel* model;
 	SetupNode* value;
@@ -91,7 +91,8 @@ static gboolean fill_option_list(const gchar* key, FillListTag* tag) {
 			do {
 				gtk_tree_model_get(model, &iter, 1, &value, -1);
 				if( g_str_equal(value->id, *p) ) {
-					parent = &iter;
+					parent_iter = iter;
+					parent = &parent_iter;
 					if( gtk_tree_model_iter_children(model, &subiter, &iter) )
 						iter = subiter;
 					break;

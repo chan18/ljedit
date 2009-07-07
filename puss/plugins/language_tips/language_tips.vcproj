@@ -92,7 +92,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(ProjectDir)*.ui $(SolutionDir)bin\plugins\&#x0D;&#x0A;copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\&#x0D;&#x0A;mkdir $(SolutionDir)bin\plugins\$(ProjectName)_res&#x0D;&#x0A;copy $(ProjectDir)$(ProjectName)_res\*.* $(SolutionDir)bin\plugins\$(ProjectName)_res\&#x0D;&#x0A;"
+				CommandLine="copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\&#x0D;&#x0A;mkdir $(SolutionDir)bin\plugins\$(ProjectName)_res&#x0D;&#x0A;copy $(ProjectDir)$(ProjectName)_res\*.* $(SolutionDir)bin\plugins\$(ProjectName)_res\&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -171,7 +171,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(ProjectDir)$(ProjectName).ui $(SolutionDir)bin\plugins\&#x0D;&#x0A;copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\&#x0D;&#x0A;mkdir $(SolutionDir)bin\plugins\$(ProjectName)_res&#x0D;&#x0A;copy $(ProjectDir)$(ProjectName)_res\*.* $(SolutionDir)bin\plugins\$(ProjectName)_res\&#x0D;&#x0A;"
+				CommandLine="copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\&#x0D;&#x0A;mkdir $(SolutionDir)bin\plugins\$(ProjectName)_res&#x0D;&#x0A;copy $(ProjectDir)$(ProjectName)_res\*.* $(SolutionDir)bin\plugins\$(ProjectName)_res\&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -322,7 +322,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\language_tips_res\main.ui"
+				>
+			</File>
+			<File
 				RelativePath=".\language_tips_res\namespace.png"
+				>
+			</File>
+			<File
+				RelativePath=".\language_tips_res\setup_normal.ui"
+				>
+			</File>
+			<File
+				RelativePath=".\language_tips_res\setup_path.ui"
 				>
 			</File>
 			<File
@@ -340,14 +352,6 @@
 		</File>
 		<File
 			RelativePath=".\language_tips.plugin"
-			>
-		</File>
-		<File
-			RelativePath=".\language_tips.ui"
-			>
-		</File>
-		<File
-			RelativePath=".\language_tips_setup.ui"
 			>
 		</File>
 		<File

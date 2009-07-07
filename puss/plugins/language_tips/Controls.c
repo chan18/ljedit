@@ -4,6 +4,7 @@
 #include "LanguageTips.h"
 
 #include <string.h>
+#include <stdlib.h>
 
 #include <gdk/gdkkeysyms.h>
 #include <gtksourceview/gtksourcebuffer.h>
@@ -23,6 +24,16 @@ struct _ControlsPriv {
 	gint			tips_last_line;
 	gint			tips_last_offset;
 
+	// options
+	gpointer		option_monitor_hint_max_num;
+	gpointer		option_monitor_hint_max_time;
+	gpointer		option_monitor_jump_max_num;
+	gpointer		option_monitor_jump_max_time;
+
+	gint			option_hint_search_max_num;
+	gint			option_hint_search_max_time;
+	gint			option_jump_search_max_num;
+	gint			option_jump_search_max_time;
 };
 
 static void calc_tip_pos(GtkTextView* view, gint* px, gint* py) {
@@ -199,7 +210,14 @@ static void jump_to_current(LanguageTips* self, GtkTextView* view) {
 	CppElem* elem;
 
 	if( search_current(self, view, &spath, &file, &line) ) {
-		seq = cpp_guide_search(self->cpp_guide, spath, 0, file, line, -1, -1);
+		seq = cpp_guide_search( self->cpp_guide
+				, spath
+				, 0
+				, file
+				, line
+				, self->controls_priv->option_jump_search_max_num
+				, self->controls_priv->option_jump_search_max_time );
+
 		cpp_file_unref(file);
 
 		if( !seq )
@@ -628,7 +646,14 @@ static void show_hint(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf,
 			if( tag=='s' )
 				flag |= CPP_GUIDE_SEARCH_FLAG_WITH_KEYWORDS;
 
-			seq = cpp_guide_search( self->cpp_guide, spath, flag, file, line + 1, 100, 200);
+			seq = cpp_guide_search( self->cpp_guide
+						, spath
+						, flag
+						, file
+						, line + 1
+						, self->controls_priv->option_hint_search_max_num
+						, self->controls_priv->option_hint_search_max_time );
+
 			if( seq ) {
 				gint x = 0;
 				gint y = 0;
@@ -1076,8 +1101,29 @@ SIGNAL_CALLBACK gboolean tips_list_cb_query_tooltip( GtkTreeView* tree_view
 	return FALSE;
 }
 
+static void parse_hint_max_num_option(const Option* option, const gchar* old, ControlsPriv* priv) {
+	gint val = atoi(option->value);
+	priv->option_hint_search_max_num = val ? val : -1;
+}
+
+static void parse_hint_max_time_option(const Option* option, const gchar* old, ControlsPriv* priv) {
+	gint val = atoi(option->value);
+	priv->option_hint_search_max_time = val ? val : -1;
+}
+
+static void parse_jump_max_num_option(const Option* option, const gchar* old, ControlsPriv* priv) {
+	gint val = atoi(option->value);
+	priv->option_jump_search_max_num = val ? val : -1;
+}
+
+static void parse_jump_max_time_option(const Option* option, const gchar* old, ControlsPriv* priv) {
+	gint val = atoi(option->value);
+	priv->option_jump_search_max_time = val ? val : -1;
+}
+
 void controls_init(LanguageTips* self) {
 	ControlsPriv* priv;
+	const Option* option;
 	GtkNotebook* doc_panel;
 	gint i;
 	gint page_count;
@@ -1088,6 +1134,22 @@ void controls_init(LanguageTips* self) {
 
 	priv = g_new0(ControlsPriv, 1);
 	self->controls_priv = priv;
+
+	option = self->app->option_reg("language_tips", "hint_max_num",  "100");
+	priv->option_monitor_hint_max_num = self->app->option_monitor_reg(option, &parse_hint_max_num_option, priv, 0);
+	parse_hint_max_num_option(option, 0, priv);
+
+	option = self->app->option_reg("language_tips", "hint_max_time", "200");
+	priv->option_monitor_hint_max_time = self->app->option_monitor_reg(option, &parse_hint_max_time_option, priv, 0);
+	parse_hint_max_time_option(option, 0, priv);
+
+	option = self->app->option_reg("language_tips", "jump_max_num",  "-1");
+	priv->option_monitor_jump_max_num = self->app->option_monitor_reg(option, &parse_jump_max_num_option, priv, 0);
+	parse_jump_max_num_option(option, 0, priv);
+
+	option = self->app->option_reg("language_tips", "jump_max_time", "-1");
+	priv->option_monitor_jump_max_time = self->app->option_monitor_reg(option, &parse_jump_max_time_option, priv, 0);
+	parse_jump_max_time_option(option, 0, priv);
 
 	priv->show_function_action = gtk_action_new("cpp_guide_show_function_action", _("function tip"), _("show function args tip."), GTK_STOCK_FIND);
 	priv->jump_to_define_action = gtk_action_new("cpp_guide_jump_to_define_action", _("jump to define"), _("jump to define."), GTK_STOCK_JUMP_TO);
