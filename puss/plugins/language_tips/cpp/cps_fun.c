@@ -169,6 +169,7 @@ static gboolean parse_function_common(ParseEnv* env, Block* block, MLToken* star
 __cps_finish__:
 	tiny_str_free(typekey);
 	tiny_str_free(nskey);
+	cpp_elem_free(elem);
 	return FALSE;
 }
 

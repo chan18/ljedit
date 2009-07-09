@@ -976,6 +976,7 @@ static void signals_disconnect(LanguageTips* self, GtkTextView* view) {
 	if( !buf )
 		return;
 
+    g_signal_handlers_disconnect_matched( view->im_context, (GSignalMatchType)(G_SIGNAL_MATCH_DATA), 0, 0, NULL, NULL, self );
     g_signal_handlers_disconnect_matched( view, (GSignalMatchType)(G_SIGNAL_MATCH_DATA), 0, 0, NULL, NULL, self );
     g_signal_handlers_disconnect_matched( buf, (GSignalMatchType)(G_SIGNAL_MATCH_DATA), 0, 0, NULL, NULL, self );
 }

@@ -21,5 +21,11 @@ void cpp_scope_insert(CppElem* parent, CppElem* elem);
 
 void cpp_file_clear(CppFile* file);
 
+#ifdef _DEBUG
+	extern gint cps_debug_file_count;
+	extern gint cps_debug_elem_count;
+	extern gint cps_debug_tinystr_count;
+#endif
+
 #endif//PUSS_CPP_DS_H
 

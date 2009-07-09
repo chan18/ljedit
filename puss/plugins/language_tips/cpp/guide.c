@@ -37,9 +37,13 @@ CppGuide* cpp_guide_new(gboolean enable_macro_replace, gboolean enable_search) {
 
 void cpp_guide_free(CppGuide* guide) {
 	if( guide ) {
-		cpp_parser_final( &(guide->parser) );
+		guide->parser.cb_tag = 0;
+		guide->parser.cb_file_insert = 0;
+		guide->parser.cb_file_remove = 0;
 
 		stree_final( &(guide->stree) );
+
+		cpp_parser_final( &(guide->parser) );
 
 		g_regex_unref(guide->re_pkg_config_include);
 		g_free(guide);

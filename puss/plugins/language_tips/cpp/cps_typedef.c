@@ -74,7 +74,6 @@ static gboolean cps_normal_typedef(ParseEnv* env, Block* block) {
 			if( cps_fun(env, block) ) {
 				if( tpscope.v_ncscope.scope ) {
 					elem = tpscope.v_ncscope.scope->data;
-					tpscope.v_ncscope.scope->data = 0;
 					if( elem && elem->type==CPP_ET_FUN) {
 						// TODO : use elem directly
 						CppElem* tpelem = cpp_elem_new();

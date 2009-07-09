@@ -3,6 +3,11 @@
 
 #include "ds.h"
 
+#ifdef _DEBUG
+	gint cps_debug_file_count = 0;
+	gint cps_debug_elem_count = 0;
+	gint cps_debug_tinystr_count = 0;
+#endif
 
 #define  tiny_str_mem_size(len) (sizeof(TinyStr) + len)
 
@@ -14,6 +19,7 @@ TinyStr* tiny_str_new(const gchar* buf, gsize len) {
 
 #ifdef _DEBUG
 	res = (TinyStr*)g_new(gchar, tiny_str_mem_size(len) );
+	g_atomic_int_add(&cps_debug_tinystr_count, 1);
 #else
 	res = (TinyStr*)g_slice_alloc( tiny_str_mem_size(len) );
 #endif
@@ -32,6 +38,7 @@ void tiny_str_free(TinyStr* str) {
 		// 
 #ifdef _DEBUG
 		g_free(str);
+		g_atomic_int_add(&cps_debug_tinystr_count, -1);
 #else
 		g_slice_free1(tiny_str_mem_size(tiny_str_len(str)), str);
 #endif
@@ -56,6 +63,7 @@ guint tiny_str_hash(const TinyStr* v) {
 
 CppElem* cpp_elem_new() {
 #ifdef _DEBUG
+	g_atomic_int_add(&cps_debug_elem_count, 1);
 	return g_new0(CppElem, 1);
 #else
 	return g_slice_new0(CppElem);
@@ -63,15 +71,19 @@ CppElem* cpp_elem_new() {
 }
 
 void cpp_elem_free(CppElem* elem) {
-	cpp_elem_clear(elem);
+	if( elem ) {
+		cpp_elem_clear(elem);
 #ifdef _DEBUG
-	g_free(elem);
+		g_free(elem);
+		g_atomic_int_add(&cps_debug_elem_count, -1);
 #else
-	g_slice_free(CppElem, elem);
+		g_slice_free(CppElem, elem);
 #endif
+	}
 }
 
 void cpp_elem_clear(CppElem* elem) {
+	gint i;
 	if( !elem )
 		return;
 
@@ -79,41 +91,49 @@ void cpp_elem_clear(CppElem* elem) {
 	tiny_str_free(elem->decl);
 
 	switch( elem->type ) {
-	case CPP_ET_KEYWORD:
-	case CPP_ET_UNDEF:
-	case CPP_ET_MACRO:
+	case CPP_ET_KEYWORD:	// CppKeyword
+	case CPP_ET_UNDEF:		// CppMacroUndef
 		break;
-	case CPP_ET_INCLUDE:
+	case CPP_ET_MACRO:		// CppMacroDefine
+		for( i=0; i<elem->v_define.argc; ++i )
+			tiny_str_free(elem->v_define.argv[i]);
+		g_slice_free1( sizeof(gpointer) * elem->v_define.argc, elem->v_define.argv );
+		tiny_str_free(elem->v_define.value);
+		break;
+	case CPP_ET_INCLUDE:	// CppMacroInclude
 		tiny_str_free(elem->v_include.filename);
-		tiny_str_free(elem->v_include.include_file);
+		g_free(elem->v_include.include_file);
 		break;
-	case CPP_ET_VAR:
+	case CPP_ET_VAR:		// CppVar
 		tiny_str_free(elem->v_var.typekey);
 		tiny_str_free(elem->v_var.nskey);
 		break;
-	case CPP_ET_FUN:
+	case CPP_ET_FUN:		// CppFun
 		tiny_str_free(elem->v_fun.typekey);
 		tiny_str_free(elem->v_fun.nskey);
 		//g_free(elem->v_fun.fun_template);
 		//g_free(elem->v_fun.impl);
 		break;
-	case CPP_ET_ENUMITEM:
+	case CPP_ET_ENUMITEM:	// CppEnumItem
 		tiny_str_free(elem->v_enum_item.value);
 		break;
-	case CPP_ET_ENUM:
+	case CPP_ET_ENUM:		// CppEnum
 		tiny_str_free(elem->v_enum.nskey);
 		break;
-	case CPP_ET_USING:
+	case CPP_ET_USING:		// CppUsing
 		tiny_str_free(elem->v_using.nskey);
 		break;
-	case CPP_ET_TYPEDEF:
+	case CPP_ET_TYPEDEF:	// CppTypedef
 		tiny_str_free(elem->v_typedef.typekey);
 		break;
-	case CPP_ET_CLASS:
+	case CPP_ET_CLASS:		// CppClass
 		tiny_str_free(elem->v_class.nskey);
+		for( i=0; i<elem->v_class.inhers_count; ++i )
+			tiny_str_free(elem->v_class.inhers[i]);
+		g_slice_free1( sizeof(gpointer) * elem->v_class.inhers_count, elem->v_class.inhers );
 		break;
-	case CPP_ET_NCSCOPE:
-	case CPP_ET_NAMESPACE:
+	case CPP_ET_NCSCOPE:	// CppNCScope
+	case CPP_ET_NAMESPACE:	// CppNamespace
 		break;
 	}
 
@@ -163,6 +183,9 @@ void cpp_file_unref(CppFile* file) {
 	if( g_atomic_int_dec_and_test(&(file->ref_count)) ) {
 		cpp_file_clear(file);
 		g_free(file);
+#ifdef _DEBUG
+		g_atomic_int_add(&cps_debug_file_count, -1);
+#endif
 	}
 }
 

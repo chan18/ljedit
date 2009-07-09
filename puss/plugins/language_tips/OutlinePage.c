@@ -97,7 +97,7 @@ static void outline_set_file(LanguageTips* self, CppFile* file, gint line) {
 	}
 }
 
-void outline_update(LanguageTips* self) {
+static gboolean do_outline_update(LanguageTips* self) {
 	GtkNotebook* doc_panel;
 	gint num;
 	GtkTextBuffer* buf;
@@ -108,25 +108,32 @@ void outline_update(LanguageTips* self) {
 	doc_panel = puss_get_doc_panel(self->app);
 	num = gtk_notebook_get_current_page(doc_panel);
 	if( num < 0 )
-		return;
+		return FALSE;
 
 	buf = self->app->doc_get_buffer_from_page_num(num);
 	if( !buf )
-		return;
+		return FALSE;
 
 	url = self->app->doc_get_url(buf);
 	if( !url )
-		return;
+		return FALSE;
 
 	file = cpp_guide_find_parsed(self->cpp_guide, url->str, url->len);
 	if( !file )
-		return;
+		return FALSE;
 
 	gtk_text_buffer_get_iter_at_mark(buf, &iter, gtk_text_buffer_get_insert(buf));
 	num = gtk_text_iter_get_line(&iter);
-	outline_set_file(self, file, num);
 
+	outline_set_file(self, file, num);
 	cpp_file_unref(file);
+
+	return TRUE;
+}
+
+void outline_update(LanguageTips* self) {
+	if( !do_outline_update(self) )
+		outline_set_file(self, 0, 0);
 }
 
 SIGNAL_CALLBACK gboolean outline_cb_query_tooltip( GtkTreeView* tree_view

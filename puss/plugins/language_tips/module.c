@@ -47,6 +47,9 @@ PUSS_EXPORT void puss_plugin_destroy(void* ext) {
 	if( self->jump_to_seq )
 		g_sequence_free(self->jump_to_seq);
 
+	if( self->outline_file )
+		cpp_file_unref(self->outline_file);
+
 	cpp_guide_free(self->cpp_guide);
 
 	g_free(self);

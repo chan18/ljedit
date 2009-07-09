@@ -3,12 +3,6 @@
 #ifndef PUSS_CPP_GUIDE_H
 #define PUSS_CPP_GUIDE_H
 
-#ifdef _MSVCR
-#pragma warning( disable : 4244 )
-#pragma warning( disable : 4311 )
-#pragma warning( disable : 4312 )
-#endif//_MSVCR
-
 #include <glib.h>
 #include <memory.h>
 
@@ -108,7 +102,7 @@ typedef struct {
 
 	gchar		class_type;
 	TinyStr*	nskey;
-	gsize		inhers_count;
+	gint		inhers_count;
 	TinyStr**	inhers;
 } CppClass;
 
