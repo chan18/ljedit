@@ -4,9 +4,7 @@
 #ifndef PUSS_INC_DOCMANAGER_H
 #define PUSS_INC_DOCMANAGER_H
 
-#include <gtk/gtk.h>
-
-typedef gboolean (*FindLocation)(GtkTextBuffer* buf, gint* pline, gint* poffset, gpointer tag);
+#include "IPuss.h"
 
 // doc & view
 void			puss_doc_set_url( GtkTextBuffer* buffer, const gchar* url );

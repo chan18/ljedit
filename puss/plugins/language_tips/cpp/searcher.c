@@ -1218,7 +1218,7 @@ static void searcher_start(Searcher* searcher, GList* spath, CppFile* file, gint
 
 void searcher_search( CppSTree* stree
 	, GList* spath
-	, void (*cb)(CppElem* elem, gpointer tag)
+	, gboolean (*cb)(CppElem* elem, gpointer tag)
 	, gpointer cb_tag
 	, CppFile* file
 	, gint line

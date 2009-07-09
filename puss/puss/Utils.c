@@ -141,6 +141,7 @@ gboolean puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST
 }
 
 #ifdef G_OS_WIN32
+#define _WIN32_WINNT 0x0500
 #include <windows.h>
 #endif
 

@@ -10,7 +10,7 @@ ifeq ($(OS), Windows_NT)
 endif
 
 CC = gcc
-CFLAGS = -g -Wall
+CFLAGS = -g -Wall -D_DEBUG
 OBJPATH = debug
 
 ifeq ($(BUILD), release)

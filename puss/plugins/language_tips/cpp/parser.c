@@ -7,10 +7,6 @@
 #include "keywords.h"
 #include "cps.h"
 
-#ifdef _DEBUG
-	static gint cps_debug_cbs_count = 0;
-#endif
-
 static void __dump_block(Block* block) {
 	gchar ch;
 	gsize i;
@@ -45,13 +41,17 @@ static void __dump_block(Block* block) {
 	g_print("\n--------------------------------------------------------\n");
 }
 
-static void cpp_parser_on_remove_file(gchar* filekey, CppFile* file, CppParser* self) {
-	if( self->cb_file_remove ) {
 #ifdef _DEBUG
-		g_atomic_int_add(&cps_debug_cbs_count, -1);
-#endif
-		self->cb_file_remove(file, self->cb_tag);
+	static void trace_parser_status(const gchar* ms, CppParser* env) {
+		g_printerr("DEBUG[csp_debug %s] : files:%d/%d elems:%d str:%d\n", ms, g_hash_table_size(env->files), cps_debug_file_count, cps_debug_elem_count, cps_debug_tinystr_count);
 	}
+#else
+	#define trace_parser_status(ms,env)
+#endif
+
+static void cpp_parser_on_remove_file(gchar* filekey, CppFile* file, CppParser* self) {
+	if( self->cb_file_remove )
+		self->cb_file_remove(file, self->cb_tag);
 	cpp_file_unref(file);
 }
 
@@ -62,21 +62,14 @@ void cpp_parser_init(CppParser* self, gboolean enable_macro_replace) {
 
 	g_static_rw_lock_init( &(self->include_paths_lock) );
 	g_static_rw_lock_init( &(self->files_lock) );
-#ifdef _DEBUG
-	g_printerr("DEBUG[csp_debug ss] : files:%d/%d cbs:%d elems:%d str:%d\n", g_hash_table_size(self->files), cps_debug_file_count, cps_debug_cbs_count, cps_debug_elem_count, cps_debug_tinystr_count);
-#endif
+
+	trace_parser_status("init", self);
 }
 
 void cpp_parser_final(CppParser* self) {
-#ifdef _DEBUG
-	g_printerr("DEBUG[csp_debug fs] : files:%d/%d cbs:%d elems:%d str:%d\n", g_hash_table_size(self->files), cps_debug_file_count, cps_debug_cbs_count, cps_debug_elem_count, cps_debug_tinystr_count);
-#endif
-
+	trace_parser_status("clean_start", self);
 	g_hash_table_foreach_remove(self->files, cpp_parser_on_remove_file, self);
-
-#ifdef _DEBUG
-	g_printerr("DEBUG[csp_debug fs] : files:%d/%d cbs:%d elems:%d str:%d\n", g_hash_table_size(self->files), cps_debug_file_count, cps_debug_cbs_count, cps_debug_elem_count, cps_debug_tinystr_count);
-#endif
+	trace_parser_status("  clean_end", self);
 
 	g_hash_table_destroy(self->files);
 	cpp_keywords_table_free(self->keywords_table);
@@ -292,12 +285,8 @@ CppFile* cpp_parser_parse_use_menv(ParseEnv* env, const gchar* filekey) {
 		}
 
 		file->status = 0;
-		if( env->parser->cb_file_insert ) {
-#ifdef _DEBUG
-			g_atomic_int_add(&cps_debug_cbs_count, 1);
-#endif
+		if( env->parser->cb_file_insert )
 			(*(env->parser->cb_file_insert))(file, env->parser->cb_tag);
-		}
 	}
 
 	return file;
