@@ -80,10 +80,10 @@ int main(int argc, char* argv[]) {
 	gchar* filepath;
 	gboolean res;
 
-	// !!!GtkBuild error when use this on win32
-	// 
-	//g_mem_set_vtable(glib_mem_profiler_table);
-	//g_atexit(g_mem_profile);
+#ifdef _DEBUG
+	g_mem_set_vtable(glib_mem_profiler_table);
+	g_atexit(g_mem_profile);
+#endif
 
 	g_thread_init(NULL);
 
