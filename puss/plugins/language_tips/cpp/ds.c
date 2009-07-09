@@ -12,8 +12,12 @@ TinyStr* tiny_str_new(const gchar* buf, gsize len) {
 	if( len > 0x0000ffff )
 		len = 0x0000ffff;
 
-	//TinyStr* res = (TinyStr*)g_new(gchar, tiny_str_mem_size(len) );
+#ifdef _DEBUG
+	res = (TinyStr*)g_new(gchar, tiny_str_mem_size(len) );
+#else
 	res = (TinyStr*)g_slice_alloc( tiny_str_mem_size(len) );
+#endif
+
 	res->len_hi = (gchar)(len >> 8);
 	res->len_lo = (gchar)(len & 0xff);
 	if( buf )
@@ -26,8 +30,11 @@ void tiny_str_free(TinyStr* str) {
 	if( str ) {
 		// !!! size = sizeof(short) + len + 1 = sizeof(TinyStr) + len
 		// 
-		//g_free(str);
+#ifdef _DEBUG
+		g_free(str);
+#else
 		g_slice_free1(tiny_str_mem_size(tiny_str_len(str)), str);
+#endif
 	}
 }
 
@@ -48,14 +55,20 @@ guint tiny_str_hash(const TinyStr* v) {
 }
 
 CppElem* cpp_elem_new() {
-	//return g_new0(CppElem, 1);
+#ifdef _DEBUG
+	return g_new0(CppElem, 1);
+#else
 	return g_slice_new0(CppElem);
+#endif
 }
 
 void cpp_elem_free(CppElem* elem) {
 	cpp_elem_clear(elem);
-	//g_free(elem);
+#ifdef _DEBUG
+	g_free(elem);
+#else
 	g_slice_free(CppElem, elem);
+#endif
 }
 
 void cpp_elem_clear(CppElem* elem) {

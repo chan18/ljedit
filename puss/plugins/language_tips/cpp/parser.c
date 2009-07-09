@@ -42,6 +42,13 @@ static void __dump_block(Block* block) {
 	g_print("\n--------------------------------------------------------\n");
 }
 
+static void cpp_parser_remove_file(gchar* filekey, CppFile* file, CppParser* self) {
+	g_hash_table_remove(self->files, filekey);
+	if( self->cb_file_remove )
+		self->cb_file_remove(file, self->cb_tag);
+	cpp_file_unref(file);
+}
+
 void cpp_parser_init(CppParser* self, gboolean enable_macro_replace) {
 	self->keywords_table = cpp_keywords_table_new();
 	self->enable_macro_replace = enable_macro_replace;
@@ -52,6 +59,8 @@ void cpp_parser_init(CppParser* self, gboolean enable_macro_replace) {
 }
 
 void cpp_parser_final(CppParser* self) {
+	g_hash_table_foreach(self->files, cpp_parser_remove_file, self);
+	g_hash_table_destroy(self->files);
 	cpp_keywords_table_free(self->keywords_table);
 
 	g_static_rw_lock_free( &(self->files_lock) );
@@ -228,12 +237,8 @@ CppFile* cpp_parser_parse_use_menv(ParseEnv* env, const gchar* filekey) {
 		}
 
 	} else {
-		if( file ) {
-			g_hash_table_remove(env->parser->files, filekey);
-			if( env->parser->cb_file_remove )
-				env->parser->cb_file_remove(file, env->parser->cb_tag);
-			cpp_file_unref(file);
-		}
+		if( file )
+			cpp_parser_remove_file(file->filename, file, env->parser);
 
 		file = g_new0(CppFile, 1);
 		file->datetime = filestat.st_mtime;

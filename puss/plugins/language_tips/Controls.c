@@ -200,67 +200,6 @@ static gboolean search_current(LanguageTips* self, GtkTextView* view, gpointer* 
 	return FALSE;
 }
 
-static void jump_to_current(LanguageTips* self, GtkTextView* view) {
-	CppFile* file;
-	gint line;
-	gpointer spath;
-	GSequence* seq;
-	gboolean is_last;
-	gint index;
-	CppElem* elem;
-
-	if( search_current(self, view, &spath, &file, &line) ) {
-		seq = cpp_guide_search( self->cpp_guide
-				, spath
-				, 0
-				, file
-				, line
-				, self->controls_priv->option_jump_search_max_num
-				, self->controls_priv->option_jump_search_max_time );
-
-		cpp_file_unref(file);
-
-		if( !seq )
-			return;
-
-		is_last = self->jump_to_seq
-			&& g_sequence_get_length(seq)==g_sequence_get_length(self->jump_to_seq)
-			&& g_sequence_get(g_sequence_get_begin_iter(seq))==g_sequence_get(g_sequence_get_begin_iter(self->jump_to_seq));
-
-		if( is_last ) {
-			g_sequence_free(seq);
-			seq = self->jump_to_seq;
-			index = (self->jump_to_index + 1) % g_sequence_get_length(seq);
-		} else {
-			if( self->jump_to_seq )
-				g_sequence_free(self->jump_to_seq);
-			index = 0;
-		}
-
-		elem = (CppElem*)g_sequence_get( g_sequence_get_iter_at_pos(seq, index) );
-
-		// skip current line elem
-		if( elem->file==file && elem->sline==line )
-			index = (index + 1) % g_sequence_get_length(seq);
-
-		self->jump_to_seq = seq;
-		self->jump_to_index = index;
-
-		open_and_locate_elem(self, elem);
-	}
-}
-
-static void show_current_in_preview(LanguageTips* self, GtkTextView* view) {
-	CppFile* file;
-	gint line;
-	gpointer spath;
-
-	if( search_current(self, view, &spath, &file, &line) ) {
-		preview_set(self, spath, file, line);
-		cpp_file_unref(file);
-	}
-}
-
 static gboolean open_include_file_at_current(LanguageTips* self, GtkTextView* view) {
 	GtkTextBuffer* buf;
 	CppFile* file;
@@ -324,6 +263,70 @@ static gboolean open_include_file_at_current(LanguageTips* self, GtkTextView* vi
 	g_free(str);
 
 	return is_include_line;
+}
+
+static void jump_to_current(LanguageTips* self, GtkTextView* view) {
+	CppFile* file;
+	gint line;
+	gpointer spath;
+	GSequence* seq;
+	gboolean is_last;
+	gint index;
+	CppElem* elem;
+
+	if( open_include_file_at_current(self, view) )
+		return;
+
+	if( search_current(self, view, &spath, &file, &line) ) {
+		seq = cpp_guide_search( self->cpp_guide
+				, spath
+				, 0
+				, file
+				, line
+				, self->controls_priv->option_jump_search_max_num
+				, self->controls_priv->option_jump_search_max_time );
+
+		cpp_file_unref(file);
+
+		if( !seq )
+			return;
+
+		is_last = self->jump_to_seq
+			&& g_sequence_get_length(seq)==g_sequence_get_length(self->jump_to_seq)
+			&& g_sequence_get(g_sequence_get_begin_iter(seq))==g_sequence_get(g_sequence_get_begin_iter(self->jump_to_seq));
+
+		if( is_last ) {
+			g_sequence_free(seq);
+			seq = self->jump_to_seq;
+			index = (self->jump_to_index + 1) % g_sequence_get_length(seq);
+		} else {
+			if( self->jump_to_seq )
+				g_sequence_free(self->jump_to_seq);
+			index = 0;
+		}
+
+		elem = (CppElem*)g_sequence_get( g_sequence_get_iter_at_pos(seq, index) );
+
+		// skip current line elem
+		if( elem->file==file && elem->sline==line )
+			index = (index + 1) % g_sequence_get_length(seq);
+
+		self->jump_to_seq = seq;
+		self->jump_to_index = index;
+
+		open_and_locate_elem(self, elem);
+	}
+}
+
+static void show_current_in_preview(LanguageTips* self, GtkTextView* view) {
+	CppFile* file;
+	gint line;
+	gpointer spath;
+
+	if( search_current(self, view, &spath, &file, &line) ) {
+		preview_set(self, spath, file, line);
+		cpp_file_unref(file);
+	}
 }
 
 #ifdef G_OS_WIN32
@@ -911,12 +914,6 @@ static void view_on_im_commit(GtkIMContext *cxt, gchar* str, LanguageTips* self)
 static gboolean view_on_button_release(GtkTextView* view, GdkEventButton* event, LanguageTips* self) {
 	tips_hide_all(self);
 
-    // include test
-	if( event->state & GDK_CONTROL_MASK ) {
-		if( open_include_file_at_current(self, view) )
-			return FALSE;
-	}
-
 	show_current_in_preview(self, view);
 
     return FALSE;
@@ -1209,5 +1206,15 @@ void controls_final(LanguageTips* self) {
 	gtk_ui_manager_remove_ui(ui_mgr, priv->merge_id);
 	gtk_action_group_remove_action(group, priv->show_function_action);
 	g_object_unref(priv->show_function_action);
+	gtk_action_group_remove_action(group, priv->jump_to_define_action);
+	g_object_unref(priv->jump_to_define_action);
+
+
+	self->app->option_monitor_unreg(priv->option_monitor_hint_max_num);
+	self->app->option_monitor_unreg(priv->option_monitor_hint_max_time);
+	self->app->option_monitor_unreg(priv->option_monitor_jump_max_num);
+	self->app->option_monitor_unreg(priv->option_monitor_jump_max_time);
+
+	g_free(priv);
 }
 

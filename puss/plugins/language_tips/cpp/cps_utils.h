@@ -5,7 +5,7 @@
 
 #include "cps.h"
 
-#ifdef _DEBUG
+//#ifdef _DEBUG
 	#define err_trace(reason) \
 		g_printerr( "ParseError(%s:%d)\n" \
 				"	Function : %s\n" \
@@ -14,9 +14,9 @@
 				, __LINE__ \
 				, __FUNCTION__ \
 				, reason )
-#else
-	#define err_trace(reason)
-#endif
+//#else
+//	#define err_trace(reason)
+//#endif
 
 #define err_return(reason, retval) \
 	err_trace(reason); \

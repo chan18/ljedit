@@ -112,7 +112,6 @@ gboolean cps_class(ParseEnv* env, Block* block) {
 
 		ps = parse_scope(env, ps, (pe - ps), elem, TRUE);
 		err_goto_finish_if( ps==0 );
-		g_assert( (ps < pe) && ps->type=='}' );
 
 		if( ((ps+1) < pe) && (ps+1)->type!=';' ) {
 			Block var_block = { block->parent, ps, (pe - ps), BLOCK_STYLE_LINE, block->scope };
