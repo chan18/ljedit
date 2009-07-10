@@ -63,11 +63,11 @@ void cpp_parser_init(CppParser* self, gboolean enable_macro_replace) {
 	g_static_rw_lock_init( &(self->include_paths_lock) );
 	g_static_rw_lock_init( &(self->files_lock) );
 
-	trace_parser_status("init", self);
+	//trace_parser_status("init", self);
 }
 
 void cpp_parser_final(CppParser* self) {
-	trace_parser_status("clean_start", self);
+	//trace_parser_status("clean_start", self);
 	g_hash_table_foreach_remove(self->files, cpp_parser_on_remove_file, self);
 	trace_parser_status("  clean_end", self);
 
@@ -276,6 +276,7 @@ CppFile* cpp_parser_parse_use_menv(ParseEnv* env, const gchar* filekey) {
 
 			// start parse
 			cpp_parser_do_parse(env, buf, len);
+			g_free(buf);
 
 			env->file = last_file;
 			env->lexer = last_lexer;

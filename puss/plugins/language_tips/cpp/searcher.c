@@ -137,6 +137,7 @@ static SNode* make_sub_node(SNode* parent, const TinyStr* key) {
 			} else {
 				tiny_str_free(skey);
 				snode_free(snode);
+				snode = 0;
 			}
 		}
 	}
