@@ -25,7 +25,7 @@ static void guide_on_file_remove(CppFile* file, CppGuide* self) {
 CppGuide* cpp_guide_new(gboolean enable_macro_replace, gboolean enable_search) {
 	CppGuide* guide;
 	
-	cpp_init_new(guide, CppGuide, 1);
+	guide = g_new0(CppGuide, 1);
 
 	guide->enable_search = enable_search;
 
@@ -55,8 +55,7 @@ void cpp_guide_free(CppGuide* guide) {
 		cpp_parser_final( &(guide->parser) );
 
 		g_regex_unref(guide->re_pkg_config_include);
-		//g_free(guide);
-		cpp_free(guide);
+		g_free(guide);
 	}
 }
 
@@ -68,35 +67,37 @@ static GList* guide_append_pkg_config_cflags(CppGuide* guide, GList* include_pat
 	GMatchInfo* match_info = 0;
 	GList* pl;
 
+	// !!! glib memory leak on win32
+	// 
 	if( !g_spawn_command_line_sync(cmd, &std_output, 0, &exit_status, 0) )
 		return include_paths;
 
 	if( exit_status!=0 || !std_output )
 		return include_paths;
 
-	if( !g_regex_match(guide->re_pkg_config_include, std_output, 0, &match_info) )
-		return include_paths;
+	if( g_regex_match(guide->re_pkg_config_include, std_output, 0, &match_info) ) {
+		do {
+			p = g_match_info_fetch(match_info, 1);
+			if( p ) {
+				path = cpp_filename_to_filekey(p, strlen(p));
+				g_free(p);
 
-	do {
-		p = g_match_info_fetch(match_info, 1);
-		if( p ) {
-			path = cpp_filename_to_filekey(p, strlen(p));
-			g_free(p);
-
-			for( pl=include_paths; path && pl; pl=pl->next ) {
-				if( g_str_equal(pl->data, path) ) {
-					g_free(path);
-					path = 0;
+				for( pl=include_paths; path && pl; pl=pl->next ) {
+					if( g_str_equal(pl->data, path) ) {
+						g_free(path);
+						path = 0;
+					}
 				}
+
+				if( path )
+					include_paths = g_list_append(include_paths, path);
 			}
+		} while( g_match_info_next(match_info, 0) );
 
-			if( path )
-				include_paths = g_list_append(include_paths, path);
-		}
-	} while( g_match_info_next(match_info, 0) );
+		g_match_info_free(match_info);
+	}
 
-	g_match_info_free(match_info);
-
+	g_free(std_output);
 	return include_paths;
 }
 
@@ -304,7 +305,7 @@ gchar* cpp_filename_to_filekey(const gchar* filename, glong namelen) {
 			paths[0][0] = g_ascii_toupper(filename[0]);
 		j = 1;
 
-		for( i=3; i<len; ++i ) {
+		for( i=3; i<len && j<255; ++i ) {
 			if( wbuf[i]=='\\' ) {
 				wbuf[i] = '\0';
 
@@ -317,14 +318,17 @@ gchar* cpp_filename_to_filekey(const gchar* filename, glong namelen) {
 			}
 		}
 
-		hfd = FindFirstFileW(wbuf, &wfdd);
-		if( hfd != INVALID_HANDLE_VALUE ) {
-			paths[j++] = g_utf16_to_utf8((gunichar2*)wfdd.cFileName, -1, 0, 0, 0);
-			FindClose(hfd);
-		}
 		paths[j] = 0;
+		if( j < 255 ) {
+			hfd = FindFirstFileW(wbuf, &wfdd);
+			if( hfd != INVALID_HANDLE_VALUE ) {
+				paths[j++] = g_utf16_to_utf8((gunichar2*)wfdd.cFileName, -1, 0, 0, 0);
+				paths[j] = 0;
+				FindClose(hfd);
+			}
+			res = g_build_filenamev(paths);
+		}
 
-		res = g_build_filenamev(paths);
 		g_strfreev(paths);
 	}
 

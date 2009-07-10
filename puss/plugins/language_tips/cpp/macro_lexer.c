@@ -8,8 +8,7 @@
 
 static inline void mlstr_cpy(MLStr* dst, MLStr* src) {
 	if( src->buf ) {
-		//dst->buf = g_slice_alloc(src->len + 1);
-		dst->buf = cpp_malloc(src->len + 1);
+		dst->buf = g_slice_alloc(src->len + 1);
 		dst->len = src->len;
 		memcpy(dst->buf, src->buf, dst->len);
 		dst->buf[dst->len] = '\0';
@@ -28,12 +27,10 @@ static void ml_str_join(MLStr* out, MLStr* array, gint count) {
 
 	len = (out->buf) ? (out->len + len) : (len - 1);
 
-	//p = g_slice_alloc(len + 1);
-	p = cpp_malloc(len + 1);
+	p = g_slice_alloc(len + 1);
 	if( out->buf ) {
 		memcpy(p, out->buf, out->len);
-		//g_slice_free1(out->len + 1, out->buf);
-		cpp_free(out->buf);
+		g_slice_free1(out->len + 1, out->buf);
 		out->buf = p;
 		p += out->len;
 		out->len = len;
@@ -141,8 +138,7 @@ static void on_macro_define(ParseEnv* env, gint line, MLStr* name, gint argc, ML
 
 	elem->v_define.argc = argc;
 	if( argc > 0 ) {
-		//elem->v_define.argv = g_slice_alloc(sizeof(gpointer) * argc);
-		elem->v_define.argv = cpp_new(TinyStr*, argc);
+		elem->v_define.argv = g_slice_alloc(sizeof(gpointer) * argc);
 		for( i=0; i<argc; ++i )
 			elem->v_define.argv[i] = tiny_str_new(argv[i].buf, argv[i].len);
 	}
@@ -196,7 +192,14 @@ static void on_macro_include(ParseEnv* env, MLStr* filename, gboolean is_system_
 
 	cpp_scope_insert( &(env->file->root_scope), elem );
 
+	/*
+	line = filename->buf[filename->len];
+	filename->buf[filename->len] = 0;
+		g_print("%s : %d\n", filename->buf, memcmp(filename, "glib/gmem.h", 11));
+	filename->buf[filename->len] = line;
+	*/
 	incfile = parse_include_file(env, filename, is_system_header);
+
 	if( incfile ) {
 		elem->v_include.include_file = g_strdup(incfile->filename->buf);
 		insert_rmacros_into_env(env, incfile);
@@ -538,10 +541,8 @@ static gboolean macro_replace(ParseEnv* env, CppElem* macro, MLToken* token) {
 		}
 
 		for( i=0; i<argc; ++i) {
-			if( argv[i].is_owner ) {
-				//g_slice_free1(argv[i].str.len + 1, argv[i].str.buf);
-				cpp_free(argv[i].str.buf);
-			}
+			if( argv[i].is_owner )
+				g_slice_free1(argv[i].str.len + 1, argv[i].str.buf);
 		}
 
 		return res;

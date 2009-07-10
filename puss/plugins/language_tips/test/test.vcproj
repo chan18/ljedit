@@ -227,14 +227,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\cpp\debug.c"
-				>
-			</File>
-			<File
-				RelativePath="..\cpp\debug.h"
-				>
-			</File>
-			<File
 				RelativePath="..\cpp\ds.c"
 				>
 			</File>

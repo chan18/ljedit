@@ -42,11 +42,11 @@ static void __dump_block(Block* block) {
 }
 
 #ifdef _DEBUG
-	static void trace_parser_status(const gchar* ms, CppParser* env) {
-		g_printerr("DEBUG[csp_debug %s] : files:%d/%d elems:%d str:%d\n", ms, g_hash_table_size(env->files), cps_debug_file_count, cps_debug_elem_count, cps_debug_tinystr_count);
+	static void trace_parser_status(const gchar* ms) {
+		g_printerr("DEBUG[csp_debug %s] : files:%d elems:%d str:%d\n", ms, cps_debug_file_count, cps_debug_elem_count, cps_debug_tinystr_count);
 	}
 #else
-	#define trace_parser_status(ms,env)
+	#define trace_parser_status(ms)
 #endif
 
 static void cpp_parser_on_remove_file(gchar* filekey, CppFile* file, CppParser* self) {
@@ -63,13 +63,13 @@ void cpp_parser_init(CppParser* self, gboolean enable_macro_replace) {
 	g_static_rw_lock_init( &(self->include_paths_lock) );
 	g_static_rw_lock_init( &(self->files_lock) );
 
-	//trace_parser_status("init", self);
+	//trace_parser_status("init");
 }
 
 void cpp_parser_final(CppParser* self) {
-	//trace_parser_status("clean_start", self);
-	g_hash_table_foreach_remove(self->files, cpp_parser_on_remove_file, self);
-	trace_parser_status("  clean_end", self);
+	//trace_parser_status("clean_start");
+	g_hash_table_foreach(self->files, cpp_parser_on_remove_file, self);
+	trace_parser_status("  clean_end");
 
 	g_hash_table_destroy(self->files);
 	cpp_keywords_table_free(self->keywords_table);
@@ -84,7 +84,7 @@ void cpp_parser_include_paths_set(CppParser* self, GList* paths) {
 	CppIncludePaths* include_paths;
 	CppIncludePaths* old;
 
-	include_paths = cpp_new(CppIncludePaths, 1);
+	include_paths = g_new(CppIncludePaths, 1);
 	include_paths->path_list = paths;
 	include_paths->ref_count = 1;
 
@@ -94,8 +94,9 @@ void cpp_parser_include_paths_set(CppParser* self, GList* paths) {
 	g_static_rw_lock_writer_unlock( &(self->include_paths_lock) );
 
 	if( old && g_atomic_int_dec_and_test(&(old->ref_count)) ) {
+		g_list_foreach(old->path_list, g_free, 0);
 		g_list_free(old->path_list);
-		cpp_free(old);
+		g_free(old);
 	}
 }
 
@@ -112,8 +113,9 @@ CppIncludePaths* cpp_parser_include_paths_ref(CppParser* self) {
 
 void cpp_parser_include_paths_unref(CppIncludePaths* paths) {
 	if( paths && g_atomic_int_dec_and_test(&(paths->ref_count)) ) {
+		g_list_foreach(paths->path_list, g_free, 0);
 		g_list_free(paths->path_list);
-		cpp_free(paths);
+		g_free(paths);
 	}
 }
 
@@ -203,7 +205,7 @@ gboolean cpp_parser_load_file(const gchar* filename, gchar** text, gsize* len) {
 	return FALSE;
 }
 
-CppFile* cpp_parser_parse_use_menv(ParseEnv* env, const gchar* filekey) {
+static CppFile* cpp_parser_parse_use_menv(ParseEnv* env, const gchar* filekey, gboolean force_rebuild) {
 	CppFile* file = 0;
 	CppFile* last_file;
 	CppLexer* last_lexer;
@@ -229,34 +231,37 @@ CppFile* cpp_parser_parse_use_menv(ParseEnv* env, const gchar* filekey) {
 	g_static_rw_lock_writer_lock( &(env->parser->files_lock) );
 
 	file = (CppFile*)g_hash_table_lookup(env->parser->files, filekey);
-	if( file && file->datetime==filestat.st_mtime ) {
-		if( file->status==0 ) {	// parsed
+
+	if( file && file->status!=0 ) {
+		// parsing
+		if( file->status==(gint)env )
+			file = 0;
+		else
 			cpp_file_ref(file);
 
-		} else {				// parsing
-			if( file->status==(gint)env )
-				file = 0;
-			else
-				cpp_file_ref(file);
-		}
-
 	} else {
-		if( file ) {
-			g_hash_table_remove(env->parser->files, file->filename);
-			cpp_parser_on_remove_file(file->filename, file, env->parser);
+		// parsed
+		if( file && file->datetime==filestat.st_mtime && !force_rebuild ) {
+			cpp_file_ref(file);
+
+		} else {
+			if( file ) {
+				g_hash_table_remove(env->parser->files, file->filename);
+				cpp_parser_on_remove_file(file->filename, file, env->parser);
+			}
+
+			file = g_slice_new0(CppFile);
+			DEBUG_FILE_INC();
+			file->datetime = filestat.st_mtime;
+			file->status = (gint)env;
+			file->ref_count = 1;
+			file->filename = tiny_str_new(filekey, strlen(filekey));
+			file->root_scope.type = CPP_ET_NCSCOPE;
+			file->root_scope.file = file;
+
+			g_hash_table_insert(env->parser->files, file->filename->buf, cpp_file_ref(file));
+			g_hash_table_insert(env->used_files, cpp_file_ref(file), 0);
 		}
-
-		cpp_init_new(file, CppFile, 1);
-		DEBUG_FILE_INC();
-		file->datetime = filestat.st_mtime;
-		file->status = (gint)env;
-		file->ref_count = 1;
-		file->filename = tiny_str_new(filekey, strlen(filekey));
-		file->root_scope.type = CPP_ET_NCSCOPE;
-		file->root_scope.file = file;
-
-		g_hash_table_insert(env->parser->files, file->filename->buf, cpp_file_ref(file));
-		g_hash_table_insert(env->used_files, cpp_file_ref(file), 0);
 	}
 
 	g_static_rw_lock_writer_unlock( &(env->parser->files_lock) );
@@ -303,7 +308,7 @@ static CppFile* cpp_parser_do_parse_in_include_path(ParseEnv* env, const gchar* 
 		if( str ) {
 			filekey = cpp_filename_to_filekey(str, -1);
 			if( filekey )
-				file = cpp_parser_parse_use_menv(env, filekey);
+				file = cpp_parser_parse_use_menv(env, filekey, FALSE);
 			g_free(str);
 		}
 	}
@@ -336,7 +341,7 @@ CppFile* parse_include_file(ParseEnv* env, MLStr* filename, gboolean is_system_h
 			g_free(path);
 		}
 
-		incfile = cpp_parser_parse_use_menv(env, filekey);
+		incfile = cpp_parser_parse_use_menv(env, filekey, FALSE);
 	}
 
 	if( !incfile && env->include_paths )
@@ -353,12 +358,11 @@ CppFile* cpp_parser_parse(CppParser* self, const gchar* filekey, gboolean force_
 
 	memset(&env, 0, sizeof(ParseEnv));
 
-	env.force_rebuild = force_rebuild;
 	env.parser = self;
 
 	cpp_macro_lexer_init(&env);
 
-	file = cpp_parser_parse_use_menv(&env, filekey);
+	file = cpp_parser_parse_use_menv(&env, filekey, force_rebuild);
 
 	cpp_macro_lexer_final(&env);
 

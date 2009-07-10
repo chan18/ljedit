@@ -103,11 +103,7 @@ static void __snode_dump(SNode* snode) {
 }
 
 static inline SNode* snode_new() {
-	SNode* res;
-	//res = g_slice_new0(SNode);
-	cpp_init_new(res, SNode, 1);
-
-	return res;
+	return g_slice_new0(SNode);
 }
 
 static void snode_free(SNode* snode) {
@@ -116,8 +112,7 @@ static void snode_free(SNode* snode) {
 			g_list_free(snode->elems);
 		if( snode->sub )
 			g_hash_table_destroy(snode->sub);
-		//g_slice_free(SNode, snode);
-		cpp_free(snode);
+		g_slice_free(SNode, snode);
 	}
 }
 
@@ -425,8 +420,7 @@ static SKey* skey_new(gchar type, const gchar* buf, gsize len) {
 	if( len > 0x0000ffff )
 		len = 0x0000ffff;
 
-	//skey = (SKey*)g_slice_alloc( sizeof(SKey) + len );
-	skey = cpp_malloc( sizeof(SKey) + len );
+	skey = (SKey*)g_slice_alloc( sizeof(SKey) + len );
 	skey->type = type;
 	skey->value.len_hi = (gchar)(len >> 8);
 	skey->value.len_lo = (gchar)(len & 0xff);
@@ -442,8 +436,7 @@ static SKey* skey_tiny_str_new(gchar type, const TinyStr* str) {
 	SKey* skey;
 
 	str_len = tiny_str_len(str);
-	//skey= (SKey*)g_slice_alloc( sizeof(SKey) + str_len );
-	skey = cpp_malloc( sizeof(SKey) + str_len );
+	skey= (SKey*)g_slice_alloc( sizeof(SKey) + str_len );
 
 	skey->type = type;
 	memcpy( &(skey->value), str, sizeof(TinyStr) + str_len );
@@ -451,20 +444,11 @@ static SKey* skey_tiny_str_new(gchar type, const TinyStr* str) {
 }
 
 static inline void skey_free(SKey* skey) {
-	if( skey ) {
-		//g_slice_free1( skey_mem_size(skey), skey );
-		cpp_free(skey);
-	}
+	if( skey )
+		g_slice_free1( skey_mem_size(skey), skey );
 }
 
-//#define skey_copy(skey) (SKey*)g_slice_copy(skey_mem_size(skey), skey)
-static inline SKey* skey_copy(SKey* src) {
-	SKey* dst;
-	dst = (SKey*)cpp_malloc( skey_mem_size(src) );
-	memcpy(dst, src, skey_mem_size(src));
-
-	return dst;
-}
+#define skey_copy(skey) (SKey*)g_slice_copy(skey_mem_size(skey), skey)
 
 #define iter_prev(env, it) env->do_prev(it)
 #define iter_next(env, it) env->do_next(it)

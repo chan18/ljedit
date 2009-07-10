@@ -23,12 +23,10 @@ static MLToken* spliter_next_token(BlockSpliter* spliter, gboolean skip_comment)
 		while( (spliter->pos + 1)==spliter->end ) {
 			if( spliter->end >= spliter->cap ) {
 				count = spliter->cap ? spliter->cap * 2 : 32;
-				//token = g_slice_alloc(sizeof(MLToken) * count);
-				token = cpp_malloc(sizeof(MLToken) * count);
+				token = g_slice_alloc(sizeof(MLToken) * count);
 				if( spliter->cap ) {
 					memcpy(token, spliter->tokens, sizeof(MLToken)*spliter->cap);
-					//g_slice_free1(sizeof(MLToken)*spliter->cap, spliter->tokens);
-					cpp_free(spliter->tokens);
+					g_slice_free1(sizeof(MLToken)*spliter->cap, spliter->tokens);
 				}
 				spliter->cap = count;
 				spliter->tokens = token;
@@ -144,8 +142,7 @@ void spliter_init_with_tokens(BlockSpliter* spliter, ParseEnv* env, MLToken* tok
 
 void spliter_final(BlockSpliter* spliter) {
 	if( spliter->policy==SPLITER_POLICY_USE_LEXER ) {
-		//g_slice_free1(sizeof(MLToken)*spliter->cap, spliter->tokens);
-		cpp_free(spliter->tokens);
+		g_slice_free1(sizeof(MLToken)*spliter->cap, spliter->tokens);
 		spliter->tokens = 0;
 		spliter->cap = 0;
 		spliter->env->lexer = 0;
