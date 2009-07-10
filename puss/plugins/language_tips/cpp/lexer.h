@@ -3,6 +3,7 @@
 #ifndef PUSS_CPP_LEXER_H
 #define PUSS_CPP_LEXER_H
 
+#include "debug.h"
 #include "token.h"
 
 typedef struct {

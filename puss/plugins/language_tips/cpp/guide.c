@@ -23,7 +23,10 @@ static void guide_on_file_remove(CppFile* file, CppGuide* self) {
 }
 
 CppGuide* cpp_guide_new(gboolean enable_macro_replace, gboolean enable_search) {
-	CppGuide* guide = g_new0(CppGuide, 1);
+	CppGuide* guide;
+	
+	cpp_init_new(guide, CppGuide, 1);
+
 	guide->enable_search = enable_search;
 
 	if( guide->enable_search ) {
@@ -52,7 +55,8 @@ void cpp_guide_free(CppGuide* guide) {
 		cpp_parser_final( &(guide->parser) );
 
 		g_regex_unref(guide->re_pkg_config_include);
-		g_free(guide);
+		//g_free(guide);
+		cpp_free(guide);
 	}
 }
 

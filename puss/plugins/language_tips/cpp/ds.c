@@ -17,7 +17,8 @@ TinyStr* tiny_str_new(const gchar* buf, gsize len) {
 	if( len > 0x0000ffff )
 		len = 0x0000ffff;
 
-	res = (TinyStr*)g_slice_alloc( tiny_str_mem_size(len) );
+	//res = (TinyStr*)g_slice_alloc( tiny_str_mem_size(len) );
+	res = (TinyStr*)cpp_malloc( tiny_str_mem_size(len) );
 	DEBUG_TINYSTR_INC();
 
 	res->len_hi = (gchar)(len >> 8);
@@ -33,7 +34,8 @@ void tiny_str_free(TinyStr* str) {
 		// !!! size = sizeof(short) + len + 1 = sizeof(TinyStr) + len
 		// 
 		DEBUG_TINYSTR_DEC();
-		g_slice_free1(tiny_str_mem_size(tiny_str_len(str)), str);
+		//g_slice_free1(tiny_str_mem_size(tiny_str_len(str)), str);
+		cpp_free(str);
 	}
 }
 
@@ -55,9 +57,13 @@ guint tiny_str_hash(const TinyStr* v) {
 }
 
 CppElem* cpp_elem_new() {
-	CppElem* res = g_slice_new0(CppElem);
+	CppElem* res;
+
+	//res = g_slice_new0(CppElem);
+	cpp_init_new(res, CppElem, 1);
 	if( res )
 		DEBUG_ELEM_INC();
+
 	return res;
 }
 
@@ -65,7 +71,9 @@ void cpp_elem_free(CppElem* elem) {
 	if( elem ) {
 		cpp_elem_clear(elem);
 		DEBUG_ELEM_DEC();
-		g_slice_free(CppElem, elem);
+
+		//g_slice_free(CppElem, elem);
+		cpp_free(elem);
 	}
 }
 
@@ -84,7 +92,8 @@ void cpp_elem_clear(CppElem* elem) {
 	case CPP_ET_MACRO:		// CppMacroDefine
 		for( i=0; i<elem->v_define.argc; ++i )
 			tiny_str_free(elem->v_define.argv[i]);
-		g_slice_free1( sizeof(gpointer) * elem->v_define.argc, elem->v_define.argv );
+		//g_slice_free1( sizeof(gpointer) * elem->v_define.argc, elem->v_define.argv );
+		cpp_free(elem->v_define.argv);
 		tiny_str_free(elem->v_define.value);
 		break;
 	case CPP_ET_INCLUDE:	// CppMacroInclude
@@ -116,7 +125,8 @@ void cpp_elem_clear(CppElem* elem) {
 		tiny_str_free(elem->v_class.nskey);
 		for( i=0; i<elem->v_class.inhers_count; ++i )
 			tiny_str_free(elem->v_class.inhers[i]);
-		g_slice_free1( sizeof(gpointer) * elem->v_class.inhers_count, elem->v_class.inhers );
+		//g_slice_free1( sizeof(gpointer) * elem->v_class.inhers_count, elem->v_class.inhers );
+		cpp_free(elem->v_class.inhers);
 		break;
 	case CPP_ET_NCSCOPE:	// CppNCScope
 	case CPP_ET_NAMESPACE:	// CppNamespace
@@ -172,7 +182,8 @@ void cpp_file_unref(CppFile* file) {
 	if( g_atomic_int_dec_and_test(&(file->ref_count)) ) {
 		cpp_file_clear(file);
 		DEBUG_FILE_DEC();
-		g_free(file);
+		//g_free(file);
+		cpp_free(file);
 	}
 }
 

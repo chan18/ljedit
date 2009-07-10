@@ -3,6 +3,7 @@
 #ifndef PUSS_CPP_DS_H
 #define PUSS_CPP_DS_H
 
+#include "debug.h"
 #include "guide.h"
 
 TinyStr* tiny_str_new(const gchar* buf, gsize len);

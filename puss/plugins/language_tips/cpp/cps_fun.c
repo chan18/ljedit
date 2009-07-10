@@ -183,27 +183,27 @@ gboolean cps_fun(ParseEnv* env, Block* block) {
 	TinyStr* nskey = 0;
 	MLToken* name;
 
-	err_return_false_if( (ps = parse_function_prefix(ps, pe))==0 );
+	err_goto_finish_if( (ps = parse_function_prefix(ps, pe))==0 );
 
 	name = ps;
-	err_return_false_if( (ps = parse_datatype(ps, pe, &typekey, &dt))==0 );
+	err_goto_finish_if( (ps = parse_datatype(ps, pe, &typekey, &dt))==0 );
 
 	prdt = dt;
-	err_return_false_if( (ps = parse_ptr_ref(ps, pe, &prdt))==0 );
+	err_goto_finish_if( (ps = parse_ptr_ref(ps, pe, &prdt))==0 );
 
-	err_return_false_if_not( ps < pe );
+	err_goto_finish_if_not( ps < pe );
 
 	if( ps->type=='(' ) {
 		// try parse function pointer
 		MLToken* fptrypos = ps;
-		err_return_false_if_not( (++ps) < pe );
+		err_goto_finish_if_not( (++ps) < pe );
 
 		while( ps->type==TK_ID ) {
-			err_return_false_if_not( (++ps) < pe );
+			err_goto_finish_if_not( (++ps) < pe );
 			if( ps->type=='<' )
-				err_return_false_if( (ps = skip_pair_angle_bracket(ps+1, pe))==0 );
+				err_goto_finish_if( (ps = skip_pair_angle_bracket(ps+1, pe))==0 );
 
-			err_return_false_if_not( ps < pe );
+			err_goto_finish_if_not( ps < pe );
 			if( ps->type!=SG_DBL_COLON ) {
 				ps = fptrypos;
 				break;
@@ -215,18 +215,18 @@ gboolean cps_fun(ParseEnv* env, Block* block) {
 			name = ++ps;
 
 			++ps;
-			err_return_false_if_not( (ps < pe) && (ps->type==')') );
+			err_goto_finish_if_not( (ps < pe) && (ps->type==')') );
 			++ps;
 	
 		} else {
 			// no return type function
-			err_return_false_if( typekey==0 || tiny_str_len(typekey)==0 );
+			err_goto_finish_if( typekey==0 || tiny_str_len(typekey)==0 );
 
 			if( block->parent->type!=CPP_ET_CLASS ) {
 				TinyStr* str;
 				gsize typekey_len = tiny_str_len(typekey);
-				err_return_false_if_not( typekey_len > ps->len );
-				err_return_false_if_not( typekey->buf[typekey_len - (ps->len + 1)]=='.' );
+				err_goto_finish_if_not( typekey_len > ps->len );
+				err_goto_finish_if_not( typekey->buf[typekey_len - (ps->len + 1)]=='.' );
 				str = tiny_str_new(typekey->buf, typekey_len - (ps->len + 1));
 				tiny_str_free(typekey);
 				typekey = str;
@@ -259,17 +259,22 @@ gboolean cps_fun(ParseEnv* env, Block* block) {
 			}
 			dt = KD_UNK;
 
-			err_return_false_if( (ps = parse_datatype(ps, pe, &typekey, &dt))==0 );
+			err_goto_finish_if( (ps = parse_datatype(ps, pe, &typekey, &dt))==0 );
 			prdt = dt;
-			err_return_false_if( (ps = parse_ptr_ref(ps, pe, &prdt))==0 );
-			err_return_false_if_not( ps < pe );
+			err_goto_finish_if( (ps = parse_ptr_ref(ps, pe, &prdt))==0 );
+			err_goto_finish_if( ps < pe );
 		}
 
 		// normal function
-		err_return_false_if( (ps = parse_id(ps, pe, &nskey, &name))==0 );
+		err_goto_finish_if( (ps = parse_id(ps, pe, &nskey, &name))==0 );
 	}
 
 	return parse_function_common(env, block, ps, typekey, nskey, name);
+	
+__cps_finish__:
+	tiny_str_free(typekey);
+	tiny_str_free(nskey);
+	return FALSE;
 }
 
 gboolean cps_operator(ParseEnv* env, Block* block) {

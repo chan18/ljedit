@@ -74,6 +74,8 @@ void cpp_parser_final(CppParser* self) {
 	g_hash_table_destroy(self->files);
 	cpp_keywords_table_free(self->keywords_table);
 
+	cpp_parser_include_paths_unref(self->include_paths);
+
 	g_static_rw_lock_free( &(self->files_lock) );
 	g_static_rw_lock_free( &(self->include_paths_lock) );
 }
@@ -82,7 +84,7 @@ void cpp_parser_include_paths_set(CppParser* self, GList* paths) {
 	CppIncludePaths* include_paths;
 	CppIncludePaths* old;
 
-	include_paths = g_new(CppIncludePaths, 1);
+	include_paths = cpp_new(CppIncludePaths, 1);
 	include_paths->path_list = paths;
 	include_paths->ref_count = 1;
 
@@ -93,7 +95,7 @@ void cpp_parser_include_paths_set(CppParser* self, GList* paths) {
 
 	if( old && g_atomic_int_dec_and_test(&(old->ref_count)) ) {
 		g_list_free(old->path_list);
-		g_free(old);
+		cpp_free(old);
 	}
 }
 
@@ -111,7 +113,7 @@ CppIncludePaths* cpp_parser_include_paths_ref(CppParser* self) {
 void cpp_parser_include_paths_unref(CppIncludePaths* paths) {
 	if( paths && g_atomic_int_dec_and_test(&(paths->ref_count)) ) {
 		g_list_free(paths->path_list);
-		g_free(paths);
+		cpp_free(paths);
 	}
 }
 
@@ -244,7 +246,7 @@ CppFile* cpp_parser_parse_use_menv(ParseEnv* env, const gchar* filekey) {
 			cpp_parser_on_remove_file(file->filename, file, env->parser);
 		}
 
-		file = g_new0(CppFile, 1);
+		cpp_init_new(file, CppFile, 1);
 		DEBUG_FILE_INC();
 		file->datetime = filestat.st_mtime;
 		file->status = (gint)env;
