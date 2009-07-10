@@ -31,8 +31,13 @@ PUSS_LIBS += `pkg-config --libs gtksourceview-2.0` \
 # 
 PUSS_CFLAGS += -I../../bin/include
 
-SRCS = $(wildcard *.c) $(wildcard cpp/*.c)
+CPP_SRCS = $(wildcard cpp/*.c)
+CPP_OBJS = $(CPP_SRCS:%.c=$(OBJPATH)/%.o)
 
+TEST_SRCS = $(wildcard test/*.c)
+TEST_OBJS = $(TEST_SRCS:%.c=$(OBJPATH)/%.o)
+
+SRCS = $(wildcard *.c)
 OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)
 
 TARGET_NAME = language_tips
@@ -42,11 +47,15 @@ TARGET = $(TARGET_PATH)/$(TARGET_NAME)
 
 all : $(TARGET).so $(TARGET).plugin
 
-$(TARGET).so : $(OBJS)
+$(TARGET).so : $(OBJS) $(CPP_OBJS)
 	$(CC) $(CFLAGS) $(PUSS_CFLAGS) -shared -o $@ $^ $(PUSS_LIBS)
 
 $(TARGET).plugin : $(TARGET_NAME).plugin
 	cp -f $< $@
+
+test : $(TEST_OBJS) $(CPP_OBJS)
+	$(CC) $(CFLAGS) `pkg-config --cflags glib-2.0` -o $(OBJPATH)/test.exe $^ `pkg-config --libs glib-2.0`
+	$(OBJPATH)/test.exe
 
 clean :
 	rm -f $(TARGET).so

@@ -25,6 +25,25 @@ void cpp_file_clear(CppFile* file);
 	extern gint cps_debug_file_count;
 	extern gint cps_debug_elem_count;
 	extern gint cps_debug_tinystr_count;
+
+	#define DEBUG_FILE_INC() g_atomic_int_add(&cps_debug_file_count, 1)
+	#define DEBUG_FILE_DEC() g_atomic_int_add(&cps_debug_file_count, -1)
+
+	#define DEBUG_ELEM_INC() g_atomic_int_add(&cps_debug_elem_count, 1)
+	#define DEBUG_ELEM_DEC() g_atomic_int_add(&cps_debug_elem_count, -1)
+
+	#define DEBUG_TINYSTR_INC() g_atomic_int_add(&cps_debug_tinystr_count, 1)
+	#define DEBUG_TINYSTR_DEC() g_atomic_int_add(&cps_debug_tinystr_count, -1)
+#else
+
+	#define DEBUG_FILE_INC()
+	#define DEBUG_FILE_DEC()
+
+	#define DEBUG_ELEM_INC()
+	#define DEBUG_ELEM_DEC()
+
+	#define DEBUG_TINYSTR_INC()
+	#define DEBUG_TINYSTR_DEC()
 #endif
 
 #endif//PUSS_CPP_DS_H

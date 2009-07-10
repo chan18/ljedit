@@ -76,7 +76,6 @@ void cpp_parser_final(CppParser* self) {
 
 	g_static_rw_lock_free( &(self->files_lock) );
 	g_static_rw_lock_free( &(self->include_paths_lock) );
-
 }
 
 void cpp_parser_include_paths_set(CppParser* self, GList* paths) {
@@ -246,9 +245,7 @@ CppFile* cpp_parser_parse_use_menv(ParseEnv* env, const gchar* filekey) {
 		}
 
 		file = g_new0(CppFile, 1);
-#ifdef _DEBUG
-		g_atomic_int_add(&cps_debug_file_count, 1);
-#endif
+		DEBUG_FILE_INC();
 		file->datetime = filestat.st_mtime;
 		file->status = (gint)env;
 		file->ref_count = 1;

@@ -7,6 +7,8 @@
 
 struct _CppGuide {
 	CppParser	parser;
+
+	gboolean	enable_search;
 	CppSTree	stree;
 	
 	GRegex*		re_pkg_config_include;
@@ -22,14 +24,16 @@ static void guide_on_file_remove(CppFile* file, CppGuide* self) {
 
 CppGuide* cpp_guide_new(gboolean enable_macro_replace, gboolean enable_search) {
 	CppGuide* guide = g_new0(CppGuide, 1);
+	guide->enable_search = enable_search;
 
-	guide->parser.cb_tag = guide;
-	guide->parser.cb_file_insert = (FileInsertCallback)guide_on_file_insert;
-	guide->parser.cb_file_remove = (FileRemoveCallback)guide_on_file_remove;
+	if( guide->enable_search ) {
+		guide->parser.cb_tag = guide;
+		guide->parser.cb_file_insert = (FileInsertCallback)guide_on_file_insert;
+		guide->parser.cb_file_remove = (FileRemoveCallback)guide_on_file_remove;
+		stree_init( &(guide->stree) );
+	}
 
 	cpp_parser_init( &(guide->parser), enable_macro_replace );
-
-	stree_init( &(guide->stree) );
 
 	guide->re_pkg_config_include = g_regex_new("-I(.*?)\\s", 0, 0, 0);
 	return guide;
@@ -37,11 +41,13 @@ CppGuide* cpp_guide_new(gboolean enable_macro_replace, gboolean enable_search) {
 
 void cpp_guide_free(CppGuide* guide) {
 	if( guide ) {
-		guide->parser.cb_tag = 0;
-		guide->parser.cb_file_insert = 0;
-		guide->parser.cb_file_remove = 0;
+		if( guide->enable_search ) {
+			guide->parser.cb_tag = 0;
+			guide->parser.cb_file_insert = 0;
+			guide->parser.cb_file_remove = 0;
 
-		stree_final( &(guide->stree) );
+			stree_final( &(guide->stree) );
+		}
 
 		cpp_parser_final( &(guide->parser) );
 

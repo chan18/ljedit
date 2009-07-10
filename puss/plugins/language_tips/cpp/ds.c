@@ -17,12 +17,8 @@ TinyStr* tiny_str_new(const gchar* buf, gsize len) {
 	if( len > 0x0000ffff )
 		len = 0x0000ffff;
 
-#ifdef _DEBUG
-	res = (TinyStr*)g_new(gchar, tiny_str_mem_size(len) );
-	g_atomic_int_add(&cps_debug_tinystr_count, 1);
-#else
 	res = (TinyStr*)g_slice_alloc( tiny_str_mem_size(len) );
-#endif
+	DEBUG_TINYSTR_INC();
 
 	res->len_hi = (gchar)(len >> 8);
 	res->len_lo = (gchar)(len & 0xff);
@@ -36,18 +32,15 @@ void tiny_str_free(TinyStr* str) {
 	if( str ) {
 		// !!! size = sizeof(short) + len + 1 = sizeof(TinyStr) + len
 		// 
-#ifdef _DEBUG
-		g_free(str);
-		g_atomic_int_add(&cps_debug_tinystr_count, -1);
-#else
+		DEBUG_TINYSTR_DEC();
 		g_slice_free1(tiny_str_mem_size(tiny_str_len(str)), str);
-#endif
 	}
 }
 
 gboolean tiny_str_equal(const TinyStr* a, const TinyStr* b) {
 	if( a==b )
 		return TRUE;
+
 	if( a && b ) {
 		gsize len = tiny_str_len(a);
 		if( memcmp(a->buf, b->buf, len)==0 )
@@ -62,23 +55,17 @@ guint tiny_str_hash(const TinyStr* v) {
 }
 
 CppElem* cpp_elem_new() {
-#ifdef _DEBUG
-	g_atomic_int_add(&cps_debug_elem_count, 1);
-	return g_new0(CppElem, 1);
-#else
-	return g_slice_new0(CppElem);
-#endif
+	CppElem* res = g_slice_new0(CppElem);
+	if( res )
+		DEBUG_ELEM_INC();
+	return res;
 }
 
 void cpp_elem_free(CppElem* elem) {
 	if( elem ) {
 		cpp_elem_clear(elem);
-#ifdef _DEBUG
-		g_free(elem);
-		g_atomic_int_add(&cps_debug_elem_count, -1);
-#else
+		DEBUG_ELEM_DEC();
 		g_slice_free(CppElem, elem);
-#endif
 	}
 }
 
@@ -112,7 +99,6 @@ void cpp_elem_clear(CppElem* elem) {
 		tiny_str_free(elem->v_fun.typekey);
 		tiny_str_free(elem->v_fun.nskey);
 		//g_free(elem->v_fun.fun_template);
-		//g_free(elem->v_fun.impl);
 		break;
 	case CPP_ET_ENUMITEM:	// CppEnumItem
 		tiny_str_free(elem->v_enum_item.value);
@@ -135,6 +121,8 @@ void cpp_elem_clear(CppElem* elem) {
 	case CPP_ET_NCSCOPE:	// CppNCScope
 	case CPP_ET_NAMESPACE:	// CppNamespace
 		break;
+	default:
+		g_assert( FALSE && "bad elem type" );
 	}
 
 	switch( elem->type ) {
@@ -142,6 +130,7 @@ void cpp_elem_clear(CppElem* elem) {
 	case CPP_ET_ENUM:
 	case CPP_ET_CLASS:
 	case CPP_ET_NAMESPACE:
+	case CPP_ET_FUN:
 		g_list_foreach(elem->v_ncscope.scope, (GFunc)cpp_elem_free, 0);
 		break;
 	}
@@ -182,10 +171,8 @@ void cpp_file_unref(CppFile* file) {
 	g_assert( file );
 	if( g_atomic_int_dec_and_test(&(file->ref_count)) ) {
 		cpp_file_clear(file);
+		DEBUG_FILE_DEC();
 		g_free(file);
-#ifdef _DEBUG
-		g_atomic_int_add(&cps_debug_file_count, -1);
-#endif
 	}
 }
 

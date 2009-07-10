@@ -102,7 +102,7 @@ static void __snode_dump(SNode* snode) {
 	}
 }
 
-static SNode* snode_new() {
+static inline SNode* snode_new() {
 	return g_slice_new0(SNode);
 }
 
@@ -116,7 +116,7 @@ static void snode_free(SNode* snode) {
 	}
 }
 
-static SNode* find_sub_node(SNode* parent, const TinyStr* key) {
+static inline SNode* find_sub_node(SNode* parent, const TinyStr* key) {
 	return parent->sub ? g_hash_table_lookup(parent->sub, key) : 0;
 }
 
@@ -184,7 +184,7 @@ static SNode* snode_locate(SNode* parent, TinyStr* nskey, gboolean make_if_not_e
 	return snode;
 }
 
-static SNode* snode_sub_insert(SNode* parent, TinyStr* nskey, CppElem* elem) {
+static SNode* snode_sub_insert(SNode* parent, const TinyStr* nskey, CppElem* elem) {
 	SNode* snode = 0;
 	SNode* scope_snode;
 
@@ -383,8 +383,6 @@ void stree_init(CppSTree* self) {
 }
 
 void stree_final(CppSTree* self) {
-	stree_remove(self, &(self->keywords_file));
-
 	snode_free(self->root);
 	self->root = 0;
 
