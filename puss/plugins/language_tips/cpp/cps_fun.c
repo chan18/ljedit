@@ -64,6 +64,9 @@ static MLToken* parse_function_args(MLToken* ps, MLToken* pe, CppElem* fun, gboo
 			err_goto_finish_if( (ps = skip_pair_round_brackets(ps+1, pe))==0 );
 			while( (ps < pe) && ps->type!=',' && ps->type!=')' )
 				++ps;
+			
+			tiny_str_free(typekey);
+			typekey = 0;
 			continue;
 		}
 
@@ -85,15 +88,13 @@ static MLToken* parse_function_args(MLToken* ps, MLToken* pe, CppElem* fun, gboo
 
 			cpp_scope_insert(fun, arg);
 
-			typekey = 0;
-			nskey = 0;
-
 		} else {
 			tiny_str_free(typekey);
 			tiny_str_free(nskey);
-			typekey = 0;
-			nskey = 0;
 		}
+
+		typekey = 0;
+		nskey = 0;
 
 		err_goto_finish_if_not( ps < pe );
 		// int a[]
