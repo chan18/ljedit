@@ -49,6 +49,7 @@ all : $(TARGET).so $(TARGET).plugin
 
 $(TARGET).so : $(OBJS) $(CPP_OBJS)
 	$(CC) $(CFLAGS) $(PUSS_CFLAGS) -shared -o $@ $^ $(PUSS_LIBS)
+	cp -rf language_tips_res $(TARGET_PATH)/
 
 $(TARGET).plugin : $(TARGET_NAME).plugin
 	cp -f $< $@

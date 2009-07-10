@@ -1,7 +1,6 @@
 // main.c
 // 
 
-#include <vld.h>
 #include "../cpp/guide.h"
 
 int main(int argc, char* argv[]) {
@@ -20,7 +19,8 @@ int main(int argc, char* argv[]) {
 
 	for( i=0; i<(argc>1 ? 100 : 1); ++i ) {
 		//file = cpp_guide_parse(guide, "D:\\puss\\plugins\\language_tips\\cpp\\guide.c", -1, FALSE);
-		file = cpp_guide_parse(guide, "C:\\gtk\\include\\gtk-2.0\\gtk\\gtk.h", -1, TRUE);
+		//file = cpp_guide_parse(guide, "C:\\gtk\\include\\gtk-2.0\\gtk\\gtk.h", -1, TRUE);
+		file = cpp_guide_parse(guide, "/home/louis/puss/puss/main.c", -1, TRUE);
 		
 		if( file )
 			cpp_file_unref(file);

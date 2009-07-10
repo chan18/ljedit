@@ -474,7 +474,10 @@ static void do_macro_replace(CppElem* macro, CppLexer* lexer, gint argc, MLArg a
 			}
 			break;
 
-		} else if( (pos = get_macro_arg_pos(macro, &token)) >= 0 ) {
+		}
+
+		pos = get_macro_arg_pos(macro, &token);
+		if( pos >= 0 ) {
 			if( (pos < argc) && argv[pos].str.len > 0 ) {
 				if( pd + (1 + argv[pos].str.len + 1) < sbuf + MACRO_REPLACE_BUFFER_MAX ) {
 					*pd++ = ' ';

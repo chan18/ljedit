@@ -262,6 +262,8 @@ void cpp_lexer_next(CppLexer* lexer, MLToken* token) {
 	gint line = cpp_lexer_meger_lines_and_skip_ws(lexer);
 	if( lexer->top < 0 ) {
 		token->type = TK_EOF;
+		token->buf = 0;
+		token->len = 0;
 		return;
 	}
 
