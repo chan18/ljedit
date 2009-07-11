@@ -39,6 +39,7 @@ CppGuide* cpp_guide_new(gboolean enable_macro_replace, gboolean enable_search) {
 	cpp_parser_init( &(guide->parser), enable_macro_replace );
 
 	guide->re_pkg_config_include = g_regex_new("-I(.*?)\\s", 0, 0, 0);
+
 	return guide;
 }
 
@@ -55,6 +56,7 @@ void cpp_guide_free(CppGuide* guide) {
 		cpp_parser_final( &(guide->parser) );
 
 		g_regex_unref(guide->re_pkg_config_include);
+
 		g_free(guide);
 	}
 }

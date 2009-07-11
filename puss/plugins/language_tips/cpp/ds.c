@@ -136,6 +136,7 @@ void cpp_elem_clear(CppElem* elem) {
 	case CPP_ET_NAMESPACE:
 	case CPP_ET_FUN:
 		g_list_foreach(elem->v_ncscope.scope, (GFunc)cpp_elem_free, 0);
+		g_list_free(elem->v_ncscope.scope);
 		break;
 	}
 }

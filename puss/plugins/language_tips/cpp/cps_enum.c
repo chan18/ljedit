@@ -3,7 +3,7 @@
 
 #include "cps_utils.h"
 
-MLToken* parse_enum_iterms(MLToken* ps, MLToken* pe, CppElem* parent) {
+static MLToken* parse_enum_items(MLToken* ps, MLToken* pe, CppElem* parent) {
 	CppElem* elem;
 	while( (ps < pe) && ps->type==TK_ID ) {
 		elem = cpp_elem_new();
@@ -55,7 +55,7 @@ gboolean cps_enum(ParseEnv* env, Block* block) {
 	cpp_scope_insert(block->parent, elem);
 
 	if( (ps < pe) && ps->type=='{' ) {
-		err_return_false_if( (ps = parse_enum_iterms(ps + 1, pe, elem))==0 );
+		err_return_false_if( (ps = parse_enum_items(ps + 1, pe, elem))==0 );
 
 		err_return_false_if_not( (ps < pe) && ps->type=='}' );
 	}

@@ -155,14 +155,7 @@ static gboolean cps_complex_typedef(ParseEnv* env, Block* block) {
 	}
 
 __cps_finish__:
-	node = tpscope.v_ncscope.scope;
-	for( ; node; node = g_list_next(node) ) {
-		elem = (CppElem*)(node->data);
-		if( !elem )
-			continue;
-
-		cpp_elem_free(elem);
-	}
+	cpp_elem_clear(&tpscope);
 
 	return TRUE;
 }

@@ -321,8 +321,10 @@ static CppFile* cpp_parser_do_parse_in_include_path(ParseEnv* env, const gchar* 
 		str = g_build_filename( (gchar*)(p->data), filename, 0 );
 		if( str ) {
 			filekey = cpp_filename_to_filekey(str, -1);
-			if( filekey )
+			if( filekey ) {
 				file = cpp_parser_parse_use_menv(env, filekey, FALSE);
+				g_free(filekey);
+			}
 			g_free(str);
 		}
 	}
@@ -356,6 +358,7 @@ CppFile* parse_include_file(ParseEnv* env, MLStr* filename, gboolean is_system_h
 		}
 
 		incfile = cpp_parser_parse_use_menv(env, filekey, FALSE);
+		g_free(filekey);
 	}
 
 	if( !incfile && env->include_paths )
