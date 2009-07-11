@@ -45,8 +45,19 @@ static void __dump_block(Block* block) {
 	static void trace_parser_status(const gchar* ms) {
 		g_printerr("DEBUG[csp_debug %s] : files:%d elems:%d str:%d\n", ms, cps_debug_file_count, cps_debug_elem_count, cps_debug_tinystr_count);
 	}
+
+	static void dump_file(const gchar* key, CppFile* file, CppParser* self) {
+		g_printerr("  DUMP : %s(%p) %d %d\n", key, key, file->ref_count, file->status);
+	}
+
+	static void trace_files(CppParser* self) {
+		g_printerr("  DUMP START!\n");
+		g_hash_table_foreach(self->files, dump_file, self);
+		g_printerr("  DUMP FINISHED!\n");
+	}
 #else
 	#define trace_parser_status(ms)
+	#define trace_files(self)
 #endif
 
 static void cpp_parser_on_remove_file(gchar* filekey, CppFile* file, CppParser* self) {
@@ -68,7 +79,7 @@ void cpp_parser_init(CppParser* self, gboolean enable_macro_replace) {
 
 void cpp_parser_final(CppParser* self) {
 	//trace_parser_status("clean_start");
-	g_hash_table_foreach(self->files, cpp_parser_on_remove_file, self);
+	g_hash_table_foreach_remove(self->files, cpp_parser_on_remove_file, self);
 	trace_parser_status("  clean_end");
 
 	g_hash_table_destroy(self->files);
@@ -126,6 +137,9 @@ CppFile* cpp_parser_find_parsed(CppParser* self, const gchar* filekey) {
 		return 0;
 
 	g_static_rw_lock_reader_lock( &(self->files_lock) );
+
+	//trace_files(self);
+
 	file = (CppFile*)g_hash_table_lookup(self->files, filekey);
 	if( file && file->status==0 )
 		cpp_file_ref(file);
@@ -246,7 +260,7 @@ static CppFile* cpp_parser_parse_use_menv(ParseEnv* env, const gchar* filekey, g
 
 		} else {
 			if( file ) {
-				g_hash_table_remove(env->parser->files, file->filename);
+				g_hash_table_remove(env->parser->files, file->filename->buf);
 				cpp_parser_on_remove_file(file->filename, file, env->parser);
 			}
 
@@ -260,7 +274,7 @@ static CppFile* cpp_parser_parse_use_menv(ParseEnv* env, const gchar* filekey, g
 			file->root_scope.file = file;
 
 			g_hash_table_insert(env->parser->files, file->filename->buf, cpp_file_ref(file));
-			g_hash_table_insert(env->used_files, cpp_file_ref(file), 0);
+			g_hash_table_insert(env->used_files, cpp_file_ref(file), file);
 		}
 	}
 
