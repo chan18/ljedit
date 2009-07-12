@@ -3,6 +3,8 @@
 
 #include "OptionManager.h"
 
+#include <string.h>
+
 #include "Puss.h"
 #include "Utils.h"
 
@@ -122,7 +124,7 @@ const Option* puss_option_manager_option_reg( const gchar* group, const gchar* k
 	GTree* option_group = 0;
 
 	if( !g_tree_lookup_extended(puss_option_manager->option_groups, group, (gpointer*)&ptr_group, (gpointer*)&option_group) ) {
-		option_group = g_tree_new_full((GCompareDataFunc)&compare_data_func_wrapper, (gpointer)&g_ascii_strcasecmp, (GDestroyNotify)&g_free, (GDestroyNotify)&option_node_free );
+		option_group = g_tree_new_full((GCompareDataFunc)&compare_data_func_wrapper, (gpointer)&strcmp, (GDestroyNotify)&g_free, (GDestroyNotify)&option_node_free );
 		if( !option_group )
 			return 0;
 		ptr_group = g_strdup(group);

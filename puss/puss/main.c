@@ -80,10 +80,10 @@ int main(int argc, char* argv[]) {
 	gchar* filepath;
 	gboolean res;
 
-#ifdef _DEBUG
-	g_mem_set_vtable(glib_mem_profiler_table);
-	g_atexit(g_mem_profile);
-#endif
+	// can not work with valgrind
+	// 
+	// g_mem_set_vtable(glib_mem_profiler_table);
+	// g_atexit(g_mem_profile);
 
 	g_thread_init(NULL);
 
