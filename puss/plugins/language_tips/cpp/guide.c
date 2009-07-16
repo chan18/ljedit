@@ -6,27 +6,37 @@
 #include "searcher.h"
 
 struct _CppGuide {
-	CppParser	parser;
+	CppParser		parser;
+	CppFileParsed	cb_file_parsed;
+	gpointer		cb_file_parsed_tag;
 
-	gboolean	enable_search;
-	CppSTree	stree;
+	gboolean		enable_search;
+	CppSTree		stree;
 	
-	GRegex*		re_pkg_config_include;
+	GRegex*			re_pkg_config_include;
 };
 
 static void guide_on_file_insert(CppFile* file, CppGuide* self) {
 	stree_insert( &(self->stree), file );
+
+	if( self->cb_file_parsed )
+		(*self->cb_file_parsed)(file, self->cb_file_parsed_tag);
 }
 
 static void guide_on_file_remove(CppFile* file, CppGuide* self) {
 	stree_remove( &(self->stree), file );
 }
 
-CppGuide* cpp_guide_new(gboolean enable_macro_replace, gboolean enable_search) {
+CppGuide* cpp_guide_new( gboolean enable_macro_replace
+			, gboolean enable_search
+			, CppFileParsed* cb_file_parsed
+			, gpointer cb_file_parsed_tag )
+{
 	CppGuide* guide;
 	
 	guide = g_new0(CppGuide, 1);
-
+	guide->cb_file_parsed = cb_file_parsed;
+	guide->cb_file_parsed_tag = cb_file_parsed_tag;
 	guide->enable_search = enable_search;
 
 	if( guide->enable_search ) {

@@ -295,21 +295,22 @@ static void jump_to_current(LanguageTips* self, GtkTextView* view) {
 			&& g_sequence_get_length(seq)==g_sequence_get_length(self->jump_to_seq)
 			&& g_sequence_get(g_sequence_get_begin_iter(seq))==g_sequence_get(g_sequence_get_begin_iter(self->jump_to_seq));
 
+		if( self->jump_to_seq )
+			g_sequence_free(self->jump_to_seq);
+
 		if( is_last ) {
-			g_sequence_free(seq);
-			seq = self->jump_to_seq;
 			index = (self->jump_to_index + 1) % g_sequence_get_length(seq);
 		} else {
-			if( self->jump_to_seq )
-				g_sequence_free(self->jump_to_seq);
 			index = 0;
 		}
 
 		elem = (CppElem*)g_sequence_get( g_sequence_get_iter_at_pos(seq, index) );
 
 		// skip current line elem
-		if( elem->file==file && elem->sline==line )
+		if( elem->file==file && elem->sline==line ) {
 			index = (index + 1) % g_sequence_get_length(seq);
+			elem = (CppElem*)g_sequence_get( g_sequence_get_iter_at_pos(seq, index) );
+		}
 
 		self->jump_to_seq = seq;
 		self->jump_to_index = index;

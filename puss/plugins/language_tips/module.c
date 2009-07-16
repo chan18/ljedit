@@ -12,8 +12,6 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	self = g_new0(LanguageTips, 1);
 	self->app = app;
 
-	self->cpp_guide = cpp_guide_new(TRUE, TRUE);
-
 	parse_thread_init(self);
 
 	self->re_include = g_regex_new("^[ \t]*#[ \t]*include[ \t]*(.*)", (GRegexCompileFlags)0, (GRegexMatchFlags)0, 0);
@@ -42,15 +40,13 @@ PUSS_EXPORT void puss_plugin_destroy(void* ext) {
 	g_regex_unref(self->re_include_tip);
 	g_regex_unref(self->re_include_info);
 
-	parse_thread_final(self);
-
 	if( self->jump_to_seq )
 		g_sequence_free(self->jump_to_seq);
 
 	if( self->outline_file )
 		cpp_file_unref(self->outline_file);
 
-	cpp_guide_free(self->cpp_guide);
+	parse_thread_final(self);
 
 	g_free(self);
 }
