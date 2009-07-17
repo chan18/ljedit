@@ -36,10 +36,11 @@ static gboolean preview_show(PreviewIdleArg* arg) {
 		preview_update(arg->self);
 
 	} else {
+		search_key_free(arg->key);
 		if( arg->seq )
 			g_sequence_free(arg->seq);
 	}
-
+				
 	g_free(arg);
 	return FALSE;		
 }
@@ -60,18 +61,12 @@ static gpointer tips_preview_search_thread(LanguageTips* self) {
 			continue;
 
 		seq = cpp_guide_search(self->cpp_guide, key->spath, 0, key->file, key->line, -1, -1);
-		search_key_free(key);
-
 		if( seq ) {
 			PreviewIdleArg* arg = g_new0(PreviewIdleArg, 1);
-			if( arg ) {
-				arg->self = self;
-				arg->key = key;
-				arg->seq = seq;
-				g_idle_add(preview_show, arg);				
-			} else {
-				g_sequence_free(seq);
-			}
+			arg->self = self;
+			arg->key = key;
+			arg->seq = seq;
+			g_idle_add(preview_show, arg);
 		}
 	}
 
@@ -94,27 +89,14 @@ void preview_final(LanguageTips* self) {
 		g_async_queue_unref(self->preview_search_queue);
 	}
 
-	if( self->preview_search_thread ) {
+	if( self->preview_search_thread )
 		g_thread_join(self->preview_search_thread);
-	}
+
+	if( self->preview_search_key )
+		search_key_free((PreviewSearchKey*)(self->preview_search_key));
 
 	if( self->preview_search_seq )
 		g_sequence_free(self->preview_search_seq);
-}
-
-void preview_set(LanguageTips* self, gpointer spath, CppFile* file, gint line) {
-	PreviewSearchKey* key;
-	if( !spath )
-		return;
-
-	key = g_new0(PreviewSearchKey, 1);
-	key->spath = spath;
-	key->file = file ? cpp_file_ref(file) : file;
-	key->line = line;
-
-	self->preview_search_key = key;
-
-	g_async_queue_push(self->preview_search_queue, key);
 }
 
 static gboolean scroll_to_define_line(LanguageTips* self) {
@@ -195,6 +177,30 @@ static void preview_do_update(LanguageTips* self, gint index) {
 
 void preview_update(LanguageTips* self) {
 	preview_do_update(self, self->preview_last_index);
+}
+
+void preview_set(LanguageTips* self, gpointer spath, CppFile* file, gint line) {
+	PreviewSearchKey* key;
+	if( !spath )
+		return;
+
+	if( self->preview_search_key ) {
+		key = self->preview_search_key;
+		if( key->file==file && key->line==line && csp_spath_equal(key->spath, spath) ) {
+			cpp_spath_free(spath);
+			preview_do_update(self, self->preview_last_index + 1);
+			return;
+		}
+	}
+
+	key = g_new0(PreviewSearchKey, 1);
+	key->spath = spath;
+	key->file = file ? cpp_file_ref(file) : file;
+	key->line = line;
+
+	self->preview_search_key = key;
+
+	g_async_queue_push(self->preview_search_queue, key);
 }
 
 SIGNAL_CALLBACK void preview_cb_number_button_clicked(GtkButton* button, LanguageTips* self) {

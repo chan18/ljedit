@@ -737,7 +737,10 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 
     switch( event->keyval ) {
 	case GDK_F12:
-		jump_to_current(self, view);
+		if( event->state & (GDK_CONTROL_MASK|GDK_MOD1_MASK) )
+			jump_to_current(self, view);
+		else
+			show_current_in_preview(self, view);
 		return FALSE;
 
 	case GDK_Alt_L:

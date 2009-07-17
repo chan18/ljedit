@@ -204,7 +204,8 @@ gpointer cpp_spath_find( gboolean find_startswith
 			, gpointer start_iter
 			, gpointer end_iter );
 gpointer cpp_spath_parse(gboolean find_startswith, const gchar* text);
-void cpp_spath_free(gpointer spath);
+void     cpp_spath_free(gpointer spath);
+gboolean csp_spath_equal(GList* a, GList* b);
 
 typedef gboolean (*CppMatched)(CppElem* elem, gpointer tag);
 

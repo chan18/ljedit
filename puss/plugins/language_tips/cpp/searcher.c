@@ -696,7 +696,7 @@ void spath_free(GList* spath) {
 	g_list_free(spath);
 }
 
-static gboolean spath_equal(GList* a, GList* b) {
+gboolean spath_equal(GList* a, GList* b) {
 	SKey* pa;
 	SKey* pb;
 

@@ -24,9 +24,10 @@ typedef struct {
 	gchar (*do_next)(gpointer it);
 } SearchIterEnv;
 
-GList* spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_startswith);
-GList* spath_parse(const gchar* text, gboolean find_startswith);
-void   spath_free(GList* spath);
+GList*   spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_startswith);
+GList*   spath_parse(const gchar* text, gboolean find_startswith);
+void     spath_free(GList* spath);
+gboolean spath_equal(GList* a, GList* b);
 
 void searcher_search( CppSTree* stree
 	, GList* spath
