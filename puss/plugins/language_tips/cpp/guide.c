@@ -190,7 +190,7 @@ void cpp_spath_free(gpointer spath) {
 	spath_free((GList*)spath);
 }
 
-gboolean csp_spath_equal(gpointer a, gpointer b) {
+gboolean cpp_spath_equal(gpointer a, gpointer b) {
 	return spath_equal(a, b);
 }
 

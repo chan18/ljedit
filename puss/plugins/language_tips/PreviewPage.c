@@ -186,7 +186,7 @@ void preview_set(LanguageTips* self, gpointer spath, CppFile* file, gint line) {
 
 	if( self->preview_search_key ) {
 		key = self->preview_search_key;
-		if( key->file==file && key->line==line && csp_spath_equal(key->spath, spath) ) {
+		if( key->file==file && key->line==line && cpp_spath_equal(key->spath, spath) ) {
 			cpp_spath_free(spath);
 			preview_do_update(self, self->preview_last_index + 1);
 			return;

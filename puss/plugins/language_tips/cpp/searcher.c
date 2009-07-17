@@ -710,7 +710,7 @@ gboolean spath_equal(GList* a, GList* b) {
 		b = b->next;
 
 		if( pa!=pb && (pa->type!=pb->type || !tiny_str_equal( &(pa->value), &(pb->value))) )
-			break;
+			return FALSE;
 	}
 
 	return a==b;
