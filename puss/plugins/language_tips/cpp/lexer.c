@@ -204,7 +204,7 @@ label_cpp_lexer_start:
 				} else if( ch=='\r' || ch=='\n' ) {
 					if( (i > 0) || mline.buf ) {
 						g_assert( i < MULTILINES_COUNT );
-						lines[i].len = (gsize)(frame->ps - lines[i].buf - 1);
+						lines[i].len = (gsize)(frame->ps - lines[i].buf);
 						++i;
 
 					} else {
