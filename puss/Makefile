@@ -20,6 +20,13 @@ all : .puss .extends .plugins
 .plugins :
 	@for plg in $(PLGS); do make -C$$plg BUILD=$(BUILD); done
 
+strip:
+	@for ext in $(wildcard bin/extends/*.ext); do strip $$ext; done
+	@for ext in $(wildcard bin/plugins/*.so); do strip $$ext; done
+	@-strip bin/puss
+	@-strip bin/_puss.exe
+	@-strip bin/puss.exe
+
 clean:
 	@make -Cpuss BUILD=$(BUILD) NOT_USE_D_FILE=1 clean
 	@make -Cwin32_boot BUILD=$(BUILD) NOT_USE_D_FILE=1 clean
