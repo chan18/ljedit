@@ -793,8 +793,6 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 
 		switch( event->keyval ) {
 		case GDK_Right:
-		case GDK_Return:
-		case GDK_KP_Enter:
 			do_hint_or_auto_complete(self, view);
 			break;
 		}

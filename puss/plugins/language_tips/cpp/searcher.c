@@ -519,7 +519,9 @@ GList* spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_st
 
 		switch( ch ) {
 		case '\0':
-			goto find_error;
+			spath = g_list_prepend(spath, skey_new('S', "", 0));
+			goto find_finish;
+			break;
 
 		case '.':
 			if( iter_prev_char(env, ps)=='.' )
@@ -529,14 +531,18 @@ GList* spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_st
 			break;
 
 		case '>':
-			if( iter_prev(env, ps)!='-' )
-				goto find_error;
+			if( iter_prev(env, ps)!='-' ) {
+				spath = g_list_prepend(spath, skey_new('S', "", 0));
+				goto find_finish;
+			}
 			spath = g_list_prepend(spath, skey_new('S', "", 0));
 			type = 'v';
 			break;
 
 		case '(':
 		case '<':
+			spath = g_list_prepend(spath, skey_new('S', "", 0));
+			goto find_finish;
 			break;
 
 		case ':':
@@ -552,8 +558,10 @@ GList* spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_st
 				ch = iter_prev(env, ps);
 			}
 
-			if( buf->len==0 )
-				goto find_error;
+			if( buf->len==0 ) {
+				spath = g_list_prepend(spath, skey_new('S', "", 0));
+				goto find_finish;
+			}
 
 			spath = g_list_prepend(spath, skey_new('S', g_strreverse(buf->str), buf->len));
 			g_string_assign(buf, "");
