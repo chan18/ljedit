@@ -473,7 +473,7 @@ static gboolean show_include_files_tips(LanguageTips* self, GtkTextView* view, G
 	return FALSE;
 }
 
-gboolean on_show_hint_timeout(GtkTextView* view, LanguageTips* self) {
+static gboolean do_show_hint(LanguageTips* self, GtkTextView* view) {
 	GtkNotebook* doc_panel;
 	gint page_num;
 	GtkTextBuffer* buf;
@@ -481,9 +481,6 @@ gboolean on_show_hint_timeout(GtkTextView* view, LanguageTips* self) {
 	GtkTextIter end;
 
 	g_assert( view );
-
-	//if( show_hint_tag_!=tag )
-	//	return false;
 
 	doc_panel = puss_get_doc_panel(self->app);
 	page_num = gtk_notebook_get_current_page(doc_panel);
@@ -497,19 +494,6 @@ gboolean on_show_hint_timeout(GtkTextView* view, LanguageTips* self) {
 	show_hint(self, view, buf, &iter, &end, 's');
 
 	return FALSE;
-}
-
-static void kill_show_hint_timer(LanguageTips* self) {
-	//show_hint_timer_.disconnect();
-}
-
-static void set_show_hint_timer(LanguageTips* self, GtkTextView* view) {
-	kill_show_hint_timer(self);
-
-	//++show_hint_tag_;
-	//show_hint_timer_ = Glib::signal_timeout().connect( sigc::bind(sigc::mem_fun(this, &LJCS::on_show_hint_timeout), &page, show_hint_tag_), 200 );
-
-	on_show_hint_timeout(view, self);
 }
 
 static void locate_sub_hint(LanguageTips* self, GtkTextView* view) {
@@ -539,7 +523,7 @@ static void locate_sub_hint(LanguageTips* self, GtkTextView* view) {
 	y = 0;
 	calc_tip_pos(view, &x, &y);
 	if( !tips_locate_sub(self, x, y, text) )
-		set_show_hint_timer(self, view);
+		do_show_hint(self, view);
 
 	g_free(text);
 }
@@ -631,8 +615,6 @@ static void show_hint(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf,
 
 	if( tag=='f' )
 		tips_list_tip_hide(self);
-
-	kill_show_hint_timer(self);
 
 	url = self->app->doc_get_url(buf);
 	if( !url )
@@ -732,6 +714,8 @@ static gboolean view_on_key_press(GtkTextView* view, GdkEventKey* event, Languag
 static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, LanguageTips* self) {
     if( event->state & GDK_MOD1_MASK ) {
         tips_hide_all(self);
+		if( event->keyval==GDK_Right )
+			do_show_hint(self, view);
         return FALSE;
     }
 
@@ -749,7 +733,7 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
         return FALSE;
     }
 
-	if( tips_is_visible(self) ) {
+	if( tips_list_is_visible(self) || tips_include_is_visible(self) ) {
 		switch( event->keyval ) {
 		case GDK_Delete:
 		case GDK_Left:
@@ -766,10 +750,10 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 				if( gtk_text_iter_get_line(&iter)==self->controls_priv->tips_last_line ) {
 					if( tips_list_is_visible(self) ) {
 						locate_sub_hint(self, view);
-
 					} else {
-						set_show_hint_timer(self, view);
+						do_show_hint(self, view);
 					}
+
 				} else {
 					tips_hide_all(self);
 				}
@@ -893,23 +877,16 @@ static void view_on_im_commit(GtkIMContext *cxt, gchar* str, LanguageTips* self)
 			if( sign )
 				tips_decl_tip_hide(self);
 
-		} else {
+		} else if( tips_list_is_visible(self) ) {
 			gboolean sign = FALSE;
 
 			if( last_input=='_' || g_unichar_isalnum(last_input) )
 				sign = TRUE;
 
-			if( sign ) {
-				if( tips_list_is_visible(self) ) {
-					locate_sub_hint(self, view);
-
-				} else {
-					set_show_hint_timer(self, view);
-				}
-
-			} else {
+			if( sign )
+				locate_sub_hint(self, view);
+			else
 				tips_list_tip_hide(self);
-			}
 		}
 		break;
 	}
