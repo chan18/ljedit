@@ -657,6 +657,8 @@ GList* spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_st
 		spath = g_list_prepend(spath, skey_new(type, g_strreverse(buf->str), buf->len));
 	}
 
+	iter_next(env, ps);
+	iter_next(env, pe);
 	goto find_finish;
 
 find_error:

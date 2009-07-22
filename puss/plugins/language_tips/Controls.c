@@ -496,6 +496,82 @@ static gboolean do_show_hint(LanguageTips* self, GtkTextView* view) {
 	return FALSE;
 }
 
+static void do_hint_or_auto_complete(LanguageTips* self, GtkTextView* view) {
+	GtkNotebook* doc_panel;
+	gint page_num;
+	GtkTextBuffer* buf;
+	GtkTextIter iter;
+	GtkTextIter end;
+	GString* url;
+	gint flag;
+	CppFile* file;
+	gint line;
+	gint offset;
+	gpointer spath;
+	GSequence* seq;
+	gint len;
+
+	g_assert( view );
+
+	doc_panel = puss_get_doc_panel(self->app);
+	page_num = gtk_notebook_get_current_page(doc_panel);
+	if( page_num < 0 || self->app->doc_get_view_from_page_num(page_num) != view )
+		return;
+
+	buf = gtk_text_view_get_buffer(view);
+	gtk_text_buffer_get_iter_at_mark(buf, &iter, gtk_text_buffer_get_insert(buf));
+	gtk_text_iter_backward_char(&iter);
+	end = iter;
+
+	url = self->app->doc_get_url(buf);
+	if( !url )
+		return;
+
+	// find keys
+	line = gtk_text_iter_get_line(&iter);
+	offset = gtk_text_iter_get_line_offset(&iter);
+
+	file = cpp_guide_find_parsed(self->cpp_guide, url->str, url->len);
+	if( !file )
+		return;
+
+	spath = find_spath_in_text_buffer(file, &iter, &end, TRUE);
+	if( spath ) {
+		flag = CPP_GUIDE_SEARCH_FLAG_USE_UNIQUE_ID | CPP_GUIDE_SEARCH_FLAG_WITH_KEYWORDS;
+
+		seq = cpp_guide_search( self->cpp_guide
+					, spath
+					, flag
+					, file
+					, line + 1
+					, self->controls_priv->option_hint_search_max_num
+					, self->controls_priv->option_hint_search_max_time );
+
+		if( seq ) {
+			len = g_sequence_get_length(seq);
+			if( len > 1 ) {
+				gint x = 0;
+				gint y = 0;
+				calc_tip_pos(view, &x, &y);
+				tips_list_tip_show(self, x, y, seq);
+				self->controls_priv->tips_last_line = line;
+
+			} else if( len==1 ) {
+				CppElem* elem = g_sequence_get(g_sequence_get_begin_iter(seq));
+
+				gtk_text_buffer_delete(buf, &iter, &end);
+				gtk_text_buffer_insert_at_cursor(buf, elem->name->buf, tiny_str_len(elem->name));
+				tips_list_tip_hide(self);
+
+				g_sequence_free(seq);
+			}
+		}
+
+		cpp_spath_free(spath);
+	}
+	cpp_file_unref(file);
+}
+
 static void locate_sub_hint(LanguageTips* self, GtkTextView* view) {
 	GtkTextBuffer* buf;
 	GtkTextIter iter;
@@ -719,7 +795,7 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
 		case GDK_Right:
 		case GDK_Return:
 		case GDK_KP_Enter:
-			do_show_hint(self, view);
+			do_hint_or_auto_complete(self, view);
 			break;
 		}
 
