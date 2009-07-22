@@ -714,8 +714,15 @@ static gboolean view_on_key_press(GtkTextView* view, GdkEventKey* event, Languag
 static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, LanguageTips* self) {
     if( event->state & GDK_MOD1_MASK ) {
         tips_hide_all(self);
-		if( event->keyval==GDK_Right )
+
+		switch( event->keyval ) {
+		case GDK_Right:
+		case GDK_Return:
+		case GDK_KP_Enter:
 			do_show_hint(self, view);
+			break;
+		}
+
         return FALSE;
     }
 
