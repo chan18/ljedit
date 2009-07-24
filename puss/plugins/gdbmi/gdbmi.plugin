@@ -1,0 +1,7 @@
+# puss plugin
+# 
+
+[plugin]
+name = gdbmi
+engine = so
+description = gdb debug plugin

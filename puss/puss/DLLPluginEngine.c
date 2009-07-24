@@ -20,14 +20,8 @@ gpointer dll_plugin_load(const gchar* plugin_id, GKeyFile* keyfile, Puss* app) {
 		return 0;
 
 	filename = g_strconcat(plugin_id, ".so", 0);
-	if( filename ) {
-		filepath = g_build_filename(app->get_plugins_path(), filename, 0);
-		if( filepath ) {
-			dll_plugin->module = g_module_open(filepath, G_MODULE_BIND_LAZY);
-			g_free(filepath);
-		}
-		g_free(filename);
-	}
+	filepath = g_build_filename(app->get_plugins_path(), filename, 0);
+	dll_plugin->module = g_module_open(filepath, G_MODULE_BIND_LAZY);
 
 	if( !dll_plugin->module ) {
 		g_printerr("ERROR  : load plugin(%s) failed!\n", filepath);
@@ -39,11 +33,11 @@ gpointer dll_plugin_load(const gchar* plugin_id, GKeyFile* keyfile, Puss* app) {
 						, (gpointer*)&create_fun );
 
 		if( !create_fun ) {
-			g_printerr("ERROR  : not find puss_plugin_create() in extend(%s)!\n", filepath);
+			g_printerr("ERROR  : not find puss_plugin_create() in plugin(%s)!\n", filepath);
 
 		} else {
 			dll_plugin->handle = (*create_fun)(app);
-			return dll_plugin;
+			goto __finished__;
 		}
 	}
 
@@ -51,7 +45,13 @@ gpointer dll_plugin_load(const gchar* plugin_id, GKeyFile* keyfile, Puss* app) {
 		g_module_close(dll_plugin->module);
 
 	g_free(dll_plugin);
-	return 0;
+	dll_plugin = 0;
+
+__finished__:
+	g_free(filename);
+	g_free(filepath);
+
+	return dll_plugin;
 }
 
 void dll_plugin_unload(gpointer plugin, Puss* app) {

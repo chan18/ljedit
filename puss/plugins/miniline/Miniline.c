@@ -572,7 +572,7 @@ static void miniline_create() {
 	group = GTK_ACTION_GROUP( gtk_builder_get_object(builder, "main_action_group") );
 	ui_mgr = GTK_UI_MANAGER( gtk_builder_get_object(builder, "main_ui_manager") );
 	hbox = GTK_BOX( gtk_builder_get_object(builder, "main_toolbar_hbox") );
-	gtk_action_group_add_action_with_accel(group, g_self->action, "<control>K");
+	gtk_action_group_add_action_with_accel(group, g_self->action, "<control>G");
 
 	g_self->ui_mgr_id = gtk_ui_manager_add_ui_from_string(ui_mgr, MINILINE_MENU, -1, 0);
 	gtk_ui_manager_ensure_update(ui_mgr);
