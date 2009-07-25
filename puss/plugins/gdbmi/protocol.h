@@ -26,7 +26,7 @@ async-output ->
 result-class ->
 	"done" | "running" | "connected" | "error" | "exit"
 async-class ->
-	"stopped" | others (where others will be added depending on the needs—this
+	"stopped" | others (where others will be added depending on the needs this
 	is still in development).
 result ->
 	variable "=" value
@@ -96,14 +96,9 @@ typedef struct {
 	GHashTable*	results;		// key(gchar*) : value(MIValue)
 } MIResultRecord;
 
-typedef struct {
-	GList*			out_of_bands;	// Record List
-	MIResultRecord*	result_record;
-} MIParseResult;
+MIRecord* mi_record_parse(const gchar* buf, gint len);
 
-MIParseResult* mi_result_parse(const gchar* buf, gint len, gsize* bytes_read);
-
-void mi_result_free(MIParseResult* v);
+void mi_record_free(MIRecord* record);
 
 #endif//PUSS_MI_PROTOCOL_H
 

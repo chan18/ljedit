@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="gdbmi"
-	ProjectGUID="{E73E2E17-386F-4E4D-E43E-7FE5C5ED84CE}"
-	RootNamespace="gdbmi"
+	Name="test"
+	ProjectGUID="{9E506345-C24F-4E22-ABA4-88507A09FA29}"
+	RootNamespace="test"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -19,8 +19,8 @@
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="2"
-			InheritedPropertySheets="..\..\puss_d.vsprops"
+			ConfigurationType="1"
+			InheritedPropertySheets="..\..\..\puss_d.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -41,8 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)bin\include&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -50,7 +49,6 @@
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
-				CompileAs="1"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -63,10 +61,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(SolutionDir)bin\plugins\$(ProjectName).so"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
-				SubSystem="2"
+				SubSystem="1"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -92,15 +89,14 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\&#x0D;&#x0A;copy $(ProjectDir)*.ui $(SolutionDir)bin\plugins\&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="2"
-			InheritedPropertySheets="..\..\puss.vsprops"
+			ConfigurationType="1"
+			InheritedPropertySheets="..\..\..\puss.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -121,8 +117,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)bin\include&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -140,10 +135,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(SolutionDir)bin\plugins\$(ProjectName).so"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
-				SubSystem="2"
+				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				TargetMachine="1"
@@ -171,7 +165,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\&#x0D;&#x0A;copy $(ProjectDir)*.ui $(SolutionDir)bin\plugins\"
 			/>
 		</Configuration>
 	</Configurations>
@@ -179,31 +172,23 @@
 	</References>
 	<Files>
 		<File
-			RelativePath=".\gdbmi.plugin"
+			RelativePath=".\main.c"
 			>
 		</File>
 		<File
-			RelativePath=".\gdbmi.ui"
+			RelativePath="..\protocol.c"
 			>
 		</File>
 		<File
-			RelativePath=".\module.c"
+			RelativePath="..\protocol.h"
 			>
 		</File>
 		<File
-			RelativePath=".\protocol.c"
+			RelativePath="..\vdriver.c"
 			>
 		</File>
 		<File
-			RelativePath=".\protocol.h"
-			>
-		</File>
-		<File
-			RelativePath=".\vdriver.c"
-			>
-		</File>
-		<File
-			RelativePath=".\vdriver.h"
+			RelativePath="..\vdriver.h"
 			>
 		</File>
 	</Files>

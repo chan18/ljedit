@@ -18,42 +18,7 @@ static void mi_value_free(MIValue* v) {
 		g_hash_table_destroy(v->v_tuple);
 		break;
 	case 'l':
-		g_list_foreach(v->v_list, mi_value_free, 0);
-		break;
-	}
-	g_free(v);
-}
-
-static void mi_record_free(MIRecord* v) {
-	if( !v )
-		return;
-
-	switch( v->type ) {
-	case '*':
-	case '+':
-	case '=':
-		{
-			MIAsyncRecord* p = (MIAsyncRecord*)v;
-			g_free( p->async_class );
-			if( p->results )
-				g_hash_table_destroy( p->results );
-		}
-		break;
-	case '~':
-	case '@':
-	case '&':
-		{
-			MIStreamRecord* p = (MIStreamRecord*)v;
-			g_free( p->str );
-		}
-		break;
-	case '^':
-		{
-			MIResultRecord* p = (MIResultRecord*)v;
-			g_free( p->result_class );
-			if( p->results )
-				g_hash_table_destroy( p->results );
-		}
+		g_list_foreach(v->v_list, (GFunc)mi_value_free, 0);
 		break;
 	}
 	g_free(v);
@@ -63,22 +28,18 @@ static void mi_record_free(MIRecord* v) {
 #define MI_CURRENT_PTR	(self->buf + self->pos)
 #define MI_HAS_NEXT		(self->pos < self->len)
 
-static gboolean mi_parse_token(MIParser* self, gchar** token) {
-	gchar* vbuf;
-	gsize  vlen;
+static void mi_parse_token(MIParser* self, MIStr* token) {
+	token->buf = MI_CURRENT_PTR;
+	token->len = 0;
 
-	*token = 0;
 	if( !g_ascii_isdigit(MI_CURRENT) )
-		return FALSE;
+		return;
 
-	vbuf = MI_CURRENT_PTR;
 	for( ++self->pos; MI_HAS_NEXT; ++self->pos )
 		if( !g_ascii_isdigit(MI_CURRENT) )
 			break;
-	vlen = (self->buf + self->pos) - vbuf;
-
-	*token = g_strndup(vbuf, vlen);
-	return TRUE;
+	token->len = (gsize)((self->buf + self->pos) - token->buf);
+	return;
 }
 
 static gboolean mi_parse_string(MIParser* self, MIStr* str) {
@@ -183,7 +144,7 @@ static gboolean mi_parse_values(MIParser* self, GList** out) {
 	}
 
 __error__:
-	g_list_foreach(*out, mi_value_free, 0);
+	g_list_foreach(*out, (GFunc)mi_value_free, 0);
 	g_list_free(*out);
 	*out = 0;
 	return FALSE;
@@ -325,10 +286,10 @@ static gboolean mi_parse_async_output(MIParser* self, MIAsyncRecord* record) {
 	return TRUE;
 }
 
-static gboolean mi_parse_async_record(MIParser* self, gulong token, MIAsyncRecord* record) {
+static gboolean mi_parse_async_record(MIParser* self, MIStr* token, MIAsyncRecord* record) {
 	gboolean res = FALSE;
 
-	record->token = token;
+	record->token = token->len ? g_strndup(token->buf, token->len) : 0;;
 	res = mi_parse_async_output(self, record);
 
 	if( !res )
@@ -341,134 +302,117 @@ static gboolean mi_parse_stream_record(MIParser* self, MIStreamRecord* record) {
 	if( !mi_parse_c_string(self, &(record->str)) )
 		return FALSE;
 
-	mi_parse_CR_LF(self);	// need
 	return TRUE;
 }
 
-static gboolean mi_parse_out_of_band_records(MIParser* self, MIParseResult* out) {
-	gboolean res = FALSE;
-	gulong token = 0;
-	gint last_pos;
-
-	while( MI_HAS_NEXT ) {
-		MIRecord* record = 0;
-
-		last_pos = self->pos;
-		mi_parse_token(self, &token);
-		
-		if( mi_is_async_record(self) ) {
-			MIAsyncRecord* async_record = g_new0(MIAsyncRecord, 1);
-			record = (MIRecord*)async_record;
-			record->type = MI_CURRENT;
-			++self->pos;
-
-			if( !mi_parse_async_record(self, token, async_record) ) {
-				mi_record_free(record);
-				return FALSE;
-			}
-
-		} else if( mi_is_stream_record(self) ) {
-			MIStreamRecord* stream_record = g_new0(MIStreamRecord, 1);
-			record = (MIRecord*)stream_record;
-			record->type = MI_CURRENT;
-			++self->pos;
-
-			if( !mi_parse_stream_record(self, stream_record) ) {
-				mi_record_free(record);
-				return FALSE;
-			}
-
-		} else {
-			self->pos = last_pos;
-			break;
-		}
-
-		if( record )
-			out->out_of_bands = g_list_append(out->out_of_bands, record);
-	}
-
-	return TRUE;
-}
-
-static gboolean mi_parse_result_record(MIParser* self, MIParseResult* out) {
-	// result-record -> [ token ] "^" result-class ( "," result )* nl
-
-	gulong token = 0;
-	MIResultRecord* result = 0;
+static gboolean mi_parse_result_record(MIParser* self, MIStr* token, MIResultRecord* record) {
 	MIStr result_class;
-
-	mi_parse_token(self, &token);
-
-	if( !mi_is_result_record(self) )
-		return TRUE;	// Allowed Empty Result
-
-	++self->pos;
 
 	if( !mi_parse_string(self, &result_class) )
 		return FALSE;
 
-	result = g_new0(MIResultRecord, 1);
-	((MIRecord*)result)->type = '^';
-
 	if( mi_is_CR_LF(self) ) {
-		result->token = token;
-		result->result_class = g_strndup(result_class.buf, result_class.len);
+		record->token = token->len ? g_strndup(token->buf, token->len) : 0;
+		record->result_class = g_strndup(result_class.buf, result_class.len);
 
 	} else {
-		if( MI_CURRENT!=',' ) { 
-			mi_record_free( (MIRecord*)result );
+		if( MI_CURRENT!=',' )
 			return FALSE;
-		}
 
 		++self->pos;
 
-		if( !mi_parse_results(self, &(result->results)) ) {
-			mi_record_free( (MIRecord*)result );
+		if( !mi_parse_results(self, &(record->results)) )
 			return FALSE;
-		}	
 	}
 
-	mi_parse_CR_LF(self);
-
-	out->result_record = result;
 	return TRUE;
 }
 
-MIParseResult* mi_result_parse(const gchar* buf, gint len, gsize* bytes_read) {
-	MIParser parser;
-	MIParseResult* res;
+static MIRecord* mi_parse_record_line(MIParser* self) {
+	MIRecord* record;
+	MIStr token;
 
-	parser.buf = (gchar*)buf;
-	parser.len = len ? len : (gsize)strlen(buf);
-	parser.pos = 0;
+	mi_parse_token(self, &token);
 
-	// output -> ( out-of-band-record )* [ result-record ] "(gdb)" nl
+	if( mi_is_async_record(self) ) {
+		MIAsyncRecord* async_record = g_new0(MIAsyncRecord, 1);
+		record = (MIRecord*)async_record;
+		record->type = MI_CURRENT;
+		++self->pos;
 
-	res = g_new0(MIParseResult, 1);
+		if( !mi_parse_async_record(self, &token, async_record) ) {
+			mi_record_free(record);
+			record = 0;
+		}
 
-	if( !mi_parse_out_of_band_records(&parser, res)
-		|| !mi_parse_result_record(&parser, res)
-		|| !mi_parse_end_sign(&parser) )
-	{
-		mi_result_free(res);
-		res = 0;
-		
-	} else if( bytes_read ) {
-		*bytes_read = parser.pos;
+	} else if( mi_is_stream_record(self) ) {
+		MIStreamRecord* stream_record = g_new0(MIStreamRecord, 1);
+		record = (MIRecord*)stream_record;
+		record->type = MI_CURRENT;
+		++self->pos;
+
+		if( !mi_parse_stream_record(self, stream_record) ) {
+			mi_record_free(record);
+			record = 0;
+		}
+
+	} else if( mi_is_result_record(self) ) {
+		MIResultRecord* result_record = g_new0(MIResultRecord, 1);
+		record = (MIRecord*)result_record;
+		record->type = MI_CURRENT;
+		++self->pos;
+
+		if( !mi_parse_result_record(self, &token, result_record) ) {
+			mi_record_free(record);
+			record = 0;
+		}
+
+	} else {
+		record = 0;
 	}
 
-	return res;
+	return record;
 }
 
-void mi_result_free(MIParseResult* v) {
-	if( !v )
+MIRecord* mi_record_parse(const gchar* buf, gint len) {
+	MIParser parser = { (gchar*)buf, len, 0 };
+	return mi_parse_record_line(&parser);
+}
+
+void mi_record_free(MIRecord* record) {
+	if( !record )
 		return;
 
-	g_list_foreach(v->out_of_bands, mi_record_free, 0);
-	g_list_free(v->out_of_bands);
-
-	mi_record_free((MIRecord*)(v->result_record));
-
-	g_free(v);
+	switch( record->type ) {
+	case '*':
+	case '+':
+	case '=':
+		{
+			MIAsyncRecord* p = (MIAsyncRecord*)record;
+			g_free( p->token );
+			g_free( p->async_class );
+			if( p->results )
+				g_hash_table_destroy( p->results );
+		}
+		break;
+	case '~':
+	case '@':
+	case '&':
+		{
+			MIStreamRecord* p = (MIStreamRecord*)record;
+			g_free( p->str );
+		}
+		break;
+	case '^':
+		{
+			MIResultRecord* p = (MIResultRecord*)record;
+			g_free( p->token );
+			g_free( p->result_class );
+			if( p->results )
+				g_hash_table_destroy( p->results );
+		}
+		break;
+	}
+	g_free(record);
 }
 

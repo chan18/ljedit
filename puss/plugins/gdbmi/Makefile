@@ -41,8 +41,8 @@ TARGET = $(TARGET_PATH)/$(TARGET_NAME)
 
 all : $(TARGET).so $(TARGET).plugin
 
-tee : vdriver.c protocol.c
-	$(CC) -DTEST_VDRIVER $(CFLAGS) $(PUSS_CFLAGS) -o $@ $^ $(PUSS_LIBS)
+test : $(OBJS) test/main.c
+	$(CC) $(CFLAGS) $(PUSS_CFLAGS) -o $@ $^ $(PUSS_LIBS)
 
 $(TARGET).so : $(OBJS)
 	$(CC) $(CFLAGS) $(PUSS_CFLAGS) -shared -o $@ $^ $(PUSS_LIBS)

@@ -20,6 +20,11 @@
           </object>
         </child>
         <child>
+          <object class="GtkAction" id="debug_menu">
+            <property name="label" translatable="yes">_Debug</property>
+          </object>
+        </child>
+        <child>
           <object class="GtkAction" id="tool_menu">
             <property name="label" translatable="yes">_Tools</property>
           </object>
@@ -407,6 +412,8 @@
           <placeholder name="view_menu_extend_place">
           </placeholder>
         </menu>
+        <menu action="debug_menu">
+        </menu>
         <menu action="tool_menu">
           <placeholder name="tool_menu_default_place">
             <menuitem action="tools_menu_plugin_manager"/>
@@ -434,6 +441,9 @@
         </placeholder>
         <separator/>
         <placeholder name="main_toolbar_view_place">
+        </placeholder>
+        <separator/>
+        <placeholder name="main_toolbar_debug_place">
         </placeholder>
         <separator/>
         <placeholder name="main_toolbar_tool_place">
