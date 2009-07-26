@@ -58,7 +58,9 @@ gboolean cps_class(ParseEnv* env, Block* block) {
 		nskey = 0;
 			
 	} else {
-		elem->name = tiny_str_new("@anonymous", 10);
+		gchar* str = g_strdup_printf("@anonymous_%p", elem);
+		elem->name = tiny_str_new(str, strlen(str));
+		g_free(str);
 	}
 
 	switch( class_type ) {

@@ -291,7 +291,7 @@ static void option_monitor_init(LanguageTips* self) {
 	self->option_path_change_handler = self->app->option_monitor_reg(option, (OptionChanged)parse_include_path_option, self, 0);
 	parse_include_path_option(option, 0, self);
 
-	self->app->option_setup_reg("language_tips", _("language tips"), (CreateSetupWidget)create_setup_normal_ui, self, 0);
+	self->app->option_setup_reg("language_tips", _("language tips"), (CreateSetupWidget)create_setup_path_ui, self, 0);
 	self->app->option_setup_reg("language_tips._", _("tips limit"), (CreateSetupWidget)create_setup_normal_ui, self, 0);
 	self->app->option_setup_reg("language_tips.path", _("c++ paths"), (CreateSetupWidget)create_setup_path_ui, self, 0);
 }

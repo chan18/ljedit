@@ -311,11 +311,7 @@ static gboolean mi_parse_result_record(MIParser* self, MIStr* token, MIResultRec
 	if( !mi_parse_string(self, &result_class) )
 		return FALSE;
 
-	if( mi_is_CR_LF(self) ) {
-		record->token = token->len ? g_strndup(token->buf, token->len) : 0;
-		record->result_class = g_strndup(result_class.buf, result_class.len);
-
-	} else {
+	if( !mi_is_CR_LF(self) ) {
 		if( MI_CURRENT!=',' )
 			return FALSE;
 
@@ -325,6 +321,8 @@ static gboolean mi_parse_result_record(MIParser* self, MIStr* token, MIResultRec
 			return FALSE;
 	}
 
+	record->token = token->len ? g_strndup(token->buf, token->len) : 0;
+	record->result_class = g_strndup(result_class.buf, result_class.len);
 	return TRUE;
 }
 
@@ -414,5 +412,73 @@ void mi_record_free(MIRecord* record) {
 		break;
 	}
 	g_free(record);
+}
+
+typedef struct {
+	GString*	buffer;
+	gint		layer;
+	gboolean	newline;
+} MegerTag;
+
+static mi_value_meger_to_str(MIValue* value, MegerTag* tag);
+static mi_results_meger_to_str(gchar* key, MIValue* value, MegerTag* tag);
+
+static mi_value_meger_to_str(MIValue* value, MegerTag* tag) {
+	switch( value->type ) {
+	case 'c':
+		g_string_append(tag->buffer, value->v_const);
+		break;
+	case 't':
+		if( value->v_tuple==0 || g_hash_table_size(value->v_tuple)==0 ) {
+			g_string_append(tag->buffer, "{}");
+
+		} else {
+			MegerTag subtag = { tag->buffer, tag->layer+1, FALSE };
+			g_string_append(tag->buffer, "{\n");
+			g_hash_table_foreach(value->v_tuple, (GHFunc)mi_results_meger_to_str, &subtag);
+			g_string_append(tag->buffer, "}");
+		}
+		break;
+	case 'l':
+		if( !value->v_list ) {
+			g_string_append(tag->buffer, "[]");
+		} else {
+			MegerTag subtag = { tag->buffer, tag->layer+1, FALSE };
+			g_string_append(tag->buffer, "[\n");
+			g_list_foreach(value->v_list, (GFunc)mi_value_meger_to_str, &tag);
+			g_string_append(tag->buffer, "]");
+		}
+		break;
+	}
+}
+
+static mi_results_meger_to_str(gchar* key, MIValue* value, MegerTag* tag) {
+	gint i;
+
+	if( tag->newline )
+		tag->newline = FALSE;
+	else
+		g_string_append_c(tag->buffer, '\n');
+
+	for( i=0; i<tag->layer; ++i )
+		g_string_append(tag->buffer, "  ");
+
+	g_string_append(tag->buffer, key);
+	g_string_append(tag->buffer, " = ");
+
+	mi_value_meger_to_str(value, tag);
+}
+
+gchar* mi_results_to_str(GHashTable* results) {
+	gchar* result;
+	MegerTag tag = { g_string_new(""), 0, TRUE };
+
+	if( results )
+		g_hash_table_foreach(results, (GHFunc)mi_results_meger_to_str, &tag);
+
+	result = g_strndup(tag.buffer->str, tag.buffer->len);
+	g_string_free(tag.buffer, TRUE);
+
+	return result;
 }
 

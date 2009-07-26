@@ -14,8 +14,6 @@
 #include <Windows.h>
 #endif
 
-#include "protocol.h"
-
 typedef enum { MI_VDRIVER_ST_NONE
 	, MI_VDRIVER_ST_INIT				// gdb init
 	, MI_VDRIVER_ST_TASK				// serials gdb operators
@@ -26,16 +24,17 @@ typedef void (*MIVDriverTask)(MIVDriver* self, MIRecord* record, gint step);
 
 struct _MIVDriver {
 	// GDB Process
-	GPid			pid;
-	GIOChannel*		stdin_channel;
-	GIOChannel*		stdout_channel;
-	guint			stdin_event_handle;
-	guint			stdout_event_handle;
+	GPid		pid;
+	GIOChannel*	stdin_channel;
+	GIOChannel*	stdout_channel;
+	guint		stdin_event_handle;
+	guint		stdout_event_handle;
 
-	GString*		send_buffer;
-	GString*		recv_buffer;
+	GString*	send_buffer;
+	GString*	recv_buffer;
 
 	// Target Process
+	MITargetSetup*	target_setup;
 	GPid			target_pid;
 	MITargetStatus	target_status;
 
@@ -46,9 +45,42 @@ struct _MIVDriver {
 	gint			task_step;
 
 	GRegex*			re_debugevents_pid;
+
+	// Callbacks
+	gpointer				cb_tag;
+	GFreeFunc				cb_tag_free;
+
+	MITargetStatusChanged	cb_target_status_changed;
 };
 
-MITargetStatus	mi_vdriver_target_status(MIVDriver* self) {
+MITargetSetup* mi_target_setup_new() {
+	return g_new0(MITargetSetup, 1);
+}
+
+void mi_target_setup_clear(MITargetSetup* setup) {
+	if( setup ) {
+		g_free(setup->gdb);
+		g_free(setup->exec);
+		g_free(setup->args);
+		g_free(setup->working_dir);
+		g_strfreev(setup->env);
+		memset(setup, 0, sizeof(MITargetSetup));
+	}
+}
+
+void mi_target_setup_free(MITargetSetup* setup) {
+	mi_target_setup_clear(setup);
+	g_free(setup);
+}
+
+static void mi_vdriver_set_target_status(MIVDriver* self, MITargetStatus status, const MIRecord* record) {
+	self->target_status = status;
+
+	if( self->cb_target_status_changed )
+		(*(self->cb_target_status_changed))(self, status, record, self->cb_tag);
+}
+
+MITargetStatus	mi_vdriver_get_target_status(MIVDriver* self) {
 	return self->target_status;
 }
 
@@ -64,10 +96,14 @@ static void mi_vdriver_target_status_check(MIVDriver* self, MIRecord* record) {
 			MIAsyncRecord* p = (MIAsyncRecord*)record;
 			if( !p->async_class )
 				break;
-			
-			else if( g_str_equal(p->async_class, "stopped") )
-				self->target_status = MI_TARGET_ST_STOPPED;
-			
+
+			else if( g_str_equal(p->async_class, "stopped") ) {
+				MIValue* reason;
+				mi_vdriver_set_target_status(self, MI_TARGET_ST_STOPPED, record);
+				reason = p->results ? g_hash_table_lookup(p->results, "reason") : 0;
+				if( reason && reason->type=='c' && reason->v_const && g_str_equal(reason->v_const, "exited") )
+					mi_vdriver_command_stop(self);
+			}
 		}
 		break;
 
@@ -78,28 +114,29 @@ static void mi_vdriver_target_status_check(MIVDriver* self, MIRecord* record) {
 				break;
 			
 			else if( g_str_equal(p->result_class, "done") )
-				self->target_status = MI_TARGET_ST_DONE;
+				mi_vdriver_set_target_status(self, MI_TARGET_ST_DONE, record);
 			
 			else if( g_str_equal(p->result_class, "running") )
-				self->target_status = MI_TARGET_ST_RUNNING;
+				mi_vdriver_set_target_status(self, MI_TARGET_ST_RUNNING, record);
 			
 			else if( g_str_equal(p->result_class, "connected") )
-				self->target_status = MI_TARGET_ST_CONNECTED;
+				mi_vdriver_set_target_status(self, MI_TARGET_ST_CONNECTED, record);
 			
 			else if( g_str_equal(p->result_class, "error") )
-				self->target_status = MI_TARGET_ST_ERROR;
+				mi_vdriver_set_target_status(self, MI_TARGET_ST_ERROR, record);
 			
 			else if( g_str_equal(p->result_class, "exit") )
-				self->target_status = MI_TARGET_ST_EXIT;
+				mi_vdriver_set_target_status(self, MI_TARGET_ST_EXIT, record);
 		}
 		break;
 	}
 }
 
 static void mi_vdriver_cb_recv(MIVDriver* self, const gchar* line, gsize size) {
-	MIRecord* record = mi_record_parse(line, size);
+	MIRecord* record;
 	g_print("RECV : %s\n", line);
 
+	record = mi_record_parse(line, size);
 	mi_vdriver_target_status_check(self, record);
 
 	switch( self->status ) {
@@ -112,7 +149,7 @@ static void mi_vdriver_cb_recv(MIVDriver* self, const gchar* line, gsize size) {
 		(*(self->task_func))(self, record, self->task_step);
 		break;
 
-	case MI_VDRIVER_ST_WAIT:
+	default:
 		break;
 	}
 
@@ -214,20 +251,20 @@ static gboolean mi_vdriver_prepare(MIVDriver* self) {
 	gint standard_output = 0;
 
 	gchar* argv[8];
-	gchar* envp[8];
 
-	argv[0] = "C:\\mingw32\\bin\\gdb.exe";
+	argv[0] = "gdb";
+	if(self->target_setup->gdb && self->target_setup->gdb[0])
+		argv[0] = self->target_setup->gdb;
+
 	argv[1] = "--interpreter=mi";
 	argv[2] = "--quiet";
-	argv[3] = "d:\\t.exe";
+	argv[3] = self->target_setup->exec;
 	argv[4] = 0;
 
-	envp[0] = 0;
-
-	res = g_spawn_async_with_pipes( "D:\\puss\\bin"
+	res = g_spawn_async_with_pipes( self->target_setup->working_dir
 			, argv
-			, 0	//envp
-			, 0
+			, self->target_setup->env
+			, G_SPAWN_SEARCH_PATH | G_SPAWN_STDERR_TO_DEV_NULL
 			, 0
 			, 0
 			, &(self->pid)
@@ -316,7 +353,7 @@ static void mi_vdriver_final(MIVDriver* self) {
 		}
 	}
 	self->target_pid = 0;
-	self->target_status = MI_TARGET_ST_NONE;
+	mi_vdriver_set_target_status(self, MI_TARGET_ST_NONE, 0);
 
 	if( self->stdin_event_handle ) {
 		g_source_remove(self->stdin_event_handle);
@@ -367,71 +404,27 @@ void mi_vdriver_free(MIVDriver* self) {
 	g_string_free(self->send_buffer, TRUE);
 	g_string_free(self->recv_buffer, TRUE);
 
+	if( self->cb_tag_free )
+		(*(self->cb_tag_free))(self->cb_tag);
+
 	g_free(self);
 }
 
-static void task_mi_vdriver_start(MIVDriver* self, MIRecord* record, gint step) {
-	GMatchInfo* info;
-	gchar* word;
+void mi_vdriver_set_callbacks(MIVDriver* self, MITargetStatusChanged cb_target_status_changed, gpointer tag, GFreeFunc tag_free) {
+	if( self->cb_tag_free )
+		(*(self->cb_tag_free))(self->cb_tag);
+	self->cb_tag_free = tag_free;
+	self->cb_tag = tag;
 
-	g_print("START STEP : %d\n", step);
-	switch( step ) {
-	case 0:
-		if( !mi_vdriver_prepare( (MIVDriver*)self ) ) {
-			mi_vdriver_task_finish(self, MI_VDRIVER_ST_NONE);
-			break;
-		}
-		self->task_step = 100;
-		break;
-		
-	case 100:
-		if( !record )
-			mi_vdriver_task_call(self, 200, "-gdb-set new-console on");
-		break;
+	self->cb_target_status_changed = cb_target_status_changed;
+}
 
-	case 200:
-		//if self.args:
-		//	self.__call('-exec-arguments %s' % self.args)
-		//if self.working_directory:
-		//	self.__call('-environment-cd %s' % self.working_directory)
+void mi_vdriver_set_target( MIVDriver* self, MITargetSetup* setup ) {
+	self->target_setup = setup;
+}
 
-		//mi_vdriver_task_call(self, 201, "-exec-arguments %s");
-		//mi_vdriver_task_call(self, 202, "-environment-cd %s");
-
-		if( !record )
-			mi_vdriver_task_call(self, 300, "-gdb-set debugevents on");
-		break;
-		
-	case 300:
-		if( !record )
-			mi_vdriver_task_call(self, 400, "start");
-		break;
-		
-	case 400:
-		{
-			if( !record ) {
-				mi_vdriver_task_call(self, 500, "-gdb-set debugevents off");
-
-			} else if( record->type=='~' && g_regex_match(self->re_debugevents_pid, ((MIStreamRecord*)record)->str, 0, &info) ) {
-				word = g_match_info_fetch(info, 1);
-
-				//g_print("word:%s", word);
-				self->target_pid = atol(word);
-				g_print("YYYYYYYYYY : %d\n", self->target_pid);
-
-				g_free(word);
-				g_match_info_free(info);
-			}
-		}
-		break;
-
-	case 500:
-		if( !record ) {
-			mi_vdriver_task_finish(self, MI_VDRIVER_ST_WAIT);
-			g_print("WHEN STOP : %d\n", self->target_pid);
-		}
-		break;
-	}
+MITargetSetup*	mi_vdriver_get_target(MIVDriver* self) {
+	return self->target_setup;
 }
 
 static void task_mi_vdriver_run(MIVDriver* self, MIRecord* record, gint step) {
@@ -441,6 +434,7 @@ static void task_mi_vdriver_run(MIVDriver* self, MIRecord* record, gint step) {
 	g_print("RUN STEP : %d\n", step);
 	switch( step ) {
 	case 0:
+		self->target_setup->succeed = FALSE;
 		if( !mi_vdriver_prepare( (MIVDriver*)self ) ) {
 			mi_vdriver_task_finish(self, MI_VDRIVER_ST_NONE);
 			break;
@@ -480,16 +474,31 @@ static void task_mi_vdriver_run(MIVDriver* self, MIRecord* record, gint step) {
 	case 401:
 		if( !record ) {
 			mi_vdriver_task_call(self, 500, "-gdb-set debugevents off");
+			break;
+		}
 
-		} else if( record->type=='~' && g_regex_match(self->re_debugevents_pid, ((MIStreamRecord*)record)->str, 0, &info) ) {
+		if( self->target_status==MI_TARGET_ST_ERROR ) {
+			mi_vdriver_task_call(self, 402, "-gdb-exit");
+			break;
+		}
+
+		if( record->type=='~' && g_regex_match(self->re_debugevents_pid, ((MIStreamRecord*)record)->str, 0, &info) ) {
 			word = g_match_info_fetch(info, 1);
 
 			//g_print("word:%s", word);
 			self->target_pid = atol(word);
+			self->target_setup->succeed = TRUE;
 			g_print("YYYYYYYYYY : %d\n", self->target_pid);
 
 			g_free(word);
 			g_match_info_free(info);
+		}
+		break;
+
+	case 402:
+		if( !record ) {
+			mi_vdriver_task_finish(self, MI_VDRIVER_ST_NONE);
+			mi_vdriver_set_target_status(self, MI_TARGET_ST_NONE, record);
 		}
 		break;
 
@@ -513,22 +522,19 @@ static void task_mi_vdriver_stop(MIVDriver* self, MIRecord* record, gint step) {
 		break;
 
 	case 100:
-		if( self->target_status==MI_TARGET_ST_EXIT )
+		if( !record ) {
 			mi_vdriver_task_finish(self, MI_VDRIVER_ST_NONE);
+			mi_vdriver_set_target_status(self, MI_TARGET_ST_NONE, record);
+		}
+		break;
 	}
-}
-
-gboolean mi_vdriver_command_start(MIVDriver* self) {
-	if( self->status != MI_VDRIVER_ST_NONE )
-		return FALSE;
-
-	self->status = MI_VDRIVER_ST_INIT;
-	mi_vdriver_task_start(self, task_mi_vdriver_start, 0);
-	return TRUE;
 }
 
 gboolean mi_vdriver_command_run(MIVDriver* self) {
 	if( self->status != MI_VDRIVER_ST_NONE )
+		return FALSE;
+
+	if( !self->target_setup )
 		return FALSE;
 
 	self->status = MI_VDRIVER_ST_INIT;
@@ -554,8 +560,14 @@ gboolean mi_vdriver_command_pause(MIVDriver* self) {
 }
 
 gboolean mi_vdriver_command_stop(MIVDriver* self) {
-	self->task_func = 0;	// force finish last task
-	mi_vdriver_task_start(self, task_mi_vdriver_stop, 0);
+	if( self->status==MI_VDRIVER_ST_TASK ) {
+		self->status = MI_VDRIVER_ST_WAIT;
+		self->task_func = 0;	// force finish last task
+	}
+
+	if( self->status==MI_VDRIVER_ST_WAIT )
+		mi_vdriver_task_start(self, task_mi_vdriver_stop, 0);
+
 	return TRUE;
 }
 

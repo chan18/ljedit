@@ -1,0 +1,149 @@
+<?xml version=1.0?>
+<!--*- mode: xml -*-->
+<interface>
+  <object class="GtkDialog" id="target_setup_dialog">
+    <property name="default_width">400</property>
+    <property name="default_height">300</property>
+    <action-widgets>
+      <action-widget response="0">ok_button</action-widget>
+    </action-widgets>
+    <child internal-child="action_area">
+      <object class="GtkHButtonBox" id="hbuttonbox">
+        <child>
+          <object class="GtkButton" id="ok_button">
+            <property name="label" translatable="yes">ok</property>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child internal-child="vbox">
+      <object class="GtkVBox" id="vbox">
+        <child>
+          <object class="GtkTable" id="main_panel">
+            <property name="n_rows">5</property>
+            <property name="n_columns">2</property>
+            <property name="column_spacing">5</property>
+            <property name="row_spacing">20</property>
+
+            <child>
+              <object class="GtkLabel" id="gdb_label">
+                <property name="label" translatable="yes">gdb path</property>
+              </object>
+              <packing>
+                <property name="y_options">GTK_FILL</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="gdb_entry">
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="y_options">GTK_FILL</property>
+              </packing>
+            </child>
+
+            <child>
+              <object class="GtkLabel" id="exec_label">
+                <property name="label" translatable="yes">target</property>
+              </object>
+              <packing>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
+                <property name="y_options">GTK_FILL</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="exec_entry">
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
+                <property name="y_options">GTK_FILL</property>
+              </packing>
+            </child>
+
+            <child>
+              <object class="GtkLabel" id="args_label">
+                <property name="label" translatable="yes">args</property>
+              </object>
+              <packing>
+                <property name="top_attach">2</property>
+                <property name="bottom_attach">3</property>
+                <property name="y_options">GTK_FILL</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="args_entry">
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">2</property>
+                <property name="bottom_attach">3</property>
+                <property name="y_options">GTK_FILL</property>
+              </packing>
+            </child>
+
+            <child>
+              <object class="GtkLabel" id="working_dir_label">
+                <property name="label" translatable="yes">working dir</property>
+              </object>
+              <packing>
+                <property name="top_attach">3</property>
+                <property name="bottom_attach">4</property>
+                <property name="y_options">GTK_FILL</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="working_dir_entry">
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">3</property>
+                <property name="bottom_attach">4</property>
+                <property name="y_options">GTK_FILL</property>
+              </packing>
+            </child>
+
+            <!--
+            <child>
+              <object class="GtkLabel" id="env_label">
+                <property name="label" translatable="yes">environment</property>
+              </object>
+              <packing>
+                <property name="top_attach">4</property>
+                <property name="bottom_attach">5</property>
+                <property name="y_options">GTK_FILL</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="env_entry">
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">4</property>
+                <property name="bottom_attach">5</property>
+                <property name="y_options">GTK_FILL</property>
+              </packing>
+            </child>
+            -->
+
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>
+
+

@@ -251,25 +251,20 @@ static void snode_insert(SNode* parent, CppElem* elem) {
 		
 	case CPP_ET_ENUM:
 		{
-			if( elem->name->buf[0]!='@' ) {
-				SNode* snode = snode_sub_insert(parent, elem->v_enum.nskey, elem);
-				if( snode )
-					snode_insert_list(snode, elem->v_ncscope.scope);
-			}
+			SNode* snode = snode_sub_insert(parent, elem->v_enum.nskey, elem);
+			if( snode )
+				snode_insert_list(snode, elem->v_ncscope.scope);
 			snode_insert_list(parent, elem->v_ncscope.scope);
 		}
 		break;
 		
 	case CPP_ET_CLASS:
 		{
-			if( elem->name->buf[0]!='@' ) {
-				SNode* snode = snode_sub_insert(parent, elem->v_class.nskey, elem);
-				if( snode )
-					snode_insert_list(snode, elem->v_ncscope.scope);
-					
-			} else if( elem->v_class.class_type==CPP_CLASS_TYPE_UNION ) {
+			SNode* snode = snode_sub_insert(parent, elem->v_class.nskey, elem);
+			if( snode )
+				snode_insert_list(snode, elem->v_ncscope.scope);
+			if( elem->v_class.class_type==CPP_CLASS_TYPE_UNION )
 				snode_insert_list(parent, elem->v_ncscope.scope);
-			}
 		}
 		break;
 		
@@ -284,10 +279,11 @@ static void snode_insert(SNode* parent, CppElem* elem) {
 		
 	case CPP_ET_NAMESPACE:
 		{
+			SNode* snode = snode_sub_insert(parent, 0, elem);
+			if( snode )
+				snode_insert_list(snode, elem->v_ncscope.scope);
 			if( elem->name->buf[0]!='@' )
-				parent = snode_sub_insert(parent, 0, elem);
-
-			snode_insert_list(parent, elem->v_ncscope.scope);
+				snode_insert_list(parent, elem->v_ncscope.scope);
 		}
 		break;
 	}
@@ -316,25 +312,20 @@ static void snode_remove(SNode* parent, CppElem* elem) {
 		
 	case CPP_ET_ENUM:
 		{
-			if( elem->name->buf[0]!='@' ) {
-				SNode* snode = snode_sub_remove(parent, elem->v_enum.nskey, elem);
-				if( snode )
-					snode_remove_list(snode, elem->v_ncscope.scope);
-			}
+			SNode* snode = snode_sub_remove(parent, elem->v_enum.nskey, elem);
+			if( snode )
+				snode_remove_list(snode, elem->v_ncscope.scope);
 			snode_remove_list(parent, elem->v_ncscope.scope);
 		}
 		break;
 		
 	case CPP_ET_CLASS:
 		{
-			if( elem->name->buf[0]!='@' ) {
-				SNode* snode = snode_sub_remove(parent, elem->v_class.nskey, elem);
-				if( snode )
-					snode_remove_list(snode, elem->v_ncscope.scope);
-					
-			} else if( elem->v_class.class_type==CPP_CLASS_TYPE_UNION ) {
+			SNode* snode = snode_sub_remove(parent, elem->v_class.nskey, elem);
+			if( snode )
+				snode_remove_list(snode, elem->v_ncscope.scope);
+			if( elem->v_class.class_type==CPP_CLASS_TYPE_UNION )
 				snode_remove_list(parent, elem->v_ncscope.scope);
-			}
 		}
 		break;
 		
@@ -349,10 +340,11 @@ static void snode_remove(SNode* parent, CppElem* elem) {
 		
 	case CPP_ET_NAMESPACE:
 		{
+			SNode* snode = snode_sub_remove(parent, 0, elem);
+			if( snode )
+				snode_remove_list(snode, elem->v_ncscope.scope);
 			if( elem->name->buf[0]!='@' )
-				parent = snode_sub_remove(parent, 0, elem);
-
-			snode_remove_list(parent, elem->v_ncscope.scope);
+				snode_remove_list(parent, elem->v_ncscope.scope);
 		}
 		break;
 	}
@@ -757,6 +749,9 @@ static inline void search_call_cb(Searcher* searcher, CppElem* elem) {
 		g_printerr("\tfind : %s\n", elem->name->buf);
 	#endif
 
+	if( elem->name->buf[0]=='@' )
+		return;
+
 	if( (*(searcher->cb))( elem, searcher->cb_tag ) ) {
 		if( searcher->limit_num > 0 ) {
 			--searcher->limit_num;
@@ -972,21 +967,9 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 			if( tiny_str_len(key) < cur_key_len )
 				continue;
 
-			if( g_str_has_prefix(key->buf, cur_key->buf) ) {
-				for(ps=value->elems; searcher->run_sign && ps; ps=ps->next ) {
+			if( g_str_has_prefix(key->buf, cur_key->buf) )
+				for(ps=value->elems; searcher->run_sign && ps; ps=ps->next )
 					search_call_cb(searcher, (CppElem*)(ps->data));
-
-					// use limit_num enought
-					// 
-					// g_get_current_time(&tm);
-					// if( searcher->limit_time > 0 ) {
-					//	if( searcher->limit_time < abs((tm.tv_sec - searcher->start_time.tv_sec)*1000 + (tm.tv_usec - searcher->start_time.tv_usec)/1000) ) {
-					// 		searcher->run_sign = FALSE;
-					// 		break;
-					//	}
-					// }
-				}
-			}
 		}
 
 		return;

@@ -171,7 +171,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\&#x0D;&#x0A;copy $(ProjectDir)*.ui $(SolutionDir)bin\plugins\"
+				CommandLine="copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\&#x0D;&#x0A;copy $(ProjectDir)*.ui $(SolutionDir)bin\plugins\&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -184,6 +184,10 @@
 		</File>
 		<File
 			RelativePath=".\gdbmi.ui"
+			>
+		</File>
+		<File
+			RelativePath=".\gdbmi_target_setup.ui"
 			>
 		</File>
 		<File

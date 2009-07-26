@@ -510,6 +510,7 @@ static void do_hint_or_auto_complete(LanguageTips* self, GtkTextView* view) {
 	gpointer spath;
 	GSequence* seq;
 	gint len;
+	gunichar ch;
 
 	g_assert( view );
 
@@ -558,6 +559,16 @@ static void do_hint_or_auto_complete(LanguageTips* self, GtkTextView* view) {
 
 			} else if( len==1 ) {
 				CppElem* elem = g_sequence_get(g_sequence_get_begin_iter(seq));
+
+				iter = end;
+				
+				while( gtk_text_iter_backward_char(&iter) ) {
+					ch = gtk_text_iter_get_char(&iter);
+					if( g_unichar_isalnum(ch) || ch=='_' )
+						continue;
+					gtk_text_iter_forward_char(&iter);
+					break;
+				}
 
 				gtk_text_buffer_delete(buf, &iter, &end);
 				gtk_text_buffer_insert_at_cursor(buf, elem->name->buf, tiny_str_len(elem->name));

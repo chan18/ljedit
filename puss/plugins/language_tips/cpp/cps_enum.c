@@ -47,7 +47,9 @@ gboolean cps_enum(ParseEnv* env, Block* block) {
 		elem->name = tiny_str_new(ps->buf, ps->len);
 		++ps;
 	} else {
-		elem->name = tiny_str_new("@anonymous", 10);
+		gchar* str = g_strdup_printf("@anonymous_%p", elem);
+		elem->name = tiny_str_new(str, strlen(str));
+		g_free(str);
 	}
 
 	elem->decl = block_meger_tokens(block->tokens, ps, 0);
@@ -58,6 +60,20 @@ gboolean cps_enum(ParseEnv* env, Block* block) {
 		err_return_false_if( (ps = parse_enum_items(ps + 1, pe, elem))==0 );
 
 		err_return_false_if_not( (ps < pe) && ps->type=='}' );
+
+		if( ((ps+1) < pe) && (ps+1)->type!=';' ) {
+			Block var_block = { block->parent, ps, (pe - ps), BLOCK_STYLE_LINE, block->scope };
+			MLToken type_token = *ps;
+
+			ps->type = TK_ID;
+			ps->buf = elem->name->buf;
+			ps->len = tiny_str_len(elem->name);
+			ps->line = (ps+1)->line;
+
+			cps_var(env, &var_block);
+			
+			*ps = type_token;
+		}
 	}
 
 	return TRUE;

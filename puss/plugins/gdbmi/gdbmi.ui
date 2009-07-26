@@ -1,6 +1,5 @@
 <?xml version=1.0?>
 <!--*- mode: xml -*-->
-
 <ui>
   <menubar name="main_menubar">
     <menu action="debug_menu">
@@ -13,11 +12,11 @@
 
   <toolbar name='main_toolbar'>
     <placeholder name="main_toolbar_debug_place">
-      <toolitem action='gdbmi_setup'/>
-      <separator/>
       <toolitem action='gdbmi_run'/>
       <toolitem action='gdbmi_stop'/>
     </placeholder>
   </toolbar>
 </ui>
+
+
 

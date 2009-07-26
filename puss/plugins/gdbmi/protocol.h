@@ -100,5 +100,7 @@ MIRecord* mi_record_parse(const gchar* buf, gint len);
 
 void mi_record_free(MIRecord* record);
 
+gchar* mi_results_to_str(GHashTable* results);
+
 #endif//PUSS_MI_PROTOCOL_H
 
