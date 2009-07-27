@@ -84,6 +84,49 @@ MITargetStatus	mi_vdriver_get_target_status(MIVDriver* self) {
 	return self->target_status;
 }
 
+static void mi_vdriver_final(MIVDriver* self) {
+	HANDLE hProcess;
+
+	if( self->target_pid && self->target_status==MI_TARGET_ST_RUNNING ) {
+		hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, (DWORD)self->target_pid);
+		if( hProcess ) {
+			TerminateProcess(hProcess, -1);
+			CloseHandle(hProcess);
+		}
+	}
+	self->target_pid = 0;
+	mi_vdriver_set_target_status(self, MI_TARGET_ST_NONE, 0);
+	self->status = MI_VDRIVER_ST_NONE;
+
+	if( self->stdin_event_handle ) {
+		g_source_remove(self->stdin_event_handle);
+		self->stdin_event_handle = 0;
+	}
+
+	if( self->stdout_event_handle ) {
+		g_source_remove(self->stdout_event_handle);
+		self->stdout_event_handle = 0;
+	}
+
+	if( self->stdin_channel ) {
+		g_io_channel_shutdown(self->stdin_channel, FALSE, 0);
+		g_io_channel_unref(self->stdin_channel);
+		self->stdin_channel = 0;
+	}
+
+	if( self->stdout_channel ) {
+		g_io_channel_shutdown(self->stdout_channel, FALSE, 0);
+		g_io_channel_unref(self->stdout_channel);
+		self->stdout_channel = 0;
+	}
+
+	if( self->pid )
+		g_spawn_close_pid(self->pid);
+
+	g_string_assign(self->send_buffer, "");
+	g_string_assign(self->recv_buffer, "");
+}
+
 static void mi_vdriver_send(MIVDriver* self, const gchar* buf, gsize len);
 
 static void mi_vdriver_target_status_check(MIVDriver* self, MIRecord* record) {
@@ -191,13 +234,28 @@ static gboolean mi_vdriver_on_stdout_events( GIOChannel* source
 	gchar buf[8192];
 	gsize len = 0;
 
-	if( condition & (G_IO_ERR | G_IO_HUP) )
+	if( condition & (G_IO_ERR | G_IO_HUP) ) {
+		if( self->status==MI_VDRIVER_ST_TASK ) {
+			assert( self->task_func );
+			self->target_status = MI_TARGET_ST_ERROR;
+			(*(self->task_func))(self, 0, self->task_step);
+		}
+		mi_vdriver_final(self);
 		return FALSE;
+	}
 
 	switch( g_io_channel_read_chars( source, buf, 8192, &len, 0 ) ) {
 	case G_IO_STATUS_ERROR:
 	case G_IO_STATUS_EOF:
+		if( self->status==MI_VDRIVER_ST_TASK ) {
+			assert( self->task_func );
+			self->target_status = MI_TARGET_ST_ERROR;
+			(*(self->task_func))(self, 0, self->task_step);
+		}
+		mi_vdriver_final(self);
 		return FALSE;
+	default:
+		break;
 	}
 
 	//buf[len] = '\0';
@@ -342,48 +400,6 @@ static void mi_vdriver_task_callf(MIVDriver* self, gint step, const gchar* fmt, 
 	g_free(buffer);
 }
 
-static void mi_vdriver_final(MIVDriver* self) {
-	HANDLE hProcess;
-
-	if( self->target_pid && self->target_status==MI_TARGET_ST_RUNNING ) {
-		hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, (DWORD)self->target_pid);
-		if( hProcess ) {
-			TerminateProcess(hProcess, -1);
-			CloseHandle(hProcess);
-		}
-	}
-	self->target_pid = 0;
-	mi_vdriver_set_target_status(self, MI_TARGET_ST_NONE, 0);
-
-	if( self->stdin_event_handle ) {
-		g_source_remove(self->stdin_event_handle);
-		self->stdin_event_handle = 0;
-	}
-
-	if( self->stdout_event_handle ) {
-		g_source_remove(self->stdout_event_handle);
-		self->stdout_event_handle = 0;
-	}
-
-	if( self->stdin_channel ) {
-		g_io_channel_shutdown(self->stdin_channel, FALSE, 0);
-		g_io_channel_unref(self->stdin_channel);
-		self->stdin_channel = 0;
-	}
-
-	if( self->stdout_channel ) {
-		g_io_channel_shutdown(self->stdout_channel, FALSE, 0);
-		g_io_channel_unref(self->stdout_channel);
-		self->stdout_channel = 0;
-	}
-
-	if( self->pid )
-		g_spawn_close_pid(self->pid);
-
-	g_string_assign(self->send_buffer, "");
-	g_string_assign(self->recv_buffer, "");
-}
-
 MIVDriver* mi_vdriver_new() {
 	MIVDriver* self = g_new0(MIVDriver, 1);
 	self->status = MI_VDRIVER_ST_NONE;
@@ -522,10 +538,8 @@ static void task_mi_vdriver_stop(MIVDriver* self, MIRecord* record, gint step) {
 		break;
 
 	case 100:
-		if( !record ) {
+		if( !record )
 			mi_vdriver_task_finish(self, MI_VDRIVER_ST_NONE);
-			mi_vdriver_set_target_status(self, MI_TARGET_ST_NONE, record);
-		}
 		break;
 	}
 }
