@@ -7,6 +7,10 @@
       <separator/>
       <menuitem action='gdbmi_run'/>
       <menuitem action='gdbmi_stop'/>
+      <separator/>
+      <menuitem action='gdbmi_step'/>
+      <menuitem action='gdbmi_step_in'/>
+      <menuitem action='gdbmi_step_out'/>
     </menu>
   </menubar>
 
@@ -14,6 +18,10 @@
     <placeholder name="main_toolbar_debug_place">
       <toolitem action='gdbmi_run'/>
       <toolitem action='gdbmi_stop'/>
+      <separator/>
+      <toolitem action='gdbmi_step'/>
+      <toolitem action='gdbmi_step_in'/>
+      <toolitem action='gdbmi_step_out'/>
     </placeholder>
   </toolbar>
 </ui>

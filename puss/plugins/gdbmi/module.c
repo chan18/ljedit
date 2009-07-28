@@ -17,10 +17,20 @@ typedef struct {
 	GtkActionGroup*	action_group;
 	guint			ui_meger_id;
 
+	GtkBuilder*		builder;
+	GtkWidget*		main_panel;
+
+	GtkTextView*	output_view;
+	GtkTextBuffer*	output_buffer;
+	GtkTextTag*		output_tag_command;
+	GtkTextTag*		output_tag_packet;
+	GtkTextTag*		output_tag_output;
+	GtkTextTag*		output_tag_info;
+
 	MITargetSetup*	current_setup;
 } GDBMIPlugin;
 
-static void gdbmi_menu_setup( GtkAction* action, GDBMIPlugin* self ) {
+static void gdbmi_menu_setup(GtkAction* action, GDBMIPlugin* self) {
 	gchar* filepath;
 	GtkBuilder* builder;
 	GtkWidget* dlg;
@@ -79,7 +89,7 @@ static void gdbmi_menu_setup( GtkAction* action, GDBMIPlugin* self ) {
 				// TODO : use
 				//self->current_setup->env = g_listenv() +g_strsplit( gtk_entry_get_text(env_entry), ";", 0 );
 
-				mi_vdriver_set_target(self->drv, self->current_setup);
+				mi_vdriver_set_target_setup(self->drv, self->current_setup);
 			}
 			gtk_widget_destroy(dlg);
 		}
@@ -88,22 +98,28 @@ static void gdbmi_menu_setup( GtkAction* action, GDBMIPlugin* self ) {
 	g_object_unref(builder);
 }
 
-static void gdbmi_menu_run( GtkAction* action, GDBMIPlugin* self ) {
-	if( !mi_vdriver_get_target(self->drv) || !mi_vdriver_get_target(self->drv)->succeed )
+static void gdbmi_menu_run(GtkAction* action, GDBMIPlugin* self) {
+	if( !mi_vdriver_get_target_setup(self->drv) || !mi_vdriver_get_target_setup(self->drv)->succeed )
 		gdbmi_menu_setup(action, self);
 
-	if( !mi_vdriver_get_target(self->drv) )
+	if( !mi_vdriver_get_target_setup(self->drv) )
 		return;
 
 	switch( mi_vdriver_get_target_status(self->drv) ) {
 	case MI_TARGET_ST_NONE:
 	case MI_TARGET_ST_EXIT:
+		{
+			GtkTextIter ps, pe;
+			gtk_text_buffer_get_start_iter(self->output_buffer, &ps);
+			gtk_text_buffer_get_end_iter(self->output_buffer, &pe);
+			gtk_text_buffer_delete(self->output_buffer, &ps, &pe);
+		}
 		mi_vdriver_command_run(self->drv);
 		break;
 	case MI_TARGET_ST_DONE:
 	case MI_TARGET_ST_STOPPED:
 	case MI_TARGET_ST_ERROR:
-		mi_vdriver_command_continue(self->drv);
+		mi_vdirver_command_send(self->drv, "-exec-continue");
 		break;
 	case MI_TARGET_ST_RUNNING:
 		mi_vdriver_command_pause(self->drv);
@@ -113,45 +129,97 @@ static void gdbmi_menu_run( GtkAction* action, GDBMIPlugin* self ) {
 	}
 }
 
-static void gdbmi_menu_stop( GtkAction* action, GDBMIPlugin* self ) {
+static void gdbmi_menu_stop(GtkAction* action, GDBMIPlugin* self) {
 	mi_vdriver_command_stop(self->drv);
 }
 
+static void gdbmi_menu_step(GtkAction* action, GDBMIPlugin* self) {
+	mi_vdirver_command_send(self->drv, "-exec-next");
+}
+
+static void gdbmi_menu_step_in(GtkAction* action, GDBMIPlugin* self) {
+	mi_vdirver_command_send(self->drv, "-exec-step");
+}
+
+static void gdbmi_menu_step_out(GtkAction* action, GDBMIPlugin* self) {
+	mi_vdirver_command_send(self->drv, "-exec-return");
+}
+
 static GtkActionEntry gdbmi_actions[] = {
-	  { "gdbmi_setup", GTK_STOCK_PREFERENCES, "setup", 0, 0, (GCallback)gdbmi_menu_setup }
-	, { "gdbmi_run", GTK_STOCK_MEDIA_PLAY, "run", "F5", 0, (GCallback)gdbmi_menu_run }
-	, { "gdbmi_stop", GTK_STOCK_MEDIA_STOP, "stop", 0, 0, (GCallback)gdbmi_menu_stop }
+	  { "gdbmi_setup",		GTK_STOCK_PREFERENCES,	"setup",	0,		"setup debug options",	(GCallback)gdbmi_menu_setup }
+	, { "gdbmi_run",		GTK_STOCK_MEDIA_PLAY,	"run",		"F5",	"run/pause/continue",	(GCallback)gdbmi_menu_run }
+	, { "gdbmi_stop",		GTK_STOCK_MEDIA_STOP,	"stop",		0,		"stop debug",			(GCallback)gdbmi_menu_stop }
+	, { "gdbmi_step",		GTK_STOCK_GO_FORWARD,	"step",		"F10",	"step",					(GCallback)gdbmi_menu_step }
+	, { "gdbmi_step_in",	GTK_STOCK_MEDIA_FORWARD,"step_in",	"F11",	"step in function",		(GCallback)gdbmi_menu_step_in }
+	, { "gdbmi_step_out",	GTK_STOCK_MEDIA_REWIND,	"step_out",	"F9",	"step out function",	(GCallback)gdbmi_menu_step_out }
 };
 
 void ui_create(GDBMIPlugin* self) {
 	gchar* filepath;
 	GError* err = 0;
 
-	filepath = g_build_filename(self->app->get_plugins_path(), "gdbmi.ui", NULL);
-	if( !filepath ) {
-		g_printerr("ERROR(gdbmi) : build ui filepath failed!\n");
-		return;
-	}
-
 	self->action_group = gtk_action_group_new("gdbmi_action_group");
 	gtk_action_group_add_actions(self->action_group, gdbmi_actions, sizeof(gdbmi_actions)/sizeof(GtkActionEntry), self);
 	gtk_ui_manager_insert_action_group(puss_get_ui_manager(self->app), self->action_group, 0);
 
-	self->ui_meger_id = gtk_ui_manager_add_ui_from_file(puss_get_ui_manager(self->app), filepath, 0);
-	//self->toolbar = GTK_TOOLBAR(gtk_builder_get_object(builder, "gdbmi_toolbar"));
-	//self->app->panel_append(self->toolbar, gtk_label_new("debug"), "gdbmi", PUSS_PANEL_POS_BOTTOM);
+	filepath = g_build_filename(self->app->get_plugins_path(), "gdbmi_menu.ui", NULL);
+	self->ui_meger_id = gtk_ui_manager_add_ui_from_file(puss_get_ui_manager(self->app), filepath, &err);
+	g_free(filepath);
+	if( err ) {
+		g_printerr("ERROR(gdbmi) : load gdbmi_menu.ui failed! %s\n", err->message);
+		g_error_free(err);
+	}
+
+	filepath = g_build_filename(self->app->get_plugins_path(), "gdbmi_panels.ui", NULL);
+	self->builder = gtk_builder_new();
+	gtk_builder_add_from_file(self->builder, filepath, &err);
+	g_free(filepath);
+
+	if( err ) {
+		g_printerr("ERROR(gdbmi) : load gdbmi_panels.ui failed! %s\n", err->message);
+		g_error_free(err);
+	}
+
+	self->output_view = GTK_TEXT_VIEW(gtk_builder_get_object(self->builder, "output_view"));
+	self->output_buffer = GTK_TEXT_BUFFER(gtk_text_view_get_buffer(self->output_view));
+	self->output_tag_command = gtk_text_buffer_create_tag(self->output_buffer, 0, "foreground-gdk", "red", 0);
+	self->output_tag_packet = gtk_text_buffer_create_tag(self->output_buffer, 0, "foreground-gdk", "gray", 0);
+	self->output_tag_output = gtk_text_buffer_create_tag(self->output_buffer, 0, "foreground-gdk", "blue", 0);
+	self->output_tag_info = gtk_text_buffer_create_tag(self->output_buffer, 0, "foreground-gdk", "green", 0);
+	
+	self->main_panel = GTK_WIDGET(gtk_builder_get_object(self->builder, "main_panel"));
+	self->app->panel_append(self->main_panel, gtk_label_new("debug"), "gdbmi", PUSS_PANEL_POS_BOTTOM);
+	gtk_widget_show_all(self->main_panel);
 }
 
 void ui_destroy(GDBMIPlugin* self) {
 	gtk_ui_manager_remove_ui(puss_get_ui_manager(self->app), self->ui_meger_id);
 	gtk_ui_manager_remove_action_group(puss_get_ui_manager(self->app), self->action_group);
+	g_object_unref( G_OBJECT(self->action_group) );
+
+	self->app->panel_remove(self->main_panel);
+	g_object_unref( G_OBJECT(self->builder) );
 }
 
-static void cb_target_status_changed(MIVDriver* drv, MITargetStatus status, const MIRecord* record, GDBMIPlugin* self) {
+static void gdbmi_cb_command_monitor(MIVDriver* drv, const gchar* cmd, GDBMIPlugin* self) {
+	GtkTextIter iter;
+	gtk_text_buffer_get_end_iter(self->output_buffer, &iter);
+	gtk_text_buffer_insert_with_tags(self->output_buffer, &iter, cmd, -1, self->output_tag_command, 0);
+	gtk_text_view_scroll_mark_onscreen(self->output_view, gtk_text_buffer_get_insert(self->output_buffer));
+}
+
+static void gdbmi_cb_message_monitor(MIVDriver* drv, const MIRecord* record, const gchar* msg, GDBMIPlugin* self) {
+	GtkTextIter iter;
+	gtk_text_buffer_get_end_iter(self->output_buffer, &iter);
+	gtk_text_buffer_insert_with_tags(self->output_buffer, &iter, msg, -1, self->output_tag_output, 0);
+	gtk_text_view_scroll_mark_onscreen(self->output_view, gtk_text_buffer_get_insert(self->output_buffer));
+}
+
+static void gdbmi_cb_target_status_changed(MIVDriver* drv, MITargetStatus status, const MIRecord* record, GDBMIPlugin* self) {
 	GtkWidget* dlg;
 	GtkAction* action;
 	gchar* str;
-	g_print("SSSSSSSSSSSSSS : %d\n", status);
+	gboolean working;
 
 	action = gtk_action_group_get_action(self->action_group, "gdbmi_run");
 	switch( status ) {
@@ -188,8 +256,21 @@ static void cb_target_status_changed(MIVDriver* drv, MITargetStatus status, cons
 		break;
 	}
 
+	working = (status!=MI_TARGET_ST_NONE && status!=MI_TARGET_ST_EXIT);
 	action = gtk_action_group_get_action(self->action_group, "gdbmi_stop");
-	gtk_action_set_visible( action, (status!=MI_TARGET_ST_NONE && status!=MI_TARGET_ST_EXIT) );
+	gtk_action_set_visible(action, working);
+
+	action = gtk_action_group_get_action(self->action_group, "gdbmi_step");
+	gtk_action_set_sensitive(action, status!=MI_TARGET_ST_RUNNING);
+	gtk_action_set_visible(action, working);
+
+	action = gtk_action_group_get_action(self->action_group, "gdbmi_step_in");
+	gtk_action_set_sensitive(action, status!=MI_TARGET_ST_RUNNING);
+	gtk_action_set_visible(action, working);
+
+	action = gtk_action_group_get_action(self->action_group, "gdbmi_step_out");
+	gtk_action_set_sensitive(action, status!=MI_TARGET_ST_RUNNING);
+	gtk_action_set_visible(action, working);
 
 	gtk_ui_manager_ensure_update( puss_get_ui_manager(self->app) );
 }
@@ -205,8 +286,13 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	self->drv = mi_vdriver_new();
 	ui_create(self);
 
-	mi_vdriver_set_callbacks(self->drv, (MITargetStatusChanged)cb_target_status_changed, self, 0);
-	cb_target_status_changed(self->drv, MI_TARGET_ST_NONE, 0, self);
+	mi_vdriver_set_callbacks( self->drv
+		, (MICommandMonitor)gdbmi_cb_command_monitor
+		, (MIMessageMonitor)gdbmi_cb_message_monitor
+		, (MITargetStatusChanged)gdbmi_cb_target_status_changed
+		, self
+		, 0 );
+	gdbmi_cb_target_status_changed(self->drv, MI_TARGET_ST_NONE, 0, self);
 
 	return self;
 }

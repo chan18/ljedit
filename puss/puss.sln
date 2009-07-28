@@ -20,9 +20,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deps", "deps", "{93BB43B4-3C26-4CF8-A1BF-8EE6ED794D2B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "extends", "extends", "{30F7E9D7-008F-4BEB-984E-56CD811C5CA0}"
-	ProjectSection(SolutionItems) = preProject
-		C:\Documents and Settings\User\Application Data\Microsoft\Internet Explorer\Quick Launch\快捷方式 到 EmEditor.lnk = C:\Documents and Settings\User\Application Data\Microsoft\Internet Explorer\Quick Launch\快捷方式 到 EmEditor.lnk
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vconsole", "plugins\puss_vconsole\vconsole\vconsole.vcproj", "{0710309F-CBBD-4FD6-A379-3CA2E94C14DB}"
 EndProject

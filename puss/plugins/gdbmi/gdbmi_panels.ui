@@ -1,0 +1,15 @@
+<?xml version=1.0?>
+<!--*- mode: xml -*-->
+<interface>
+  <object class="GtkScrolledWindow" id="main_panel">
+    <property name="border_width">2</property>
+    <property name="hscrollbar_policy">automatic</property>
+    <property name="vscrollbar_policy">automatic</property>
+    <child>
+      <object class="GtkTextView" id="output_view">
+      </object>
+    </child>
+  </object>
+</interface>
+
+

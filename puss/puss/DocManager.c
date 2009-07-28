@@ -38,7 +38,7 @@ typedef struct _PussTextView PussTextView;
 typedef struct _PussTextViewClass PussTextViewClass;
 
 struct _PussTextView {
-	GtkSourceView         parent;
+	GtkSourceView	parent;
 };
 
 struct _PussTextViewClass {
@@ -54,6 +54,8 @@ enum {
 	PUSS_SEARCH,
 	LAST_SIGNAL
 };
+
+const gchar* mark_name_view_scroll = "puss:scroll_mark";
 
 
 typedef  void (*MoveCursorFn)(GtkTextView *text_view, GtkMovementStep step, gint count, gboolean extend_selection);
@@ -307,15 +309,14 @@ gboolean doc_file_get_mtime(gchar* url, ModifyInfo* mi) {
 
 gboolean doc_close_page( gint page_num );
 
-const gchar* scroll_mark_name = "scroll-to-pos-mark";
-
 static gboolean doc_scroll_to_pos( GtkTextView* view ) {
 	GtkTextBuffer* buf = gtk_text_view_get_buffer(view);
-	GtkTextMark* mark = gtk_text_buffer_get_mark(buf, scroll_mark_name);
-	if( mark ) {
-		gtk_text_view_scroll_to_mark(view, mark, 0.0, TRUE, 1.0, 0.25);
-		gtk_text_buffer_delete_mark(buf, mark);
-	}
+	GtkTextMark* mark = gtk_text_buffer_get_mark(buf, mark_name_view_scroll);
+
+	gtk_text_view_scroll_mark_onscreen(view, mark);
+	// gtk_text_view_scroll_to_mark(view, mark, 0.0, TRUE, 1.0, 0.25);
+	// gtk_text_buffer_delete_mark(buf, mark);
+
     return FALSE;
 }
 
@@ -356,11 +357,8 @@ static void doc_locate_page_line( gint page_num, gint line, gint offset, gboolea
 	if( need_move_cursor )
 		gtk_text_buffer_place_cursor(buf, &iter);
 
-	mark = gtk_text_buffer_get_mark(buf, scroll_mark_name);
-	if( mark )
-		gtk_text_buffer_move_mark(buf, mark, &iter);
-	else
-		gtk_text_buffer_create_mark(buf, "scroll-to-pos-mark", &iter, TRUE);
+	mark = gtk_text_buffer_get_mark(buf, mark_name_view_scroll);
+	gtk_text_buffer_move_mark(buf, mark, &iter);
 
 	puss_active_panel_page(puss_app->doc_panel, page_num);
 	g_idle_add_full(G_PRIORITY_DEFAULT_IDLE, (GSourceFunc)&doc_scroll_to_pos, g_object_ref(G_OBJECT(view)), &g_object_unref);
@@ -494,6 +492,8 @@ gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 	}
 
 	gtk_text_buffer_get_start_iter(GTK_TEXT_BUFFER(buf), &iter);
+	gtk_text_buffer_create_mark(GTK_TEXT_BUFFER(buf), mark_name_view_scroll, &iter ,TRUE);
+
 	gtk_text_buffer_create_mark(GTK_TEXT_BUFFER(buf), "puss:searched_mark_start", &iter ,TRUE);
 	gtk_text_buffer_create_mark(GTK_TEXT_BUFFER(buf), "puss:searched_mark_end", &iter ,FALSE);
 

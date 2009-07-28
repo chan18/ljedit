@@ -183,7 +183,11 @@
 			>
 		</File>
 		<File
-			RelativePath=".\gdbmi.ui"
+			RelativePath=".\gdbmi_menu.ui"
+			>
+		</File>
+		<File
+			RelativePath=".\gdbmi_panels.ui"
 			>
 		</File>
 		<File
