@@ -409,10 +409,24 @@ MIVDriver* mi_vdriver_new() {
 	self->send_buffer = g_string_new(0);
 	self->recv_buffer = g_string_new(0);
 
+#ifdef G_OS_WIN32
+#ifndef _DEBUG
+	AllocConsole();
+	ShowWindow(GetConsoleWindow(), SW_HIDE);
+#endif
+#endif
+
 	return self;
 }
 
 void mi_vdriver_free(MIVDriver* self) {
+
+#ifdef G_OS_WIN32
+#ifndef _DEBUG
+	FreeConsole();
+#endif
+#endif
+
 	mi_vdriver_final(self);
 
 	g_regex_unref(self->re_debugevents_pid);

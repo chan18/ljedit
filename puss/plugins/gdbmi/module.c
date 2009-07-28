@@ -15,6 +15,7 @@ typedef struct {
 	MIVDriver*		drv;
 
 	GtkActionGroup*	action_group;
+	guint			ui_meger_id;
 
 	MITargetSetup*	current_setup;
 } GDBMIPlugin;
@@ -136,12 +137,14 @@ void ui_create(GDBMIPlugin* self) {
 	gtk_action_group_add_actions(self->action_group, gdbmi_actions, sizeof(gdbmi_actions)/sizeof(GtkActionEntry), self);
 	gtk_ui_manager_insert_action_group(puss_get_ui_manager(self->app), self->action_group, 0);
 
-	gtk_ui_manager_add_ui_from_file(puss_get_ui_manager(self->app), filepath, 0);
+	self->ui_meger_id = gtk_ui_manager_add_ui_from_file(puss_get_ui_manager(self->app), filepath, 0);
 	//self->toolbar = GTK_TOOLBAR(gtk_builder_get_object(builder, "gdbmi_toolbar"));
 	//self->app->panel_append(self->toolbar, gtk_label_new("debug"), "gdbmi", PUSS_PANEL_POS_BOTTOM);
 }
 
 void ui_destroy(GDBMIPlugin* self) {
+	gtk_ui_manager_remove_ui(puss_get_ui_manager(self->app), self->ui_meger_id);
+	gtk_ui_manager_remove_action_group(puss_get_ui_manager(self->app), self->action_group);
 }
 
 static void cb_target_status_changed(MIVDriver* drv, MITargetStatus status, const MIRecord* record, GDBMIPlugin* self) {
