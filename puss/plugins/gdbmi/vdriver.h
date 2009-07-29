@@ -30,8 +30,8 @@ void			mi_target_setup_clear(MITargetSetup* setup);
 void			mi_target_setup_free(MITargetSetup* setup);
 
 typedef void (*MICommandMonitor)(MIVDriver* drv, const gchar* cmd, gpointer tag);
-typedef void (*MIMessageMonitor)(MIVDriver* drv, const MIRecord* record, const gchar* msg, gpointer tag);
-typedef void (*MITargetStatusChanged)(MIVDriver* drv, MITargetStatus status, const MIRecord* record, gpointer tag);
+typedef void (*MIMessageMonitor)(MIVDriver* drv, MIRecord* record, const gchar* msg, gpointer tag);
+typedef void (*MITargetStatusChanged)(MIVDriver* drv, MITargetStatus status, MIRecord* record, gpointer tag);
 
 MIVDriver*		mi_vdriver_new();
 void			mi_vdriver_free(MIVDriver* drv);

@@ -10,6 +10,11 @@
 
 #define _(str) dgettext(TEXT_DOMAIN, str)
 
+// TODO : remove all C code except vdriver & protocol
+// 
+//        use script(javascript) create this plugin
+// 
+
 typedef struct {
 	Puss*			app;
 	MIVDriver*		drv;
@@ -142,7 +147,7 @@ static void gdbmi_menu_step_in(GtkAction* action, GDBMIPlugin* self) {
 }
 
 static void gdbmi_menu_step_out(GtkAction* action, GDBMIPlugin* self) {
-	mi_vdirver_command_send(self->drv, "-exec-return");
+	mi_vdirver_command_send(self->drv, "-break-insert a.c:9");
 }
 
 static GtkActionEntry gdbmi_actions[] = {
@@ -205,21 +210,48 @@ static void gdbmi_cb_command_monitor(MIVDriver* drv, const gchar* cmd, GDBMIPlug
 	GtkTextIter iter;
 	gtk_text_buffer_get_end_iter(self->output_buffer, &iter);
 	gtk_text_buffer_insert_with_tags(self->output_buffer, &iter, cmd, -1, self->output_tag_command, 0);
+	gtk_text_buffer_insert(self->output_buffer, &iter, "\n", 1);
+	gtk_text_buffer_move_mark_by_name(self->output_buffer, "insert", &iter);
 	gtk_text_view_scroll_mark_onscreen(self->output_view, gtk_text_buffer_get_insert(self->output_buffer));
 }
 
-static void gdbmi_cb_message_monitor(MIVDriver* drv, const MIRecord* record, const gchar* msg, GDBMIPlugin* self) {
+static void gdbmi_cb_message_monitor(MIVDriver* drv, MIRecord* record, const gchar* msg, GDBMIPlugin* self) {
 	GtkTextIter iter;
 	gtk_text_buffer_get_end_iter(self->output_buffer, &iter);
 	gtk_text_buffer_insert_with_tags(self->output_buffer, &iter, msg, -1, self->output_tag_output, 0);
 	gtk_text_view_scroll_mark_onscreen(self->output_view, gtk_text_buffer_get_insert(self->output_buffer));
 }
 
-static void gdbmi_cb_target_status_changed(MIVDriver* drv, MITargetStatus status, const MIRecord* record, GDBMIPlugin* self) {
+static void gdbmi_cb_target_status_changed(MIVDriver* drv, MITargetStatus status, MIRecord* record, GDBMIPlugin* self) {
 	GtkWidget* dlg;
 	GtkAction* action;
 	gchar* str;
 	gboolean working;
+
+	if( status==MI_TARGET_ST_STOPPED ) {
+		MIAsyncRecord* p;
+		MIValue* v;
+		MIValue* s;
+
+		p = (MIAsyncRecord*)record;
+		v = p->results ? g_hash_table_lookup(p->results, "reason") : 0;
+		if( v && v->type=='c' ) {
+			v = g_hash_table_lookup(p->results, "frame");
+			if( v && v->type=='t' ) {
+				gchar* filename;
+				gint line;
+
+				s = g_hash_table_lookup(v->v_tuple, "fullname");
+				filename = (s && s->type=='c') ? s->v_const : 0;
+
+				s = g_hash_table_lookup(v->v_tuple, "line");
+				line = (s && s->type=='c') ? atoi(s->v_const) : 0;
+
+				if( filename )
+					self->app->doc_open(filename, line-1, -1, FALSE);
+			}
+		}
+	}
 
 	action = gtk_action_group_get_action(self->action_group, "gdbmi_run");
 	switch( status ) {
