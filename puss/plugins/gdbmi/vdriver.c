@@ -626,27 +626,17 @@ gboolean mi_vdriver_command_stop(MIVDriver* self) {
 }
 
 gboolean mi_vdirver_command_send(MIVDriver* self, gchar* cmd, ...) {
+	va_list args;
+	gchar* buf;
+
 	if( !self->target_pid || self->status!=MI_VDRIVER_ST_WAIT )
 		return FALSE;
-	
-	switch( self->target_status ) {
-	case MI_TARGET_ST_DONE:
-	case MI_TARGET_ST_STOPPED:
-		{
-			va_list args;
-			gchar* buf;
-			va_start(args, cmd);
-			buf = g_strdup_vprintf(cmd, args);
-			va_end (args);
-			mi_vdriver_task_start(self, task_mi_vdriver_normal, 0, buf);
-			g_free(buf);
-		}
-		break;
 
-	default:
-		break;
-	}
-
+	va_start(args, cmd);
+	buf = g_strdup_vprintf(cmd, args);
+	va_end (args);
+	mi_vdriver_task_start(self, task_mi_vdriver_normal, 0, buf);
+	g_free(buf);
 	return TRUE;
 }
 
