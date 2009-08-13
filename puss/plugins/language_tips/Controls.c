@@ -193,8 +193,9 @@ static gboolean search_current(LanguageTips* self, GtkTextView* view, gpointer* 
 		*out_spath = find_spath_in_text_buffer(*out_file, &it, &end, FALSE);
 		if( *out_spath )
 			return TRUE;
-		cpp_file_unref(*out_spath);
-		*out_spath = 0;
+
+		cpp_file_unref(*out_file);
+		*out_file = 0;
 	}
 
 	return FALSE;
