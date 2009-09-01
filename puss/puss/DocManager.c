@@ -113,12 +113,13 @@ static void doc_cb_move_focus(GtkWidget* widget, GtkDirectionType dir) {
 }
 
 #ifdef G_OS_WIN32
-	static void __win32_GtkTextView_bug_hack_on_scroll_event(GtkAdjustment* adj, gpointer tag) {
-		GtkWidget* widget = GTK_WIDGET(tag);
+	static gboolean __win32_GtkTextView_bug_hack_on_button_press_event(GtkWidget* widget) {
 		gtk_widget_grab_focus(widget);
 		gtk_text_view_set_editable(GTK_TEXT_VIEW(widget), FALSE);
 		gtk_text_view_set_editable(GTK_TEXT_VIEW(widget), TRUE);
+		return FALSE;
 	}
+
 #endif//G_OS_WIN32
 
 static void puss_text_view_init(PussTextView* view) {
@@ -135,6 +136,10 @@ static void puss_text_view_init(PussTextView* view) {
 	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(view), GTK_WRAP_NONE);
 
 	g_signal_connect(view, "move-focus", G_CALLBACK(&doc_cb_move_focus), 0);
+
+#ifdef G_OS_WIN32
+	g_signal_connect_after(view, "scroll-event", G_CALLBACK(&__win32_GtkTextView_bug_hack_on_button_press_event), 0);
+#endif//G_OS_WIN32
 }
 
 /* Constructors */
@@ -472,17 +477,6 @@ gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 
 	page = gtk_scrolled_window_new(0, 0);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(page), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-
-#ifdef G_OS_WIN32
-	{
-		GtkAdjustment* vadj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(page));
-		GtkAdjustment* hadj = gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(page));
-		g_signal_connect(vadj, "value-changed", G_CALLBACK(&__win32_GtkTextView_bug_hack_on_scroll_event), view);
-		g_signal_connect(hadj, "value-changed", G_CALLBACK(&__win32_GtkTextView_bug_hack_on_scroll_event), view);
-	}
-#endif//G_OS_WIN32
-	
-
 	gtk_container_add(GTK_CONTAINER(page), GTK_WIDGET(view));
 	gtk_widget_show_all(page);
 	g_object_set_data(G_OBJECT(page), "puss-doc-view", view);
