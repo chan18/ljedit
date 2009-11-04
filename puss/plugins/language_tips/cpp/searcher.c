@@ -198,7 +198,7 @@ static SNode* snode_sub_insert(SNode* parent, const TinyStr* nskey, CppElem* ele
 }
 
 static SNode* snode_sub_remove(SNode* parent, TinyStr* nskey, CppElem* elem) {
-	SNode* snode;
+	SNode* snode = 0;
 	SNode* scope_snode;
 
 	scope_snode = snode_locate(parent, nskey, FALSE);
