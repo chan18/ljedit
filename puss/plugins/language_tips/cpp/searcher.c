@@ -414,8 +414,8 @@ static SKey* skey_new(gchar type, const gchar* buf, gsize len) {
 
 	skey = (SKey*)g_slice_alloc( sizeof(SKey) + len );
 	skey->type = type;
-	skey->value.len_hi = (gchar)(len >> 8);
-	skey->value.len_lo = (gchar)(len & 0xff);
+	skey->value.len_hi = (guchar)(len >> 8);
+	skey->value.len_lo = (guchar)(len & 0xff);
 	if( buf )
 		memcpy(skey->value.buf, buf, len);
 	skey->value.buf[len] = '\0';
