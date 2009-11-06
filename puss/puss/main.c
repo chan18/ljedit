@@ -85,6 +85,9 @@ int main(int argc, char* argv[]) {
 	// g_mem_set_vtable(glib_mem_profiler_table);
 	// g_atexit(g_mem_profile);
 
+	// for debug
+	//g_slice_set_config(G_SLICE_CONFIG_ALWAYS_MALLOC, TRUE);
+
 	g_thread_init(NULL);
 
 	//gdk_threads_init();
