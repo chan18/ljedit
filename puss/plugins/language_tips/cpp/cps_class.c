@@ -101,7 +101,7 @@ gboolean cps_class(ParseEnv* env, Block* block) {
 
 		if( inhers_count ) {
 			elem->v_class.inhers_count = inhers_count;
-			elem->v_class.inhers = g_memdup(inhers, sizeof(TinyStr*)*inhers_count);
+			elem->v_class.inhers = g_slice_copy(sizeof(TinyStr*)*inhers_count, inhers);
 
 			inhers_count = 0;
 		}
