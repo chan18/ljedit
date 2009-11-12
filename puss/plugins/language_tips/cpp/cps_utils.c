@@ -279,7 +279,8 @@ MLToken* parse_datatype(MLToken* ps, MLToken* pe, TinyStr** ns, gint* dt) {
 			if( *ns )
 				return ps;
 
-			if( (ps+1)<pe && (ps+1)->type==TK_ID ) {
+			++ps;
+			if( ps<pe && ps->type==TK_ID ) {
 				ps = parse_ns(ps, pe, ns);
 				if( !ps )
 					err_trace("parse ns error when parse datatype!");

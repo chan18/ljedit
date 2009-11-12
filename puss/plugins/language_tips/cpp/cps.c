@@ -237,7 +237,7 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 			use_template = TRUE;
 			if( (token = spliter_next_token(spliter, TRUE))==0 )
 				return 0;
-			else if( token->type != '>' )
+			else if( token->type != '<' )
 				fn = cps_skip_block;
 			else if( !spliter_skip_pair_angle_bracket(spliter) )
 				fn = cps_skip_block;

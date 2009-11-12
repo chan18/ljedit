@@ -138,8 +138,9 @@ static gboolean parse_function_common(ParseEnv* env, Block* block, MLToken* star
 	elem->v_fun.typekey = typekey;
 	typekey = 0;
 
-	if( nskey && name->len==tiny_str_len(nskey) ) {
+	if( nskey && ( (name->len==tiny_str_len(nskey)) || (!g_ascii_isalnum(name->buf[0])) ) ) {
 		elem->name = nskey;
+
 	} else {
 		elem->name = tiny_str_new(name->buf, name->len);
 		elem->v_fun.nskey = nskey;

@@ -42,7 +42,7 @@ gboolean cps_template(ParseEnv* env, Block* block) {
 		++ps;
 
 	++ps;
-	err_goto_finish_if_not( (ps < pe) && ps->type!='<' );
+	err_goto_finish_if_not( (ps < pe) && ps->type=='<' );
 
 	++ps;
 	while( ps < pe ) {
@@ -81,6 +81,7 @@ gboolean cps_template(ParseEnv* env, Block* block) {
 	}
 
 	err_goto_finish_if_not( (ps < pe) && ps->type=='>' );
+	++ps;
 
 	// <not finished>
 	// /usr/include/c++/4.0/bits/basic_string.tcc:88
