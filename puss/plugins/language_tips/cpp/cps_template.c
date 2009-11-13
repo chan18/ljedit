@@ -50,9 +50,9 @@ gboolean cps_template(ParseEnv* env, Block* block) {
 			break;
 
 		err_goto_finish_if_not( (targc + 1) < TEMPLATE_ARGS_MAX );
-		++targc;
 		targ = targv + targc;
 		memset(targ, 0, sizeof(TemplateArg));
+		++targc;
 
 		if( ps->type==KW_TYPENAME || ps->type==KW_CLASS ) {
 			targ->type = tiny_str_new(ps->buf, ps->len);
