@@ -30,7 +30,7 @@ MLToken* parse_template_arg_value(MLToken* ps, MLToken* pe) {
 gboolean cps_template(ParseEnv* env, Block* block) {
 	Template* tmpl;
 	gint i;
-	gint targc = 0;
+	gint targc = -1;
 	TemplateArg targv[128];
 	TemplateArg* targ;
 	gint dt;
@@ -50,9 +50,9 @@ gboolean cps_template(ParseEnv* env, Block* block) {
 			break;
 
 		err_goto_finish_if_not( (targc + 1) < TEMPLATE_ARGS_MAX );
+		++targc;
 		targ = targv + targc;
 		memset(targ, 0, sizeof(TemplateArg));
-		++targc;
 
 		if( ps->type==KW_TYPENAME || ps->type==KW_CLASS ) {
 			targ->type = tiny_str_new(ps->buf, ps->len);
@@ -64,9 +64,27 @@ gboolean cps_template(ParseEnv* env, Block* block) {
 			
 		} else {
 			dt = KD_UNK;
-			err_goto_finish_if( (ps = parse_datatype(ps, pe, &targ->type, &dt))==0 );
-			if( ps->type==TK_ID )
-				err_goto_finish_if( (ps = parse_id(ps, pe, &targ->name, 0))==0 );
+			err_goto_finish_if( (ps = parse_datatype(ps, pe, &(targ->type), &dt))==0 );
+			err_goto_finish_if( (ps = parse_ptr_ref(ps, pe, &dt))==0 );
+			err_goto_finish_if_not( ps < pe );
+
+			if( ps->type=='(' ) {
+				// try parse function pointer
+				err_goto_finish_if( (ps = skip_pair_round_brackets(ps+1, pe))==0 );
+				err_goto_finish_if( ps->type!='(' );
+				err_goto_finish_if( (ps = skip_pair_round_brackets(ps+1, pe))==0 );
+				while( (ps < pe) && ps->type!=',' && ps->type!=')' )
+					++ps;
+
+				// TODO : <not finished>, now ignore this
+				tiny_str_free(targ->type);
+				targ->type = 0;
+				--targc;
+
+			} else if( ps->type==TK_ID ) {
+				targ->name = tiny_str_new(ps->buf, ps->len);
+				++ps;
+			}
 		}
 
 		err_goto_finish_if_not( ps < pe );
@@ -83,7 +101,7 @@ gboolean cps_template(ParseEnv* env, Block* block) {
 	err_goto_finish_if_not( (ps < pe) && ps->type=='>' );
 	++ps;
 
-	// <not finished>
+	// TODO : <not finished>
 	// /usr/include/c++/4.0/bits/basic_string.tcc:88
 	// multi-template
 	// 
