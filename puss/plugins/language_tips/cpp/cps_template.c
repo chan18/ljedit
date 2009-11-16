@@ -73,7 +73,7 @@ gboolean cps_template(ParseEnv* env, Block* block) {
 				err_goto_finish_if( (ps = skip_pair_round_brackets(ps+1, pe))==0 );
 				err_goto_finish_if( ps->type!='(' );
 				err_goto_finish_if( (ps = skip_pair_round_brackets(ps+1, pe))==0 );
-				while( (ps < pe) && ps->type!=',' && ps->type!=')' )
+				while( (ps < pe) && ps->type!=',' && ps->type!='>' )
 					++ps;
 
 				// TODO : <not finished>, now ignore this
