@@ -212,9 +212,9 @@ gboolean puss_create(const gchar* filepath) {
 	puss_reg_global_options();
 
 	if( !( puss_utils_create()
-		&& puss_doc_manager_create()
 		&& puss_load_ui_files()
 		&& puss_main_ui_create()
+		&& puss_doc_manager_create()
 		&& puss_pos_locate_create()
 		&& puss_option_setup_create()
 		&& puss_plugin_manager_create()

@@ -40,28 +40,43 @@ OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)
 TARGET_PATH = ../bin
 
 ifeq ($(PLATFORM), win32)
-	TARGET = $(TARGET_PATH)/_puss.exe
+	TARGET = $(TARGET_PATH)/puss.exe
+	PUSS_DLL = $(TARGET_PATH)/_puss.dll
 
 	ifeq ($(BUILD), release)
 		LDFLAGS = -mwindows
 	endif
 
+all : $(TARGET) $(PUSS_DLL) $(TARGET_PATH)/include/IPuss.h
+
+$(TARGET) : win32/boot.c puss.rc puss.ico
+	windres -i puss.rc -J rc -o puss_res.o -O coff --include-dir=./
+	gcc -O3 -Wall -mwindows -o $@ $< puss_res.o
+
+$(PUSS_DLL) : $(OBJS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -shared -o $@ $^ $(LIBS)
+
+clean :
+
 else
 	LIBS += -ldl
 	TARGET = $(TARGET_PATH)/puss
-
-endif
 
 all : $(TARGET) $(TARGET_PATH)/include/IPuss.h
 
 $(TARGET) : $(OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
+endif
+
 $(TARGET_PATH)/include/IPuss.h : IPuss.h
 	cp -f $< $@
 
 clean :
 	rm -f $(TARGET)
+ifeq ($(PLATFORM), win32)
+	rm -f $(PUSS_DLL)
+endif
 	rm -f $(TARGET_PATH)/include/IPuss.h
 	rm -rf $(OBJPATH)
 

@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="gb2312"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="9.00"
 	Name="puss"
-	ProjectGUID="{B4C6ACCC-CA92-520F-4B58-EFA5F3BEB52E}"
+	ProjectGUID="{945C989B-77D7-475D-A832-C5B9FF4E3656}"
 	RootNamespace="puss"
 	Keyword="Win32Proj"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -20,7 +21,6 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\puss_d.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -41,16 +41,15 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=""
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile="$(SolutionDir)puss_d.pch"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
+				CompileAs="1"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -63,13 +62,13 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(SolutionDir)bin\_$(ProjectName).exe"
+				OutputFile="$(SolutionDir)bin\$(SolutionName).exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories=""
-				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				EntryPointSymbol="mainCRTStartup"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -92,11 +91,7 @@
 				Name="VCAppVerifierTool"
 			/>
 			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(ProjectDir)IPuss.h $(SolutionDir)bin\include\"
 			/>
 		</Configuration>
 		<Configuration
@@ -104,7 +99,6 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\puss.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -125,15 +119,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				WholeProgramOptimization="false"
-				AdditionalIncludeDirectories=""
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile="$(SolutionDir)puss.pch"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
+				CompileAs="1"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -146,15 +138,15 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(SolutionDir)bin\_$(ProjectName).exe"
+				OutputFile="$(SolutionDir)bin\$(SolutionName).exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories=""
-				GenerateDebugInformation="false"
+				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				LinkTimeCodeGeneration="0"
 				EntryPointSymbol="mainCRTStartup"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -177,11 +169,7 @@
 				Name="VCAppVerifierTool"
 			/>
 			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(ProjectDir)IPuss.h $(SolutionDir)bin\include\"
 			/>
 		</Configuration>
 	</Configurations>
@@ -189,157 +177,15 @@
 	</References>
 	<Files>
 		<File
-			RelativePath=".\AboutDialog.c"
+			RelativePath=".\win32\boot.c"
 			>
 		</File>
 		<File
-			RelativePath=".\AboutDialog.h"
+			RelativePath=".\puss.ico"
 			>
 		</File>
 		<File
-			RelativePath=".\Commands.c"
-			>
-		</File>
-		<File
-			RelativePath=".\Commands.h"
-			>
-		</File>
-		<File
-			RelativePath=".\DLLPluginEngine.c"
-			>
-		</File>
-		<File
-			RelativePath=".\DLLPluginEngine.h"
-			>
-		</File>
-		<File
-			RelativePath=".\DndOpen.c"
-			>
-		</File>
-		<File
-			RelativePath=".\DndOpen.h"
-			>
-		</File>
-		<File
-			RelativePath=".\DocManager.c"
-			>
-		</File>
-		<File
-			RelativePath=".\DocManager.h"
-			>
-		</File>
-		<File
-			RelativePath=".\DocSearch.c"
-			>
-		</File>
-		<File
-			RelativePath=".\DocSearch.h"
-			>
-		</File>
-		<File
-			RelativePath=".\ExtendManager.c"
-			>
-		</File>
-		<File
-			RelativePath=".\ExtendManager.h"
-			>
-		</File>
-		<File
-			RelativePath=".\GlobalOptions.c"
-			>
-		</File>
-		<File
-			RelativePath=".\GlobalOptions.h"
-			>
-		</File>
-		<File
-			RelativePath=".\GlobMatch.c"
-			>
-		</File>
-		<File
-			RelativePath=".\GlobMatch.h"
-			>
-		</File>
-		<File
-			RelativePath=".\IPuss.h"
-			>
-		</File>
-		<File
-			RelativePath=".\main.c"
-			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					ObjectFile="$(IntDir)\$(InputName)1.obj"
-					XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					ObjectFile="$(IntDir)\$(InputName)1.obj"
-					XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
-				/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath=".\OptionManager.c"
-			>
-		</File>
-		<File
-			RelativePath=".\OptionManager.h"
-			>
-		</File>
-		<File
-			RelativePath=".\OptionSetup.c"
-			>
-		</File>
-		<File
-			RelativePath=".\OptionSetup.h"
-			>
-		</File>
-		<File
-			RelativePath=".\PanelOrder.c"
-			>
-		</File>
-		<File
-			RelativePath=".\PanelOrder.h"
-			>
-		</File>
-		<File
-			RelativePath=".\PluginManager.c"
-			>
-		</File>
-		<File
-			RelativePath=".\PluginManager.h"
-			>
-		</File>
-		<File
-			RelativePath=".\PosLocate.c"
-			>
-		</File>
-		<File
-			RelativePath=".\PosLocate.h"
-			>
-		</File>
-		<File
-			RelativePath=".\Puss.c"
-			>
-		</File>
-		<File
-			RelativePath=".\Puss.h"
-			>
-		</File>
-		<File
-			RelativePath=".\Utils.c"
-			>
-		</File>
-		<File
-			RelativePath=".\Utils.h"
+			RelativePath=".\puss.rc"
 			>
 		</File>
 	</Files>
