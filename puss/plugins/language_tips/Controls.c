@@ -801,7 +801,7 @@ static gboolean view_on_key_press(GtkTextView* view, GdkEventKey* event, Languag
 
 static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, LanguageTips* self) {
     if( event->state & GDK_MOD1_MASK ) {
-        tips_hide_all(self);
+        //tips_hide_all(self);	// when use Xming, it will hide autocomplete-tip window
 
 		switch( event->keyval ) {
 		case GDK_Right:
