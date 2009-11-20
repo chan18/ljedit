@@ -17,11 +17,96 @@ static JsExtend* g_self = 0;
 //----------------------------------------------------------------
 // IPuss wrappers
 
-SeedValue js_wrapper_doc_new(SeedContext ctx, SeedObject fn, SeedObject self, gsize argc, const SeedValue argv[], SeedException* e) {
+static SeedValue js_wrapper_doc_new(SeedContext ctx, SeedObject fn, SeedObject self, gsize argc, const SeedValue argv[], SeedException* e) {
 	if( argc != 0 ) {
-		seed_make_exception(ctx, e, "ArgumentError", "puss.doc_new expected 1 args");
+		seed_make_exception(ctx, e, "ArgumentError", "puss.doc_new expected 0 args");
 	} else {
 		g_self->app->doc_new();
+	}
+	return seed_make_undefined(ctx);
+}
+
+static SeedValue js_wrapper_doc_open(SeedContext ctx, SeedObject fn, SeedObject self, gsize argc, const SeedValue argv[], SeedException* e) {
+	gboolean res;
+	const char* url = 0;
+	gint line = -1;
+	gint offset = -1;
+	gboolean flag = FALSE;
+
+	if( argc==0 || argc > 4 ) {
+		seed_make_exception(ctx, e, "ArgumentError", "puss.doc_open expected 1 ~ 4 args");
+		return seed_make_undefined(ctx);
+	}
+
+	if( argc > 0 )	url = seed_value_to_string(ctx, argv[0], e);
+	if( argc > 1 )	line = seed_value_to_int(ctx, argv[1], e);
+	if( argc > 2 )	offset = seed_value_to_int(ctx, argv[2], e);
+	if( argc > 3 )	flag = seed_value_to_boolean(ctx, argv[3], e);
+
+	res = g_self->app->doc_open(url, line, offset, flag);
+
+	return seed_value_from_boolean(ctx, res, e);
+}
+
+static SeedValue js_wrapper_doc_locate(SeedContext ctx, SeedObject fn, SeedObject self, gsize argc, const SeedValue argv[], SeedException* e) {
+	gboolean res;
+	gint page = 0;
+	gint line = -1;
+	gint offset = -1;
+	gboolean flag = FALSE;
+
+	if( argc==0 || argc > 4 ) {
+		seed_make_exception(ctx, e, "ArgumentError", "puss.doc_locate expected 1 ~ 4 args");
+		return seed_make_undefined(ctx);
+	}
+
+	if( argc > 0 )	page = seed_value_to_int(ctx, argv[0], e);
+	if( argc > 1 )	line = seed_value_to_int(ctx, argv[1], e);
+	if( argc > 2 )	offset = seed_value_to_int(ctx, argv[2], e);
+	if( argc > 3 )	flag = seed_value_to_boolean(ctx, argv[3], e);
+
+	res = g_self->app->doc_locate(page, line, offset, flag);
+
+	return seed_value_from_boolean(ctx, res, e);
+}
+
+static SeedValue js_wrapper_doc_save_current(SeedContext ctx, SeedObject fn, SeedObject self, gsize argc, const SeedValue argv[], SeedException* e) {
+	gboolean save_as;
+
+	if( argc > 1 ) {
+		seed_make_exception(ctx, e, "ArgumentError", "puss.doc_save_current expected 0 ~ 1 args");
+		return seed_make_undefined(ctx);
+	}
+
+	if( argc > 0 )	save_as = seed_value_to_boolean(ctx, argv[0], e);
+
+	g_self->app->doc_save_current(save_as);
+	return seed_make_undefined(ctx);
+}
+
+static SeedValue js_wrapper_doc_close_current(SeedContext ctx, SeedObject fn, SeedObject self, gsize argc, const SeedValue argv[], SeedException* e) {
+	if( argc != 0 ) {
+		seed_make_exception(ctx, e, "ArgumentError", "puss.doc_close_current expected 0 args");
+	} else {
+		g_self->app->doc_close_current();
+	}
+	return seed_make_undefined(ctx);
+}
+
+static SeedValue js_wrapper_doc_save_all(SeedContext ctx, SeedObject fn, SeedObject self, gsize argc, const SeedValue argv[], SeedException* e) {
+	if( argc != 0 ) {
+		seed_make_exception(ctx, e, "ArgumentError", "puss.doc_save_all expected 0 args");
+	} else {
+		g_self->app->doc_save_all();
+	}
+	return seed_make_undefined(ctx);
+}
+
+static SeedValue js_wrapper_doc_close_all(SeedContext ctx, SeedObject fn, SeedObject self, gsize argc, const SeedValue argv[], SeedException* e) {
+	if( argc != 0 ) {
+		seed_make_exception(ctx, e, "ArgumentError", "puss.doc_close_all expected 0 args");
+	} else {
+		g_self->app->doc_close_all();
 	}
 	return seed_make_undefined(ctx);
 }
@@ -35,7 +120,7 @@ typedef struct {
 	SeedValue			value;
 } PussJsPlugin;
 
-gpointer js_plugin_load(const gchar* plugin_id, GKeyFile* keyfile, JsExtend* self) {
+static gpointer js_plugin_load(const gchar* plugin_id, GKeyFile* keyfile, JsExtend* self) {
 	gchar* url = 0;
 	SeedScript* script = 0;
 	PussJsPlugin* js_plugin = 0;
@@ -46,7 +131,7 @@ gpointer js_plugin_load(const gchar* plugin_id, GKeyFile* keyfile, JsExtend* sel
 	gchar* msg = 0;
 
 	sbuf = g_strdup_printf("%s.js", plugin_id);
-	url = g_build_filename(self->app->get_plugins_path(), sbuf, 0);
+	url = g_build_filename(self->app->get_plugins_path(), sbuf, NULL);
 	g_free(sbuf);
 	sbuf = 0;
 
@@ -64,7 +149,7 @@ gpointer js_plugin_load(const gchar* plugin_id, GKeyFile* keyfile, JsExtend* sel
 	e = seed_script_exception(script);
 	if( e ) {
 		msg = seed_exception_to_string(js_plugin->ctx, e);
-		g_critical(msg);
+		g_critical("%s", msg);
 		g_free(msg);
 		goto finished;
 	}
@@ -102,7 +187,7 @@ finished:
 	return js_plugin;
 }
 
-void js_plugin_unload(gpointer plugin, JsExtend* self) {
+static void js_plugin_unload(gpointer plugin, JsExtend* self) {
 	PussJsPlugin* js_plugin = (PussJsPlugin*)plugin;
 	SeedValue global = 0;
 	SeedValue obj = 0;
@@ -139,7 +224,7 @@ void js_plugin_unload(gpointer plugin, JsExtend* self) {
 
 JsExtend* puss_js_extend_create(Puss* app) {
 	static gint argc = 0;
-	static gchar** argv = {""};
+	static gchar* argv[1] = {""};
 
 	SeedEngine* engine;
 	SeedValue js_val;
@@ -149,7 +234,7 @@ JsExtend* puss_js_extend_create(Puss* app) {
 	if( !g_self )
 		return g_self;
 
-	engine = seed_init(&argc, &argv);
+	engine = seed_init(&argc, (gchar***)&argv);
 	g_self->app = app;
 	g_self->engine = engine;
 
@@ -160,12 +245,17 @@ JsExtend* puss_js_extend_create(Puss* app) {
 	js_val = seed_value_from_object(engine->context, g_object_ref(gobj), 0);
 	seed_object_set_property(engine->context, g_self->js_puss, "ui", js_val);
 
-	seed_object_set_property(engine->context, g_self->js_puss, "module_path", seed_value_from_string(engine->context, app->get_module_path(), 0));
-	seed_object_set_property(engine->context, g_self->js_puss, "locale_path", seed_value_from_string(engine->context, app->get_locale_path(), 0));
-	seed_object_set_property(engine->context, g_self->js_puss, "extends_path", seed_value_from_string(engine->context, app->get_extends_path(), 0));
-	seed_object_set_property(engine->context, g_self->js_puss, "plugins_path", seed_value_from_string(engine->context, app->get_plugins_path(), 0));
+	seed_object_set_property(engine->context, g_self->js_puss, "module_path",	seed_value_from_string(engine->context, app->get_module_path(), 0));
+	seed_object_set_property(engine->context, g_self->js_puss, "locale_path",	seed_value_from_string(engine->context, app->get_locale_path(), 0));
+	seed_object_set_property(engine->context, g_self->js_puss, "extends_path",	seed_value_from_string(engine->context, app->get_extends_path(), 0));
+	seed_object_set_property(engine->context, g_self->js_puss, "plugins_path",	seed_value_from_string(engine->context, app->get_plugins_path(), 0));
 
-	seed_create_function(engine->context, "doc_new", &js_wrapper_doc_new, g_self->js_puss);
+	seed_create_function(engine->context, "doc_new",			&js_wrapper_doc_new, g_self->js_puss);
+	seed_create_function(engine->context, "doc_open",			&js_wrapper_doc_open, g_self->js_puss);
+	seed_create_function(engine->context, "doc_locate",			&js_wrapper_doc_locate, g_self->js_puss);
+	seed_create_function(engine->context, "doc_save_current",	&js_wrapper_doc_save_current, g_self->js_puss);
+	seed_create_function(engine->context, "doc_save_all",		&js_wrapper_doc_save_all, g_self->js_puss);
+	seed_create_function(engine->context, "doc_close_all",		&js_wrapper_doc_close_all, g_self->js_puss);
 
 	app->plugin_engine_regist( "javascript"
 		, (PluginLoader)js_plugin_load

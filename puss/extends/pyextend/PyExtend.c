@@ -66,7 +66,7 @@ static void py_object_decref(PyObject* py_obj) {
 //----------------------------------------------------------------
 // IPuss wrappers
 
-PyObject* py_wrapper_panel_append(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_panel_append(PyObject* self, PyObject* args) {
 	GtkWidget* panel = 0;
 	GtkWidget* tab_label = 0;
 	gchar* id = 0;
@@ -80,7 +80,7 @@ PyObject* py_wrapper_panel_append(PyObject* self, PyObject* args) {
 	return Py_None;
 }
 
-PyObject* py_wrapper_panel_remove(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_panel_remove(PyObject* self, PyObject* args) {
 	GtkWidget* panel = 0;
 
 	if( !PyArg_ParseTuple(args, "O&:panel_remove", &widget_convert, &panel) )
@@ -91,7 +91,7 @@ PyObject* py_wrapper_panel_remove(PyObject* self, PyObject* args) {
 	return Py_None;
 }
 
-PyObject* py_wrapper_panel_get_pos(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_panel_get_pos(PyObject* self, PyObject* args) {
 	GtkWidget* panel = 0;
 	GtkNotebook* parent = 0;
 	gint page_num = 0;
@@ -107,7 +107,7 @@ PyObject* py_wrapper_panel_get_pos(PyObject* self, PyObject* args) {
 	return Py_BuildValue("(Ni)", pygobject_new(G_OBJECT(parent)), page_num);
 }
 
-PyObject* py_wrapper_doc_get_url(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_doc_get_url(PyObject* self, PyObject* args) {
 	GString* url;
 	GtkTextBuffer* buf = 0;
 	if( !PyArg_ParseTuple(args, "O&:doc_get_url", &buf_convert, &buf))
@@ -122,7 +122,7 @@ PyObject* py_wrapper_doc_get_url(PyObject* self, PyObject* args) {
 	return PyString_FromString(url->str);
 }
 
-PyObject* py_wrapper_doc_set_url(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_doc_set_url(PyObject* self, PyObject* args) {
 	GtkTextBuffer* buf = 0;
 	const gchar* url = 0;
 	if( !PyArg_ParseTuple(args, "O&s:doc_set_url", &buf_convert, &buf, &url))
@@ -133,7 +133,7 @@ PyObject* py_wrapper_doc_set_url(PyObject* self, PyObject* args) {
 	return Py_None;
 }
 
-PyObject* py_wrapper_doc_get_charset(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_doc_get_charset(PyObject* self, PyObject* args) {
 	GString* charset;
 	GtkTextBuffer* buf = 0;
 	if( !PyArg_ParseTuple(args, "O&:doc_get_charset", &buf_convert, &buf))
@@ -148,7 +148,7 @@ PyObject* py_wrapper_doc_get_charset(PyObject* self, PyObject* args) {
 	return PyString_FromString(charset->str);
 }
 
-PyObject* py_wrapper_doc_set_charset(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_doc_set_charset(PyObject* self, PyObject* args) {
 	GtkTextBuffer* buf = 0;
 	const gchar* charset = 0;
 	if( !PyArg_ParseTuple(args, "O&s:doc_set_url", &buf_convert, &buf, &charset))
@@ -159,7 +159,7 @@ PyObject* py_wrapper_doc_set_charset(PyObject* self, PyObject* args) {
 	return Py_None;
 }
 
-PyObject* py_wrapper_doc_get_view_from_page_num(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_doc_get_view_from_page_num(PyObject* self, PyObject* args) {
 	GtkTextView* view;
 	PyObject* py_view;
 	gint page_num = 0;
@@ -176,7 +176,7 @@ PyObject* py_wrapper_doc_get_view_from_page_num(PyObject* self, PyObject* args) 
 	return py_view;
 }
 
-PyObject* py_wrapper_doc_get_buffer_from_page_num(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_doc_get_buffer_from_page_num(PyObject* self, PyObject* args) {
 	GtkTextBuffer* buf;
 	PyObject* py_buf;
 	gint page_num = 0;
@@ -192,7 +192,7 @@ PyObject* py_wrapper_doc_get_buffer_from_page_num(PyObject* self, PyObject* args
 	return py_buf;
 }
 
-PyObject* py_wrapper_doc_find_page_from_url(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_doc_find_page_from_url(PyObject* self, PyObject* args) {
 	gint res;
 	const char* url = 0;
 	if( !PyArg_ParseTuple(args, "s:doc_find_page_from_url", &url))
@@ -202,13 +202,13 @@ PyObject* py_wrapper_doc_find_page_from_url(PyObject* self, PyObject* args) {
 	return PyInt_FromLong((long)res);
 }
 
-PyObject* py_wrapper_doc_new(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_doc_new(PyObject* self, PyObject* args) {
 	g_self->app->doc_new();
 	Py_INCREF(Py_None);
 	return Py_None;
 }
 
-PyObject* py_wrapper_doc_open(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_doc_open(PyObject* self, PyObject* args) {
 	int res;
 	const char* url = 0;
 	int line = -1;
@@ -222,7 +222,7 @@ PyObject* py_wrapper_doc_open(PyObject* self, PyObject* args) {
 	return PyBool_FromLong((long)res);
 }
 
-PyObject* py_wrapper_doc_locate(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_doc_locate(PyObject* self, PyObject* args) {
 	int res;
 	int page_num = 0;
 	int line = 0;
@@ -236,7 +236,7 @@ PyObject* py_wrapper_doc_locate(PyObject* self, PyObject* args) {
 	return PyBool_FromLong((long)res);
 }
 
-PyObject* py_wrapper_doc_save_current(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_doc_save_current(PyObject* self, PyObject* args) {
 	gboolean save_as = FALSE;
 
 	if( !PyArg_ParseTuple(args, "|i:doc_save_current", &save_as) )
@@ -247,25 +247,25 @@ PyObject* py_wrapper_doc_save_current(PyObject* self, PyObject* args) {
 	return Py_None;
 }
 
-PyObject* py_wrapper_doc_close_current(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_doc_close_current(PyObject* self, PyObject* args) {
 	gboolean res;
 	res = g_self->app->doc_close_current();
 	return PyBool_FromLong((long)res);
 }
 
-PyObject* py_wrapper_doc_save_all(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_doc_save_all(PyObject* self, PyObject* args) {
 	g_self->app->doc_save_all();
 	Py_INCREF(Py_None);
 	return Py_None;
 }
 
-PyObject* py_wrapper_doc_close_all(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_doc_close_all(PyObject* self, PyObject* args) {
 	gboolean res;
 	res = g_self->app->doc_close_all();
 	return PyBool_FromLong((long)res);
 }
 
-PyObject* py_wrapper_send_focus_change(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_send_focus_change(PyObject* self, PyObject* args) {
 	GtkWidget* widget = 0;
 	int force_in = 0;
 	if( !PyArg_ParseTuple(args, "O&i:doc_close_all", &widget_convert, &widget, &force_in))
@@ -276,7 +276,7 @@ PyObject* py_wrapper_send_focus_change(PyObject* self, PyObject* args) {
 	return Py_None;
 }
 
-PyObject* py_wrapper_active_panel_page(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_active_panel_page(PyObject* self, PyObject* args) {
 	GtkNotebook* nb = 0;
 	gint page_num = 0;
 	if( !PyArg_ParseTuple(args, "O&i:doc_close_all", &notebook_convert, &nb, &page_num))
@@ -289,7 +289,7 @@ PyObject* py_wrapper_active_panel_page(PyObject* self, PyObject* args) {
 
 // puss option manager
 
-PyObject* py_wrapper_option_reg(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_option_reg(PyObject* self, PyObject* args) {
 	const char* group = 0;
 	const char* key = 0;
 	const char* default_value = 0;
@@ -302,7 +302,7 @@ PyObject* py_wrapper_option_reg(PyObject* self, PyObject* args) {
 	return Py_None;
 }
 
-PyObject* py_wrapper_option_set(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_option_set(PyObject* self, PyObject* args) {
 	const Option* option;
 	const char* group = 0;
 	const char* key = 0;
@@ -319,7 +319,7 @@ PyObject* py_wrapper_option_set(PyObject* self, PyObject* args) {
 	return Py_None;
 }
 
-PyObject* py_wrapper_option_get(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_option_get(PyObject* self, PyObject* args) {
 	const Option* option;
 	const char* group = 0;
 	const char* key = 0;
@@ -335,7 +335,7 @@ PyObject* py_wrapper_option_get(PyObject* self, PyObject* args) {
 	return Py_None;
 }
 
-void py_option_changed_wrapper(const Option* option, const gchar* old, PyObject* cb) {
+static void py_option_changed_wrapper(const Option* option, const gchar* old, PyObject* cb) {
 	PyObject* res;
 
 	g_assert( PyCallable_Check(cb) );
@@ -349,7 +349,7 @@ void py_option_changed_wrapper(const Option* option, const gchar* old, PyObject*
 	Py_XDECREF(res);
 }
 
-PyObject* py_wrapper_option_monitor_reg(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_option_monitor_reg(PyObject* self, PyObject* args) {
 	const char* group = 0;
 	const char* key = 0;
 	PyObject* cb = 0;
@@ -376,7 +376,7 @@ PyObject* py_wrapper_option_monitor_reg(PyObject* self, PyObject* args) {
 	return PyCObject_FromVoidPtr(handler, 0);
 }
 
-PyObject* py_wrapper_option_monitor_unreg(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_option_monitor_unreg(PyObject* self, PyObject* args) {
 	PyObject* handler;
 	if( !PyArg_ParseTuple(args, "O:option_monitor_unreg", &handler))
 		return 0;
@@ -408,7 +408,7 @@ static GtkWidget* py_option_setup_widget_creator_wrapper(gpointer tag) {
 	return res;
 }
 
-PyObject* py_wrapper_option_setup_reg(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_option_setup_reg(PyObject* self, PyObject* args) {
 	const char* id = 0;
 	const char* name = 0;
 	PyObject* cb = 0;
@@ -431,7 +431,7 @@ PyObject* py_wrapper_option_setup_reg(PyObject* self, PyObject* args) {
 	return PyBool_FromLong(res);
 }
 
-PyObject* py_wrapper_option_setup_unreg(PyObject* self, PyObject* args) {
+static PyObject* py_wrapper_option_setup_unreg(PyObject* self, PyObject* args) {
 	const char* id = 0;
 	if( !PyArg_ParseTuple(args, "z:option_setup_unreg", &id))
 		return 0;
@@ -444,9 +444,9 @@ PyObject* py_wrapper_option_setup_unreg(PyObject* self, PyObject* args) {
 
 // panels
 
-PyObject* py_wrapper_panel_append(PyObject* self, PyObject* args);
-PyObject* py_wrapper_panel_remove(PyObject* self, PyObject* args);
-PyObject* py_wrapper_panel_get_pos(PyObject* self, PyObject* args);
+static PyObject* py_wrapper_panel_append(PyObject* self, PyObject* args);
+static PyObject* py_wrapper_panel_remove(PyObject* self, PyObject* args);
+static PyObject* py_wrapper_panel_get_pos(PyObject* self, PyObject* args);
 
 PyMethodDef puss_methods[] =
 	{ { "panel_append", &py_wrapper_panel_append, METH_VARARGS, NULL }
@@ -489,7 +489,7 @@ PyMethodDef puss_methods[] =
 //----------------------------------------------------------------
 // PyExtend implements
 
-gboolean init_pygtk_library(PyExtend* self) {
+static gboolean init_pygtk_library(PyExtend* self) {
 	PyObject* cobject;
 
 	self->py_gobject = pygobject_init(-1, -1, -1);
@@ -521,7 +521,7 @@ gboolean init_pygtk_library(PyExtend* self) {
 	return TRUE;
 }
 
-gboolean init_puss_module(PyExtend* self) {
+static gboolean init_puss_module(PyExtend* self) {
 	PyObject* py_puss = Py_InitModule("puss", puss_methods);
 	if( !py_puss )
 		return FALSE;
@@ -564,7 +564,7 @@ static gboolean python_do_pending_calls(gpointer data) {
 	return TRUE;
 }
 
-gpointer py_plugin_load(const gchar* plugin_id, GKeyFile* keyfile, PyExtend* self) {
+static gpointer py_plugin_load(const gchar* plugin_id, GKeyFile* keyfile, PyExtend* self) {
 	PyObject* py_res;
 	PyObject* py_plugin;
 	PyObject* py_dict;
@@ -593,7 +593,7 @@ gpointer py_plugin_load(const gchar* plugin_id, GKeyFile* keyfile, PyExtend* sel
 	return py_plugin;
 }
 
-void py_plugin_unload(gpointer plugin, PyExtend* self) {
+static void py_plugin_unload(gpointer plugin, PyExtend* self) {
 	PyObject* py_res;
 	PyObject* py_plugin;
 	PyObject* py_dict;
