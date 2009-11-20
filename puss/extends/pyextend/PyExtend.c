@@ -66,47 +66,6 @@ static void py_object_decref(PyObject* py_obj) {
 //----------------------------------------------------------------
 // IPuss wrappers
 
-static PyObject* py_wrapper_panel_append(PyObject* self, PyObject* args) {
-	GtkWidget* panel = 0;
-	GtkWidget* tab_label = 0;
-	gchar* id = 0;
-	int default_pos = PUSS_PANEL_POS_BOTTOM;
-
-	if( !PyArg_ParseTuple(args, "O&O&z|i:panel_append", &widget_convert, &panel, &widget_convert, &tab_label, &id, &default_pos) )
-		return 0;
-
-	g_self->app->panel_append(panel, tab_label, id, default_pos);
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-
-static PyObject* py_wrapper_panel_remove(PyObject* self, PyObject* args) {
-	GtkWidget* panel = 0;
-
-	if( !PyArg_ParseTuple(args, "O&:panel_remove", &widget_convert, &panel) )
-		return 0;
-
-	g_self->app->panel_remove(panel);
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-
-static PyObject* py_wrapper_panel_get_pos(PyObject* self, PyObject* args) {
-	GtkWidget* panel = 0;
-	GtkNotebook* parent = 0;
-	gint page_num = 0;
-
-	if( !PyArg_ParseTuple(args, "O&:panel_get_pos", &widget_convert, &panel) )
-		return 0;
-
-	if( !g_self->app->panel_get_pos(panel, &parent, &page_num) ) {
-		Py_INCREF(Py_None);
-		return Py_None;
-	}
-
-	return Py_BuildValue("(Ni)", pygobject_new(G_OBJECT(parent)), page_num);
-}
-
 static PyObject* py_wrapper_doc_get_url(PyObject* self, PyObject* args) {
 	GString* url;
 	GtkTextBuffer* buf = 0;
@@ -444,9 +403,46 @@ static PyObject* py_wrapper_option_setup_unreg(PyObject* self, PyObject* args) {
 
 // panels
 
-static PyObject* py_wrapper_panel_append(PyObject* self, PyObject* args);
-static PyObject* py_wrapper_panel_remove(PyObject* self, PyObject* args);
-static PyObject* py_wrapper_panel_get_pos(PyObject* self, PyObject* args);
+static PyObject* py_wrapper_panel_append(PyObject* self, PyObject* args) {
+	GtkWidget* panel = 0;
+	GtkWidget* tab_label = 0;
+	gchar* id = 0;
+	int default_pos = PUSS_PANEL_POS_BOTTOM;
+
+	if( !PyArg_ParseTuple(args, "O&O&z|i:panel_append", &widget_convert, &panel, &widget_convert, &tab_label, &id, &default_pos) )
+		return 0;
+
+	g_self->app->panel_append(panel, tab_label, id, default_pos);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static PyObject* py_wrapper_panel_remove(PyObject* self, PyObject* args) {
+	GtkWidget* panel = 0;
+
+	if( !PyArg_ParseTuple(args, "O&:panel_remove", &widget_convert, &panel) )
+		return 0;
+
+	g_self->app->panel_remove(panel);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static PyObject* py_wrapper_panel_get_pos(PyObject* self, PyObject* args) {
+	GtkWidget* panel = 0;
+	GtkNotebook* parent = 0;
+	gint page_num = 0;
+
+	if( !PyArg_ParseTuple(args, "O&:panel_get_pos", &widget_convert, &panel) )
+		return 0;
+
+	if( !g_self->app->panel_get_pos(panel, &parent, &page_num) ) {
+		Py_INCREF(Py_None);
+		return Py_None;
+	}
+
+	return Py_BuildValue("(Ni)", pygobject_new(G_OBJECT(parent)), page_num);
+}
 
 PyMethodDef puss_methods[] =
 	{ { "panel_append", &py_wrapper_panel_append, METH_VARARGS, NULL }
