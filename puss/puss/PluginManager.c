@@ -214,7 +214,7 @@ gboolean puss_plugin_manager_create() {
 	if( !puss_plugin_engines_map )
 		return FALSE;
 
-	dll_plugin_engine_regist((Puss*)puss_app);
+	dll_plugin_engine_regist(puss_app->api);
 
 	return TRUE;
 }

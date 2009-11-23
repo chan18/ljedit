@@ -11,7 +11,7 @@ typedef struct _Plugin         Plugin;
 typedef struct _PussApp        PussApp;
 
 struct _PussApp {
-	Puss			parent;
+	Puss*			api;
 
 	GtkBuilder*		builder;
 	gchar*			module_path;

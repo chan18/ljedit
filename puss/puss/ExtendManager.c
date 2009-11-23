@@ -63,7 +63,7 @@ Extend* extend_load(const gchar* filepath) {
 			g_printerr(_("ERROR  : not find puss_extend_create() in extend(%s)!\n"), filepath);
 
 		} else {
-			extend->handle = (*create_fun)((Puss*)puss_app);
+			extend->handle = (*create_fun)(puss_app->api);
 			return extend;
 		}
 	}
