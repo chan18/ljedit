@@ -112,16 +112,6 @@ static void doc_cb_move_focus(GtkWidget* widget, GtkDirectionType dir) {
 	}
 }
 
-#ifdef G_OS_WIN32
-	static gboolean __win32_GtkTextView_bug_hack_on_button_press_event(GtkWidget* widget) {
-		gtk_widget_grab_focus(widget);
-		gtk_text_view_set_editable(GTK_TEXT_VIEW(widget), FALSE);
-		gtk_text_view_set_editable(GTK_TEXT_VIEW(widget), TRUE);
-		return FALSE;
-	}
-
-#endif//G_OS_WIN32
-
 static void puss_text_view_init(PussTextView* view) {
 	GtkSourceView* sview = GTK_SOURCE_VIEW(view);
 	gtk_source_view_set_auto_indent(sview, TRUE);
@@ -136,10 +126,6 @@ static void puss_text_view_init(PussTextView* view) {
 	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(view), GTK_WRAP_NONE);
 
 	g_signal_connect(view, "move-focus", G_CALLBACK(&doc_cb_move_focus), 0);
-
-#ifdef G_OS_WIN32
-	g_signal_connect_after(view, "scroll-event", G_CALLBACK(&__win32_GtkTextView_bug_hack_on_button_press_event), 0);
-#endif//G_OS_WIN32
 }
 
 /* Constructors */
@@ -225,7 +211,16 @@ static void puss_text_view_move_cursor(GtkTextView *view, GtkMovementStep step, 
 }
 
 static gint puss_text_view_button_press_event(GtkWidget *widget, GdkEventButton *event) {
-	gint res = (*parent_press_event_fn)(widget, event);
+	GtkTextView* text_view = GTK_TEXT_VIEW(widget);
+	gint res;
+	if( text_view->need_im_reset ) {
+		GTK_TEXT_VIEW(widget)->need_im_reset = FALSE;
+		res = (*parent_press_event_fn)(widget, event);
+		gtk_im_context_reset(text_view->im_context);
+	} else {
+		res = (*parent_press_event_fn)(widget, event);
+	}
+
 
 	if( event->button==1 && event->type == GDK_2BUTTON_PRESS ) {
 		// Double-Click word can select word(include "_" )
