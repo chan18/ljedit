@@ -6,8 +6,12 @@
 MLToken* parse_template_arg_value(MLToken* ps, MLToken* pe) {
 	MLToken* retval = 0;
 	while( ps && ps < pe ) {
-		if( ps->type==',' || ps->type=='>' ) {
+		if( ps->type==',' ) {
 			++ps;
+			retval = ps;
+			break;
+
+		} else if( ps->type=='>' ) {
 			retval = ps;
 			break;
 		}
