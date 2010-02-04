@@ -317,9 +317,9 @@ gchar* cpp_filename_to_filekey(const gchar* filename, glong namelen) {
 
 		paths = g_new(gchar*, 256);
 		paths[0] = g_strdup("_:");
-		paths[0] = (char)wbuf[0];
-		if( g_ascii_isalpha(paths[0]) )
-			paths[0][0] = g_ascii_toupper(paths[0]);
+		paths[0][0] = (char)wbuf[0];
+		if( g_ascii_isalpha(paths[0][0]) )
+			paths[0][0] = g_ascii_toupper(paths[0][0]);
 		j = 1;
 
 		for( i=3; i<len && j<255; ++i ) {
