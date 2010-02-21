@@ -292,10 +292,19 @@ gboolean cps_destruct(ParseEnv* env, Block* block) {
 	MLToken* pe = ps + block->count;
 	TinyStr* nskey = 0;
 	MLToken* name;
+	MLToken tmp;
 
 	err_return_false_if( (ps = parse_function_prefix(ps, pe))==0 );
 
 	err_return_false_if( (ps = parse_id(ps, pe, &nskey, &name))==0 );
+
+	if( nskey && nskey->buf[0]=='~' ) {
+		tmp.buf = nskey->buf;
+		tmp.len = tiny_str_len(nskey);
+		tmp.line = name->line;
+		tmp.type = name->type;
+		name = &tmp;
+	}
 
 	if( !parse_function_common(env, block, ps, 0, nskey, name) ) {
 		err_trace("parse destruct function failed!");

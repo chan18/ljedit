@@ -37,7 +37,7 @@ TinyStr* block_meger_tokens(MLToken* ps, MLToken* pe, TinyStr* init) {
 			need_space = TRUE;
 		else if( last==',' && ((first=='_' || g_ascii_isalnum(first)) || first=='.') )
 			need_space = TRUE;
-		else if( (last=='_' || g_ascii_isalnum(last)) && (first=='_' || g_ascii_isalnum(first)) )
+		else if( (last=='_' || g_ascii_isalnum(last)) && (first=='~' || first=='_' || g_ascii_isalnum(first)) )
 			need_space = TRUE;
 
 		if( need_space ) {
@@ -156,8 +156,9 @@ MLToken* parse_ns(MLToken* ps, MLToken* pe, TinyStr** ns) {
 			err_return_null_if_not( (ps<pe) && ps->type==TK_ID );
 			err_return_null_if_not( (p + (ps-1)->len + ps->len) < end );
 			memcpy(p, (ps-1)->buf, (ps-1)->len);
+			p += (ps-1)->len;
 			memcpy(p, ps->buf, ps->len);
-			p += ((ps-1)->len + ps->len);
+			p += ps->len;
 
 		} else if( ps->type==KW_OPERATOR ) {
 			err_return_null_if_not( (p + ps->len) < end );
