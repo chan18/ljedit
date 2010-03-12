@@ -103,7 +103,10 @@ static void parse_doc_module(GtkDocHelper* self, const gchar* gtk_doc_path, cons
 			self->modules = g_list_prepend(self->modules, node);
 
 			do {
-				g_hash_table_insert(node->index, g_match_info_fetch(info, 1), g_match_info_fetch(info, 2));
+				gchar* key = g_match_info_fetch(info, 1);
+				gchar* url = g_match_info_fetch(info, 2);
+				//g_print("%s : %s\n", key, url);
+				g_hash_table_insert(node->index, key, url);
 			} while( g_match_info_next(info, 0) );
 
 			g_match_info_free(info);
@@ -162,9 +165,19 @@ static void find_and_open_in_brower(GtkDocHelper* self, const gchar* key) {
 	}
 
 	tag.self = self;
-	tag.key = key;
+
+	// gtk-doc 2.14, sgml use key(g-free) replace key(g_free)
+	// 
+	tag.key = g_strdup(key);
+	if( tag.key ) {
+		gchar* p;
+		for( p=tag.key; *p; ++p )
+			if( *p=='_' )
+				*p = '-';
+	}
 
 	g_list_foreach(self->modules, (GFunc)&__find_and_open_in_brower, &tag);
+	g_free(tag.key);
 
 	if( tag.res_path ) {
 		gchar* url = g_build_filename("file:///", tag.res_path, tag.res_pos, NULL);
