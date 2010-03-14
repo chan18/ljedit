@@ -8,6 +8,7 @@
 
 #ifdef G_OS_WIN32
 #include <windows.h>
+#include <gdk/gdkwin32.h>
 #endif
 
 #include <gdk/gdkkeysyms.h>
@@ -39,6 +40,10 @@ typedef struct _PussTextViewClass PussTextViewClass;
 
 struct _PussTextView {
 	GtkSourceView	parent;
+	
+#ifdef G_OS_WIN32
+	WNDPROC			old_proc;
+#endif
 };
 
 struct _PussTextViewClass {
@@ -67,6 +72,7 @@ static ButtonPressFn parent_press_event_fn = 0;
 
 static void puss_text_view_search(PussTextView *view);
 
+	static gboolean puss_text_view_cb_init(GtkWidget* widget, GdkEvent* event);
 static void puss_text_view_move_cursor(GtkTextView *view, GtkMovementStep step, gint count, gboolean extend_selection);
 static gint puss_text_view_button_press_event(GtkWidget *widget, GdkEventButton *event);
 
@@ -126,6 +132,24 @@ static void puss_text_view_init(PussTextView* view) {
 	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(view), GTK_WRAP_NONE);
 
 	g_signal_connect(view, "move-focus", G_CALLBACK(&doc_cb_move_focus), 0);
+
+	// thinkpad trickpoint support
+	// need : modify TP4table.dat, add and restart two SynTPxxx.exe files: 
+	// ; Gtk+
+	// *,*,*,gdkWindowTopLevel,*,gdkWindowChild,WheelStd,0,9
+	// 
+	// or add
+	// ; puss
+	// *,*,puss.exe,*,*,*,WheelVkey,0,9
+	// 
+	// but on win32 platform, use Spy++ only recv(WM_MOUSEWHEEL & WM_HSCROLL)
+	// but Win GDK looks like not support those messages, now DIY this
+	// 
+#ifdef G_OS_WIN32
+	{
+		g_signal_connect(view, "realize", G_CALLBACK(&puss_text_view_cb_init), 0);
+	}
+#endif
 }
 
 /* Constructors */
@@ -134,6 +158,42 @@ static GtkWidget* puss_text_view_new_with_buffer(GtkSourceBuffer* buf) {
 	gtk_text_view_set_buffer(GTK_TEXT_VIEW(view), GTK_TEXT_BUFFER(buf));
 	return GTK_WIDGET(view);
 }
+
+#ifdef G_OS_WIN32
+
+	LRESULT CALLBACK __trackpoint_win32_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+		PussTextView* self = (PussTextView*)GetWindowLong(hwnd, GWL_USERDATA);
+		if( msg==WM_MOUSEWHEEL ) {
+			short delta = GET_WHEEL_DELTA_WPARAM(wparam);
+			int line = delta / WHEEL_DELTA;
+			GtkWidget* sc = gtk_widget_get_parent(GTK_WIDGET(self));
+			g_print("wheel : %d %d %d %d\n", HIWORD(wparam), LOWORD(wparam), HIWORD(lparam), LOWORD(lparam));
+			if( GTK_IS_SCROLLED_WINDOW(sc) ) {
+				GtkScrolledWindow* scwin = GTK_SCROLLED_WINDOW(sc);
+				GtkAdjustment* adj = gtk_scrolled_window_get_vadjustment(scwin);
+				if( adj )
+					gtk_adjustment_set_value(adj, adj->value - (line * adj->step_increment / 3));
+			}
+
+		} else if( msg==WM_HSCROLL ) {
+			// TODO : can not receive this message, but Spy++ got it. why??
+			//g_print("got it(%d-%d-%d)!\n", msg, wparam, lparam);
+		}
+
+		return CallWindowProc(self->old_proc, hwnd, msg, wparam, lparam);
+	}
+
+	static gboolean puss_text_view_cb_init(GtkWidget* widget, GdkEvent* event) {
+		PussTextView* self = PUSS_TEXT_VIEW(widget);
+		GdkWindow* win = gtk_widget_get_window(widget);
+		HWND hwnd = GDK_WINDOW_HWND(win);
+		g_print("ss : %d\n", hwnd);
+		SetWindowLong(hwnd, GWL_USERDATA, (LONG)self);
+		self->old_proc = (WNDPROC)GetWindowLong(hwnd, GWL_WNDPROC);
+		self->old_proc = (WNDPROC)SetWindowLong(hwnd, GWL_WNDPROC, (LONG)__trackpoint_win32_proc);
+		return TRUE;
+	}
+#endif
 
 static void puss_text_view_search(PussTextView *view) {
 	gchar* text = 0;
