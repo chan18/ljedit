@@ -20,7 +20,7 @@ gpointer dll_plugin_load(const gchar* plugin_id, GKeyFile* keyfile, Puss* app) {
 		return 0;
 
 #ifdef _DEBUG
-	filename = g_strconcat(plugin_id, "_d.so", 0);
+	filename = g_strconcat(plugin_id, ".so_d", 0);
 #else
 	filename = g_strconcat(plugin_id, ".so", 0);
 #endif

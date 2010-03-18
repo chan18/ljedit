@@ -19,7 +19,7 @@ ifeq ($(BUILD), release)
 else
 	CXXFLAGS = -g -Wall -D_DEBUG
 	OBJPATH = debug
-	TARGET = $(TARGET_PATH)/$(TARGET_NAME)_d.so
+	TARGET = $(TARGET_PATH)/$(TARGET_NAME).so_d
 endif
 
 # gtk & gtksourceview & gthread

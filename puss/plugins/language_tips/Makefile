@@ -2,5 +2,6 @@
 
 TARGET_NAME = language_tips
 
-include ../puss_plugin_makefile_c_template
+SRCS += $(wildcard cpp/*.c)
 
+include ../puss_plugin_makefile_c_template
