@@ -250,10 +250,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\Makefile"
-			>
-		</File>
-		<File
 			RelativePath=".\OptionManager.c"
 			>
 		</File>

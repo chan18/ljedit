@@ -12,7 +12,9 @@
 #define _(str) dgettext(TEXT_DOMAIN, str)
 
 
-struct ResultNode {
+typedef struct _ResultNode  ResultNode;
+
+struct _ResultNode {
 	const char*		filename;
 	gint			line;
 	gint			offset;
@@ -21,14 +23,16 @@ struct ResultNode {
 	ResultNode*		next;
 };
 
-struct FileResultNode {
+typedef struct _FileResultNode  FileResultNode;
+
+struct _FileResultNode {
 	gchar*			owner_filename;
 	ResultNode*		result_node_list;
 
 	FileResultNode*	next;
 };
 
-struct SearchTools {
+typedef struct {
 	Puss*				app;
 
 	GtkWidget*			panel;
@@ -43,17 +47,19 @@ struct SearchTools {
 	GtkToggleButton*	search_option_in_current_file;
 	GtkToggleButton*	search_option_in_opened_files;
 	GtkToggleButton*	search_option_in_current_file_dir;
-};
+} SearchTools;
 
 void clear_search_results(SearchTools* self) {
+	FileResultNode* rs;
+	ResultNode* p;
 	gtk_list_store_clear(self->result_store);
 
 	while( self->result_list ) {
-		FileResultNode* rs = self->result_list;
+		rs = self->result_list;
 		self->result_list = rs->next;
 
 		while( rs->result_node_list ) {
-			ResultNode* p = rs->result_node_list;
+			p = rs->result_node_list;
 			rs->result_node_list = p->next;
 
 			g_free(p->preview);
@@ -70,8 +76,11 @@ void clear_search_results(SearchTools* self) {
 
 void fill_search_results_list(SearchTools* self) {
 	GtkTreeIter iter;
-	for(FileResultNode* rs = self->result_list; rs; rs = rs->next) {
-		for(ResultNode* p = rs->result_node_list; p; p = p->next) {
+	FileResultNode* rs;
+	ResultNode* p;
+
+	for(rs = self->result_list; rs; rs = rs->next) {
+		for(p = rs->result_node_list; p; p = p->next) {
 			gtk_list_store_append(self->result_store, &iter);
 			gtk_list_store_set( self->result_store, &iter
 				, 0, p->filename
@@ -89,29 +98,30 @@ void search_in_file_content( const gchar* filename
 							, const gchar* search_text
 							, SearchTools* self )
 {
-	g_assert( content );
-
 	ResultNode* last_node = 0;
-
 	gchar* end = content + len;
 	gint line = -1;
 	gchar* ps = content;
 	gchar* pe = content;
+	gchar* pos;
+	ResultNode* node;
+	FileResultNode* fnode;
+
 	while( ps < end ) {
 		for( pe=ps; pe < end; ++pe )
 			if( *pe=='\r' || *pe=='\n' )
 				break;
 		++line;
 
-		gchar* pos = g_strstr_len(ps, (gsize)(pe-ps), search_text);
+		pos = g_strstr_len(ps, (gsize)(pe-ps), search_text);
 		if( pos ) {
-			ResultNode* node = g_new0(ResultNode, 1);
+			node = g_new0(ResultNode, 1);
 
 			if( last_node ) {
 				last_node->next = node;
 
 			} else {
-				FileResultNode* fnode = g_new0(FileResultNode, 1);
+				fnode = g_new0(FileResultNode, 1);
 
 				fnode->owner_filename = g_strdup(filename);
 
@@ -145,27 +155,32 @@ void search_in_file_content( const gchar* filename
 
 void search_in_doc(GtkTextBuffer* buf, const gchar* search_text, SearchTools* self) {
 	GString* url = self->app->doc_get_url(buf);
+	GtkTextIter ps, pe;
+	gchar* content;
+	gsize len;
+
 	if( !url )
 		return;
 
-	GtkTextIter ps, pe;
 	gtk_text_buffer_get_start_iter(buf, &ps);
 	gtk_text_buffer_get_end_iter(buf, &pe);
-	gchar* content = gtk_text_buffer_get_text(buf, &ps, &pe, TRUE);
-	gsize len = g_utf8_strlen(content, -1);
-	if( content ) {
-		search_in_file_content( url->str
-			, content
-			, len
-			, search_text
-			, self );
-		g_free(content);
-	}
+	content = gtk_text_buffer_get_text(buf, &ps, &pe, TRUE);
+	if( !content )
+		return;
+
+	len = g_utf8_strlen(content, -1);
+	search_in_file_content( url->str
+		, content
+		, len
+		, search_text
+		, self );
+	g_free(content);
 }
 
 void search_in_file(const gchar* filename, const gchar* search_text, SearchTools* self) {
 	gchar* content = 0;
 	gsize len = 0;
+
 	if( !self->app->load_file(filename, &content, &len, 0) )
 		return;
 
@@ -180,6 +195,7 @@ void search_in_dir(const gchar* dirname, const gchar* search_text, SearchTools* 
 		return;
 
 	for(;;) {
+		gchar* filename;
 		const gchar* fname = g_dir_read_name(dir);
 		if( !fname )
 			break;
@@ -187,7 +203,7 @@ void search_in_dir(const gchar* dirname, const gchar* search_text, SearchTools* 
 		if( fname[0]=='.' )
 			continue;
 
-		gchar* filename = g_build_filename(dirname, fname, NULL);
+		filename = g_build_filename(dirname, fname, NULL);
 		if( g_file_test(filename, G_FILE_TEST_IS_DIR) ) {
 			search_in_dir(filename, search_text, self);
 		} else {
@@ -199,38 +215,46 @@ void search_in_dir(const gchar* dirname, const gchar* search_text, SearchTools* 
 }
 
 void search_in_current_file(const gchar* search_text, SearchTools* self) {
+	GtkTextBuffer* buf;
 	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(self->app));
 	if( page_num < 0 )
 		return;
 
-	GtkTextBuffer* buf = self->app->doc_get_buffer_from_page_num(page_num);
+	buf = self->app->doc_get_buffer_from_page_num(page_num);
 	if( buf )
 		search_in_doc(buf, search_text, self);
 }
 
 void search_in_opened_files(const gchar* search_text, SearchTools* self) {
+	gint i;
+	GtkTextBuffer* buf;
 	gint count = gtk_notebook_get_n_pages(puss_get_doc_panel(self->app));
-	for( gint i=0; i < count; ++i ) {
-		GtkTextBuffer* buf = self->app->doc_get_buffer_from_page_num(i);
+	for( i=0; i < count; ++i ) {
+		buf = self->app->doc_get_buffer_from_page_num(i);
 		if( buf )
 			search_in_doc(buf, search_text, self);
 	}
 }
 
 void search_in_current_file_dir(const gchar* search_text, SearchTools* self) {
-	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(self->app));
+	GtkTextBuffer* buf;
+	GString* url;
+	gint page_num;
+	gchar* dirname;
+
+	page_num = gtk_notebook_get_current_page(puss_get_doc_panel(self->app));
 	if( page_num < 0 )
 		return;
 
-	GtkTextBuffer* buf = self->app->doc_get_buffer_from_page_num(page_num);
+	buf = self->app->doc_get_buffer_from_page_num(page_num);
 	if( !buf )
 		return;
 
-	GString* url = self->app->doc_get_url(buf);
+	url = self->app->doc_get_url(buf);
 	if( !url )
 		return;
 
-	gchar* dirname = g_path_get_dirname(url->str);
+	dirname = g_path_get_dirname(url->str);
 	if( dirname ) {
 		search_in_dir(dirname, search_text, self);
 		g_free(dirname);
@@ -238,8 +262,7 @@ void search_in_current_file_dir(const gchar* search_text, SearchTools* self) {
 }
 
 SIGNAL_CALLBACK gboolean search_tools_search(GtkEntry* entry, GdkEventKey* event, SearchTools* self) {
-	if( event->keyval==GDK_Return || event->keyval==GDK_KP_Enter )
-	{
+	if( event->keyval==GDK_Return || event->keyval==GDK_KP_Enter ) {
 		const gchar* text = gtk_entry_get_text(entry);
 
 		gtk_tree_view_set_model(self->result_view, 0);
@@ -264,11 +287,11 @@ SIGNAL_CALLBACK gboolean search_tools_search(GtkEntry* entry, GdkEventKey* event
 }
 
 SIGNAL_CALLBACK void search_results_cb_row_activated(GtkTreeView* tree_view, GtkTreePath* path, GtkTreeViewColumn* col, SearchTools* self) {
+	ResultNode* p = 0;
 	GtkTreeIter iter;
 	if( !gtk_tree_model_get_iter(GTK_TREE_MODEL(self->result_store), &iter, path) )
 		return;
 
-	ResultNode* p = 0;
 	gtk_tree_model_get(GTK_TREE_MODEL(self->result_store), &iter, 3, &p, -1);
 	if( !p )
 		return;
@@ -277,9 +300,12 @@ SIGNAL_CALLBACK void search_results_cb_row_activated(GtkTreeView* tree_view, Gtk
 }
 
 gboolean search_tools_active_search_entry(GtkWidget* widget, GdkEventFocus* event, SearchTools* self) {
-	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(self->app));
+	GtkTextBuffer* buf;
+	gint page_num;
+
+	page_num = gtk_notebook_get_current_page(puss_get_doc_panel(self->app));
 	if( page_num >= 0 ) {
-		GtkTextBuffer* buf = self->app->doc_get_buffer_from_page_num(page_num);
+		buf = self->app->doc_get_buffer_from_page_num(page_num);
 		if( buf ) {
 			GtkTextIter ps, pe;
 			if( gtk_text_buffer_get_selection_bounds(buf, &ps, &pe) ) {
@@ -297,19 +323,22 @@ gboolean search_tools_active_search_entry(GtkWidget* widget, GdkEventFocus* even
 }
 
 void create_ui(SearchTools* self) {
-	GtkBuilder* builder = gtk_builder_new();
+	gchar* filepath;
+	GError* err = 0;
+	GtkBuilder* builder;
+
+	builder = gtk_builder_new();
 	if( !builder )
 		return;
 	gtk_builder_set_translation_domain(builder, TEXT_DOMAIN);
 
-	gchar* filepath = g_build_filename(self->app->get_plugins_path(), "search_tools.ui", NULL);
+	filepath = g_build_filename(self->app->get_plugins_path(), "search_tools.ui", NULL);
 	if( !filepath ) {
 		g_printerr("ERROR(search_tools) : build preview page ui filepath failed!\n");
 		g_object_unref(G_OBJECT(builder));
 		return;
 	}
 
-	GError* err = 0;
 	gtk_builder_add_from_file(builder, filepath, &err);
 	g_free(filepath);
 
@@ -349,10 +378,12 @@ void destroy_ui(SearchTools* self) {
 }
 
 PUSS_EXPORT void* puss_plugin_create(Puss* app) {
+	SearchTools* self;
+
 	bindtextdomain(TEXT_DOMAIN, app->get_locale_path());
 	bind_textdomain_codeset(TEXT_DOMAIN, "UTF-8");
 
-	SearchTools* self = g_new0(SearchTools, 1);
+	self = g_new0(SearchTools, 1);
 	self->app = app;
 	create_ui(self);
 

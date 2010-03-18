@@ -177,15 +177,7 @@
 	</References>
 	<Files>
 		<File
-			RelativePath=".\src\module.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\search_tools.plugin"
-			>
-		</File>
-		<File
-			RelativePath=".\search_tools.ui"
+			RelativePath=".\module.c"
 			>
 		</File>
 	</Files>

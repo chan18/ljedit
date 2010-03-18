@@ -178,22 +178,6 @@
 	</References>
 	<Files>
 		<File
-			RelativePath=".\gdbmi.plugin"
-			>
-		</File>
-		<File
-			RelativePath=".\gdbmi_menu.ui"
-			>
-		</File>
-		<File
-			RelativePath=".\gdbmi_panels.ui"
-			>
-		</File>
-		<File
-			RelativePath=".\gdbmi_target_setup.ui"
-			>
-		</File>
-		<File
 			RelativePath=".\module.c"
 			>
 		</File>
