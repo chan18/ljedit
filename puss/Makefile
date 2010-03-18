@@ -21,10 +21,12 @@ all : .puss .extends .plugins
 
 strip:
 	@for ext in $(wildcard bin/extends/*.ext); do strip $$ext; done
-	@for ext in $(wildcard bin/plugins/*.so); do strip $$ext; done
+	@for plg in $(wildcard bin/plugins/*.so); do strip $$plg; done
+	@for dll in $(wildcard bin/plugins/*.dll); do strip $$dll; done
+	@-strip bin/*.so
 	@-strip bin/puss
-	@-strip bin/_puss.exe
-	@-strip bin/puss.exe
+	@-strip bin/*.dll
+	@-strip bin/*.exe
 
 clean:
 	@make -Cpuss BUILD=$(BUILD) NOT_USE_D_FILE=1 clean

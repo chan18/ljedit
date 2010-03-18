@@ -58,13 +58,17 @@ int main(int argc, char* argv[]) {
 	// load ./_puss.dll
 	// 
 	strcpy(buf, basePath);
+#ifdef _DEBUG
+	strcat(buf, "_puss_d.dll");
+#else
 	strcat(buf, "_puss.dll");
+#endif
 
 	// ShellExecuteA(HWND_DESKTOP, "open", buf, lpCmdLine, NULL, nShowCmd);
 
 	hDLL = LoadLibraryA(buf);
 	if( !hDLL ) {
-		MessageBoxA(NULL, "Not find _puss.dll", "Puss Error!", MB_OK);
+		MessageBoxA(NULL, "Not find _puss.dll(or _puss_d.dll in debug version)", "Puss Error!", MB_OK);
 		return 1;
 	}
 

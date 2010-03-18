@@ -19,7 +19,12 @@ gpointer dll_plugin_load(const gchar* plugin_id, GKeyFile* keyfile, Puss* app) {
 	if( !dll_plugin )
 		return 0;
 
+#ifdef _DEBUG
+	filename = g_strconcat(plugin_id, "_d.so", 0);
+#else
 	filename = g_strconcat(plugin_id, ".so", 0);
+#endif
+
 	filepath = g_build_filename(app->get_plugins_path(), filename, 0);
 	dll_plugin->module = g_module_open(filepath, G_MODULE_BIND_LAZY);
 

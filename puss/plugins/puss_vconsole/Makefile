@@ -1,91 +1,28 @@
 # makefile
-# 
-# usage :
-#     build debug version   : make
-#     build release version : make BUILD=release
-# 
 
-ifeq ($(OS), Windows_NT)
-	PLATFORM = win32
-endif
+TARGET_NAME = gdbmi
 
-CC = gcc
-CFLAGS = -g -Wall
-OBJPATH = debug
+all : target vconsole
 
-ifeq ($(BUILD), release)
-	CFLAGS = -O3 -Wall
-	OBJPATH = release
-endif
-
-# gtk & gtksourceview & gthread
-# 
-PUSS_CFLAGS += `pkg-config --cflags gtksourceview-2.0`
-
-PUSS_LIBS += `pkg-config --libs gtksourceview-2.0` \
-		`pkg-config --libs gmodule-2.0` \
-		`pkg-config --libs gio-2.0` \
-		`pkg-config --libs gthread-2.0`
-
-# project
-# 
-PUSS_CFLAGS += -I../../bin/include
-
-SRCS = $(wildcard *.c)
-
-OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)
-
-TARGET_NAME = puss_vconsole
-TARGET_PATH = ../../bin/plugins
-
-TARGET = $(TARGET_PATH)/$(TARGET_NAME)
+include ../puss_plugin_makefile_c_template
 
 ifeq ($(PLATFORM), win32)
+	CFLAGS += -Ivconsole
+	ifeq ($(BUILD), release)
+		VCONSOLE = $(TARGET_PATH)/vconsole.dll
+	else
+		VCONSOLE = $(TARGET_PATH)/vconsole_d.dll
+	endif
 
-PUSS_CFLAGS += -Ivconsole
-VCONSOLE = $(TARGET_PATH)/vconsole.dll
+	vconsole : vconsole/*.c
+		ifeq ($(BUILD), release)
+			$(CC) -O3 -Wall -DUNICODE -shared -o $@ $^
+		else
+			$(CC) -g -Wall -D_DEBUG -DUNICODE -shared -o $@ $^
+		endif
 
-all : $(VCONSOLE) $(TARGET).so $(TARGET).plugin
-
-$(VCONSOLE) : vconsole/*.c
-	$(CC) $(CFLAGS) -DUNICODE -shared -o $@ $^
-
-clean :
-	rm -f $(VCONSOLE)
-	rm -f $(TARGET).so
-	rm -f $(TARGET).plugin
-	rm -rf $(OBJPATH)
-
-else #linux
-
-PUSS_LIBS += -lvte
-
-all : $(TARGET).so $(TARGET).plugin
-
-clean :
-	rm -f $(TARGET).so
-	rm -f $(TARGET).plugin
-	rm -rf $(OBJPATH)
+else
+	CFLAGS += -lvte
+	vconsole : 
 
 endif
-
-$(TARGET).so : $(OBJS)
-	$(CC) $(CFLAGS) $(PUSS_CFLAGS) -shared -o $@ $^ $(PUSS_LIBS)
-
-$(TARGET).plugin : $(TARGET_NAME).plugin
-	cp -f $< $@
-
-$(OBJPATH)/%.o : %.c
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $(PUSS_CFLAGS) -o $@ -c $<
-
-$(OBJPATH)/%.d : %.c
-	@echo $(CC) -MM -o $@ -c $<
-	@rm -f $@
-	@mkdir -p $(dir $@)
-	@$(CC) $(CFLAGS) $(PUSS_CFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
-
-ifneq ($(NOT_USE_D_FILE), 1)
--include $(SRCS:%.c=$(OBJPATH)/%.d)
-endif
-

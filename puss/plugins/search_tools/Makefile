@@ -9,12 +9,17 @@ ifeq ($(OS), Windows_NT)
 	PLATFORM = win32
 endif
 
-CXXFLAGS = -g -Wall
-OBJPATH = debug
+TARGET_NAME = search_tools
+TARGET_PATH = ../../bin/plugins
 
 ifeq ($(BUILD), release)
 	CXXFLAGS = -O3 -Wall
 	OBJPATH = release
+	TARGET = $(TARGET_PATH)/$(TARGET_NAME).so
+else
+	CXXFLAGS = -g -Wall -D_DEBUG
+	OBJPATH = debug
+	TARGET = $(TARGET_PATH)/$(TARGET_NAME)_d.so
 endif
 
 # gtk & gtksourceview & gthread
@@ -33,26 +38,13 @@ SRCS = $(wildcard src/*.cpp)
 
 OBJS = $(SRCS:src/%.cpp=$(OBJPATH)/%.o)
 
-TARGET_NAME = search_tools
-TARGET_PATH = ../../bin/plugins
+all : $(TARGET)
 
-TARGET = $(TARGET_PATH)/$(TARGET_NAME)
-
-all : $(TARGET).so $(TARGET).ui $(TARGET).plugin
-
-$(TARGET).so : $(OBJS)
+$(TARGET) : $(OBJS)
 	$(CXX) $(CXXFLAGS) -shared -o $@ $^ $(LIBS)
 
-$(TARGET).ui : $(TARGET_NAME).ui
-	cp -f $< $@
-
-$(TARGET).plugin : $(TARGET_NAME).plugin
-	cp -f $< $@
-
 clean :
-	rm -f $(TARGET).so
-	rm -f $(TARGET).ui
-	rm -f $(TARGET).plugin
+	rm -f $(TARGET)
 	rm -rf $(OBJPATH)
 
 $(OBJPATH)/%.o : src/%.cpp

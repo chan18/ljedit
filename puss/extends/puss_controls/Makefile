@@ -10,12 +10,17 @@ ifeq ($(OS), Windows_NT)
 endif
 
 CC = gcc
-CFLAGS = -g -Wall
-OBJPATH = debug
+
+TARGET_PATH = ../../bin
 
 ifeq ($(BUILD), release)
 	CFLAGS = -O3 -Wall
 	OBJPATH = release
+	TARGET = $(TARGET_PATH)/extends/puss_controls.ext
+else
+	CFLAGS = -g -Wall -D_DEBUG
+	OBJPATH = debug
+	TARGET = $(TARGET_PATH)/extends/puss_controls.ext_d
 endif
 
 # gtk & gtksourceview
@@ -26,15 +31,9 @@ LIBS += `pkg-config --libs gtksourceview-2.0`
 
 # project
 # 
-TARGET_PATH = ../../bin
-
 CFLAGS += -I$(TARGET_PATH)/include
-
 SRCS = $(wildcard *.c)
-
 OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)
-
-TARGET = $(TARGET_PATH)/extends/puss_controls.ext
 
 all : $(TARGET) $(TARGET_PATH)/include/IPussControls.h
 

@@ -10,12 +10,15 @@ ifeq ($(OS), Windows_NT)
 endif
 
 CC = gcc
-CFLAGS = -g -Wall
-OBJPATH = debug
 
 ifeq ($(BUILD), release)
 	CFLAGS = -O3 -Wall
 	OBJPATH = release
+	TARGET = ../../bin/extends/jsextend.ext
+else
+	CFLAGS = -g -Wall -D_DEBUG
+	OBJPATH = debug
+	TARGET = ../../bin/extends/jsextend.ext_d
 endif
 
 # gtk & gtksourceview & gthread & python & pygtk
@@ -32,7 +35,6 @@ ifeq ($(PLATFORM), win32)
 
 else
 	CFLAGS += `pkg-config --cflags seed`
-
 	LIBS += `pkg-config --libs seed`
 
 endif
@@ -44,8 +46,6 @@ CFLAGS += -I../../bin/include
 SRCS = $(wildcard *.c)
 
 OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)
-
-TARGET = ../../bin/extends/jsextend.ext
 
 all : $(TARGET)
 

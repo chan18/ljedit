@@ -64,7 +64,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(SolutionDir)bin\plugins\$(ProjectName).so"
+				OutputFile="$(SolutionDir)bin\plugins\$(ProjectName)_d.so"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"

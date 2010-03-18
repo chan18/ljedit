@@ -116,7 +116,13 @@ gboolean puss_extend_manager_create() {
 	const gchar* filename;
 	gsize len;
 	gchar* filepath;
+
+#ifdef _DEUBG
 	const gchar* match_str = ".ext";
+#else
+	const gchar* match_str = ".ext_d";
+#endif
+
 	gsize match_len = (gsize)strlen(match_str);
 
 	if( !g_module_supported() )
