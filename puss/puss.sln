@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual C++ Express 2008
+# Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pyextend", "extends\pyextend\pyextend.vcproj", "{44F803E0-12E8-4F44-8B7A-2FAB5DB8EEE4}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "language_selector", "plugins\language_selector\language_selector.vcproj", "{44F803E1-1E28-44F4-2FAB-5DB9FE8B7AE3}"
