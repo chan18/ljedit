@@ -132,6 +132,7 @@ static gboolean parse_function_common(ParseEnv* env, Block* block, MLToken* star
 	MLToken* ps = start;
 	MLToken* pe = block->tokens + block->count;
 	CppElem* elem = cpp_elem_new();
+
 	elem->type = CPP_ET_FUN;
 	elem->file = block->parent->file;
 	elem->sline = name->line;
@@ -144,7 +145,13 @@ static gboolean parse_function_common(ParseEnv* env, Block* block, MLToken* star
 
 	} else {
 		elem->name = tiny_str_new(name->buf, name->len);
-		elem->v_fun.nskey = nskey;
+
+		if( nskey ) {
+			elem->v_fun.nskey = tiny_str_new(nskey->buf, tiny_str_len(nskey) - name->len - 1);
+			tiny_str_free(nskey);
+		} else {
+			elem->v_fun.nskey = nskey;
+		}
 	}
 	nskey = 0;
 

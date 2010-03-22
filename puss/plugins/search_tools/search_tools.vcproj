@@ -91,7 +91,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(ProjectDir)$(ProjectName).ui $(SolutionDir)bin\plugins\&#x0D;&#x0A;copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\&#x0D;&#x0A;"
+				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
@@ -169,7 +169,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(ProjectDir)$(ProjectName).ui $(SolutionDir)bin\plugins\&#x0D;&#x0A;copy $(ProjectDir)$(ProjectName).plugin $(SolutionDir)bin\plugins\&#x0D;&#x0A;"
+				CommandLine=""
 			/>
 		</Configuration>
 	</Configurations>

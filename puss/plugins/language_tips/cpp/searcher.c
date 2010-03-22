@@ -1110,8 +1110,8 @@ static gboolean searcher_do_locate(Searcher* searcher, GList* scope, gint line, 
 					snode_free(impl_root);
 				}
 
-				if( elem->v_fun.typekey ) {
-					rep = parse_typekey_to_spath(elem->v_fun.typekey);
+				if( elem->v_fun.nskey ) {
+					rep = parse_typekey_to_spath(elem->v_fun.nskey);
 					if( rep ) {
 						new_spath = spath_replace_new(spath, ((SKey*)(rep->data))->type=='R' ? spath : pos, pos, rep);
 						spath_free(rep);
