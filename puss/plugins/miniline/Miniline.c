@@ -495,10 +495,14 @@ static void miniline_cb_active(GtkAction* action) {
 				g_free(text);
 
 			} else {
-				gtk_entry_set_text(g_self->entry, "");
-				miniline_switch_image( GTK_STOCK_DIALOG_QUESTION );
-				gtk_text_buffer_get_iter_at_mark(buf, &ps, gtk_text_buffer_get_insert(buf));
-				g_self->app->find_and_locate_text(view, 0, TRUE, FALSE, TRUE, TRUE, FALSE, SEARCH_FLAGS);
+				const gchar* old_value = gtk_entry_get_text(g_self->entry);
+				if( old_value && old_value[0] ) {
+					
+				} else {
+					gtk_entry_set_text(g_self->entry, "");
+					miniline_switch_image( GTK_STOCK_DIALOG_QUESTION );
+					g_self->app->find_and_locate_text(view, 0, TRUE, FALSE, TRUE, TRUE, FALSE, SEARCH_FLAGS);
+				}
 			}
 			gtk_entry_select_region(g_self->entry, 0, -1);
 			res = TRUE;
