@@ -14,6 +14,7 @@
   <object class="GtkDialog" id="puss_plugin_manager_dialog">
     <property name="default_width">500</property>
     <property name="default_height">300</property>
+    <signal name="delete-event" handler="cb_puss_plugin_manager_dialog_delete" />
     <child internal-child="vbox">
       <object class="GtkVBox" id="vbox">
         <child>
@@ -77,20 +78,8 @@
             </child>
           </object>
         </child>
-        <child internal-child="action_area">
-          <object class="GtkHButtonBox" id="hbuttonbox">
-            <child>
-              <object class="GtkButton" id="close_button">
-                <property name="label" translatable="yes">close</property>
-              </object>
-            </child>
-          </object>
-        </child>
       </object>
     </child>
-    <action-widgets>
-      <action-widget response="0">close_button</action-widget>
-    </action-widgets>
   </object>
 </interface>
 

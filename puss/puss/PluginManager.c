@@ -32,6 +32,7 @@ struct _PluginEngine {
 	gpointer			tag;
 };
 
+static GtkDialog* g_plugin_manager_dlg = 0;
 static GHashTable* puss_plugin_engines_map = 0;
 
 static void unload_plugin( Plugin* plugin ) {
@@ -268,59 +269,66 @@ static void plugin_ui_enabled_toggled(GtkCellRendererToggle* cell, gchar* path_s
 	gtk_tree_path_free (path);
 }
 
+SIGNAL_CALLBACK gboolean cb_puss_plugin_manager_dialog_delete(GtkWidget *widget) {
+	gtk_widget_destroy(widget);
+	g_plugin_manager_dlg = 0;
+	return TRUE;
+}
+
 void puss_plugin_manager_show_config_dialog() {
 	gchar* filepath;
 	GtkBuilder* builder;
-	GtkWidget* dlg;
 	GtkListStore* store;
 	GtkTreeView* view;
 	GtkCellRendererToggle* toggle;
 	GError* err = 0;
+	GtkWidget* dlg = (GtkWidget*)g_plugin_manager_dlg;
 
-	// create UI
-	builder = gtk_builder_new();
-	if( !builder )
-		return;
-	gtk_builder_set_translation_domain(builder, TEXT_DOMAIN);
+	if( !dlg ) {
+		// create UI
+		builder = gtk_builder_new();
+		if( !builder )
+			return;
+		gtk_builder_set_translation_domain(builder, TEXT_DOMAIN);
 
-	filepath = g_build_filename(puss_app->module_path, "res", "puss_plugin_manager_dialog.xml", NULL);
-	if( !filepath ) {
-		g_printerr("ERROR(puss) : build plugin manager ui filepath failed!\n");
+		filepath = g_build_filename(puss_app->module_path, "res", "puss_plugin_manager_dialog.xml", NULL);
+		if( !filepath ) {
+			g_printerr("ERROR(puss) : build plugin manager ui filepath failed!\n");
+			g_object_unref(G_OBJECT(builder));
+			return;
+		}
+
+		gtk_builder_add_from_file(builder, filepath, &err);
+		g_free(filepath);
+
+		if( err ) {
+			g_printerr("ERROR(puss): %s\n", err->message);
+			g_error_free(err);
+			g_object_unref(G_OBJECT(builder));
+			return;
+		}
+
+		dlg = GTK_WIDGET(gtk_builder_get_object(builder, "puss_plugin_manager_dialog"));
+		store = GTK_LIST_STORE(gtk_builder_get_object(builder, "plugin_store"));
+		view = GTK_TREE_VIEW(gtk_builder_get_object(builder, "plugin_treeview"));
+		toggle = GTK_CELL_RENDERER_TOGGLE(gtk_builder_get_object(builder, "enabled_cell_renderer"));
+		g_signal_connect(toggle, "toggled", G_CALLBACK(plugin_ui_enabled_toggled), store);
+		gtk_tree_view_column_set_sort_column_id(GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "enabled_column")), 0);
+		gtk_tree_view_column_set_sort_column_id(GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "name_column")), 1);
+		gtk_tree_view_column_set_sort_column_id(GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "engine_column")), 2);
+		gtk_builder_connect_signals(builder, GTK_WINDOW(dlg));
 		g_object_unref(G_OBJECT(builder));
-		return;
+
+		gtk_window_set_transient_for(GTK_WINDOW(dlg), puss_app->main_window);
+
+		// fill data and show
+		walk_all_plugin(do_fill_plugin_list, store);
+
+		g_plugin_manager_dlg = (GtkDialog*)dlg;
 	}
-
-	gtk_builder_add_from_file(builder, filepath, &err);
-	g_free(filepath);
-
-	if( err ) {
-		g_printerr("ERROR(puss): %s\n", err->message);
-		g_error_free(err);
-		g_object_unref(G_OBJECT(builder));
-		return;
-	}
-
-	dlg = GTK_WIDGET(gtk_builder_get_object(builder, "puss_plugin_manager_dialog"));
-	store = GTK_LIST_STORE(gtk_builder_get_object(builder, "plugin_store"));
-	view = GTK_TREE_VIEW(gtk_builder_get_object(builder, "plugin_treeview"));
-	toggle = GTK_CELL_RENDERER_TOGGLE(gtk_builder_get_object(builder, "enabled_cell_renderer"));
-	g_signal_connect(toggle, "toggled", G_CALLBACK(plugin_ui_enabled_toggled), store);
-	gtk_tree_view_column_set_sort_column_id(GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "enabled_column")), 0);
-	gtk_tree_view_column_set_sort_column_id(GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "name_column")), 1);
-	gtk_tree_view_column_set_sort_column_id(GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "engine_column")), 2);
-	gtk_builder_connect_signals(builder, GTK_WINDOW(dlg));
-	g_object_unref(G_OBJECT(builder));
-
-	gtk_window_set_transient_for(GTK_WINDOW(dlg), puss_app->main_window);
-
-	// fill data and show
-	walk_all_plugin(do_fill_plugin_list, store);
 
 	gtk_widget_show_all(dlg);
-	//gint res = 
-	gtk_dialog_run(GTK_DIALOG(dlg));
-
-	gtk_widget_destroy(dlg);
+	gdk_window_raise(gtk_widget_get_window(dlg));
 }
 
 void puss_plugin_engine_regist( const gchar* key

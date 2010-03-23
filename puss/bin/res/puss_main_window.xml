@@ -121,7 +121,7 @@
     <property name="skip_taskbar_hint">true</property>
     <property name="skip_pager_hint">true</property>
     <property name="has_separator">false</property>
-    <signal handler="cb_search_dialog_delete" name="delete-event" />
+    <signal handler="gtk_widget_hide_on_delete" name="delete-event" />
 
     <child internal-child="vbox">
 

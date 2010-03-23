@@ -153,8 +153,3 @@ SIGNAL_CALLBACK gboolean cb_main_window_delete(GtkWidget *widget, GdkEvent *even
 	return !puss_doc_close_all();
 }
 
-SIGNAL_CALLBACK gboolean cb_search_dialog_delete(GtkWidget *widget, GdkEvent *event) {
-	gtk_widget_hide(widget);
-	return TRUE;
-}
-
