@@ -209,7 +209,11 @@ LuaExtend* puss_lua_extend_create(Puss* app) {
 		lua_setfield(L, -2, "path");
 		g_free(path);
 
+#ifdef G_OS_WIN32
+		path = g_strdup_printf( "./?.dll;%s/lua/?.dll", app->get_extends_path());
+#else
 		path = g_strdup_printf( "./?.so;%s/lua/?.so", app->get_extends_path());
+#endif
 		lua_pushstring(L, path);
 		lua_setfield(L, -2, "cpath");
 		g_free(path);
