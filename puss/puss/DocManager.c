@@ -28,17 +28,17 @@
 #include "OptionManager.h"
 
 #define PUSS_TYPE_TEXT_VIEW             (puss_text_view_get_type ())
-#define PUSS_TEXT_VIEW(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), PUSS_TYPE_TEXT_VIEW, PussTextView))
-#define PUSS_TEXT_VIEW_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), PUSS_TYPE_TEXT_VIEW, PussTextViewClass))
+#define PUSS_TEXT_VIEW(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), PUSS_TYPE_TEXT_VIEW, GtkPussTextView))
+#define PUSS_TEXT_VIEW_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), PUSS_TYPE_TEXT_VIEW, GtkPussTextViewClass))
 #define PUSS_IS_TEXT_VIEW(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), PUSS_TYPE_TEXT_VIEW))
 #define PUSS_IS_TEXT_VIEW_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), PUSS_TYPE_TEXT_VIEW))
-#define PUSS_TEXT_VIEW_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), PUSS_TYPE_TEXT_VIEW, PussTextViewClass))
+#define PUSS_TEXT_VIEW_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), PUSS_TYPE_TEXT_VIEW, GtkPussTextViewClass))
 
 
-typedef struct _PussTextView PussTextView;
-typedef struct _PussTextViewClass PussTextViewClass;
+typedef struct _GtkPussTextView GtkPussTextView;
+typedef struct _GtkPussTextViewClass GtkPussTextViewClass;
 
-struct _PussTextView {
+struct _GtkPussTextView {
 	GtkSourceView	parent;
 	
 #ifdef G_OS_WIN32
@@ -46,13 +46,13 @@ struct _PussTextView {
 #endif
 };
 
-struct _PussTextViewClass {
+struct _GtkPussTextViewClass {
 	GtkSourceViewClass parent_class;
 
-	void (*search)(PussTextView *view);
+	void (*search)(GtkPussTextView *view);
 };
 
-G_DEFINE_TYPE(PussTextView, puss_text_view, GTK_TYPE_SOURCE_VIEW)
+G_DEFINE_TYPE(GtkPussTextView, puss_text_view, GTK_TYPE_SOURCE_VIEW)
 
 /* Signals */
 enum {
@@ -70,13 +70,16 @@ static guint signals[LAST_SIGNAL] = { 0 };
 static MoveCursorFn parent_move_cursor_fn = 0;
 static ButtonPressFn parent_press_event_fn = 0;
 
-static void puss_text_view_search(PussTextView *view);
+static void puss_text_view_search(GtkPussTextView *view);
 
+#ifdef G_OS_WIN32
 	static gboolean puss_text_view_cb_init(GtkWidget* widget, GdkEvent* event);
+#endif
+
 static void puss_text_view_move_cursor(GtkTextView *view, GtkMovementStep step, gint count, gboolean extend_selection);
 static gint puss_text_view_button_press_event(GtkWidget *widget, GdkEventButton *event);
 
-static void puss_text_view_class_init(PussTextViewClass* klass) {
+static void puss_text_view_class_init(GtkPussTextViewClass* klass) {
 	GtkBindingSet* binding_set;
 	GtkTextViewClass* parent_class = GTK_TEXT_VIEW_CLASS(klass);
 	GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
@@ -92,7 +95,7 @@ static void puss_text_view_class_init(PussTextViewClass* klass) {
 	signals[PUSS_SEARCH] = g_signal_new( "puss_search"
 		, G_TYPE_FROM_CLASS(klass)
 		, G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION
-		, G_STRUCT_OFFSET(PussTextViewClass, search)
+		, G_STRUCT_OFFSET(GtkPussTextViewClass, search)
 		, NULL
 		, NULL
 		, gtk_marshal_VOID__VOID
@@ -118,7 +121,7 @@ static void doc_cb_move_focus(GtkWidget* widget, GtkDirectionType dir) {
 	}
 }
 
-static void puss_text_view_init(PussTextView* view) {
+static void puss_text_view_init(GtkPussTextView* view) {
 	GtkSourceView* sview = GTK_SOURCE_VIEW(view);
 	gtk_source_view_set_auto_indent(sview, TRUE);
 	gtk_source_view_set_highlight_current_line(sview, TRUE);
@@ -154,7 +157,7 @@ static void puss_text_view_init(PussTextView* view) {
 
 /* Constructors */
 static GtkWidget* puss_text_view_new_with_buffer(GtkSourceBuffer* buf) {
-	PussTextView* view = g_object_new(PUSS_TYPE_TEXT_VIEW, 0);
+	GtkPussTextView* view = g_object_new(PUSS_TYPE_TEXT_VIEW, 0);
 	gtk_text_view_set_buffer(GTK_TEXT_VIEW(view), GTK_TEXT_BUFFER(buf));
 	return GTK_WIDGET(view);
 }
@@ -162,7 +165,7 @@ static GtkWidget* puss_text_view_new_with_buffer(GtkSourceBuffer* buf) {
 #ifdef G_OS_WIN32
 
 	LRESULT CALLBACK __trackpoint_win32_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-		PussTextView* self = (PussTextView*)GetWindowLong(hwnd, GWL_USERDATA);
+		GtkPussTextView* self = (GtkPussTextView*)GetWindowLong(hwnd, GWL_USERDATA);
 		if( msg==WM_MOUSEWHEEL ) {
 			short delta = GET_WHEEL_DELTA_WPARAM(wparam);
 			int line = delta / WHEEL_DELTA;
@@ -184,7 +187,7 @@ static GtkWidget* puss_text_view_new_with_buffer(GtkSourceBuffer* buf) {
 	}
 
 	static gboolean puss_text_view_cb_init(GtkWidget* widget, GdkEvent* event) {
-		PussTextView* self = PUSS_TEXT_VIEW(widget);
+		GtkPussTextView* self = PUSS_TEXT_VIEW(widget);
 		GdkWindow* win = gtk_widget_get_window(widget);
 		HWND hwnd = GDK_WINDOW_HWND(win);
 		g_print("ss : %d\n", hwnd);
@@ -195,7 +198,7 @@ static GtkWidget* puss_text_view_new_with_buffer(GtkSourceBuffer* buf) {
 	}
 #endif
 
-static void puss_text_view_search(PussTextView *view) {
+static void puss_text_view_search(GtkPussTextView *view) {
 	gchar* text = 0;
 	GtkTextBuffer* buf;
 	GtkTextIter ps, pe;

@@ -138,20 +138,22 @@ static gboolean parse_function_common(ParseEnv* env, Block* block, MLToken* star
 	elem->sline = name->line;
 	elem->eline = block->tokens[block->count-1].line;
 	elem->v_fun.typekey = typekey;
+	elem->v_fun.nskey = 0;
 	typekey = 0;
 
-	if( nskey && ( (name->len==tiny_str_len(nskey)) || (!g_ascii_isalnum(name->buf[0])) ) ) {
+	if( nskey && name->len==tiny_str_len(nskey) ) {
 		elem->name = nskey;
 
-	} else {
+	} else if( g_ascii_isalnum(name->buf[0]) ) {
 		elem->name = tiny_str_new(name->buf, name->len);
 
 		if( nskey ) {
 			elem->v_fun.nskey = tiny_str_new(nskey->buf, tiny_str_len(nskey) - name->len - 1);
 			tiny_str_free(nskey);
-		} else {
-			elem->v_fun.nskey = nskey;
 		}
+
+	} else {
+		elem->name = tiny_str_new("@anonymous", 10);
 	}
 	nskey = 0;
 
@@ -214,14 +216,20 @@ gboolean cps_fun(ParseEnv* env, Block* block) {
 
 			err_goto_finish_if_not( ps < pe );
 			if( ps->type!=SG_DBL_COLON ) {
-				ps = fptrypos;
+				ps = fptrypos + 1;
 				break;
+			} else {
+				++ps;
 			}
 		}
 
-		if( ps->type=='*' && ((ps+1) < pe) && ((ps+1)->type==TK_ID) ) {
+		err_goto_finish_if_not( ps < pe );
+		if( ps->type=='*' ) {
 			// function pointer
-			name = ++ps;
+			if( ((ps+1) < pe) && ((ps+1)->type==TK_ID) )
+				name = ++ps;
+			else
+				name = ps;
 
 			++ps;
 			err_goto_finish_if_not( (ps < pe) && (ps->type==')') );
@@ -229,9 +237,7 @@ gboolean cps_fun(ParseEnv* env, Block* block) {
 	
 		} else {
 			// no return type function
-			err_goto_finish_if( typekey==0 || tiny_str_len(typekey)==0 );
-
-			if( block->parent->type!=CPP_ET_CLASS ) {
+			if( block->parent->type!=CPP_ET_CLASS && typekey && tiny_str_len(typekey)>0 ) {
 				TinyStr* str;
 				gsize typekey_len = tiny_str_len(typekey);
 				err_goto_finish_if_not( typekey_len > ps->len );
@@ -240,21 +246,16 @@ gboolean cps_fun(ParseEnv* env, Block* block) {
 				tiny_str_free(typekey);
 				typekey = str;
 				name = ps;
-			}
+				ps = fptrypos;
 
-			/*
-			if( name==ns ) {
-				// constructor
-
-			} else if( ns.size()==(name.size() + 1) && ns[0]=='~' && ns.compare(1, ns.size()-1, name)==0 ) {
-				// destructor
+			} else if( ps->type==TK_ID ) {
+				err_goto_finish_if( (ps = parse_id(ps, pe, &nskey, &name))==0 );
+				err_goto_finish_if( (ps+2) >= pe || ps->type!=')' || (ps+1)->type!='(' );
+				++ps;
 
 			} else {
-				throw_parse_error("Error when parse_function!");
+				ps = fptrypos;
 			}
-			*/
-
-			ps = fptrypos;
 		}
 
 	} else {
