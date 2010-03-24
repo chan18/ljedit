@@ -7,12 +7,9 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
-#include <gmodule.h>
-
 struct _LuaExtend {
 	Puss*			app;
 
-	GModule*		lgob;
 	lua_State*		L;
 };
 
