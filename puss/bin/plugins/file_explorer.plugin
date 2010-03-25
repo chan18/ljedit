@@ -1,0 +1,7 @@
+# puss plugin
+# 
+
+[plugin]
+name = file_explorer
+engine = lua
+description = file_explorer use lua
