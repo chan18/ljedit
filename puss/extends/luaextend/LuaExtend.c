@@ -472,7 +472,20 @@ static void init_lua_puss(lua_State* L) {
 
 	luaL_register(L, "puss", puss_luaextend);
 	luaL_register(L, NULL, _global);
-	luaL_dostring(L, "puss.plugins = {}");
+	luaL_dostring(L, "puss.plugins = {}\n"
+		"puss.safe_connect = function(obj, signal, fn, data, error_return_value)\n"
+		"	function wrapper(...)\n"
+		"		r, t = pcall(fn, ...)\n"
+		"		if r then\n"
+		"			return t\n"
+		"		else\n"
+		"			print('Lua Error:', t)\n"
+		"			return error_return_value\n"
+		"		end\n"
+		"	end\n"
+		"	return obj:connect(signal, wrapper, data)\n"
+		"end\n"
+	);
 }
 
 LuaExtend* puss_lua_extend_create(Puss* app) {

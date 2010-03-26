@@ -1,0 +1,7 @@
+# puss plugin
+# 
+
+[plugin]
+name = lua output
+engine = lua
+description = lua output panel
