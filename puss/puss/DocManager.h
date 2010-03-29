@@ -22,7 +22,7 @@ GtkTextBuffer*	puss_doc_get_buffer_from_page_num( gint page_num );
 
 gint			puss_doc_find_page_from_url( const gchar* url );
 
-void			puss_doc_new();
+gint			puss_doc_new();
 gboolean		puss_doc_open_locate(const gchar* url, FindLocation fun, gpointer tag, gboolean show_message_if_open_failed);
 gboolean		puss_doc_open(const gchar* url, gint line, gint line_offset, gboolean show_message_if_open_failed);
 gboolean		puss_doc_locate(gint page_num, gint line, gint line_offset, gboolean add_pos_locate );

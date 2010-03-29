@@ -127,23 +127,26 @@ static SeedValue js_wrapper_doc_find_page_from_url(SeedContext ctx, SeedObject f
 
 	if( argc != 1 ) {
 		seed_make_exception(ctx, e, "ArgumentError", "puss.doc_find_page_from_url expected 1 args");
-	} else {
-		url = seed_value_to_string(ctx, argv[0], e);
-		if( url ) {
-			res = g_self->app->doc_find_page_from_url(url);
-			g_free(url);
-		}
+		return seed_make_undefined(ctx);
+	}
+
+	url = seed_value_to_string(ctx, argv[0], e);
+	if( url ) {
+		res = g_self->app->doc_find_page_from_url(url);
+		g_free(url);
 	}
 	return seed_value_from_int(ctx, res, e);
 }
 
 static SeedValue js_wrapper_doc_new(SeedContext ctx, SeedObject fn, SeedObject self, gsize argc, const SeedValue argv[], SeedException* e) {
+	gint page_num = -1;
 	if( argc != 0 ) {
 		seed_make_exception(ctx, e, "ArgumentError", "puss.doc_new expected 0 args");
-	} else {
-		g_self->app->doc_new();
+		return seed_make_undefined(ctx);
 	}
-	return seed_make_undefined(ctx);
+
+	page_num = g_self->app->doc_new();
+	return seed_value_from_int(ctx, page_num, e);
 }
 
 static SeedValue js_wrapper_doc_open(SeedContext ctx, SeedObject fn, SeedObject self, gsize argc, const SeedValue argv[], SeedException* e) {

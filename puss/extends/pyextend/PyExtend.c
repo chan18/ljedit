@@ -162,9 +162,8 @@ static PyObject* py_wrapper_doc_find_page_from_url(PyObject* self, PyObject* arg
 }
 
 static PyObject* py_wrapper_doc_new(PyObject* self, PyObject* args) {
-	g_self->app->doc_new();
-	Py_INCREF(Py_None);
-	return Py_None;
+	gint page_num = g_self->app->doc_new();
+	return PyInt_FromLong((long)page_num);
 }
 
 static PyObject* py_wrapper_doc_open(PyObject* self, PyObject* args) {

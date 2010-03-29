@@ -190,7 +190,7 @@ static GtkWidget* puss_text_view_new_with_buffer(GtkSourceBuffer* buf) {
 		GtkPussTextView* self = PUSS_TEXT_VIEW(widget);
 		GdkWindow* win = gtk_widget_get_window(widget);
 		HWND hwnd = GDK_WINDOW_HWND(win);
-		g_print("ss : %d\n", hwnd);
+		// g_print("ss : %d\n", hwnd);
 		SetWindowLong(hwnd, GWL_USERDATA, (LONG)self);
 		self->old_proc = (WNDPROC)GetWindowLong(hwnd, GWL_WNDPROC);
 		self->old_proc = (WNDPROC)SetWindowLong(hwnd, GWL_WNDPROC, (LONG)__trackpoint_win32_proc);
@@ -884,7 +884,7 @@ gint puss_doc_find_page_from_url( const gchar* url ) {
 	return -1;
 }
 
-void puss_doc_new() {
+gint puss_doc_new() {
 	gint page_num;
 	GtkSourceBuffer* buf = gtk_source_buffer_new(0);
 	puss_doc_set_charset(GTK_TEXT_BUFFER(buf), "UTF-8");
@@ -892,7 +892,10 @@ void puss_doc_new() {
 	puss_pos_locate_add_current_pos();
 	page_num = doc_open_page(buf, TRUE);
 	puss_pos_locate_add(page_num, 0, 0);
+
+	return page_num;
 }
+
 gboolean puss_doc_open_locate( const gchar* url, FindLocation fun, gpointer tag, gboolean show_message_if_open_failed ) {
 	gint res;
 	GtkWidget* dlg;

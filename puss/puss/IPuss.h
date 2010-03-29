@@ -66,7 +66,7 @@ struct _Puss {
 
 	gint			(*doc_find_page_from_url)( const gchar* url );
 
-	void			(*doc_new)();
+	gint			(*doc_new)();
 	gboolean		(*doc_open)(const gchar* url, gint line, gint line_offset, gboolean show_message_if_open_failed );
 	gboolean		(*doc_open_locate)(const gchar* url, FindLocation fun, gpointer tag, gboolean show_message_if_open_failed );
 	gboolean		(*doc_locate)( gint page_num, gint line, gint line_offset, gboolean add_pos_locate );

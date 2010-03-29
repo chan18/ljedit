@@ -57,7 +57,7 @@ $(TARGET) : win32/boot.c puss.rc puss.ico
 ifeq ($(BUILD), release)
 	gcc -O3 -Wall -mwindows -o $@ $< puss_res.o
 else
-	gcc -g -Wall -D_DEBUG -mwindows -o $@ $< puss_res.o
+	gcc -g -Wall -D_DEBUG -o $@ $< puss_res.o
 endif
 
 $(PUSS_DLL) : $(OBJS)

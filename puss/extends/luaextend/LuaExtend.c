@@ -271,8 +271,9 @@ static int lua_wrapper_doc_find_page_from_url(lua_State* L) {
 }
 
 static int lua_wrapper_doc_new(lua_State* L) {
-	g_self->app->doc_new();
-	return 0;
+	gint page_num = g_self->app->doc_new();
+	lua_pushinteger(L, page_num);
+	return 1;
 }
 
 static int lua_wrapper_doc_open(lua_State* L) {

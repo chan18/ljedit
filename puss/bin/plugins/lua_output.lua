@@ -2,152 +2,9 @@ require("lgob.gobject")
 require("lgob.gtk")
 require("lgob.gtksourceview")
 
-local UI = [[
-<interface>
-  <object class="GtkHBox" id="panel">
-    <property name="visible">True</property>
-    <child>
-      <object class="GtkVBox" id="vbox1">
-        <property name="visible">True</property>
-        <property name="orientation">vertical</property>
-        <child>
-          <object class="GtkButton" id="run_button">
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="has_focus">True</property>
-            <property name="is_focus">True</property>
-            <property name="can_default">True</property>
-            <property name="has_default">True</property>
-            <property name="receives_default">True</property>
-            <child>
-              <object class="GtkVBox" id="vbox2">
-                <property name="visible">True</property>
-                <property name="orientation">vertical</property>
-                <child>
-                  <object class="GtkImage" id="image1">
-                    <property name="visible">True</property>
-                    <property name="stock">gtk-media-play</property>
-                    <property name="icon-size">6</property>
-                  </object>
-                  <packing>
-                    <property name="position">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkLabel" id="label1">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">run</property>
-                  </object>
-                  <packing>
-                    <property name="position">1</property>
-                  </packing>
-                </child>
-              </object>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">False</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-      </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="fill">False</property>
-        <property name="padding">3</property>
-        <property name="position">0</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkScrolledWindow" id="scrolledwindow1">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="hscrollbar_policy">automatic</property>
-        <property name="vscrollbar_policy">automatic</property>
-        <property name="shadow_type">in</property>
-        <child>
-          <object class="GtkTextView" id="view">
-            <property name="visible">True</property>
-            <property name="editable">False</property>
-            <property name="cursor_visible">False</property>
-            <property name="buffer">buffer</property>
-          </object>
-        </child>
-      </object>
-      <packing>
-        <property name="padding">2</property>
-        <property name="position">1</property>
-      </packing>
-    </child>
-  </object>
-  <object class="GtkTextBuffer" id="buffer"/>
-</interface>
-]]
-
 local self = {}
 
-function trace(...)
-	local text = ''
-	for k,v in ipairs({...}) do
-		if text=='' then
-			text = tostring(v)
-		else
-			text = text .. ' ' .. tostring(v)
-		end
-	end
-	self.buffer:insert_at_cursor(text, #text)
-	self.buffer:insert_at_cursor('\n', 1)
-end
-
-function dump(t)
-	local text = ''
-	for i,v in pairs(t) do
-		-- TODO : different color key
-		text = text .. i .. ' : ' .. tostring(v) .. '\n'
-	end
-	self.buffer:insert_at_cursor(text, #text)
-	self.buffer:insert_at_cursor('\n', 1)
-end
-
-function on_run_button_clicked()
-	local doc_panel = puss.get_ui_builder():get_object('doc_panel')
-	local page_num = doc_panel:get_current_page()
-	if page_num < 0 then
-		trace('need lua file opened!')
-		return
-	end
-
-	local buf = puss.doc_get_buffer_from_page_num(page_num);
-	local text = buf:get('text')
-
-	self.buffer:set('text', '')
-	fn = loadstring(text, 'lua')
-
-	trace('-- run start')
-	r, t = pcall(fn)
-	if r then
-		trace('-- run succeed')
-	else
-		trace(t)
-		trace('-- run failed')
-	end
-end
-
-self.active = function()
-	-- self.test()
-
-	local builder = gtk.Builder.new()
-	builder:add_from_string(UI, #UI)
-	local run_button = builder:get_object('run_button')
-	puss.safe_connect(run_button, 'clicked', on_run_button_clicked)
-	self.panel = builder:get_object('panel')
-	self.view  = builder:get_object('view')
-	self.buffer  = builder:get_object('buffer')
-	self.panel:show_all()
-	puss.panel_append(self.panel, gtk.Label.new('LuaOutput'), "lua_output_plugin_panel", 3)
-
-	trace([[-- Welcome to use lua output plugin!
+self.TIPS = [[-- Welcome to use lua output plugin!
 -- usage :
 --    press <<run>> button to run current file as lua script
 -- globals :
@@ -169,11 +26,90 @@ self.active = function()
 --			end
 --			return obj:connect(signal, wrapper, data)
 --		end
-	]])
+]]
+
+self.trace = function(...)
+	local text = ''
+	for k,v in ipairs(arg) do
+		if text=='' then
+			text = tostring(v)
+		else
+			text = text .. ' ' .. tostring(v)
+		end
+	end
+	self.buffer:insert_at_cursor(text, #text)
+	self.buffer:insert_at_cursor('\n', 1)
+end
+
+self.dump = function(t)
+	local text = ''
+	for i,v in pairs(t) do
+		-- TODO : different color key
+		text = text .. i .. ' : ' .. tostring(v) .. '\n'
+	end
+	self.buffer:insert_at_cursor(text, #text)
+	self.buffer:insert_at_cursor('\n', 1)
+end
+
+self.on_run_button_clicked = function()
+	local doc_panel = puss.get_ui_builder():get_object('doc_panel')
+	local page_num = doc_panel:get_current_page()
+	if page_num < 0 then
+		self.trace('need lua file opened!')
+		return
+	end
+
+	local buf = puss.doc_get_buffer_from_page_num(page_num);
+	local text = buf:get('text')
+
+	self.buffer:set('text', '')
+	fn = loadstring(text)
+
+	self.trace('-- run start')
+	r, t = pcall(fn)
+	if r then
+		self.trace('-- run succeed')
+	else
+		self.trace(t)
+		self.trace('-- run failed')
+	end
+end
+
+self.on_new_button_clicked = function()
+	local page_num = puss.doc_new()
+	local lang = gtk.source_language_manager_get_default():get_language('lua')
+	local buffer = puss.doc_get_buffer_from_page_num(page_num)
+	buffer:set_language(lang)
+	buffer:set('text', self.TIPS)
+end
+
+self.active = function()
+	-- self.test()
+
+	local builder = gtk.Builder.new()
+	local ui_file = puss.get_plugins_path() .. '/lua_output.glade'
+	builder:add_from_file(ui_file)
+
+	local run_button = builder:get_object('run_button')
+	local new_lua_file_button = builder:get_object('new_lua_file_button')
+	puss.safe_connect(run_button, 'clicked', self.on_run_button_clicked)
+	puss.safe_connect(new_lua_file_button, 'clicked', self.on_new_button_clicked)
+	self.panel = builder:get_object('panel')
+	self.view  = builder:get_object('view')
+	self.buffer  = builder:get_object('buffer')
+	self.panel:show_all()
+	puss.panel_append(self.panel, gtk.Label.new('LuaOutput'), "lua_output_plugin_panel", 3)
+
+	_G.trace = _G.trace or self.trace
+	_G.dump = _G.dump or self.dump
+
+	self.trace(self.TIPS)
 end
 
 self.deactive = function()
 	puss.panel_remove(self.panel)
+	if _G.trace==self.trace then _G.trace = nil end
+	if _G.dump==self.dump then _G.dump = nil end
 end
 
 return self
