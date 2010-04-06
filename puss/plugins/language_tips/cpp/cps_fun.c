@@ -153,6 +153,8 @@ static gboolean parse_function_common(ParseEnv* env, Block* block, MLToken* star
 		}
 
 	} else {
+		// TODO : operators not @anonymous
+
 		elem->name = tiny_str_new("@anonymous", 10);
 	}
 	nskey = 0;

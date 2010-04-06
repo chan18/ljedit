@@ -190,10 +190,11 @@ static GtkWidget* puss_text_view_new_with_buffer(GtkSourceBuffer* buf) {
 		GtkPussTextView* self = PUSS_TEXT_VIEW(widget);
 		GdkWindow* win = gtk_widget_get_window(widget);
 		HWND hwnd = GDK_WINDOW_HWND(win);
+		// NOTICE : not work on gtk+-2.20, now not use this
 		// g_print("ss : %d\n", hwnd);
-		SetWindowLong(hwnd, GWL_USERDATA, (LONG)self);
-		self->old_proc = (WNDPROC)GetWindowLong(hwnd, GWL_WNDPROC);
-		self->old_proc = (WNDPROC)SetWindowLong(hwnd, GWL_WNDPROC, (LONG)__trackpoint_win32_proc);
+		// SetWindowLong(hwnd, GWL_USERDATA, (LONG)self);
+		// self->old_proc = (WNDPROC)GetWindowLong(hwnd, GWL_WNDPROC);
+		// self->old_proc = (WNDPROC)SetWindowLong(hwnd, GWL_WNDPROC, (LONG)__trackpoint_win32_proc);
 		return TRUE;
 	}
 #endif
