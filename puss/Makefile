@@ -6,7 +6,7 @@
 # 
 
 EXTS = $(wildcard extends/*)
-PLGS = $(wildcard plugins/*)
+PLGS = $(wildcard plugins/*) 
 
 all : .puss .extends .plugins
 

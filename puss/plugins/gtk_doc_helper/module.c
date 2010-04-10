@@ -227,7 +227,7 @@ static void search_gtk_doc_symbol_active(GtkAction* action, GtkDocHelper* self) 
 		return;
 
 	// get current word
-	gtk_text_buffer_get_iter_at_mark(buf, &ps, gtk_text_buffer_get_insert(buf));
+	gtk_text_buffer_get_iter_at_mark(buf, &ps, gtk_text_buffer12q34erff vg_get_insert(buf));
 	if( gtk_text_iter_is_end(&ps) )
 		return;
 
@@ -371,7 +371,7 @@ static const gchar* setup_ui_info =
 	"	  </packing>"
 	"	</child>"
 	"	<child>"
-	"	  <object class='GtkLabel' id='gtk_doc_path_label'>"
+	"	  <object class='GtkLabel' id='gtk_doc_path_label_tip'>"
 	"		<property name='label' translatable='yes'>e.g. (/usr/share/gtk-doc/html)</property>"
 	"	  </object>"
 	"	  <packing>"
@@ -447,7 +447,7 @@ static GtkWidget* create_setup_ui(GtkDocHelper* self) {
 	}
 
 	g_object_unref(G_OBJECT(builder));
-
+	gtk_widget_show_all(panel);
 	return panel;
 }
 
