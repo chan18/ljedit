@@ -134,7 +134,7 @@ static void parse_gtk_doc_module(GtkDocHelper* self, const gchar* gtk_doc_path) 
 
 typedef struct {
 	GtkDocHelper*	self;
-	const gchar*	key;
+	gchar*			key;
 
 	const gchar*	res_path;
 	const gchar*	res_pos;
@@ -227,7 +227,7 @@ static void search_gtk_doc_symbol_active(GtkAction* action, GtkDocHelper* self) 
 		return;
 
 	// get current word
-	gtk_text_buffer_get_iter_at_mark(buf, &ps, gtk_text_buffer12q34erff vg_get_insert(buf));
+	gtk_text_buffer_get_iter_at_mark(buf, &ps, gtk_text_buffer_get_insert(buf));
 	if( gtk_text_iter_is_end(&ps) )
 		return;
 
@@ -321,77 +321,6 @@ static void destroy_ui(GtkDocHelper* self) {
 	gtk_ui_manager_ensure_update(ui_mgr);
 }
 
-static const gchar* setup_ui_info =
-	"<interface>"
-	"  <object class='GtkTable' id='main_panel'>"
-	"	<property name='n_rows'>4</property>"
-	"	<property name='n_columns'>2</property>"
-	"	<property name='column_spacing'>5</property>"
-	"	<property name='row_spacing'>20</property>"
-	"	<child>"
-	"	  <object class='GtkFileChooserButton' id='web_browser_file_button'/>"
-	"	  <packing>"
-	"		<property name='left_attach'>1</property>"
-	"		<property name='right_attach'>2</property>"
-	"		<property name='top_attach'>0</property>"
-	"		<property name='bottom_attach'>1</property>"
-	"		<property name='y_options'>GTK_FILL</property>"
-	"	  </packing>"
-	"	</child>"
-	"	<child>"
-	"	  <object class='GtkLabel' id='web_browser_label'>"
-	"		<property name='label' translatable='yes'>web browser</property>"
-	"	  </object>"
-	"	  <packing>"
-	"		<property name='top_attach'>0</property>"
-	"		<property name='bottom_attach'>1</property>"
-	"		<property name='y_options'>GTK_FILL</property>"
-	"	  </packing>"
-	"	</child>"
-	"	<child>"
-	"	  <object class='GtkFileChooserButton' id='gtk_doc_path_button'>"
-	"       <property name='action'>GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER</property>"
-	"     </object>"
-	"	  <packing>"
-	"		<property name='left_attach'>1</property>"
-	"		<property name='right_attach'>2</property>"
-	"		<property name='top_attach'>1</property>"
-	"		<property name='bottom_attach'>2</property>"
-	"		<property name='y_options'>GTK_FILL</property>"
-	"	  </packing>"
-	"	</child>"
-	"	<child>"
-	"	  <object class='GtkLabel' id='gtk_doc_path_label'>"
-	"		<property name='label' translatable='yes'>gtk-doc path</property>"
-	"	  </object>"
-	"	  <packing>"
-	"		<property name='top_attach'>1</property>"
-	"		<property name='bottom_attach'>2</property>"
-	"		<property name='y_options'>GTK_FILL</property>"
-	"	  </packing>"
-	"	</child>"
-	"	<child>"
-	"	  <object class='GtkLabel' id='gtk_doc_path_label_tip'>"
-	"		<property name='label' translatable='yes'>e.g. (/usr/share/gtk-doc/html)</property>"
-	"	  </object>"
-	"	  <packing>"
-	"		<property name='left_attach'>1</property>"
-	"		<property name='right_attach'>2</property>"
-	"		<property name='top_attach'>2</property>"
-	"		<property name='bottom_attach'>3</property>"
-	"		<property name='y_options'>GTK_FILL</property>"
-	"	  </packing>"
-	"	</child>"
-	"	<child>"
-	"	  <placeholder/>"
-	"	</child>"
-	"	<child>"
-	"	  <placeholder/>"
-	"	</child>"
-	"  </object>"
-	"</interface>"
-	;
-
 static const gchar* TARGET_OPTION_KEY = "target_option";
 
 static void cb_file_set(GtkFileChooserButton *widget, GtkDocHelper* self) {
@@ -404,6 +333,7 @@ static void cb_file_set(GtkFileChooserButton *widget, GtkDocHelper* self) {
 }
 
 static GtkWidget* create_setup_ui(GtkDocHelper* self) {
+	gchar* filename;
 	GtkBuilder* builder;
 	GtkWidget* panel;
 	GtkWidget* w;
@@ -416,7 +346,10 @@ static GtkWidget* create_setup_ui(GtkDocHelper* self) {
 		return 0;
 	gtk_builder_set_translation_domain(builder, TEXT_DOMAIN);
 
-	gtk_builder_add_from_string(builder, setup_ui_info, -1, &err);
+	filename = g_build_filename(self->app->get_plugins_path(), "gtk_doc_helper_setup.ui", 0);
+	gtk_builder_add_from_file(builder, filename, &err);
+	g_free(filename);
+
 	if( err ) {
 		g_printerr("ERROR(gtk_doc_helper): %s\n", err->message);
 		g_error_free(err);
@@ -472,7 +405,7 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 #endif
 			);
 
-		self->option_monitor_web_browser = app->option_monitor_reg(option, &parse_web_browser_option, self, 0);
+		self->option_monitor_web_browser = app->option_monitor_reg(option, (OptionChanged)parse_web_browser_option, self, 0);
 		parse_web_browser_option(option, 0, self);
 	}
 
@@ -486,14 +419,14 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 #endif
 			);
 
-		self->option_monitor_gtk_doc_path = app->option_monitor_reg(option, &parse_gtk_doc_path_option, self, 0);
+		self->option_monitor_gtk_doc_path = app->option_monitor_reg(option, (OptionChanged)parse_gtk_doc_path_option, self, 0);
 		parse_gtk_doc_path_option(option, 0, self);
 	}
 
 	// UI
 	create_ui(self);
 
-	app->option_setup_reg("gtk_doc_helper", _("gtk-doc helper"), create_setup_ui, self, 0);
+	app->option_setup_reg("gtk_doc_helper", _("gtk-doc helper"), (CreateSetupWidget)create_setup_ui, self, 0);
 
 	return self;
 }
