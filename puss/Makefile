@@ -5,19 +5,14 @@
 #     build release version : make BUILD=release
 # 
 
-EXTS = $(wildcard extends/*)
-PLGS = $(wildcard plugins/*) 
+PROJECTS = puss \
+	$(wildcard extends/*) \
+	$(wildcard plugins/*)
 
-all : .puss .extends .plugins
+all : $(PROJECTS:%=.project/%)
 
-.puss :
-	@make -Cpuss BUILD=$(BUILD);
-
-.extends :
-	@for ext in $(EXTS); do make -C$$ext BUILD=$(BUILD); done
-
-.plugins :
-	@for plg in $(PLGS); do make -C$$plg BUILD=$(BUILD); done
+.project/% : %
+	-make BUILD=$(BUILD) -C$<
 
 strip:
 	@for ext in $(wildcard bin/extends/*.ext); do strip $$ext; done
