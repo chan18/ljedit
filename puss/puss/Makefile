@@ -10,17 +10,26 @@
 # 
 
 ifeq ($(OS), Windows_NT)
-	PLATFORM = win32
+	EXE_SUFFIX = .exe
 endif
 
 CC = gcc
 
+TARGET_PATH = ../bin
 ifeq ($(BUILD), release)
 	CFLAGS = -O3 -Wall
+	ifeq ($(OS), Windows_NT)
+		CFLAGS += -mwindows
+	endif
 	OBJPATH = release
+	TARGET = $(TARGET_PATH)/puss$(EXE_SUFFIX)
 else
 	CFLAGS = -g -Wall -D_DEBUG
 	OBJPATH = debug
+	TARGET = $(TARGET_PATH)/puss_d$(EXE_SUFFIX)
+	ifneq ($(OS), Windows_NT)
+		LIBS += -ldl
+	endif
 endif
 
 # gtk & gtksourceview & gthread
@@ -38,56 +47,23 @@ SRCS = $(wildcard *.c)
 
 OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)
 
-TARGET_PATH = ../bin
-
-ifeq ($(PLATFORM), win32)
-	ifeq ($(BUILD), release)
-		TARGET = $(TARGET_PATH)/puss.exe
-		PUSS_DLL = $(TARGET_PATH)/_puss.dll
-		LDFLAGS = -mwindows
-	else
-		TARGET = $(TARGET_PATH)/puss_d.exe
-		PUSS_DLL = $(TARGET_PATH)/_puss_d.dll
-	endif
-
-all : $(TARGET) $(PUSS_DLL) $(TARGET_PATH)/include/IPuss.h
-
-$(TARGET) : win32/boot.c puss.rc puss.ico
-	windres -i puss.rc -J rc -o puss_res.o -O coff --include-dir=./
-ifeq ($(BUILD), release)
-	gcc -O3 -Wall -mwindows -o $@ $< puss_res.o
-else
-	gcc -g -Wall -D_DEBUG -o $@ $< puss_res.o
+ifeq ($(OS), Windows_NT)
+	OBJS += puss_res.o
 endif
-
-$(PUSS_DLL) : $(OBJS)
-	$(CC) $(CFLAGS) -shared -o $@ $^ $(LIBS)
-
-clean :
-
-else
-	LIBS += -ldl
-	ifeq ($(BUILD), release)
-		TARGET = $(TARGET_PATH)/puss
-	else
-		TARGET = $(TARGET_PATH)/puss_d
-	endif
 
 all : $(TARGET) $(TARGET_PATH)/include/IPuss.h
 
 $(TARGET) : $(OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-endif
-
 $(TARGET_PATH)/include/IPuss.h : IPuss.h
 	cp -f $< $@
 
+puss_res.o : puss.rc puss.ico
+	windres -i puss.rc -J rc -o puss_res.o -O coff --include-dir=./
+
 clean :
 	rm -f $(TARGET)
-ifeq ($(PLATFORM), win32)
-	rm -f $(PUSS_DLL)
-endif
 	rm -f $(TARGET_PATH)/include/IPuss.h
 	rm -rf $(OBJPATH)
 

@@ -19,8 +19,6 @@
 		return g_locale_to_utf8(buf, len, NULL, NULL, NULL);
 	}
 
-	PUSS_EXPORT int main(int argc, char* argv[]);
-
 #else
 	gchar* find_module_filepath(const char* argv0) {
 		gchar* pwd;
