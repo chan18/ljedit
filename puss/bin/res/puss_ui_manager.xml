@@ -149,7 +149,7 @@
         <child>
           <object class="GtkRadioAction" id="view_menu_doc_page_2">
             <property name="value">2</property>
-            <property name="active">true</property>
+            <property name="group">view_menu_doc_page_1</property>
             <property name="label" translatable="yes">Document Page 2</property>
             <signal handler="view_menu_doc_page_n" name="activate"/>
           </object>
@@ -158,7 +158,7 @@
         <child>
           <object class="GtkRadioAction" id="view_menu_doc_page_3">
             <property name="value">3</property>
-            <property name="active">true</property>
+            <property name="group">view_menu_doc_page_1</property>
             <property name="label" translatable="yes">Document Page 3</property>
             <signal handler="view_menu_doc_page_n" name="activate"/>
           </object>
@@ -167,7 +167,7 @@
         <child>
           <object class="GtkRadioAction" id="view_menu_doc_page_4">
             <property name="value">4</property>
-            <property name="active">true</property>
+            <property name="group">view_menu_doc_page_1</property>
             <property name="label" translatable="yes">Document Page 4</property>
             <signal handler="view_menu_doc_page_n" name="activate"/>
           </object>
@@ -176,7 +176,7 @@
         <child>
           <object class="GtkRadioAction" id="view_menu_doc_page_5">
             <property name="value">5</property>
-            <property name="active">true</property>
+            <property name="group">view_menu_doc_page_1</property>
             <property name="label" translatable="yes">Document Page 5</property>
             <signal handler="view_menu_doc_page_n" name="activate"/>
           </object>
@@ -185,7 +185,7 @@
         <child>
           <object class="GtkRadioAction" id="view_menu_doc_page_6">
             <property name="value">6</property>
-            <property name="active">true</property>
+            <property name="group">view_menu_doc_page_1</property>
             <property name="label" translatable="yes">Document Page 6</property>
             <signal handler="view_menu_doc_page_n" name="activate"/>
           </object>
@@ -194,7 +194,7 @@
         <child>
           <object class="GtkRadioAction" id="view_menu_doc_page_7">
             <property name="value">7</property>
-            <property name="active">true</property>
+            <property name="group">view_menu_doc_page_1</property>
             <property name="label" translatable="yes">Document Page 7</property>
             <signal handler="view_menu_doc_page_n" name="activate"/>
           </object>
@@ -203,7 +203,7 @@
         <child>
           <object class="GtkRadioAction" id="view_menu_doc_page_8">
             <property name="value">8</property>
-            <property name="active">true</property>
+            <property name="group">view_menu_doc_page_1</property>
             <property name="label" translatable="yes">Document Page 8</property>
             <signal handler="view_menu_doc_page_n" name="activate"/>
           </object>
@@ -212,7 +212,7 @@
         <child>
           <object class="GtkRadioAction" id="view_menu_doc_page_9">
             <property name="value">9</property>
-            <property name="active">true</property>
+            <property name="group">view_menu_doc_page_1</property>
             <property name="label" translatable="yes">Document Page 9</property>
             <signal handler="view_menu_doc_page_n" name="activate"/>
           </object>
