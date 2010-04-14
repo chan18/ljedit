@@ -46,7 +46,7 @@ gboolean cps_class(ParseEnv* env, Block* block) {
 	elem->type = CPP_ET_CLASS;
 	elem->file = env->file;
 	elem->sline = line;
-	elem->eline = pe->line;
+	elem->eline = block->tokens[block->count-1].line;
 
 	if( name ) {
 		if( name->len == tiny_str_len(nskey) ) {
