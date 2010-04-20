@@ -33,7 +33,7 @@ gboolean cps_namespace(ParseEnv* env, Block* block) {
 		elem->eline = block->tokens[block->count-1].line;
 		elem->decl = tiny_str_new(0, 10 + name->len);
 		memcpy(elem->decl->buf, "namesapce ", 10);
-		memcpy(elem->decl->buf + 8, name->buf, name->len);
+		memcpy(elem->decl->buf + 10, name->buf, name->len);
 
 		cpp_scope_insert(block->parent, elem);
 	}

@@ -144,6 +144,10 @@ static gboolean parse_function_common(ParseEnv* env, Block* block, MLToken* star
 	if( nskey && name->len==tiny_str_len(nskey) ) {
 		elem->name = nskey;
 
+	} else if( name->type==KW_OPERATOR ) {
+		parse_ns(name, pe, &(elem->name), 0);
+		err_goto_finish_if( elem->name==0 );
+
 	} else if( g_ascii_isalnum(name->buf[0]) ) {
 		elem->name = tiny_str_new(name->buf, name->len);
 
@@ -153,8 +157,6 @@ static gboolean parse_function_common(ParseEnv* env, Block* block, MLToken* star
 		}
 
 	} else {
-		// TODO : operators not @anonymous
-
 		elem->name = tiny_str_new("@anonymous", 10);
 	}
 	nskey = 0;

@@ -75,7 +75,7 @@ MLToken* skip_pair_brace_bracket(MLToken* ps, MLToken* pe);
 //  std::list<int>::iterator
 //      => [std, list, iterator]
 //
-MLToken* parse_ns(MLToken* ps, MLToken* pe, TinyStr** ns);
+MLToken* parse_ns(MLToken* ps, MLToken* pe, TinyStr** ns, MLToken** name_token);
 MLToken* parse_datatype(MLToken* ps, MLToken* pe, TinyStr** ns, gint* dt);
 MLToken* parse_ptr_ref(MLToken* ps, MLToken* pe, gint* dt);
 MLToken* parse_id(MLToken* ps, MLToken* pe, TinyStr** ns, MLToken** name_token);

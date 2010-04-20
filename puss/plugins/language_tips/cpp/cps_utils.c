@@ -137,7 +137,7 @@ MLToken* skip_pair_brace_bracket(MLToken* ps, MLToken* pe) {
 	return ps;
 }
 
-MLToken* parse_ns(MLToken* ps, MLToken* pe, TinyStr** ns) {
+MLToken* parse_ns(MLToken* ps, MLToken* pe, TinyStr** ns, MLToken** name_token) {
 	gchar buf[MAX_RESULT_LENGTH];
 	gchar* p = buf;
 	gchar* end = buf + MAX_RESULT_LENGTH;
@@ -159,8 +159,13 @@ MLToken* parse_ns(MLToken* ps, MLToken* pe, TinyStr** ns) {
 			p += (ps-1)->len;
 			memcpy(p, ps->buf, ps->len);
 			p += ps->len;
+			if( name_token )
+				*name_token = ps;
 
 		} else if( ps->type==KW_OPERATOR ) {
+			if( name_token )
+				*name_token = ps;
+
 			err_return_null_if_not( (p + ps->len) < end );
 			memcpy(p, ps->buf, ps->len);
 			p += ps->len;
@@ -208,6 +213,9 @@ MLToken* parse_ns(MLToken* ps, MLToken* pe, TinyStr** ns) {
 
 			err_return_null_if_not( ps->type==TK_ID );
 			err_return_null_if_not( (p + ps->len) < end );
+			if( name_token )
+				*name_token = ps;
+
 			memcpy(p, ps->buf, ps->len);
 			p += ps->len;
 		}
@@ -266,7 +274,7 @@ MLToken* parse_datatype(MLToken* ps, MLToken* pe, TinyStr** ns, gint* dt) {
 			// not use break;
 
 		case SG_DBL_COLON:
-			ps = parse_ns(ps, pe, ns);
+			ps = parse_ns(ps, pe, ns, 0);
 			if( !ps )
 				err_trace("parse ns error when parse datatype!");
 			return ps;
@@ -282,7 +290,7 @@ MLToken* parse_datatype(MLToken* ps, MLToken* pe, TinyStr** ns, gint* dt) {
 
 			++ps;
 			if( ps<pe && ps->type==TK_ID ) {
-				ps = parse_ns(ps, pe, ns);
+				ps = parse_ns(ps, pe, ns, 0);
 				if( !ps )
 					err_trace("parse ns error when parse datatype!");
 				return ps;
@@ -325,10 +333,10 @@ MLToken* parse_ptr_ref(MLToken* ps, MLToken* pe, gint* dt) {
 }
 
 MLToken* parse_id(MLToken* ps, MLToken* pe, TinyStr** ns, MLToken** name_token) {
-	ps = parse_ns(ps, pe, ns);
+	ps = parse_ns(ps, pe, ns, name_token);
 	if( ps ) {
 		if( name_token )
-			*name_token = (ps - 1);
+			g_assert( *name_token );
 	} else {
 		err_trace("parse ns error when parse id!");
 	}

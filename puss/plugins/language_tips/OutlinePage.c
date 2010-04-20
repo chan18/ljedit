@@ -71,6 +71,8 @@ static void locate_line(LanguageTips* self, size_t line, GtkTreeIter* parent) {
 
 static void outline_set_file(LanguageTips* self, CppFile* file, gint line) {
 	if( file != self->outline_file ) {
+		self->outline_pos = -1;	// reset outline_pos
+
 		gtk_tree_view_set_model(self->outline_view, 0);
 		gtk_tree_store_clear(self->outline_store);
 
