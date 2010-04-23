@@ -223,7 +223,7 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 			if( spliter->pos==1 )
 				fn = cps_label;
 			else
-				fn = cps_skip_block;
+				fn = cps_var;
 			break;
 		case '<':
 			if( !spliter_skip_pair_angle_bracket(spliter) )
