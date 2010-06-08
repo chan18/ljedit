@@ -52,7 +52,7 @@ gboolean cps_var(ParseEnv* env, Block* block) {
 
 		if( ps < pe ) {
 			if( ps->type==':' )			// int a:32;
-				;	// parse bit number if need
+				; // parse num if need, now ignore
 
 			else if( ps->type=='[' )	// int a[]
 				err_goto_finish_if( (ps = skip_pair_square_bracket(ps+1, pe))==0 );

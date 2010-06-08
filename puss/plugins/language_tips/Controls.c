@@ -970,7 +970,9 @@ static void view_on_im_commit(GtkIMContext *cxt, gchar* str, LanguageTips* self)
 			if( sign )
 				tips_decl_tip_hide(self);
 
-		} else if( tips_list_is_visible(self) ) {
+		}
+
+		if( tips_list_is_visible(self) ) {
 			gboolean sign = FALSE;
 
 			if( last_input=='_' || g_unichar_isalnum(last_input) )
