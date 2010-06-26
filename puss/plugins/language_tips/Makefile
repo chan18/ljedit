@@ -1,6 +1,6 @@
 # makefile
 
-TARGET_NAME = language_tips
+TARGET_NAME = language_tips/language_tips
 
 SRCS += $(wildcard cpp/*.c)
 

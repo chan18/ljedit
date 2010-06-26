@@ -29,7 +29,7 @@ static GdkPixbuf* tips_icon_load(const gchar* plugin_path, const gchar* name) {
 	GdkPixbuf* icon = 0;
 
 	if( name ) {
-		filepath = g_build_filename(plugin_path, "language_tips_res", name, NULL);
+		filepath = g_build_filename(plugin_path, "language_tips", name, NULL);
 		icon = gdk_pixbuf_new_from_file(filepath, NULL);
 		if( !icon )
 			g_critical(_("* ERROR : language_tips load icon(%s) failed!\n"), filepath);
@@ -173,7 +173,7 @@ static GtkWidget* create_setup_normal_ui(LanguageTips* self) {
 	GtkButton* button;
 	gchar* setup_filename;
 
-	setup_filename = g_build_filename(self->app->get_plugins_path(), "language_tips_res", "setup_normal.ui", NULL);
+	setup_filename = g_build_filename(self->app->get_plugins_path(), "language_tips", "setup_normal.ui", NULL);
 	if( !setup_filename )
 		return 0;
 
@@ -228,7 +228,7 @@ static GtkWidget* create_setup_path_ui(LanguageTips* self) {
 	const Option* option;
 	gchar* setup_filename;
 
-	setup_filename = g_build_filename(self->app->get_plugins_path(), "language_tips_res", "setup_path.ui", NULL);
+	setup_filename = g_build_filename(self->app->get_plugins_path(), "language_tips", "setup_path.ui", NULL);
 	if( !setup_filename )
 		return 0;
 
@@ -327,7 +327,7 @@ void ui_create(LanguageTips* self) {
 
 	gtk_builder_set_translation_domain(builder, TEXT_DOMAIN);
 
-	filepath = g_build_filename(self->app->get_plugins_path(), "language_tips_res", "main.ui", NULL);
+	filepath = g_build_filename(self->app->get_plugins_path(), "language_tips", "main.ui", NULL);
 	if( !filepath ) {
 		g_printerr("ERROR(language_tips) : build ui filepath failed!\n");
 		g_object_unref(G_OBJECT(builder));

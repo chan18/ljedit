@@ -64,7 +64,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(SolutionDir)bin\plugins\$(ProjectName).so_d"
+				OutputFile="$(SolutionDir)bin\plugins\language_tips\$(ProjectName).so_d"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -140,7 +140,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(SolutionDir)bin\plugins\$(ProjectName).so"
+				OutputFile="$(SolutionDir)bin\plugins\language_tips\$(ProjectName).so"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="2"
