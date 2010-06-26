@@ -12,8 +12,9 @@ typedef struct {
 	gboolean			enable_macro_replace;
 	gpointer			keywords_table;
 
-	GStaticRWLock		include_paths_lock;
+	GStaticRWLock		settings_lock;
 	CppIncludePaths*	include_paths;
+	GList*				predefineds;
 
 	GStaticRWLock		files_lock;
 	GHashTable*			files;
@@ -26,6 +27,8 @@ typedef struct {
 void cpp_parser_init(CppParser* self, gboolean enable_macro_replace);
 
 void cpp_parser_final(CppParser* self);
+
+void cpp_parser_predefineds_set(CppParser* self, GList* files);
 
 void cpp_parser_include_paths_set(CppParser* self, GList* paths);
 CppIncludePaths* cpp_parser_include_paths_ref(CppParser* self);

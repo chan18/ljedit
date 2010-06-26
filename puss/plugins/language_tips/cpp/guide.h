@@ -191,6 +191,8 @@ CppGuide* cpp_guide_new( gboolean enable_macro_replace
 
 void cpp_guide_free(CppGuide* guide);
 
+void cpp_guide_predefineds_set(CppGuide* guide, const gchar* files);
+
 void cpp_guide_include_paths_set(CppGuide* guide, const gchar* paths);
 CppIncludePaths* cpp_guide_include_paths_ref(CppGuide* guide);
 void cpp_guide_include_paths_unref(CppIncludePaths* paths);

@@ -71,7 +71,7 @@ void cpp_parser_init(CppParser* self, gboolean enable_macro_replace) {
 	self->enable_macro_replace = enable_macro_replace;
 	self->files  = g_hash_table_new(g_str_hash, g_str_equal);
 
-	g_static_rw_lock_init( &(self->include_paths_lock) );
+	g_static_rw_lock_init( &(self->settings_lock) );
 	g_static_rw_lock_init( &(self->files_lock) );
 
 	//trace_parser_status("init");
@@ -88,7 +88,17 @@ void cpp_parser_final(CppParser* self) {
 	cpp_parser_include_paths_unref(self->include_paths);
 
 	g_static_rw_lock_free( &(self->files_lock) );
-	g_static_rw_lock_free( &(self->include_paths_lock) );
+	g_static_rw_lock_free( &(self->settings_lock) );
+}
+
+void cpp_parser_predefineds_set(CppParser* self, GList* files) {
+	g_static_rw_lock_writer_lock( &(self->settings_lock) );
+	if( self->predefineds ) {
+		g_list_foreach(self->predefineds, g_free, 0);
+		g_list_free(self->predefineds);
+	}
+	self->predefineds = files;
+	g_static_rw_lock_writer_unlock( &(self->settings_lock) );
 }
 
 void cpp_parser_include_paths_set(CppParser* self, GList* paths) {
@@ -99,10 +109,10 @@ void cpp_parser_include_paths_set(CppParser* self, GList* paths) {
 	include_paths->path_list = paths;
 	include_paths->ref_count = 1;
 
-	g_static_rw_lock_writer_lock( &(self->include_paths_lock) );
+	g_static_rw_lock_writer_lock( &(self->settings_lock) );
 	old = self->include_paths;
 	self->include_paths = include_paths;
-	g_static_rw_lock_writer_unlock( &(self->include_paths_lock) );
+	g_static_rw_lock_writer_unlock( &(self->settings_lock) );
 
 	if( old && g_atomic_int_dec_and_test(&(old->ref_count)) ) {
 		g_list_foreach(old->path_list, g_free, 0);
@@ -113,11 +123,11 @@ void cpp_parser_include_paths_set(CppParser* self, GList* paths) {
 
 CppIncludePaths* cpp_parser_include_paths_ref(CppParser* self) {
 	CppIncludePaths* paths;
-	g_static_rw_lock_reader_lock( &(self->include_paths_lock) );
+	g_static_rw_lock_reader_lock( &(self->settings_lock) );
 	paths = self->include_paths;
 	if( paths )
 		g_atomic_int_inc( &(paths->ref_count) );
-	g_static_rw_lock_reader_unlock( &(self->include_paths_lock) );
+	g_static_rw_lock_reader_unlock( &(self->settings_lock) );
 
 	return paths;
 }
@@ -369,6 +379,12 @@ CppFile* parse_include_file(ParseEnv* env, MLStr* filename, gboolean is_system_h
 	return incfile;
 }
 
+static void parse_predefines_file(const gchar* filekey, ParseEnv* env) {
+	CppFile* file = cpp_parser_parse_use_menv(env, filekey, FALSE);
+	if( file )
+		cpp_file_unref(file);
+}
+
 CppFile* cpp_parser_parse(CppParser* self, const gchar* filekey, gboolean force_rebuild) {
 	ParseEnv env;
 	CppFile* file;
@@ -378,6 +394,10 @@ CppFile* cpp_parser_parse(CppParser* self, const gchar* filekey, gboolean force_
 	env.parser = self;
 
 	cpp_macro_lexer_init(&env);
+
+	g_static_rw_lock_reader_lock( &(self->settings_lock) );
+	g_list_foreach(self->predefineds, parse_predefines_file, &env);
+	g_static_rw_lock_reader_unlock( &(self->settings_lock) );
 
 	file = cpp_parser_parse_use_menv(&env, filekey, force_rebuild);
 

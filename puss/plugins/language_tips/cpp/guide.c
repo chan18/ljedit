@@ -113,6 +113,38 @@ static GList* guide_append_pkg_config_cflags(CppGuide* guide, GList* include_pat
 	return include_paths;
 }
 
+void cpp_guide_predefineds_set(CppGuide* guide, const gchar* files) {
+	gchar* path;
+	gchar** p;
+	gchar** items;
+	GList* predefineds_files = 0;
+	GList* pl;
+
+	if( !files )
+		return;
+
+	items = g_strsplit_set(files, ";\r\n", 0);
+	for( p=items; *p; ++p ) {
+		if( *p[0]=='\0' )
+			continue;
+
+		path = cpp_filename_to_filekey(*p, strlen(*p));
+
+		for( pl=predefineds_files; path && pl; pl=pl->next ) {
+			if( g_str_equal(pl->data, path) ) {
+				g_free(path);
+				path = 0;
+			}
+		}
+
+		if( path )
+			predefineds_files = g_list_append(predefineds_files, path);
+	}
+	g_strfreev(items);
+
+	cpp_parser_predefineds_set(&(guide->parser), predefineds_files);
+}
+
 void cpp_guide_include_paths_set(CppGuide* guide, const gchar* paths) {
 	gchar* path;
 	gchar** p;
