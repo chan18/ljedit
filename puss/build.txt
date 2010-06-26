@@ -1,0 +1,2 @@
+export PKG_CONFIG_PATH=/lib/pkgconfig:/C/gtk2_20/lib/pkgconfig
+export LD_LIBRARY_PATH=/lib:/C/gtk2_20/lib
