@@ -372,6 +372,12 @@ static gboolean doc_scroll_to_pos( GtkTextView* view ) {
 	GtkTextBuffer* buf = gtk_text_view_get_buffer(view);
 	GtkTextMark* mark = gtk_text_buffer_get_mark(buf, mark_name_view_scroll);
 
+	// move view point to left
+	{
+		GtkAdjustment* vadj = gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(gtk_widget_get_parent(GTK_WIDGET(view))));
+		gtk_adjustment_set_value(vadj, 0.0);
+	}
+
 	gtk_text_view_scroll_mark_onscreen(view, mark);
 	// gtk_text_view_scroll_to_mark(view, mark, 0.0, TRUE, 1.0, 0.25);
 	// gtk_text_buffer_delete_mark(buf, mark);
