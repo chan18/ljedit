@@ -337,6 +337,30 @@ static void show_current_in_preview(LanguageTips* self, GtkTextView* view) {
 	#define IS_DIR_SEPERATOR(ch) (ch)==G_DIR_SEPARATOR
 #endif
 
+static gboolean filter_implements_filename(const gchar* fname) {
+	// filter .c .cc .cpp
+	gsize i;
+	char suffix[8];
+	gsize len = strlen(fname);
+	gsize n = (len < 4) ? len : 4;
+	for( i=0; i<n; ++i ) {
+		suffix[i] = fname[len-1-i];
+		if( suffix[i]=='.' )
+			break;
+
+		if( suffix[i] >= 'A' && suffix[i] <= 'Z' )
+			suffix[i] += ('a' - 'A');
+	}
+
+	if( suffix[i]=='.' ) {
+		suffix[i+1] = 0;
+		if( g_str_equal(suffix, "c.") || g_str_equal(suffix, "cc.") || g_str_equal(suffix, "ppc.") )
+			return TRUE;
+	}
+
+	return FALSE;
+}
+
 static GList* search_include_files_in_dir(GList* files, gchar* inc_path, gchar* subpath, gchar* starts) {
 	const gchar* fname;
 	gchar* dirname = inc_path;
@@ -350,8 +374,13 @@ static GList* search_include_files_in_dir(GList* files, gchar* inc_path, gchar* 
 		fname = g_dir_read_name(dir);
 		if( !fname )
 			break;
-		if( *starts=='\0' || g_strrstr(fname, starts)==fname )
+		if( *starts=='\0' || g_strrstr(fname, starts)==fname ) {
+			if( filter_implements_filename(fname) )
+				 continue;
+
+			// append file
 			files = g_list_append(files, g_strdup(fname));
+		}
 	}
 	g_dir_close(dir);
 
