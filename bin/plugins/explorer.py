@@ -224,6 +224,7 @@ class FileExplorer(gtk.VBox):
 		
 		treeview.connect('row-activated', self.cb_row_activated)
 		treeview.connect('row-expanded',  self.cb_row_expanded)
+		treeview.connect('key-press-event', self.cb_key_press)
 		return treeview
 		
 	def cb_file_icon(self, column, cell, model, iter):
@@ -257,6 +258,15 @@ class FileExplorer(gtk.VBox):
 				treeview.collapse_row(path)
 			else:
 				treeview.expand_to_path(path)
+
+	def cb_key_press(self, treeview, event):
+		if event.keyval==gtk.keysyms.Left:
+			gtk.bindings_activate(treeview, gtk.keysyms.BackSpace, 0)
+			treeview.emit_stop_by_name('key-press-event')
+			
+		elif event.keyval==gtk.keysyms.Right:
+			gtk.bindings_activate(treeview, gtk.keysyms.Return, 0)
+			treeview.emit_stop_by_name('key-press-event')
 
 if __name__ == "__main__":
 	w = gtk.Window()
