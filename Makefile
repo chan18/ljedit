@@ -9,7 +9,9 @@ PROJECTS = puss \
 	$(wildcard extends/*) \
 	$(wildcard plugins/*)
 
-all : $(PROJECTS:%=.project/%)
+PRJS = $(filter-out plugins/puss_plugin_makefile_c_template, $(PROJECTS))
+
+all : $(PRJS:%=.project/%))
 
 .project/% : %
 	-make BUILD=$(BUILD) -C$<
