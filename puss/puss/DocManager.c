@@ -750,7 +750,7 @@ gboolean doc_save_page( gint page_num, gboolean is_save_as ) {
 		is_save_as = TRUE;
 
 	if( is_save_as ) {
-		dlg = gtk_file_chooser_dialog_new( "Save File"
+		dlg = gtk_file_chooser_dialog_new( _("Save File")
 			, puss_app->main_window
 			, GTK_FILE_CHOOSER_ACTION_SAVE
 			, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL

@@ -46,37 +46,49 @@ LIBS += `pkg-config --libs gtksourceview-2.0` \
 SRCS = $(wildcard *.c)
 
 OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)
+DEPS = $(SRCS:%.c=$(OBJPATH)/%.d)
 
 ifeq ($(OS), Windows_NT)
-	OBJS += puss_res.o
+	RES = puss_res.o
+else
+	RES = 
 endif
 
 all : $(TARGET) $(TARGET_PATH)/include/IPuss.h
 
-$(TARGET) : $(OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
+ifeq ($(OS), Windows_NT)
 
-$(TARGET_PATH)/include/IPuss.h : IPuss.h
-	cp -f $< $@
+$(TARGET) : $(OBJS) puss_res.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 puss_res.o : puss.rc puss.ico
 	windres -i puss.rc -J rc -o puss_res.o -O coff --include-dir=./
+
+else
+
+$(TARGET) : $(OBJS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
+
+endif
+
+$(TARGET_PATH)/include/IPuss.h : IPuss.h
+	cp -f $< $@
 
 clean :
 	rm -f $(TARGET)
 	rm -f $(TARGET_PATH)/include/IPuss.h
 	rm -rf $(OBJPATH)
 
-$(OBJPATH)/%.o : %.c
+$(OBJS) : $(OBJPATH)/%.o : %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-$(OBJPATH)/%.d : %.c
+$(DEPS) : $(OBJPATH)/%.d : %.c
 	@echo $(CC) -MM -o $@ -c $<
 	@rm -f $@
 	@mkdir -p $(dir $@)
 	@$(CC) $(CFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
 
 ifneq ($(NOT_USE_D_FILE), 1)
--include $(SRCS:%.c=$(OBJPATH)/%.d)
+-include $(DEPS)
 endif
