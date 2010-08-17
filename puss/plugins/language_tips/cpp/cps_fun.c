@@ -276,7 +276,7 @@ gboolean cps_fun(ParseEnv* env, Block* block) {
 			err_goto_finish_if( (ps = parse_datatype(ps, pe, &typekey, &dt))==0 );
 			prdt = dt;
 			err_goto_finish_if( (ps = parse_ptr_ref(ps, pe, &prdt))==0 );
-			err_goto_finish_if( ps < pe );
+			err_goto_finish_if_not( ps < pe );
 		}
 
 		// normal function

@@ -381,8 +381,10 @@ CppFile* parse_include_file(ParseEnv* env, MLStr* filename, gboolean is_system_h
 
 static void parse_predefines_file(const gchar* filekey, ParseEnv* env) {
 	CppFile* file = cpp_parser_parse_use_menv(env, filekey, FALSE);
-	if( file )
+	if( file ) {
+		cpp_macro_lexer_insert_rmacros_into_env(env, file);
 		cpp_file_unref(file);
+	}
 }
 
 CppFile* cpp_parser_parse(CppParser* self, const gchar* filekey, gboolean force_rebuild) {

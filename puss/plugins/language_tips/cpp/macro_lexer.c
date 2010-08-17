@@ -603,3 +603,7 @@ void cpp_macro_lexer_next(ParseEnv* env, MLToken* token) {
 	}
 }
 
+void cpp_macro_lexer_insert_rmacros_into_env(ParseEnv* env, CppFile* file) {
+	insert_rmacros_into_env(env, file);
+}
+
