@@ -98,8 +98,6 @@ int main(int argc, char* argv[]) {
 	res = puss_create(filepath);
 	g_free(filepath);
 
-	puss_dnd_open_support();
-
 	if( argc==2 )
 		open_arg1_file(argv[1]);
 

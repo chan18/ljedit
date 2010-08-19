@@ -16,6 +16,8 @@
 #include "OptionSetup.h"
 #include "GlobalOptions.h"
 #include "Utils.h"
+#include "DndOpen.h"
+
 
 PussApp* puss_app = 0;
 
@@ -217,7 +219,18 @@ gboolean puss_create(const gchar* filepath) {
 		return FALSE;
 	}
 
+	g_signal_connect(puss_app->main_window, "destroy", G_CALLBACK(&cb_puss_main_window_destroy), 0);
+
 	puss_panel_order_load();
+	puss_dnd_open_support();
+	puss_plugin_manager_load_all();
+
+	gtk_notebook_set_current_page(puss_app->left_panel, 0);
+	gtk_notebook_set_current_page(puss_app->right_panel, 0);
+	gtk_notebook_set_current_page(puss_app->bottom_panel, 0);
+
+	gtk_widget_show( GTK_WIDGET(puss_app->main_window) );
+
 	return TRUE;
 }
 
@@ -243,16 +256,6 @@ void puss_destroy() {
 }
 
 void puss_run() {
-	g_signal_connect(puss_app->main_window, "destroy", G_CALLBACK(&cb_puss_main_window_destroy), 0);
-
-	puss_plugin_manager_load_all();
-
-	gtk_notebook_set_current_page(puss_app->left_panel, 0);
-	gtk_notebook_set_current_page(puss_app->right_panel, 0);
-	gtk_notebook_set_current_page(puss_app->bottom_panel, 0);
-
-	gtk_widget_show( GTK_WIDGET(puss_app->main_window) );
-
 	gtk_main();
 }
 
