@@ -105,9 +105,8 @@ static GList* guide_append_pkg_config_cflags(CppGuide* guide, GList* include_pat
 					include_paths = g_list_append(include_paths, path);
 			}
 		} while( g_match_info_next(match_info, 0) );
-
-		g_match_info_free(match_info);
 	}
+	g_match_info_free(match_info);
 
 	g_free(std_output);
 	return include_paths;

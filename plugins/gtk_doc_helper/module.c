@@ -108,9 +108,8 @@ static void parse_doc_module(GtkDocHelper* self, const gchar* gtk_doc_path, cons
 				//g_print("%s : %s\n", key, url);
 				g_hash_table_insert(node->index, key, url);
 			} while( g_match_info_next(info, 0) );
-
-			g_match_info_free(info);
 		}
+		g_match_info_free(info);	// see glib-document, even though match return FALSE, info may NOT NULL.
 	}
 	g_free(index_filename);
 }

@@ -148,7 +148,7 @@ static gboolean parse_function_common(ParseEnv* env, Block* block, MLToken* star
 		parse_ns(name, pe, &(elem->name), 0);
 		err_goto_finish_if( elem->name==0 );
 
-	} else if( g_ascii_isalnum(name->buf[0]) ) {
+	} else if( name->buf[0]=='_' || g_ascii_isalnum(name->buf[0]) ) {
 		elem->name = tiny_str_new(name->buf, name->len);
 
 		if( nskey ) {
@@ -276,7 +276,7 @@ gboolean cps_fun(ParseEnv* env, Block* block) {
 			err_goto_finish_if( (ps = parse_datatype(ps, pe, &typekey, &dt))==0 );
 			prdt = dt;
 			err_goto_finish_if( (ps = parse_ptr_ref(ps, pe, &prdt))==0 );
-			err_goto_finish_if( ps < pe );
+			err_goto_finish_if_not( ps < pe );
 		}
 
 		// normal function
