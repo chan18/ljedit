@@ -11,7 +11,10 @@
 #include "DndOpen.h"
 
 #ifdef G_OS_WIN32
+	#define _WIN32_WINNT 0x0500
 	#include <Windows.h>
+	#include <fcntl.h>
+	#include <stdio.h>
 
 	gchar* find_module_filepath(const char* argv0) {
 		gchar buf[4096];

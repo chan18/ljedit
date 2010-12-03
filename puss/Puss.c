@@ -252,6 +252,7 @@ void puss_run() {
 	gtk_notebook_set_current_page(puss_app->bottom_panel, 0);
 
 	gtk_widget_show( GTK_WIDGET(puss_app->main_window) );
+	gdk_window_show( gtk_widget_get_window(GTK_WIDGET(puss_app->main_window)) );
 
 	gtk_main();
 }
