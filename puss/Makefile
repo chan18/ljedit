@@ -5,8 +5,7 @@
 #     build release version : make BUILD=release
 # 
 
-PROJECTS =	winboot \
-			puss \
+PROJECTS =	puss \
 			$(wildcard extends/*) \
 			$(wildcard plugins/*)
 
@@ -25,11 +24,8 @@ strip:
 	@-strip bin/puss
 	@-strip bin/*.dll
 	@-strip bin/*.exe
-	@-strip puss.exe
-	@-strip puss_d.exe
 
 clean:
-	@make -Cwinboot BUILD=$(BUILD) NOT_USE_D_FILE=1 clean
 	@make -Cpuss BUILD=$(BUILD) NOT_USE_D_FILE=1 clean
 	@for ext in $(EXTS); do make -C$$ext BUILD=$(BUILD) NOT_USE_D_FILE=1 clean; done
 	@for plg in $(PLGS); do make -C$$plg BUILD=$(BUILD) NOT_USE_D_FILE=1 clean; done

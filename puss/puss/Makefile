@@ -18,18 +18,12 @@ CC = gcc
 TARGET_PATH = ../bin
 ifeq ($(BUILD), release)
 	CFLAGS = -O3 -Wall
-#	ifeq ($(OS), Windows_NT)
-#		CFLAGS += -mwindows
-#	endif
 	OBJPATH = release
 	TARGET = $(TARGET_PATH)/puss$(EXE_SUFFIX)
 else
 	CFLAGS = -g -Wall -D_DEBUG
 	OBJPATH = debug
 	TARGET = $(TARGET_PATH)/puss_d$(EXE_SUFFIX)
-	ifneq ($(OS), Windows_NT)
-		LIBS += -ldl
-	endif
 endif
 
 # gtk & gtksourceview & gthread
@@ -47,9 +41,13 @@ SRCS = $(wildcard *.c)
 
 OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)
 
-#ifeq ($(OS), Windows_NT)
-#	OBJS += puss_res.o
-#endif
+ifeq ($(OS), Windows_NT)
+	ifeq ($(BUILD), release)
+		CFLAGS += -mwindows
+	endif
+
+	OBJS += puss_res.o
+endif
 
 all : $(TARGET) $(TARGET_PATH)/include/IPuss.h
 
@@ -59,8 +57,8 @@ $(TARGET) : $(OBJS)
 $(TARGET_PATH)/include/IPuss.h : IPuss.h
 	cp -f $< $@
 
-#puss_res.o : puss.rc puss.ico
-#	windres -i puss.rc -J rc -o puss_res.o -O coff --include-dir=./
+puss_res.o : puss.rc puss.ico
+	windres -i puss.rc -J rc -o puss_res.o -O coff --include-dir=./
 
 clean :
 	rm -f $(TARGET)

@@ -11,19 +11,16 @@
 #include "DndOpen.h"
 
 #ifdef G_OS_WIN32
-	#define _WIN32_WINNT 0x0500
 	#include <Windows.h>
-	#include <fcntl.h>
-	#include <stdio.h>
 
-	gchar* find_module_filepath(const char* argv0) {
+	static gchar* find_module_filepath(const char* argv0) {
 		gchar buf[4096];
 		int len = GetModuleFileNameA(0, buf, 4096);
 		return g_locale_to_utf8(buf, len, NULL, NULL, NULL);
 	}
 
 #else
-	gchar* find_module_filepath(const char* argv0) {
+	static gchar* find_module_filepath(const char* argv0) {
 		gchar* pwd;
 		gchar* prj;
 		gchar* realpath;
@@ -60,7 +57,7 @@
 
 #endif
 
-void open_arg1_file(const char* argv1) {
+static void open_arg1_file(const char* argv1) {
 	gchar* pwd;
 	gchar* tmp;
 	gssize len = (gssize)strlen(argv1);
@@ -79,7 +76,17 @@ void open_arg1_file(const char* argv1) {
 	g_free(filepath);
 }
 
-int main(int argc, char* argv[]) {
+#ifdef G_OS_WIN32
+	#ifndef _DEBUG
+		#define USE_WINMAIN
+	#endif
+#endif
+
+#ifndef USE_WINMAIN
+	#define puss_main main
+#endif
+
+int puss_main(int argc, char* argv[]) {
 	gchar* filepath;
 	gboolean res;
 
@@ -113,4 +120,33 @@ int main(int argc, char* argv[]) {
 
 	return 0;
 }
+
+#ifdef USE_WINMAIN
+	int CALLBACK WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,int nCmdShow) {
+		int res = 0;
+		if( nCmdShow != SW_HIDE ) {
+			char szApp[4096];
+			STARTUPINFOA si;
+			PROCESS_INFORMATION pi;
+			DWORD len = GetModuleFileNameA(NULL, szApp, sizeof(szApp));
+			for( ; len > 0; --len ) {
+				if( szApp[len-1]=='\\' || szApp[len-1]=='/' )
+					break;
+			}
+
+			ZeroMemory(&si, sizeof(STARTUPINFO));
+			si.cb			= sizeof(STARTUPINFO);
+			si.dwFlags		= STARTF_USESHOWWINDOW;
+			si.wShowWindow	= SW_HIDE;
+			CreateProcessA(szApp, lpCmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+			return res;
+		}
+
+		AllocConsole();
+		res = puss_main(__argc, __argv);
+		FreeConsole();
+
+		return res;
+	}
+#endif
 

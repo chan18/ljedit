@@ -252,7 +252,13 @@ void puss_run() {
 	gtk_notebook_set_current_page(puss_app->bottom_panel, 0);
 
 	gtk_widget_show( GTK_WIDGET(puss_app->main_window) );
+
+#ifdef G_OS_WIN32
+	// when use puss winboot run puss.exe, main window will hidden
+	// show need show window
+	// 
 	gdk_window_show( gtk_widget_get_window(GTK_WIDGET(puss_app->main_window)) );
+#endif
 
 	gtk_main();
 }

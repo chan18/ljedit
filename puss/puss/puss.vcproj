@@ -142,10 +142,10 @@
 				OutputFile="$(SolutionDir)bin\$(ProjectName).exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
-				SubSystem="1"
+				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				EntryPointSymbol="mainCRTStartup"
+				EntryPointSymbol=""
 				TargetMachine="1"
 			/>
 			<Tool
@@ -300,6 +300,14 @@
 		</File>
 		<File
 			RelativePath=".\Puss.h"
+			>
+		</File>
+		<File
+			RelativePath=".\puss.ico"
+			>
+		</File>
+		<File
+			RelativePath=".\puss.rc"
 			>
 		</File>
 		<File
