@@ -11,7 +11,10 @@
 #include "DndOpen.h"
 
 #ifdef G_OS_WIN32
+	#define _WIN32_WINNT 0x0500
 	#include <Windows.h>
+	#include <fcntl.h>
+	#include <stdio.h>
 
 	gchar* find_module_filepath(const char* argv0) {
 		gchar buf[4096];
@@ -97,6 +100,8 @@ int main(int argc, char* argv[]) {
 	filepath = find_module_filepath(argv[0]);
 	res = puss_create(filepath);
 	g_free(filepath);
+
+	puss_dnd_open_support();
 
 	if( argc==2 )
 		open_arg1_file(argv[1]);

@@ -217,12 +217,9 @@ static int vconsole_init(VCon* con) {
 		wcscpy(szComspec, DEFAULT_SHELL);
 
 	ZeroMemory(&si, sizeof(STARTUPINFO));
-	si.dwFlags		= STARTF_USEPOSITION;
 	si.cb			= sizeof(STARTUPINFO);
+	si.dwFlags		= STARTF_USESHOWWINDOW;
 	si.wShowWindow	= SW_HIDE;
-	si.lpTitle		= NULL;
-	si.dwX			= 0x7FFF;
-	si.dwY			= 0x7FFF;
 
 	// 1. create console process : (cmd.exe)
 	//    and pause it's main thread
