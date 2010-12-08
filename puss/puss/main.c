@@ -128,12 +128,7 @@ int puss_main(int argc, char* argv[]) {
 			char szApp[4096];
 			STARTUPINFOA si;
 			PROCESS_INFORMATION pi;
-			DWORD len = GetModuleFileNameA(NULL, szApp, sizeof(szApp));
-			for( ; len > 0; --len ) {
-				if( szApp[len-1]=='\\' || szApp[len-1]=='/' )
-					break;
-			}
-
+			GetModuleFileNameA(NULL, szApp, sizeof(szApp));
 			ZeroMemory(&si, sizeof(STARTUPINFO));
 			si.cb			= sizeof(STARTUPINFO);
 			si.dwFlags		= STARTF_USESHOWWINDOW;
