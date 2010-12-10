@@ -162,6 +162,14 @@ static BOOL console_on_resize(ShareMemory* shared) {
 
 	// TODO : width resize, now not use width
 	srNew.Bottom = srNew.Top + newVal.Y - 1;
+	// printf("resize require : %d, %d\n", srNew.Top, srNew.Bottom);
+
+	// fix srNew
+	// 
+	if( srNew.Bottom > shared->screen_info.srWindow.Bottom ) {
+		srNew.Top -= (srNew.Bottom - shared->screen_info.srWindow.Bottom);
+		srNew.Bottom = shared->screen_info.srWindow.Bottom;
+	}
 
 	if( srNew.Bottom > srNew.Top ) {
 		hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -172,6 +180,7 @@ static BOOL console_on_resize(ShareMemory* shared) {
 			}
 		}
 
+		// printf("resize set : %d, %d\n", srNew.Top, srNew.Bottom);
 		SetConsoleWindowInfo(hStdOut, TRUE, &srNew);
 	}
 

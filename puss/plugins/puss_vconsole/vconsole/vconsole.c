@@ -20,6 +20,7 @@
 		str[len] = '\0';
 
 		OutputDebugStringA(str);
+		printf("TRACE : %s\n", str);
 	}
 
 #else
@@ -345,6 +346,7 @@ static void vconsole_resize(VCon* con, int width, int height) {
 	if( !con )
 		return;
 
+	// trace("resize - width=%d, height=%d\n", width, height);
 	if( con->shared->tohook_resize_val.X == width
 		&& con->shared->tohook_resize_val.Y == height )
 	{

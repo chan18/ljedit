@@ -195,7 +195,7 @@ static void on_size_allocate(GtkWidget *widget, GtkAllocation *allocation, PussV
 	h += gtk_text_view_get_pixels_below_lines(view);
 	h += gtk_text_view_get_pixels_above_lines(view);
 
-	self->api->resize(self->vcon, 120, allocation->height/h);
+	self->api->resize(self->vcon, 100, allocation->height/h);
 }
 
 static void on_size_request(GtkWidget *widget, GtkRequisition *requisition, PussVConsole* self) {
