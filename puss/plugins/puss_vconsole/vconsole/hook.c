@@ -7,8 +7,6 @@
 
 #include "share.h"
 
-#define ALIVE_TIMEOUT	30000
-
 // global vars only for this file
 // 
 
@@ -234,7 +232,6 @@ static BOOL console_on_send_input(ShareMemory* shared) {
 static void hook_service_run(ShareMemory* shared, HANDLE hParent) {
 	DWORD dwRet;
 	BOOL bRunSign;
-	DWORD dwLastAlive;
 	HANDLE hEvents[] = {
 		  hParent
 		, shared->tohook_event_quit
@@ -256,16 +253,11 @@ static void hook_service_run(ShareMemory* shared, HANDLE hParent) {
 	read_console_buffer(shared);
 
 	bRunSign = TRUE;
-	dwLastAlive = 0;
 
 	while( bRunSign ) {
 		dwRet = WaitForMultipleObjects(dwEventCount, hEvents, FALSE, shared->screen_update_time);
 		if( dwRet==WAIT_TIMEOUT ) {
-			++dwLastAlive;
-			if( (shared->screen_update_time * dwLastAlive) > ALIVE_TIMEOUT )
-				bRunSign = FALSE;
-			else
-				read_console_buffer(shared);
+			read_console_buffer(shared);
 			continue;
 
 		} else if( dwRet==WAIT_FAILED ) {
@@ -273,7 +265,6 @@ static void hook_service_run(ShareMemory* shared, HANDLE hParent) {
 			continue;
 
 		} else {
-			dwLastAlive = 0;
 			dwRet -= WAIT_OBJECT_0;
 			bRunSign = (*hHandles[dwRet])(shared);
 		}
