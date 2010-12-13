@@ -1,0 +1,7 @@
+# puss plugin
+# 
+
+[plugin]
+name = file browser
+engine = so
+description = file browser

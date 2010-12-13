@@ -1,7 +1,0 @@
-# puss plugin
-# 
-
-[plugin]
-name = explorer
-engine = python
-description = explorer
