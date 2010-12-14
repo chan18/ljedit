@@ -53,6 +53,8 @@ static void fill_root(PussFileBrowser* self) {
 	gchar* name;
 	GFile* file;
 	GtkTreeIter iter;
+	GtkTreeIter subiter;
+
 	for(p=mounts; p; p=p->next ) {
 		mnt = (GMount*)(p->data);
 		icon = g_mount_get_icon(mnt);
@@ -62,11 +64,7 @@ static void fill_root(PussFileBrowser* self) {
 		file = g_mount_get_root(mnt);
 
 		gtk_tree_store_prepend(self->store, &iter, 0);
-		gtk_tree_store_set( self->store, &iter
-			, 0, pbuf
-			, 1, name
-			, 2, file
-			, -1 );
+		gtk_tree_store_set( self->store, &iter, 0, pbuf, 1, name, 2, file, -1 );
 
 		g_object_unref(mnt);
 		if( name )
@@ -80,13 +78,8 @@ static void fill_root(PussFileBrowser* self) {
 
 		// append [loading] node
 		if( file ) {
-			GtkTreeIter subiter;
 			gtk_tree_store_prepend(self->store, &subiter, &iter);
-			gtk_tree_store_set( self->store, &subiter
-				, 0, 0
-				, 1, 0
-				, 2, 0
-				, -1 );
+			gtk_tree_store_set( self->store, &subiter, 0, 0, 1, 0, 2, 0, -1 );
 			self->object_pool = g_slist_prepend(self->object_pool, file);
 		}
 	}
