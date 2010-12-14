@@ -26,9 +26,7 @@ strip:
 	@-strip bin/*.exe
 
 clean:
-	@make -Cpuss BUILD=$(BUILD) NOT_USE_D_FILE=1 clean
-	@for ext in $(EXTS); do make -C$$ext BUILD=$(BUILD) NOT_USE_D_FILE=1 clean; done
-	@for plg in $(PLGS); do make -C$$plg BUILD=$(BUILD) NOT_USE_D_FILE=1 clean; done
+	@for p in $(PROJECTS); do make -C$$p BUILD=$(BUILD) NOT_USE_D_FILE=1 clean; done
 	@echo make clean finished!
 
 deb :
