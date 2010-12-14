@@ -102,68 +102,74 @@ static void fill_subs(PussFileBrowser* self, GFile* dir, GtkTreeIter* parent_ite
 	gchar* name;
 	GdkPixbuf* pbuf;
 	GtkTreeIter iter;
-	GFileType type;
+	GtkTreeIter subiter;
 	GFile* subfile;
-	gchar* pth;
 	GFileEnumerator* enumerator;
+	GList* dir_infos = 0;
+	GList* file_infos = 0;
+	GList* p;
 
-	enumerator = g_file_enumerate_children(dir, "*", G_FILE_QUERY_INFO_NONE, 0, 0);
-	pth = g_file_get_path(dir);
+	enumerator = g_file_enumerate_children(dir
+					, G_FILE_ATTRIBUTE_STANDARD_NAME "," G_FILE_ATTRIBUTE_STANDARD_TYPE "," G_FILE_ATTRIBUTE_STANDARD_ICON
+					, G_FILE_QUERY_INFO_NONE
+					, 0, 0);
 	if( !enumerator )
 		return;
 
 	while( (fileinfo = g_file_enumerator_next_file(enumerator, 0, 0)) ) {
-		type = g_file_info_get_file_type(fileinfo);
-		name = g_strdup(g_file_info_get_name(fileinfo));
-		icon = g_file_info_get_icon(fileinfo);	// not need unref
-		info = icon ? gtk_icon_theme_lookup_by_gicon(theme, icon, self->icon_size, 0) : 0;
-		if( info ) {
-			pbuf = gtk_icon_info_load_icon(info, 0);
-		} else if( type==G_FILE_TYPE_DIRECTORY ) {
-			pbuf = g_object_ref(self->folder_icon);
-		} else {
-			pbuf = g_object_ref(self->file_icon);
-		}
+		if( g_file_info_get_file_type(fileinfo)==G_FILE_TYPE_DIRECTORY )
+			dir_infos = g_list_append(dir_infos, fileinfo);
+		else
+			file_infos = g_list_append(file_infos, fileinfo);
+	}
+	g_file_enumerator_close(enumerator, 0, 0);
+	g_object_unref(enumerator);
 
-		if( type==G_FILE_TYPE_DIRECTORY ) {
-			gchar* subpth = g_build_filename(pth, name, NULL);
-			subfile = g_file_new_for_path(subpth);
-			g_free(subpth);
-		} else {
-			subfile = 0;
-		}
+	for( p=dir_infos; p; p=p->next ) {
+		fileinfo = (GFileInfo*)(p->data);
+		name = g_strdup(g_file_info_get_name(fileinfo));
+		icon = g_file_info_get_icon(fileinfo);
+		info = icon ? gtk_icon_theme_lookup_by_gicon(theme, icon, self->icon_size, 0) : 0;
+		pbuf = info ? gtk_icon_info_load_icon(info, 0) : g_object_ref(self->folder_icon);
+		subfile = g_file_get_child(dir, name);
+		g_object_unref(fileinfo);
 
 		gtk_tree_store_append(self->store, &iter, parent_iter);
-		gtk_tree_store_set( self->store, &iter
-			, 0, pbuf
-			, 1, name
-			, 2, subfile 
-			, -1 );
-
-		g_object_unref(fileinfo);
+		gtk_tree_store_set( self->store, &iter, 0, pbuf, 1, name, 2, subfile, -1 );
 		if( name )
 			self->string_pool = g_slist_prepend(self->string_pool, name);
 		if( info )
 			gtk_icon_info_free(info);
 		if( pbuf )
 			self->object_pool = g_slist_prepend(self->object_pool, pbuf);
-
-		// append [loading] node
 		if( subfile ) {
-			GtkTreeIter subiter;
+			// append [loading] node
 			gtk_tree_store_append(self->store, &subiter, &iter);
-			gtk_tree_store_set( self->store, &subiter
-				, 0, 0
-				, 1, 0
-				, 2, 0
-				, -1 );
+			gtk_tree_store_set( self->store, &subiter, 0, 0, 1, 0, 2, 0, -1 );
 			self->object_pool = g_slist_prepend(self->object_pool, subfile);
 		}
 	}
 
-	g_free(pth);
-	g_file_enumerator_close(enumerator, 0, 0);
-	g_object_unref(enumerator);
+	for( p=file_infos; p; p=p->next ) {
+		fileinfo = (GFileInfo*)(p->data);
+		name = g_strdup(g_file_info_get_name(fileinfo));
+		icon = g_file_info_get_icon(fileinfo);
+		info = icon ? gtk_icon_theme_lookup_by_gicon(theme, icon, self->icon_size, 0) : 0;
+		pbuf = info ? gtk_icon_info_load_icon(info, 0) : g_object_ref(self->file_icon);
+		g_object_unref(fileinfo);
+
+		gtk_tree_store_append(self->store, &iter, parent_iter);
+		gtk_tree_store_set( self->store, &iter, 0, pbuf, 1, name, 2, 0, -1 );
+		if( name )
+			self->string_pool = g_slist_prepend(self->string_pool, name);
+		if( info )
+			gtk_icon_info_free(info);
+		if( pbuf )
+			self->object_pool = g_slist_prepend(self->object_pool, pbuf);
+	}
+
+	g_list_free(dir_infos);
+	g_list_free(file_infos);
 }
 
 static void ensure_fill_subs(PussFileBrowser* self, GtkTreeIter* parent_iter) {
