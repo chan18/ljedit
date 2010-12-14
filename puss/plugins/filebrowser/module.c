@@ -41,58 +41,13 @@ typedef struct {
 	gulong				switch_page_id;
 } PussFileBrowser;
 
-static void fill_root(PussFileBrowser* self) {
-	GtkIconTheme* theme = gtk_icon_theme_get_default();
-	GList* mounts = g_volume_monitor_get_mounts(self->vm);
-	GList* p;
-	GMount* mnt;
-
-	GIcon* icon;
-	GtkIconInfo* info;
-	GdkPixbuf* pbuf;
-	gchar* name;
-	GFile* file;
-	GtkTreeIter iter;
-	GtkTreeIter subiter;
-
-	for(p=mounts; p; p=p->next ) {
-		mnt = (GMount*)(p->data);
-		icon = g_mount_get_icon(mnt);
-		info = icon ? gtk_icon_theme_lookup_by_gicon(theme, icon, self->icon_size, 0) : 0;
-		pbuf = info ? gtk_icon_info_load_icon(info, 0) : 0;
-		name = g_mount_get_name(mnt);
-		file = g_mount_get_root(mnt);
-
-		gtk_tree_store_prepend(self->store, &iter, 0);
-		gtk_tree_store_set( self->store, &iter, 0, pbuf, 1, name, 2, file, -1 );
-
-		g_object_unref(mnt);
-		if( name )
-			self->string_pool = g_slist_prepend(self->string_pool, name);
-		if( icon )
-			g_object_unref(icon);
-		if( info )
-			gtk_icon_info_free(info);
-		if( pbuf )
-			self->object_pool = g_slist_prepend(self->object_pool, pbuf);
-
-		// append [loading] node
-		if( file ) {
-			gtk_tree_store_prepend(self->store, &subiter, &iter);
-			gtk_tree_store_set( self->store, &subiter, 0, 0, 1, 0, 2, 0, -1 );
-			self->object_pool = g_slist_prepend(self->object_pool, file);
-		}
-	}
-
-	g_list_free(mounts);
-}
-
 static void fill_subs(PussFileBrowser* self, GFile* dir, GtkTreeIter* parent_iter) {
 	GtkIconTheme* theme = gtk_icon_theme_get_default();
 	GFileInfo* fileinfo;
 	GtkIconInfo* info;
 	GIcon* icon;
 	gchar* name;
+	const gchar* tname;
 	GdkPixbuf* pbuf;
 	GtkTreeIter iter;
 	GtkTreeIter subiter;
@@ -110,6 +65,12 @@ static void fill_subs(PussFileBrowser* self, GFile* dir, GtkTreeIter* parent_ite
 		return;
 
 	while( (fileinfo = g_file_enumerator_next_file(enumerator, 0, 0)) ) {
+		tname = g_file_info_get_name(fileinfo);
+		if( tname && tname[0]=='.' ) {
+			g_object_unref(fileinfo);
+			continue;
+		}
+
 		if( g_file_info_get_file_type(fileinfo)==G_FILE_TYPE_DIRECTORY )
 			dir_infos = g_list_append(dir_infos, fileinfo);
 		else
@@ -165,12 +126,70 @@ static void fill_subs(PussFileBrowser* self, GFile* dir, GtkTreeIter* parent_ite
 	g_list_free(file_infos);
 }
 
+#ifdef G_OS_WIN32
+
+static void fill_root(PussFileBrowser* self) {
+	GtkIconTheme* theme = gtk_icon_theme_get_default();
+	GList* mounts = g_volume_monitor_get_mounts(self->vm);
+	GList* p;
+	GMount* mnt;
+
+	GIcon* icon;
+	GtkIconInfo* info;
+	GdkPixbuf* pbuf;
+	gchar* name;
+	GFile* file;
+	GtkTreeIter iter;
+	GtkTreeIter subiter;
+
+	for(p=mounts; p; p=p->next ) {
+		mnt = (GMount*)(p->data);
+		icon = g_mount_get_icon(mnt);
+		info = icon ? gtk_icon_theme_lookup_by_gicon(theme, icon, self->icon_size, 0) : 0;
+		pbuf = info ? gtk_icon_info_load_icon(info, 0) : 0;
+		name = g_mount_get_name(mnt);
+		file = g_mount_get_root(mnt);
+
+		gtk_tree_store_prepend(self->store, &iter, 0);
+		gtk_tree_store_set( self->store, &iter, 0, pbuf, 1, name, 2, file, -1 );
+
+		g_object_unref(mnt);
+		if( name )
+			self->string_pool = g_slist_prepend(self->string_pool, name);
+		if( icon )
+			g_object_unref(icon);
+		if( info )
+			gtk_icon_info_free(info);
+		if( pbuf )
+			self->object_pool = g_slist_prepend(self->object_pool, pbuf);
+
+		// append [loading] node
+		if( file ) {
+			gtk_tree_store_prepend(self->store, &subiter, &iter);
+			gtk_tree_store_set( self->store, &subiter, 0, 0, 1, 0, 2, 0, -1 );
+			self->object_pool = g_slist_prepend(self->object_pool, file);
+		}
+	}
+
+	g_list_free(mounts);
+}
+
+#else
+
+static void fill_root(PussFileBrowser* self) {
+	GFile* root = g_file_new_for_path("/");
+	fill_subs(self, root, 0);
+	g_object_unref(root);
+}
+
+#endif
+
 static void ensure_fill_subs(PussFileBrowser* self, GtkTreeIter* parent_iter) {
 	gchar* sub = 0;
 	GFile* dir;
 	GtkTreeIter iter;
 
-	// check & remove [loading] node
+	// check [loading] node
 	if( !gtk_tree_model_iter_nth_child(self->model, &iter, parent_iter, 0) )
 		return;
 	gtk_tree_model_get(self->model, &iter, 1, &sub, -1);
@@ -183,8 +202,9 @@ static void ensure_fill_subs(PussFileBrowser* self, GtkTreeIter* parent_iter) {
 		return;
 
 	fill_subs(self, dir, parent_iter);
-	gtk_tree_store_remove(self->store, &iter);
 
+	// remove [loading] node
+	gtk_tree_store_remove(self->store, &iter);
 }
 
 static gboolean locate_to(PussFileBrowser* self, GtkTreeIter* iter, GtkTreeIter* parent, gchar** paths) {
@@ -192,6 +212,11 @@ static gboolean locate_to(PussFileBrowser* self, GtkTreeIter* iter, GtkTreeIter*
 	GFile* dir;
 	gchar* name;
 	GtkTreeIter parent_iter;
+
+#ifndef G_OS_WIN32
+	if( *paths[0]=='\0' )
+		++paths;
+#endif
 
 locate_loop:
 	for( ; *paths; ++paths )
@@ -226,7 +251,7 @@ locate_loop:
 					continue;
 			}
 #else
-			if( g_str_equal(str, name)!=0 )
+			if( !g_str_equal(str, name) )
 				continue;
 #endif
 			ensure_fill_subs(self, iter);
@@ -239,7 +264,7 @@ locate_loop:
 		if( g_ascii_strcasecmp(str, name)!=0 )
 			continue;
 #else
-		if( g_str_equal(str, name)!=0 )
+		if( !g_str_equal(str, name) )
 			continue;
 #endif
 
@@ -366,14 +391,23 @@ SIGNAL_CALLBACK void filebrowser_cb_row_activated(GtkTreeView* tree_view, GtkTre
 		gchar* pth;
 		gchar* filename;
 		GtkTreeIter parent_iter;
-		if( !gtk_tree_model_iter_parent(self->model, &parent_iter, &iter) )
-			return;
 
-		gtk_tree_model_get(self->model, &parent_iter, 2, &dir, -1);
-		if( !dir )
-			return;
+		if( gtk_tree_model_iter_parent(self->model, &parent_iter, &iter) ) {
+			gtk_tree_model_get(self->model, &parent_iter, 2, &dir, -1);
+			if( !dir )
+				return;
 
-		pth = g_file_get_path(dir);
+			pth = g_file_get_path(dir);
+
+		} else {
+
+#ifdef G_OS_WIN32
+			return;
+#else
+			pth = g_strdup("/");
+#endif
+		}
+
 		filename = g_build_filename(pth, name, NULL);
 		self->app->doc_open(filename, -1, -1, TRUE);
 		g_free(filename);

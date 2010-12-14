@@ -24,7 +24,8 @@ else
 endif
 
 else
-	CFLAGS += -lvte
+	CFLAGS += `pkg-config --cflags vte`
+	LIBS += `pkg-config --libs vte`
 
 vconsole : 
 	echo 'sss'
