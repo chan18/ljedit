@@ -620,7 +620,7 @@ PyExtend* puss_py_extend_create(Puss* app) {
 	if( g_self ) {
 		g_self->app = app;
 
-		Py_Initialize();
+		Py_InitializeEx(0);
 
 		if( init_pygtk_library(g_self) && init_puss_module(g_self) ) {
 			g_self->app->plugin_engine_regist( "python"

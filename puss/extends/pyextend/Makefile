@@ -32,10 +32,10 @@ LIBS += `pkg-config --libs gtksourceview-2.0` \
 
 
 ifeq ($(PLATFORM), win32)
-	CFLAGS += -IC:/Python26/include \
-			-IC:/Python26/include/pygtk-2.0
+	CFLAGS += -IC:/Python27/include \
+			-IC:/Python27/include/pygtk-2.0
 
-	LIBS += -LC:/Python26/libs -lpython26
+	LIBS += -LC:/Python27/libs -lPython27
 
 else
 	CFLAGS += `pkg-config --cflags pygtk-2.0` \
