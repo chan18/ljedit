@@ -434,20 +434,20 @@ SIGNAL_CALLBACK gboolean filebrowser_view_cb_keypress(GtkWidget* w, GdkEventKey*
 	PussFileBrowser* self = (PussFileBrowser*)user_data;
 
 	switch( event->keyval ) {
-	case GDK_KEY_Left: {
+	case GDK_Left: {
 			GtkTreePath* path;
 			gtk_tree_view_get_cursor(self->view, &path, 0);
 			if( path && gtk_tree_view_row_expanded(self->view, path) ) {
-				gtk_bindings_activate((GtkObject*)w, GDK_KEY_Return, 0);
+				gtk_bindings_activate((GtkObject*)w, GDK_Return, 0);
 			} else {
-				gtk_bindings_activate((GtkObject*)w, GDK_KEY_BackSpace, 0);
+				gtk_bindings_activate((GtkObject*)w, GDK_BackSpace, 0);
 			}
 			g_signal_stop_emission_by_name(w, "key-press-event");
 			return TRUE;
 		}
 		break;
-	case GDK_KEY_Right: {
-			gtk_bindings_activate((GtkObject*)w, GDK_KEY_Return, 0);
+	case GDK_Right: {
+			gtk_bindings_activate((GtkObject*)w, GDK_Return, 0);
 			g_signal_stop_emission_by_name(w, "key-press-event");
 			return TRUE;
 		}
