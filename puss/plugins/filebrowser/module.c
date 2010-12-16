@@ -300,17 +300,14 @@ static void clear_filetree(PussFileBrowser* self) {
 	self->object_pool = 0;
 }
 
-static void locate_to_file(PussFileBrowser* self, GString* filepath, gboolean refresh_if_failed) {
+static void locate_to_file(PussFileBrowser* self, const gchar* filepath, gboolean refresh_if_failed) {
 	GtkTreeIter iter;
 	gchar** paths;
 
-	if( !filepath )
-		return;
-
 #ifdef G_OS_WIN32
-	paths = g_strsplit_set(filepath->str, "\\/", -1);
+	paths = g_strsplit_set(filepath, "\\/", -1);
 #else
-	paths = g_strsplit(filepath->str, "/", -1);
+	paths = g_strsplit(filepath, "/", -1);
 #endif
 
 	if( locate_to(self, &iter, 0, paths) ) {
@@ -323,7 +320,7 @@ static void locate_to_file(PussFileBrowser* self, GString* filepath, gboolean re
 		g_idle_add(scroll_to_path, tag);
 
 	} else if( refresh_if_failed ) {
-		GFile* file = g_file_new_for_path(filepath->str);
+		GFile* file = g_file_new_for_path(filepath);
 		if( file ) {
 			if( g_file_query_exists(file, 0) ) {
 				clear_filetree(self);
@@ -363,8 +360,7 @@ static void build_ui(PussFileBrowser* self) {
 	fill_root(self);
 }
 
-SIGNAL_CALLBACK void filebrowser_cb_refresh_button_clicked(GtkWidget* w, gpointer user_data) {
-	PussFileBrowser* self = (PussFileBrowser*)user_data;
+static void do_refresh(PussFileBrowser* self) {
 	GtkNotebook* doc_panel = puss_get_doc_panel(self->app);
 	gint page_num = gtk_notebook_get_current_page(doc_panel);
 	GtkTextBuffer* buf = (page_num < 0) ? 0 : self->app->doc_get_buffer_from_page_num(page_num);
@@ -372,8 +368,22 @@ SIGNAL_CALLBACK void filebrowser_cb_refresh_button_clicked(GtkWidget* w, gpointe
 	clear_filetree(self);
 	fill_root(self);
 
-	if( buf )
-		locate_to_file(self, self->app->doc_get_url(buf), FALSE);
+	if( buf ) {
+		GString* pth = self->app->doc_get_url(buf);
+		if( pth )
+			locate_to_file(self, pth->str, FALSE);
+
+	} else {
+		gchar* current_dir = g_get_current_dir();
+		if( current_dir ) {
+			locate_to_file(self, current_dir, FALSE);
+			g_free(current_dir);
+		}
+	}
+}
+
+SIGNAL_CALLBACK void filebrowser_cb_refresh_button_clicked(GtkWidget* w, gpointer user_data) {
+	do_refresh((PussFileBrowser*)user_data);
 }
 
 SIGNAL_CALLBACK void filebrowser_cb_row_activated(GtkTreeView* tree_view, GtkTreePath* path, GtkTreeViewColumn* column, gpointer user_data) {
@@ -467,10 +477,8 @@ static void on_switch_page(GtkNotebook* nb, GtkNotebookPage* page, guint page_nu
 		return;
 
 	filepath = self->app->doc_get_url(buf);
-	if( !filepath )
-		return;
-
-	locate_to_file(self, filepath, TRUE);
+	if( filepath )
+		locate_to_file(self, filepath->str, TRUE);
 }
 
 PUSS_EXPORT void* puss_plugin_create(Puss* app) {
@@ -489,6 +497,8 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 				, PUSS_PANEL_POS_LEFT);
 
 	self->switch_page_id = g_signal_connect(puss_get_doc_panel(app), "switch-page", (GCallback)on_switch_page, self);
+
+	do_refresh(self);
 
 	return self;
 }

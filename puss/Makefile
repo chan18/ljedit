@@ -26,7 +26,7 @@ strip:
 	@-strip bin/*.exe
 
 clean:
-	@for p in $(PROJECTS); do make -C$$p BUILD=$(BUILD) NOT_USE_D_FILE=1 clean; done
+	@for p in $(PRJS); do make -C$$p BUILD=$(BUILD) NOT_USE_D_FILE=1 clean; done
 	@echo make clean finished!
 
 deb :
