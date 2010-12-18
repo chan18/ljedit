@@ -41,6 +41,10 @@ typedef struct {
 	gulong				switch_page_id;
 } PussFileBrowser;
 
+static gint fileinfo_sort_cmp(GFileInfo* a, GFileInfo* b) { 
+	return g_ascii_strcasecmp(g_file_info_get_name(a), g_file_info_get_name(b));
+}
+
 static void fill_subs(PussFileBrowser* self, GFile* dir, GtkTreeIter* parent_iter) {
 	GtkIconTheme* theme = gtk_icon_theme_get_default();
 	GFileInfo* fileinfo;
@@ -78,6 +82,8 @@ static void fill_subs(PussFileBrowser* self, GFile* dir, GtkTreeIter* parent_ite
 	}
 	g_file_enumerator_close(enumerator, 0, 0);
 	g_object_unref(enumerator);
+	dir_infos = g_list_sort(dir_infos, (GCompareFunc)fileinfo_sort_cmp);
+	file_infos = g_list_sort(file_infos, (GCompareFunc)fileinfo_sort_cmp);
 
 	for( p=dir_infos; p; p=p->next ) {
 		fileinfo = (GFileInfo*)(p->data);
