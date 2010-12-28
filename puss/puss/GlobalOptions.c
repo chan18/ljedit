@@ -59,6 +59,16 @@ static void parse_source_editor_font_option(const Option* option, const gchar* o
 	}
 }
 
+static void append_global_paths() {
+	// append style path PUSS/styles
+	{
+		GtkSourceStyleSchemeManager* ssm = gtk_source_style_scheme_manager_get_default();
+		gchar* style_path = g_build_filename(puss_app->module_path, "styles", NULL);
+		gtk_source_style_scheme_manager_append_search_path(ssm, style_path);
+		g_free(style_path);
+	}
+}
+
 void puss_reg_global_options() {
 	const Option* option;
 
@@ -76,6 +86,8 @@ void puss_reg_global_options() {
 
 	option = puss_option_manager_option_reg("puss", "editor.font", "");
 	puss_option_manager_monitor_reg(option, &parse_source_editor_font_option, 0, 0);
+
+	append_global_paths();
 }
 
 static void cb_combo_box_option_changed(GtkComboBox* w, const Option* option) {
@@ -172,7 +184,6 @@ GtkWidget* puss_create_global_options_setup_widget(gpointer tag) {
 	}
 
 	{
-		gchar* style_path;
 		const gchar* const * ids;
 		const gchar* const * p;
 		gint i;
@@ -184,10 +195,6 @@ GtkWidget* puss_create_global_options_setup_widget(gpointer tag) {
 		w = GTK_WIDGET(gtk_builder_get_object(builder, "style_combo"));
 
 		if( ssm ) {
-			style_path = g_build_filename(puss_app->module_path, "styles", NULL);
-			gtk_source_style_scheme_manager_append_search_path(ssm, style_path);
-			g_free(style_path);
-
 			gtk_source_style_scheme_manager_force_rescan(ssm);
 
 			ids = gtk_source_style_scheme_manager_get_scheme_ids(ssm);

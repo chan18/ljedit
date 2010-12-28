@@ -313,9 +313,9 @@ void cpp_lexer_next(CppLexer* lexer, MLToken* token) {
 		token->type = TK_ID;
 		goto label_cpp_lexer_finish;
 
-	} else if( ch=='+' || ch=='-' || g_ascii_isdigit(ch) ) {
+	} else if( ch=='+' || ch=='-' || ch=='.' || g_ascii_isdigit(ch) ) {
 		gboolean in_number;
-		if( ch=='+' || ch=='-' ) {
+		if( ch=='+' || ch=='-' || ch=='.' ) {
 			FRAME_NEXT_CH();
 			if( FRAME_HAS_NEXT() ) {
 				ch = FRAME_GET_CH();
@@ -348,6 +348,7 @@ void cpp_lexer_next(CppLexer* lexer, MLToken* token) {
 			// 0.123f	0.123f
 			// 0.12e+3	0.12E+3
 			// 0.12e-3	0.12E-3
+			// .5f
 			// 
 			ch = FRAME_GET_CH();
 			switch(ch) {
