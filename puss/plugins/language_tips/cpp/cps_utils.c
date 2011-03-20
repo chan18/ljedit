@@ -322,6 +322,9 @@ MLToken* parse_ptr_ref(MLToken* ps, MLToken* pe, gint* dt) {
 		case '&':
 			*dt = KD_REF;
 			break;
+		case SG_AND:
+			*dt = KD_REF;
+			break;
 		default:
 			return ps;
 		}
