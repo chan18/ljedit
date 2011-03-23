@@ -20,8 +20,8 @@ void stree_insert(CppSTree* self, CppFile* file);
 void stree_remove(CppSTree* self, CppFile* file);
 
 typedef struct {
-	gchar (*do_prev)(gpointer it);
-	gchar (*do_next)(gpointer it);
+	CppTextIter	do_prev;
+	CppTextIter	do_next;
 } SearchIterEnv;
 
 GList*   spath_find(SearchIterEnv* env, gpointer ps, gpointer pe, gboolean find_startswith);

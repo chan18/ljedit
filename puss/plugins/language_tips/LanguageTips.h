@@ -1,6 +1,10 @@
 // Tips.h
 // 
 
+// TODO :
+//	1 remove all LanguageTips* self, replace it with extern LanguageTips* g_tips;
+//	2 replace libintl with Glib intl wrapped.
+
 #ifndef PUSS_PLUGIN_INC_LANGUAGE_TIPS_H
 #define PUSS_PLUGIN_INC_LANGUAGE_TIPS_H
 

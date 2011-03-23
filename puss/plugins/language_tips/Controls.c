@@ -72,7 +72,10 @@ static gchar* find_spath_in_text_buffer( CppFile* file
     , GtkTextIter* end
 	, gboolean find_startswith )
 {
-	return cpp_spath_find(find_startswith, text_buffer_iter_do_prev, text_buffer_iter_do_next, it, end);
+	return (gchar*)cpp_spath_find( find_startswith
+						, (CppTextIter)text_buffer_iter_do_prev
+						, (CppTextIter)text_buffer_iter_do_next
+						, it, end);
 }
 
 static gboolean check_cpp_files(LanguageTips* self, const gchar* filename) {
@@ -343,7 +346,7 @@ static GList* search_include_files_in_dir(GList* files, gchar* inc_path, gchar* 
 	GDir* dir;
 
 	if( subpath )
-		dirname = g_build_path(G_DIR_SEPARATOR_S, inc_path, subpath, 0);
+		dirname = g_build_path(G_DIR_SEPARATOR_S, inc_path, subpath, NULL);
 
 	dir = g_dir_open(dirname, 0, 0);
 	while(dir) {
@@ -1010,41 +1013,91 @@ static void buf_on_modified_changed(GtkTextBuffer* buf, LanguageTips* self) {
 	parse_thread_push(self, url ? url->str : 0, FALSE);
 }
 
-static void signals_connect(LanguageTips* self, GtkTextView* view) {
-	GString* url;
-	GtkTextBuffer* buf;
-	GtkSourceLanguage* lang;
+static void doc_signals_connect(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf) {
+	GString* url = self->app->doc_get_url(buf);
+	GtkSourceLanguage* lang = gtk_source_buffer_get_language(GTK_SOURCE_BUFFER(buf));
+	gboolean checked = FALSE;
 
-	buf = gtk_text_view_get_buffer(view);
+	// mime-types check
+	// 
+	{
+		gchar** types = lang ? gtk_source_language_get_mime_types(lang) : 0;
+		if( types ) {
+			gchar** p = types;
+			for( p=types; *p; ++p ) {
+				// g_print("got type : %s\n", *p);
+				if( strcmp(*p, "text/x-c")==0
+					|| strcmp(*p, "text/x-csrc")==0
+					|| strcmp(*p, "text/x-chdr")==0
+					|| strcmp(*p, "text/x-c++")==0
+					|| strcmp(*p, "text/x-c++src")==0
+					|| strcmp(*p, "text/x-c++hdr")==0 )
+				{
+					checked = TRUE;
+					break;
+				}
+			}
+
+			g_strfreev(types);
+		}
+	}
+
+	if( checked ) {
+		g_signal_connect(view, "key-press-event", G_CALLBACK(view_on_key_press), self);
+		g_signal_connect(view, "key-release-event", G_CALLBACK(view_on_key_release), self);
+
+		g_signal_connect(view->im_context, "commit", G_CALLBACK(view_on_im_commit), self);
+
+		g_signal_connect(view, "button-release-event", G_CALLBACK(view_on_button_release), self);
+		g_signal_connect(view, "focus-out-event", G_CALLBACK(view_on_focus_out), self);
+		g_signal_connect(view, "scroll-event", G_CALLBACK(view_on_scroll), self);
+
+		g_signal_connect(buf, "modified-changed", G_CALLBACK(&buf_on_modified_changed), self);
+
+		if( url )
+			parse_thread_push(self, url->str, FALSE);
+
+	} else {
+		// TODO : remove this file in parsed files
+	}
+}
+
+static void doc_signals_disconnect(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf) {
+    g_signal_handlers_disconnect_matched( view->im_context, (GSignalMatchType)(G_SIGNAL_MATCH_DATA), 0, 0, NULL, NULL, self );
+    g_signal_handlers_disconnect_matched( view, (GSignalMatchType)(G_SIGNAL_MATCH_DATA), 0, 0, NULL, NULL, self );
+    g_signal_handlers_disconnect_matched( buf, (GSignalMatchType)(G_SIGNAL_MATCH_DATA), 0, 0, NULL, NULL, self );
+}
+
+#define __LANGUAGE_TIPS_KEY__	"__language_tips__"
+
+static void on_doc_language_changed(GtkTextBuffer* buf, GParamSpec* spec, GtkTextView* view) {
+	LanguageTips* self = (LanguageTips*)g_object_get_data(G_OBJECT(buf), __LANGUAGE_TIPS_KEY__);
+	doc_signals_disconnect(self, view, buf);
+	doc_signals_connect(self, view, buf);
+}
+
+static void signals_connect(LanguageTips* self, GtkTextView* view) {
+	GtkTextBuffer* buf = gtk_text_view_get_buffer(view);
 	if( !buf )
 		return;
 
-	url = self->app->doc_get_url(buf);
-	if( !url )
-		return;
-
-	if( !check_cpp_files(self, url->str) )
-		return;
-
-	g_signal_connect(view, "key-press-event", G_CALLBACK(view_on_key_press), self);
-	g_signal_connect(view, "key-release-event", G_CALLBACK(view_on_key_release), self);
-
-	g_signal_connect(view->im_context, "commit", G_CALLBACK(view_on_im_commit), self);
-
-	g_signal_connect(view, "button-release-event", G_CALLBACK(view_on_button_release), self);
-	g_signal_connect(view, "focus-out-event", G_CALLBACK(view_on_focus_out), self);
-	g_signal_connect(view, "scroll-event", G_CALLBACK(view_on_scroll), self);
-
-	g_signal_connect(buf, "modified-changed", G_CALLBACK(&buf_on_modified_changed), self);
-
-	lang = gtk_source_buffer_get_language(GTK_SOURCE_BUFFER(buf));
-	if( !lang ) {
-		GtkSourceLanguageManager* lm = gtk_source_language_manager_get_default();
-		GtkSourceLanguage* cpp_lang = gtk_source_language_manager_get_language(lm, "cpp");
-		gtk_source_buffer_set_language(GTK_SOURCE_BUFFER(buf), cpp_lang);
+	// add "language" property changes notify
+	{
+		g_object_set_data(G_OBJECT(buf), __LANGUAGE_TIPS_KEY__, self);
+		g_signal_connect_after(buf, "notify::language", G_CALLBACK(on_doc_language_changed), view);
 	}
 
-	parse_thread_push(self, url->str, FALSE);
+	// cpp files check, only first time
+	if( !gtk_source_buffer_get_language(GTK_SOURCE_BUFFER(buf)) ) {
+		GString* url = self->app->doc_get_url(buf);
+		if( check_cpp_files(self, url->str) ) {
+			GtkSourceLanguageManager* lm = gtk_source_language_manager_get_default();
+			GtkSourceLanguage* cpp_lang = gtk_source_language_manager_get_language(lm, "cpp");
+			gtk_source_buffer_set_language(GTK_SOURCE_BUFFER(buf), cpp_lang);
+		}
+	}
+
+	doc_signals_connect(self, view, buf);
 }
 
 static void signals_disconnect(LanguageTips* self, GtkTextView* view) {
@@ -1052,9 +1105,9 @@ static void signals_disconnect(LanguageTips* self, GtkTextView* view) {
 	if( !buf )
 		return;
 
-    g_signal_handlers_disconnect_matched( view->im_context, (GSignalMatchType)(G_SIGNAL_MATCH_DATA), 0, 0, NULL, NULL, self );
-    g_signal_handlers_disconnect_matched( view, (GSignalMatchType)(G_SIGNAL_MATCH_DATA), 0, 0, NULL, NULL, self );
-    g_signal_handlers_disconnect_matched( buf, (GSignalMatchType)(G_SIGNAL_MATCH_DATA), 0, 0, NULL, NULL, self );
+	g_signal_handlers_disconnect_by_func(buf, G_CALLBACK(on_doc_language_changed), view);
+
+	doc_signals_disconnect(self, view, buf);
 }
 
 static void on_doc_page_added(GtkNotebook* doc_panel, GtkWidget* page, guint page_num, LanguageTips* self) {
@@ -1086,7 +1139,6 @@ static const gchar* ui_info =
 	;
 
 static void on_show_function_action(GtkAction* action, LanguageTips* self) {
-	gboolean res = FALSE;
 	gint page_num;
 	GtkTextView* view;
 	GtkWidget* actived;
@@ -1135,7 +1187,6 @@ static void on_show_function_action(GtkAction* action, LanguageTips* self) {
 }
 
 static void on_jump_to_define_action(GtkAction* action, LanguageTips* self) {
-	gboolean res = FALSE;
 	gint page_num;
 	GtkTextView* view;
 	GtkWidget* actived;
@@ -1210,19 +1261,19 @@ void controls_init(LanguageTips* self) {
 	self->controls_priv = priv;
 
 	option = self->app->option_reg("language_tips", "hint_max_num",  "100");
-	priv->option_monitor_hint_max_num = self->app->option_monitor_reg(option, &parse_hint_max_num_option, priv, 0);
+	priv->option_monitor_hint_max_num = self->app->option_monitor_reg(option, (OptionChanged)parse_hint_max_num_option, priv, 0);
 	parse_hint_max_num_option(option, 0, priv);
 
 	option = self->app->option_reg("language_tips", "hint_max_time", "200");
-	priv->option_monitor_hint_max_time = self->app->option_monitor_reg(option, &parse_hint_max_time_option, priv, 0);
+	priv->option_monitor_hint_max_time = self->app->option_monitor_reg(option, (OptionChanged)parse_hint_max_time_option, priv, 0);
 	parse_hint_max_time_option(option, 0, priv);
 
 	option = self->app->option_reg("language_tips", "jump_max_num",  "-1");
-	priv->option_monitor_jump_max_num = self->app->option_monitor_reg(option, &parse_jump_max_num_option, priv, 0);
+	priv->option_monitor_jump_max_num = self->app->option_monitor_reg(option, (OptionChanged)parse_jump_max_num_option, priv, 0);
 	parse_jump_max_num_option(option, 0, priv);
 
 	option = self->app->option_reg("language_tips", "jump_max_time", "-1");
-	priv->option_monitor_jump_max_time = self->app->option_monitor_reg(option, &parse_jump_max_time_option, priv, 0);
+	priv->option_monitor_jump_max_time = self->app->option_monitor_reg(option, (OptionChanged)parse_jump_max_time_option, priv, 0);
 	parse_jump_max_time_option(option, 0, priv);
 
 	priv->show_function_action = gtk_action_new("cpp_guide_show_function_action", _("function tip"), _("show function args tip."), GTK_STOCK_FIND);

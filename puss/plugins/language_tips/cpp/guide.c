@@ -204,8 +204,8 @@ CppFile* cpp_guide_parse(CppGuide* guide, const gchar* filename, gint namelen, g
 }
 
 gpointer cpp_spath_find( gboolean find_startswith
-			, gchar (*do_prev)(gpointer it)
-			, gchar (*do_next)(gpointer it)
+			, CppTextIter do_prev
+			, CppTextIter do_next
 			, gpointer start_iter
 			, gpointer end_iter )
 {

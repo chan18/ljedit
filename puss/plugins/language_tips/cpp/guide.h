@@ -200,9 +200,11 @@ void cpp_guide_include_paths_unref(CppIncludePaths* paths);
 CppFile* cpp_guide_find_parsed(CppGuide* guide, const gchar* filename, gint namelen);
 CppFile* cpp_guide_parse(CppGuide* guide, const gchar* filename, gint namelen, gboolean force_rebuild);
 
+typedef gchar (*CppTextIter)(gpointer iter);
+
 gpointer cpp_spath_find( gboolean find_startswith
-			, gchar (*do_prev)(gpointer it)
-			, gchar (*do_next)(gpointer it)
+			, CppTextIter do_prev
+			, CppTextIter do_next
 			, gpointer start_iter
 			, gpointer end_iter );
 gpointer cpp_spath_parse(gboolean find_startswith, const gchar* text);
