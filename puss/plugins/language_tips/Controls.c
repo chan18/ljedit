@@ -1090,7 +1090,7 @@ static void signals_connect(LanguageTips* self, GtkTextView* view) {
 	// cpp files check, only first time
 	if( !gtk_source_buffer_get_language(GTK_SOURCE_BUFFER(buf)) ) {
 		GString* url = self->app->doc_get_url(buf);
-		if( check_cpp_files(self, url->str) ) {
+		if( url && check_cpp_files(self, url->str) ) {
 			GtkSourceLanguageManager* lm = gtk_source_language_manager_get_default();
 			GtkSourceLanguage* cpp_lang = gtk_source_language_manager_get_language(lm, "cpp");
 			gtk_source_buffer_set_language(GTK_SOURCE_BUFFER(buf), cpp_lang);
