@@ -5,6 +5,10 @@
 #include "Puss.h"
 #include "OptionManager.h"
 
+#include <string.h>
+#include <memory.h>
+
+
 typedef struct _Utils          Utils;
 
 struct _Utils {
@@ -74,7 +78,7 @@ void puss_active_panel_page(GtkNotebook* panel, gint page_num) {
 	}
 }
 
-gboolean load_convert_text(gchar** text, gsize* len, const gchar* charset, GError** err) {
+static gboolean load_convert_text(gchar** text, gsize* len, const gchar* charset, GError** err) {
 	gsize bytes_written = 0;
 	gchar* result = g_convert(*text, *len, "UTF-8", charset, 0, &bytes_written, err);
 	if( result ) {
@@ -91,8 +95,83 @@ gboolean load_convert_text(gchar** text, gsize* len, const gchar* charset, GErro
 	return FALSE;
 }
 
+static gboolean load_bom_convert_text(gchar** text, gsize* len, const gchar** charset, GError** err) {
+	// UTF-8		EF BB BF
+	// UTF-16(BE)	FE FF
+	// UTF-16(LE)	FF FE
+	// UTF-32(BE)	00 00 FE FF
+	// UTF-32(LE)	FF FE 00 00
+	// !!!NOT TEST // UTF-7		2B 2F 76, and one of the following: [ 38 | 39 | 2B | 2F ]
+	// !!!NOT TEST // UTF-1		F7 64 4C
+	// !!!NOT TEST // UTF-EBCDIC	DD 73 66 73
+	// !!!NOT TEST // SCSU			0E FE FF
+	// !!!NOT TEST // BOCU-1		FB EE 28 optionally followed by FF
+	// GB-18030		84 31 95 33
+
+	gchar* sbuf = *text;
+	gsize slen = *len;
+	gsize bytes_written = 0;
+
+	if( slen>=3 && memcmp(sbuf, "\xEF\xBB\xBF", 3)==0 ) {
+		*charset = "UTF-8";
+		if( g_utf8_validate(sbuf+3, slen-3, 0) ) {
+			sbuf = g_strdup(sbuf+3);
+			slen -= 3;
+			goto succeed;
+		}
+
+	} else if( slen>=4 && memcmp(sbuf, "\x84\x31\x95\x33", 4)==0 ) {
+		*charset = "GB-18030";
+		sbuf = g_convert(sbuf, slen, "UTF-8", *charset, 0, &bytes_written, err);
+		if( sbuf ) {
+			slen = bytes_written;
+			goto succeed;
+		}
+
+	} else if( slen>=4 && memcmp(sbuf, "\x00\x00\xFE\xFF", 4)==0 ) {
+		*charset = "UTF-32BE";
+		sbuf = g_convert(sbuf, slen, "UTF-8", *charset, 0, &bytes_written, err);
+		if( sbuf ) {
+			slen = bytes_written;
+			goto succeed;
+		}
+
+	} else if( slen>=4 && memcmp(sbuf, "\xFF\xFE\x0\x00", 4)==0 ) {
+		*charset = "UTF-32LE";
+		sbuf = g_convert(sbuf, slen, "UTF-8", *charset, 0, &bytes_written, err);
+		if( sbuf ) {
+			slen = bytes_written;
+			goto succeed;
+		}
+
+	} else if( slen>=2 && memcmp(sbuf, "\xFE\xFF", 2)==0 ) {
+		*charset = "UTF-16BE";
+		sbuf = g_convert(sbuf, slen, "UTF-8", *charset, 0, &bytes_written, err);
+		if( sbuf ) {
+			slen = bytes_written;
+			goto succeed;
+		}
+
+	} else if( slen>=2 && memcmp(sbuf, "\xFF\xFE", 2)==0 ) {
+		*charset = "UTF-16LE";
+		sbuf = g_convert(sbuf, slen, "UTF-8", *charset, 0, &bytes_written, err);
+		if( sbuf ) {
+			slen = bytes_written;
+			goto succeed;
+		}
+	}
+
+	return FALSE;
+
+succeed:
+	g_free(*text);
+	*text = sbuf;
+	*len = slen;
+	return TRUE;
+}
+
 gboolean puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST_RETURN gchar** charset) {
-	gchar** cs;
+	const gchar* cs;
 	const gchar* locale = 0;
 	gchar* sbuf = 0;
 	gsize  slen = 0;
@@ -103,41 +182,46 @@ gboolean puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST
 	if( !g_file_get_contents(filename, &sbuf, &slen, 0) )
 		return FALSE;
 
+	// BOM convert to UTF-8 test
+	if( load_bom_convert_text(&sbuf, &slen, &cs, 0) )
+		goto load_succeed;
+
+	// UTF-8 tests
 	if( g_utf8_validate(sbuf, slen, 0) ) {
-		if( charset )
-			*charset = "UTF-8";
-		*text = sbuf;
-		*len = slen;
-		return TRUE;
+		cs = "UTF-8";
+		goto load_succeed;
 	}
 
+	// charset tests
 	if( puss_utils->charset_list ) {
-		for( cs=puss_utils->charset_list; *cs; ++cs ) {
-			if( (*cs)[0]=='\0' )
+		gchar** p = puss_utils->charset_list;
+		for( ; *p; ++p ) {
+			cs = *p;
+			if( cs[0]=='\0' )
 				continue;
 
-			if( load_convert_text(&sbuf, &slen, *cs, 0) ) {
-				if( charset )
-					*charset = *cs;
-				*text = sbuf;
-				*len = slen;
-				return TRUE;
-			}
+			if( load_convert_text(&sbuf, &slen, cs, 0) )
+				goto load_succeed;
 		}
 	}
 
+	// local tests
 	if( !g_get_charset(&locale) ) {		// get locale charset, and not UTF-8
 		if( load_convert_text(&sbuf, &slen, locale, 0) ) {
-			if( charset )
-				*charset = locale;
-			*text = sbuf;
-			*len = slen;
-			return TRUE;
+			cs = locale;
+			goto load_succeed;
 		}
 	}
 
 	g_free(sbuf);
 	return FALSE;
+
+load_succeed:
+	if( charset )
+		*charset = cs;
+	*text = sbuf;
+	*len = slen;
+	return TRUE;
 }
 
 #ifdef G_OS_WIN32
