@@ -57,6 +57,9 @@ struct _Puss {
 	void			(*doc_set_charset)( GtkTextBuffer* buffer, const gchar* charset );
 	GString*		(*doc_get_charset)( GtkTextBuffer* buffer );
 
+	void			(*doc_set_BOM)( GtkTextBuffer* buffer, gboolean BOM );
+	gboolean		(*doc_get_BOM)( GtkTextBuffer* buffer );
+
 	GtkTextView*	(*doc_get_view_from_page)( GtkWidget* page );
 	GtkTextBuffer*	(*doc_get_buffer_from_page)( GtkWidget* page );
 
@@ -78,7 +81,8 @@ struct _Puss {
 	// utils
 	void			(*send_focus_change)( GtkWidget* widget, gboolean in );
 	void			(*active_panel_page)( GtkNotebook* panel, gint page_num );
-	gboolean		(*load_file)(const gchar* filename, gchar** text, gsize* len, G_CONST_RETURN gchar** charset);
+	gboolean		(*save_file)(const gchar* filename, const gchar* text, gssize len, const gchar* charset, gboolean use_BOM);
+	gboolean		(*load_file)(const gchar* filename, gchar** text, gsize* len, G_CONST_RETURN gchar** charset, gboolean* use_BOM);
 	gchar*			(*format_filename)(const gchar* filename);
 
 	// option manager

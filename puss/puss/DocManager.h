@@ -13,6 +13,9 @@ GString*		puss_doc_get_url( GtkTextBuffer* buffer );
 void			puss_doc_set_charset( GtkTextBuffer* buffer, const gchar* charset );
 GString*		puss_doc_get_charset( GtkTextBuffer* buffer );
 
+void			puss_doc_set_BOM( GtkTextBuffer* buffer, gboolean BOM );
+gboolean		puss_doc_get_BOM( GtkTextBuffer* buffer );
+
 GtkTextView*	puss_doc_get_view_from_page( GtkWidget* page );
 GtkTextBuffer*	puss_doc_get_buffer_from_page( GtkWidget* page );
 

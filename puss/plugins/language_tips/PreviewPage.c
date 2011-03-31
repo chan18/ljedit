@@ -162,7 +162,7 @@ static void preview_do_update(LanguageTips* self, gint index) {
 	if( elem->file != self->preview_last_file ) {
 		self->preview_last_file = elem->file;
 
-		if( !self->app->load_file(elem->file->filename->buf, &text, &len, 0) )
+		if( !self->app->load_file(elem->file->filename->buf, &text, &len, 0, 0) )
 			return;
 
 		gtk_text_buffer_set_text(buffer, text, len);

@@ -187,9 +187,9 @@ static GtkWidget* puss_text_view_new_with_buffer(GtkSourceBuffer* buf) {
 	}
 
 	static gboolean puss_text_view_cb_init(GtkWidget* widget, GdkEvent* event) {
-		GtkPussTextView* self = PUSS_TEXT_VIEW(widget);
-		GdkWindow* win = gtk_widget_get_window(widget);
-		HWND hwnd = GDK_WINDOW_HWND(win);
+		// GtkPussTextView* self = PUSS_TEXT_VIEW(widget);
+		// GdkWindow* win = gtk_widget_get_window(widget);
+		// HWND hwnd = GDK_WINDOW_HWND(win);
 		// NOTICE : not work on gtk+-2.20, now not use this
 		// g_print("ss : %d\n", hwnd);
 		// SetWindowLong(hwnd, GWL_USERDATA, (LONG)self);
@@ -587,8 +587,9 @@ static gint doc_open_file( const gchar* filename, FindLocation fun, gpointer tag
 		gchar* text = 0;
 		gsize len = 0;
 		const gchar* charset = 0;
+		gboolean BOM = FALSE;
 
-		if( puss_load_file(url, &text, &len, &charset) ) {
+		if( puss_load_file(url, &text, &len, &charset, &BOM) ) {
 			// create text buffer & set text
 			buf = gtk_source_buffer_new(0);
 			tbuf = GTK_TEXT_BUFFER(buf);
@@ -601,6 +602,7 @@ static gint doc_open_file( const gchar* filename, FindLocation fun, gpointer tag
 			// save url & charset
 			puss_doc_set_url(GTK_TEXT_BUFFER(buf), url);
 			puss_doc_set_charset(GTK_TEXT_BUFFER(buf), charset);
+			puss_doc_set_BOM(GTK_TEXT_BUFFER(buf), BOM);
 
 			// save modify info
 			mi.need_check = TRUE;
@@ -672,35 +674,23 @@ gboolean doc_save_file_safe( GtkTextBuffer* buf, GError** err ) {
 */
 
 gboolean doc_save_file( GtkTextBuffer* buf, GError** err ) {
-	gunichar ch;
 	GIOStatus status;
-	GtkTextIter iter;
+	GtkTextIter start, end;
 	ModifyInfo mi;
 
 	const GString* url = puss_doc_get_url(buf);
 	const GString* charset = puss_doc_get_charset(buf);
-	GIOChannel* channel = g_io_channel_new_file(url->str, "w", err);
-	if( !channel )
+	gboolean BOM = puss_doc_get_BOM(buf);
+	gchar* text = 0;
+
+	gtk_text_buffer_get_start_iter(buf, &start);
+	gtk_text_buffer_get_end_iter(buf, &end);
+	text = gtk_text_buffer_get_text(buf, &start, &end, TRUE);
+
+	if( !puss_save_file(url->str, text, -1, charset->str, BOM) ) {
+		// TODO : message box
 		return FALSE;
-
-	status = g_io_channel_set_encoding(channel, charset->str, err);
-	if( status==G_IO_STATUS_ERROR )
-		return FALSE;
-
-	gtk_text_buffer_get_iter_at_offset(buf, &iter, 0);
-	if( !gtk_text_iter_is_end(&iter) ) {
-		while( status!=G_IO_STATUS_ERROR ) {
-			ch = gtk_text_iter_get_char(&iter);
-			status = g_io_channel_write_unichar(channel, ch, err);
-
-			if( !gtk_text_iter_forward_char(&iter) )
-				break;
-		}
 	}
-
-	g_io_channel_close(channel);
-	if( status==G_IO_STATUS_ERROR )
-		return FALSE;
 
 	gtk_text_buffer_set_modified(buf, FALSE);
 
@@ -844,6 +834,14 @@ GString* puss_doc_get_charset( GtkTextBuffer* buffer ) {
 	return (GString*)g_object_get_data(G_OBJECT(buffer), "puss-doc-charset");
 }
 
+void puss_doc_set_BOM( GtkTextBuffer* buffer, gboolean BOM ) {
+	g_object_set_data(G_OBJECT(buffer), "puss-doc-BOM", GINT_TO_POINTER(BOM));
+}
+
+gboolean puss_doc_get_BOM( GtkTextBuffer* buffer ) {
+	return GPOINTER_TO_INT(g_object_get_data(G_OBJECT(buffer), "puss-doc-BOM"));
+}
+
 GtkTextView* puss_doc_get_view_from_page( GtkWidget* page ) {
 	gpointer tag = g_object_get_data(G_OBJECT(page), "puss-doc-view");
 	return (tag && GTK_TEXT_VIEW(tag)) ? GTK_TEXT_VIEW(tag) : 0;
@@ -895,6 +893,7 @@ gint puss_doc_new() {
 	gint page_num;
 	GtkSourceBuffer* buf = gtk_source_buffer_new(0);
 	puss_doc_set_charset(GTK_TEXT_BUFFER(buf), "UTF-8");
+	puss_doc_set_BOM(GTK_TEXT_BUFFER(buf), FALSE);
 
 	puss_pos_locate_add_current_pos();
 	page_num = doc_open_page(buf, TRUE);
@@ -1079,6 +1078,7 @@ gboolean doc_mtime_check(gpointer tag) {
 	gchar* text = 0;
 	gsize len = 0;
 	const gchar* charset = 0;
+	gboolean BOM = FALSE;
 
 	if( !gtk_window_is_active(puss_app->main_window) )
 		return TRUE;
@@ -1146,7 +1146,7 @@ gboolean doc_mtime_check(gpointer tag) {
 	}
 
 	{
-		if( puss_load_file(url->str, &text, &len, &charset) ) {
+		if( puss_load_file(url->str, &text, &len, &charset, &BOM) ) {
 			puss_pos_locate_add_current_pos();
 
 			gtk_source_buffer_begin_not_undoable_action(GTK_SOURCE_BUFFER(buf));
@@ -1157,6 +1157,7 @@ gboolean doc_mtime_check(gpointer tag) {
 
 			// save charset
 			puss_doc_set_charset(GTK_TEXT_BUFFER(buf), charset);
+			puss_doc_set_BOM(GTK_TEXT_BUFFER(buf), BOM);
 
 			puss_pos_locate_current();
 		}

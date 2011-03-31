@@ -93,7 +93,7 @@ static void parse_doc_module(GtkDocHelper* self, const gchar* gtk_doc_path, cons
 	if( !index_filename )
 		return;
 
-	if( self->app->load_file(index_filename, &text, &len, 0) ) {
+	if( self->app->load_file(index_filename, &text, &len, 0, 0) ) {
 		GMatchInfo* info = 0;
 		if( g_regex_match_full(self->re_dt, text, len, 0, (GRegexMatchFlags)0, &info, 0) ) {
 			DocModuleNode* node = g_new0(DocModuleNode, 1);

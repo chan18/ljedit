@@ -181,7 +181,7 @@ void search_in_file(const gchar* filename, const gchar* search_text, SearchTools
 	gchar* content = 0;
 	gsize len = 0;
 
-	if( !self->app->load_file(filename, &content, &len, 0) )
+	if( !self->app->load_file(filename, &content, &len, 0, 0) )
 		return;
 
 	search_in_file_content(filename, content, len, search_text, self);

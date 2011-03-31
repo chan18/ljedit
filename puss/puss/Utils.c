@@ -136,7 +136,7 @@ static gboolean load_bom_convert_text(gchar** text, gsize* len, const gchar** ch
 			goto succeed;
 		}
 
-	} else if( slen>=4 && memcmp(sbuf, "\xFF\xFE\x0\x00", 4)==0 ) {
+	} else if( slen>=4 && memcmp(sbuf, "\xFF\xFE\x00\x00", 4)==0 ) {
 		*charset = "UTF-32LE";
 		sbuf = g_convert(sbuf, slen, "UTF-8", *charset, 0, &bytes_written, err);
 		if( sbuf ) {
@@ -170,8 +170,87 @@ succeed:
 	return TRUE;
 }
 
-gboolean puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST_RETURN gchar** charset) {
-	const gchar* cs;
+gboolean puss_save_file(const gchar* filename, const gchar* text, gssize len, const gchar* charset, gboolean use_BOM) {
+	gboolean succeed = FALSE;
+	GIOChannel* channel = 0;
+	const gchar* BOM_str = 0;
+	gsize BOM_len = 0;
+	GError* err = 0;
+	gsize bytes_written = 0;
+	gchar* buf = g_convert(text, len, charset, "UTF-8", 0, &bytes_written, &err);
+	if( !buf )
+		goto finished;
+
+	if( use_BOM ) {
+		// UTF-8		EF BB BF
+		// UTF-16(BE)	FE FF
+		// UTF-16(LE)	FF FE
+		// UTF-32(BE)	00 00 FE FF
+		// UTF-32(LE)	FF FE 00 00
+		// !!!NOT USE // UTF-7		2B 2F 76, and one of the following: [ 38 | 39 | 2B | 2F ]
+		// !!!NOT USE // UTF-1		F7 64 4C
+		// !!!NOT USE // UTF-EBCDIC	DD 73 66 73
+		// !!!NOT USE // SCSU			0E FE FF
+		// !!!NOT USE // BOCU-1		FB EE 28 optionally followed by FF
+		// GB-18030		84 31 95 33
+
+		if( g_str_equal(charset, "UTF-8") ) {
+			BOM_str = "\xEF\xBB\xBF";
+			BOM_len = 3;
+
+		} else if( g_str_equal(charset, "GB-18030") ) {
+			BOM_str = "\x84\x31\x95\x33";
+			BOM_len = 4;
+
+		} else if( g_str_equal(charset, "UTF-32BE") ) {
+			BOM_str = "\x00\x00\xFE\xFF";
+			BOM_len = 4;
+
+		} else if( g_str_equal(charset, "UTF-32LE") ) {
+			BOM_str = "\xFF\xFE\x00\x00";
+			BOM_len = 4;
+
+		} else if( g_str_equal(charset, "UTF-16BE") ) {
+			BOM_str = "\xFE\xFF";
+			BOM_len = 2;
+
+		} else if( g_str_equal(charset, "UTF-16LE") ) {
+			BOM_str = "\xFF\xFE";
+			BOM_len = 2;
+		}
+	}
+
+	// save file
+	channel = g_io_channel_new_file(filename, "w", 0);
+	if( !channel )
+		goto finished;
+
+	if( g_io_channel_set_encoding(channel, NULL, &err)==G_IO_STATUS_ERROR )
+		goto finished;
+
+	if( BOM_str && g_io_channel_write_chars(channel, BOM_str, BOM_len, 0, &err)==G_IO_STATUS_ERROR )
+		goto finished;
+
+	if( g_io_channel_write_chars(channel, buf, (gssize)bytes_written, 0, &err)==G_IO_STATUS_ERROR )
+		goto finished;
+
+	succeed = TRUE;
+
+finished:
+	if( err ) {
+		g_warning("puss save file failed : %s", err->message);
+		g_error_free(err);
+	}
+
+	if( channel )
+		g_io_channel_close(channel);
+	g_free(buf);
+	return succeed;
+}
+
+gboolean puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST_RETURN gchar** charset, gboolean* use_BOM) {
+	gboolean BOM = FALSE;
+	const gchar* cs = 0;
 	const gchar* locale = 0;
 	gchar* sbuf = 0;
 	gsize  slen = 0;
@@ -183,8 +262,10 @@ gboolean puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST
 		return FALSE;
 
 	// BOM convert to UTF-8 test
-	if( load_bom_convert_text(&sbuf, &slen, &cs, 0) )
+	if( load_bom_convert_text(&sbuf, &slen, &cs, 0) ) {
+		BOM = TRUE;
 		goto load_succeed;
+	}
 
 	// UTF-8 tests
 	if( g_utf8_validate(sbuf, slen, 0) ) {
@@ -217,6 +298,8 @@ gboolean puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST
 	return FALSE;
 
 load_succeed:
+	if( use_BOM )
+		*use_BOM = BOM;
 	if( charset )
 		*charset = cs;
 	*text = sbuf;

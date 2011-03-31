@@ -13,7 +13,8 @@ void		puss_send_focus_change(GtkWidget* widget, gboolean in);
 
 void		puss_active_panel_page(GtkNotebook* panel, gint page_num);
 
-gboolean	puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST_RETURN gchar** charset);
+gboolean	puss_save_file(const gchar* filename, const gchar* text, gssize len, const gchar* charset, gboolean use_BOM);
+gboolean	puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST_RETURN gchar** charset, gboolean* use_BOM);
 
 gchar*		puss_format_filename(const gchar* filename);
 
