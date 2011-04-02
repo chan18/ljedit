@@ -1,97 +1,70 @@
 <?xml version="1.0"?>
 <interface>
+<!-- interface-requires gtk+ 2.12 -->
+<!-- interface-naming-policy toplevel-contextual -->
   <object class="GtkWindow" id="main_window">
     <property name="title" translatable="yes">Puss - source editor</property>
     <property name="default_width">1024</property>
     <property name="default_height">768</property>
-    <signal handler="cb_main_window_delete" name="delete-event"/>
-
+    <signal name="delete_event" handler="cb_main_window_delete"/>
     <child>
       <object class="GtkVBox" id="main_vbox">
-        <child>
-          <object class="GtkMenuBar" constructor="main_ui_manager" id="main_menubar"/>
-          <packing>
-            <property name="expand">false</property>
-          </packing>
-        </child>
-
-        <child>
-          <object class="GtkHBox" id="main_toolbar_hbox">
-            <child>
-              <object class="GtkToolbar" constructor="main_ui_manager" id="main_toolbar">
-                <property name="toolbar-style">GTK_TOOLBAR_ICONS</property>
-              </object>
-              <packing>
-                <property name="expand">true</property>
-                <property name="fill">true</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">false</property>
-            <property name="position">1</property>
-          </packing>
-        </child>
-
+        <property name="orientation">vertical</property>
         <child>
           <object class="GtkHPaned" id="hpaned1">
             <child>
               <object class="GtkNotebook" id="left_panel">
-                <property name="scrollable">true</property>
+                <property name="tab_pos">bottom</property>
                 <property name="group_id">1</property>
-                <property name="tab_pos">GTK_POS_BOTTOM</property>
               </object>
               <packing>
-                <property name="resize">false</property>
-                <property name="shrink">true</property>
+                <property name="resize">False</property>
+                <property name="shrink">True</property>
               </packing>
             </child>
             <child>
               <object class="GtkVPaned" id="vpaned1">
+                <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkHPaned" id="hpaned2">
                     <child>
-                      <object class="GtkNotebook" id="doc_panel">
-                        <property name="scrollable">true</property>
-                      </object>
+                      <object class="GtkNotebook" id="doc_panel"/>
                       <packing>
-                        <property name="resize">true</property>
-                        <property name="shrink">true</property>
+                        <property name="resize">True</property>
+                        <property name="shrink">True</property>
                       </packing>
                     </child>
                     <child>
                       <object class="GtkNotebook" id="right_panel">
-                        <property name="scrollable">true</property>
+                        <property name="tab_pos">bottom</property>
                         <property name="group_id">1</property>
-                        <property name="tab_pos">GTK_POS_BOTTOM</property>
                       </object>
                       <packing>
-                        <property name="resize">false</property>
-                        <property name="shrink">true</property>
+                        <property name="resize">False</property>
+                        <property name="shrink">True</property>
                       </packing>
                     </child>
                   </object>
                   <packing>
-                    <property name="resize">true</property>
-                    <property name="shrink">true</property>
+                    <property name="resize">True</property>
+                    <property name="shrink">True</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkNotebook" id="bottom_panel">
-                    <property name="scrollable">true</property>
+                    <property name="can_focus">True</property>
+                    <property name="tab_pos">bottom</property>
                     <property name="group_id">1</property>
-                    <property name="tab_pos">GTK_POS_BOTTOM</property>
                   </object>
                   <packing>
-                    <property name="resize">false</property>
-                    <property name="shrink">true</property>
+                    <property name="resize">False</property>
+                    <property name="shrink">True</property>
                   </packing>
                 </child>
               </object>
               <packing>
-                <property name="resize">true</property>
-                <property name="shrink">true</property>
+                <property name="resize">False</property>
+                <property name="shrink">False</property>
               </packing>
             </child>
           </object>
@@ -99,90 +72,98 @@
             <property name="position">2</property>
           </packing>
         </child>
-        <child>
-          <object class="GtkStatusbar" id="statusbar">
-            <property name="spacing">2</property>
-          </object>
-          <packing>
-            <property name="expand">false</property>
-            <property name="position">3</property>
-          </packing>
-        </child>
       </object>
     </child>
   </object>
-
   <object class="GtkDialog" id="search_dialog">
+    <property name="window_position">center-on-parent</property>
     <property name="default_width">300</property>
     <property name="default_height">170</property>
-    <property name="window_position">GTK_WIN_POS_CENTER_ON_PARENT</property>
-    <property name="destroy_with_parent">true</property>
-    <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
-    <property name="skip_taskbar_hint">true</property>
-    <property name="skip_pager_hint">true</property>
-    <property name="has_separator">false</property>
-    <signal handler="gtk_widget_hide_on_delete" name="delete-event" />
-
+    <property name="type_hint">dialog</property>
+    <signal name="delete_event" handler="gtk_widget_hide_on_delete"/>
     <child internal-child="vbox">
-
       <object class="GtkVBox" id="dialog-vbox1">
+        <property name="orientation">vertical</property>
         <property name="spacing">2</property>
         <child>
           <object class="GtkHBox" id="hbox1">
+            <property name="border_width">5</property>
+            <property name="spacing">8</property>
             <child>
               <object class="GtkVBox" id="vbox1">
+                <property name="orientation">vertical</property>
                 <property name="spacing">5</property>
                 <child>
                   <object class="GtkEntry" id="search_dialog_find_entry">
-                    <signal handler="puss_search_dialog_cb_find_entry_key_press" name="key-press-event"/>
+                    <signal name="key_press_event" handler="puss_search_dialog_cb_find_entry_key_press"/>
                   </object>
                   <packing>
                     <property name="expand">False</property>
+                    <property name="position">0</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkEntry" id="search_dialog_replace_entry">
-                  </object>
+                  <object class="GtkEntry" id="search_dialog_replace_entry"/>
                   <packing>
                     <property name="expand">False</property>
                     <property name="position">1</property>
                   </packing>
                 </child>
-                <child>
-                  <placeholder/>
-                </child>
               </object>
+              <packing>
+                <property name="position">0</property>
+              </packing>
             </child>
             <child>
-              <object class="GtkVButtonBox" id="vbuttonbox1">
+              <object class="GtkVBox" id="vbox2">
+                <property name="visible">True</property>
+                <property name="orientation">vertical</property>
                 <property name="spacing">5</property>
-                <property name="layout_style">GTK_BUTTONBOX_START</property>
                 <child>
                   <object class="GtkButton" id="search_dialog_find_button">
-                    <property name="label" translatable="yes">find</property>
-                    <signal handler="puss_search_dialog_cb_find" name="clicked"/>
+                    <property name="label" translatable="yes">_Find</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="use_underline">True</property>
+                    <signal name="clicked" handler="puss_search_dialog_cb_find"/>
                   </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="position">0</property>
+                  </packing>
                 </child>
                 <child>
                   <object class="GtkButton" id="search_dialog_replace_button">
-                    <property name="label" translatable="yes">replace</property>
-                    <signal handler="puss_search_dialog_cb_replace" name="clicked"/>
+                    <property name="label" translatable="yes">_Replace</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="use_underline">True</property>
+                    <signal name="clicked" handler="puss_search_dialog_cb_replace"/>
                   </object>
                   <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
                     <property name="position">1</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkButton" id="search_dialog_replace_all_button">
-                    <property name="label" translatable="yes">replace_all</property>
-                    <signal handler="puss_search_dialog_cb_replace_all" name="clicked"/>
+                    <property name="label" translatable="yes">Replace_All</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="use_underline">True</property>
+                    <signal name="clicked" handler="puss_search_dialog_cb_replace_all"/>
                   </object>
                   <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
                     <property name="position">2</property>
                   </packing>
                 </child>
               </object>
               <packing>
+                <property name="expand">False</property>
                 <property name="position">1</property>
               </packing>
             </child>
@@ -191,8 +172,15 @@
             <property name="position">1</property>
           </packing>
         </child>
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="dialog-action_area1"/>
+          <packing>
+            <property name="expand">False</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
       </object>
     </child>
   </object>
 </interface>
-

@@ -1,40 +1,42 @@
 <?xml version="1.0"?>
 <interface>
+<!-- interface-requires gtk+ 2.12 -->
+<!-- interface-naming-policy toplevel-contextual -->
   <object class="GtkListStore" id="plugin_store">
-  	<!-- enabled, name, desc, plugin_node -->
     <columns>
+<!-- column-name gboolean -->
       <column type="gboolean"/>
+<!-- column-name gchararray -->
       <column type="gchararray"/>
+<!-- column-name gchararray1 -->
       <column type="gchararray"/>
+<!-- column-name gchararray2 -->
       <column type="gchararray"/>
+<!-- column-name gpointer -->
       <column type="gpointer"/>
     </columns>
   </object>
-
   <object class="GtkDialog" id="puss_plugin_manager_dialog">
     <property name="default_width">500</property>
     <property name="default_height">300</property>
-    <property name="destroy_with_parent">true</property>
-    <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
-    <property name="skip_taskbar_hint">true</property>
-    <property name="skip_pager_hint">true</property>
-    <signal name="delete-event" handler="cb_puss_plugin_manager_dialog_delete" />
+    <property name="type_hint">dialog</property>
+    <signal name="delete_event" handler="cb_puss_plugin_manager_dialog_delete"/>
     <child internal-child="vbox">
       <object class="GtkVBox" id="vbox">
+        <property name="orientation">vertical</property>
         <child>
           <object class="GtkScrolledWindow" id="scrolled_window">
-            <property name="width-request">180</property>
-            <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-            <property name="vscrollbar_policy">GTK_POLICY_NEVER</property>
+            <property name="can_focus">False</property>
+            <property name="border_width">5</property>
+            <property name="hscrollbar_policy">automatic</property>
+            <property name="vscrollbar_policy">automatic</property>
             <child>
               <object class="GtkTreeView" id="plugin_treeview">
                 <property name="model">plugin_store</property>
-                <!--property name="enable-tree-lines">true</property-->
-                <property name="headers-visible">true</property>
+                <property name="reorderable">True</property>
                 <child>
                   <object class="GtkTreeViewColumn" id="enabled_column">
-                    <property name="title" translatable="yes">enabled</property>
-                    <property name="sort-indicator">true</property>
+                    <property name="title">enabled</property>
                     <child>
                       <object class="GtkCellRendererToggle" id="enabled_cell_renderer"/>
                       <attributes>
@@ -45,8 +47,7 @@
                 </child>
                 <child>
                   <object class="GtkTreeViewColumn" id="name_column">
-                    <property name="title" translatable="yes">name</property>
-                    <property name="sort-indicator">true</property>
+                    <property name="title">name</property>
                     <child>
                       <object class="GtkCellRendererText" id="name_cell_renderer"/>
                       <attributes>
@@ -57,8 +58,7 @@
                 </child>
                 <child>
                   <object class="GtkTreeViewColumn" id="engine_column">
-                    <property name="title" translatable="yes">engine</property>
-                    <property name="sort-indicator">true</property>
+                    <property name="title">engine</property>
                     <child>
                       <object class="GtkCellRendererText" id="engine_cell_renderer"/>
                       <attributes>
@@ -69,7 +69,7 @@
                 </child>
                 <child>
                   <object class="GtkTreeViewColumn" id="desc_column">
-                    <property name="title" translatable="yes">description</property>
+                    <property name="title">description</property>
                     <child>
                       <object class="GtkCellRendererText" id="desc_cell_renderer"/>
                       <attributes>
@@ -81,9 +81,23 @@
               </object>
             </child>
           </object>
+          <packing>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="dialog-action_area1">
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
+          </packing>
         </child>
       </object>
     </child>
   </object>
 </interface>
-

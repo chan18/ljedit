@@ -541,6 +541,7 @@ gint doc_open_page(GtkSourceBuffer* buf, gboolean active_page) {
 	gtk_widget_show_all(tab);
 
 	page = gtk_scrolled_window_new(0, 0);
+	g_object_set(page, "border-width", 3, 0);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(page), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 	gtk_container_add(GTK_CONTAINER(page), GTK_WIDGET(view));
 	gtk_widget_show_all(page);
@@ -674,7 +675,6 @@ gboolean doc_save_file_safe( GtkTextBuffer* buf, GError** err ) {
 */
 
 gboolean doc_save_file( GtkTextBuffer* buf, GError** err ) {
-	GIOStatus status;
 	GtkTextIter start, end;
 	ModifyInfo mi;
 

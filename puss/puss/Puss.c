@@ -73,6 +73,16 @@ static gboolean puss_load_ui_files() {
 		return FALSE;
 	}
 
+	// fix old glade version, not support GtkUIManager
+	{
+		GtkWidget* menu_toolbar_vbox = GTK_WIDGET(gtk_builder_get_object(puss_app->builder, "menu_toolbar_vbox"));
+		GtkBox* main_vbox = GTK_BOX(gtk_builder_get_object(puss_app->builder, "main_vbox"));
+		if( menu_toolbar_vbox && main_vbox ) {
+			gtk_box_pack_start(main_vbox, menu_toolbar_vbox, FALSE, TRUE, 0);
+			gtk_box_reorder_child(main_vbox, menu_toolbar_vbox, 0);
+		}
+	}
+
 	gtk_builder_connect_signals(puss_app->builder, 0);
 
 	return TRUE;
@@ -87,7 +97,6 @@ static gboolean puss_main_ui_create() {
 	puss_app->left_panel	= GTK_NOTEBOOK(gtk_builder_get_object(puss_app->builder, "left_panel"));
 	puss_app->right_panel	= GTK_NOTEBOOK(gtk_builder_get_object(puss_app->builder, "right_panel"));
 	puss_app->bottom_panel	= GTK_NOTEBOOK(gtk_builder_get_object(puss_app->builder, "bottom_panel"));
-	puss_app->statusbar		= GTK_STATUSBAR(gtk_builder_get_object(puss_app->builder, "statusbar"));
 
 	if( !( puss_app->main_window
 		&& puss_app->ui_manager
@@ -95,7 +104,6 @@ static gboolean puss_main_ui_create() {
 		&& puss_app->left_panel
 		&& puss_app->right_panel
 		&& puss_app->bottom_panel
-		&& puss_app->statusbar
 		&& puss_find_dialog_init(puss_app->builder) ) )
 	{
 		return FALSE;

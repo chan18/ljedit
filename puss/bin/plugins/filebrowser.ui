@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
 <interface>
   <requires lib="gtk+" version="2.16"/>
-  <!-- interface-naming-policy project-wide -->
+<!-- interface-naming-policy project-wide -->
   <object class="GtkTreeStore" id="file_tree_store">
     <columns>
-      <!-- column-name icon -->
+<!-- column-name icon -->
       <column type="GdkPixbuf"/>
-      <!-- column-name name -->
+<!-- column-name name -->
       <column type="gchararray"/>
-      <!-- column-name file -->
+<!-- column-name file -->
       <column type="GObject"/>
     </columns>
   </object>
@@ -20,6 +20,7 @@
       <object class="GtkToolbar" id="toolbar1">
         <property name="visible">True</property>
         <property name="toolbar_style">icons</property>
+        <property name="icon_size">1</property>
         <child>
           <object class="GtkToolButton" id="refresh_btn">
             <property name="visible">True</property>
@@ -35,6 +36,7 @@
       </object>
       <packing>
         <property name="expand">False</property>
+        <property name="padding">3</property>
         <property name="position">0</property>
       </packing>
     </child>
@@ -42,6 +44,7 @@
       <object class="GtkScrolledWindow" id="scrolledwindow1">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
+        <property name="border_width">3</property>
         <property name="hscrollbar_policy">automatic</property>
         <property name="vscrollbar_policy">automatic</property>
         <property name="shadow_type">etched-in</property>

@@ -1,145 +1,193 @@
 <?xml version="1.0"?>
 <interface>
+<!-- interface-requires gtk+ 2.12 -->
+<!-- interface-naming-policy toplevel-contextual -->
   <object class="GtkListStore" id="search_result_store">
     <columns>
+<!-- column-name gchararray -->
       <column type="gchararray"/>
+<!-- column-name gint -->
       <column type="gint"/>
+<!-- column-name gchararray1 -->
       <column type="gchararray"/>
+<!-- column-name gpointer -->
       <column type="gpointer"/>
     </columns>
   </object>
-
-  <object class="GtkHBox" id="search_tools_panel">
-    <property name="height-request">150</property>
+  <object class="GtkViewport" id="search_tools_panel">
+    <property name="height_request">150</property>
+    <property name="visible">True</property>
+    <property name="resize_mode">queue</property>
+    <property name="shadow_type">none</property>
     <child>
-      <object class="GtkFrame" id="search_result_frame">
-        <child type="label">
-          <object class="GtkLabel" id="search_result_label">
-            <property name="label" translatable="yes">search resulsts:</property>
-          </object>
-        </child>
+      <object class="GtkHBox" id="search_tools_panel_hbox">
         <child>
-          <object class="GtkScrolledWindow" id="scrolled_window">
-            <property name="hscrollbar_policy">automatic</property>
-            <property name="vscrollbar_policy">automatic</property>
+          <object class="GtkFrame" id="search_result_frame">
+            <property name="border_width">5</property>
+            <property name="label_xalign">0</property>
+            <property name="shadow_type">out</property>
             <child>
-              <object class="GtkTreeView" id="search_result_view">
-                <property name="model">search_result_store</property>
-                <property name="headers-visible">false</property>
-                <signal handler="search_results_cb_row_activated" name="row-activated"/>
+              <object class="GtkScrolledWindow" id="scrolled_window">
+                <property name="can_focus">True</property>
+                <property name="border_width">6</property>
+                <property name="hscrollbar_policy">automatic</property>
+                <property name="vscrollbar_policy">automatic</property>
                 <child>
-                  <object class="GtkTreeViewColumn" id="position_column">
-                    <property name="title" translatable="yes">position</property>
+                  <object class="GtkTreeView" id="search_result_view">
+                    <property name="can_focus">True</property>
+                    <property name="model">search_result_store</property>
+                    <property name="headers_visible">False</property>
+                    <property name="headers_clickable">False</property>
+                    <property name="search_column">0</property>
+                    <property name="enable_grid_lines">horizontal</property>
+                    <signal name="row_activated" handler="search_results_cb_row_activated"/>
                     <child>
-                      <object class="GtkCellRendererText" id="filename_cell_render"/>
-                      <attributes>
-                        <attribute name="text">0</attribute>
-                      </attributes>
+                      <object class="GtkTreeViewColumn" id="position_column">
+                        <property name="title">position</property>
+                        <child>
+                          <object class="GtkCellRendererText" id="filename_cell_render"/>
+                          <attributes>
+                            <attribute name="text">0</attribute>
+                          </attributes>
+                        </child>
+                        <child>
+                          <object class="GtkCellRendererText" id="line_cell_renderer"/>
+                          <attributes>
+                            <attribute name="text">1</attribute>
+                          </attributes>
+                        </child>
+                      </object>
                     </child>
                     <child>
-                      <object class="GtkCellRendererText" id="line_cell_renderer"/>
-                      <attributes>
-                        <attribute name="text">1</attribute>
-                      </attributes>
+                      <object class="GtkTreeViewColumn" id="preview_column">
+                        <property name="title">preview</property>
+                        <child>
+                          <object class="GtkCellRendererText" id="preview_cell_renderer"/>
+                          <attributes>
+                            <attribute name="text">2</attribute>
+                          </attributes>
+                        </child>
+                      </object>
                     </child>
                   </object>
                 </child>
-                <child>
-                  <object class="GtkTreeViewColumn" id="preview_column">
-                    <property name="title" translatable="yes">preview</property>
-                    <child>
-                      <object class="GtkCellRendererText" id="preview_cell_renderer"/>
-                      <attributes>
-                        <attribute name="text">2</attribute>
-                      </attributes>
-                    </child>
-                  </object>
-                </child>
               </object>
             </child>
-          </object>
-        </child>
-      </object>
-      <packing>
-        <property name="expand">true</property>
-        <property name="fill">true</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkVBox" id="search_right_panel">
-        <child>
-          <object class="GtkHBox" id="">
-            <child>
-              <object class="GtkLabel" id="search_label">
-                <property name="label" translatable="yes">search : </property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkEntry" id="search_entry">
-                <signal handler="search_tools_search" name="key-press-event"/>
-              </object>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">false</property>
-            <property name="fill">true</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkFrame" id="search_options_frame">
             <child type="label">
-              <object class="GtkLabel" id="search_options_label">
-                <property name="label" translatable="yes">options</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkVBox" id="search_option_range_vbox">
-                <child>
-                  <object class="GtkRadioButton" id="search_option_in_current_file">
-                    <property name="label" translatable="yes">search in current file</property>
-                    <property name="can-focus">false</property>
-                  </object>
-                  <packing>
-                    <property name="expand">false</property>
-                    <property name="fill">false</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkRadioButton" id="search_option_in_opened_files">
-                    <property name="group">search_option_in_current_file</property>
-                    <property name="label" translatable="yes">search in opened files</property>
-                    <property name="can-focus">false</property>
-                  </object>
-                  <packing>
-                    <property name="expand">false</property>
-                    <property name="fill">false</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkRadioButton" id="search_option_in_current_file_dir">
-                    <property name="group">search_option_in_current_file</property>
-                    <property name="label" translatable="yes">search in current file dir</property>
-                    <property name="can-focus">false</property>
-                  </object>
-                  <packing>
-                    <property name="expand">false</property>
-                    <property name="fill">false</property>
-                  </packing>
-                </child>
+              <object class="GtkLabel" id="search_result_label">
+                <property name="xpad">10</property>
+                <property name="label" translatable="yes">search resulsts:</property>
               </object>
             </child>
           </object>
           <packing>
-            <property name="expand">true</property>
-            <property name="fill">true</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkVBox" id="search_right_panel">
+            <property name="border_width">5</property>
+            <property name="orientation">vertical</property>
+            <property name="spacing">3</property>
+            <child>
+              <object class="GtkHBox" id="search_right_panel_top">
+                <child>
+                  <object class="GtkLabel" id="search_label">
+                    <property name="label" translatable="yes">search : </property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEntry" id="search_entry">
+                    <property name="can_focus">True</property>
+                    <property name="invisible_char">&#x25CF;</property>
+                    <signal name="key_press_event" handler="search_tools_search"/>
+                  </object>
+                  <packing>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkFrame" id="search_options_frame">
+                <property name="label_xalign">0</property>
+                <child>
+                  <object class="GtkVBox" id="search_option_range_vbox">
+                    <property name="border_width">5</property>
+                    <property name="orientation">vertical</property>
+                    <child>
+                      <object class="GtkRadioButton" id="search_option_in_current_file">
+                        <property name="label" translatable="yes">search in current file</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <property name="active">True</property>
+                        <property name="draw_indicator">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkRadioButton" id="search_option_in_opened_files">
+                        <property name="label" translatable="yes">search in opened files</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <property name="draw_indicator">True</property>
+                        <property name="group">search_option_in_current_file</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkRadioButton" id="search_option_in_current_file_dir">
+                        <property name="label" translatable="yes">search in current file dir</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <property name="draw_indicator">True</property>
+                        <property name="group">search_option_in_current_file</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                        <property name="position">2</property>
+                      </packing>
+                    </child>
+                  </object>
+                </child>
+                <child type="label">
+                  <object class="GtkLabel" id="search_options_label">
+                    <property name="xpad">10</property>
+                    <property name="label" translatable="yes">options</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="position">1</property>
           </packing>
         </child>
       </object>
-      <packing>
-        <property name="expand">false</property>
-        <property name="fill">false</property>
-      </packing>
     </child>
   </object>
 </interface>
-

@@ -177,7 +177,7 @@ static void on_paste_text(GtkClipboard *clipboard, const gchar *text, PussVConso
 
 static void on_paste(GtkTextView *text_view, PussVConsole* self) {
 	GtkClipboard* clipboard = gtk_widget_get_clipboard(self->view, GDK_SELECTION_CLIPBOARD);
-	gtk_clipboard_request_text(clipboard, on_paste_text, self);
+	gtk_clipboard_request_text(clipboard, (GtkClipboardTextReceivedFunc)on_paste_text, self);
 }
 
 static void on_sbar_changed(GtkAdjustment *adjustment, PussVConsole* self) {
@@ -226,7 +226,7 @@ static void on_show_hide_btn_click(GtkButton *button, PussVConsole* self) {
 		if( IsWindowVisible(self->vcon->hwnd) ) {
 			ShowWindow(self->vcon->hwnd, SW_HIDE);
 		} else {
-			g_idle_add(on_show_console, self);
+			g_idle_add((GSourceFunc)on_show_console, self);
 		}
 	}
 }
@@ -280,7 +280,7 @@ static void vcon_on_screen_changed(VConsole* vcon) {
 	PussVConsole* self = (PussVConsole*)vcon->tag;
 	self->need_update = TRUE;
 
-	g_idle_add(on_idle_update, self);	// it's thread safe
+	g_idle_add((GSourceFunc)on_idle_update, self);	// it's thread safe
 }
 
 static void vcon_on_quit(VConsole* vcon) {
@@ -339,6 +339,7 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 		GtkWidget* chdir_btn = gtk_button_new_with_label("chdir");
 		GtkWidget* vbox = gtk_vbox_new(FALSE, 2);
 		GtkWidget* hbox = gtk_hbox_new(FALSE, 2);
+		GtkWidget* panel = gtk_viewport_new(0, 0);
 
 		g_signal_connect(reset_btn, "clicked", (GCallback)on_reset_btn_click, self);
 		g_signal_connect(show_hide_btn, "clicked", (GCallback)on_show_hide_btn_click, self);
@@ -352,9 +353,10 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 		gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(hbox), self->view, TRUE, TRUE, 0);
 		gtk_box_pack_start(GTK_BOX(hbox), self->sbar, FALSE, FALSE, 0);
-		gtk_widget_show_all(hbox);
-
-		self->panel = hbox;
+		gtk_container_add(GTK_CONTAINER(panel), hbox);
+		gtk_widget_show_all(panel);
+	
+		self->panel = panel;
 		self->app->panel_append(self->panel, gtk_label_new(_("Terminal")), "puss_vconsole_plugin_panel", PUSS_PANEL_POS_BOTTOM);
 	}
 

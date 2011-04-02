@@ -5,6 +5,7 @@
 
 #include <gdk/gdkkeysyms.h>
 #include <gtksourceview/gtksourcebuffer.h>
+#include <gtksourceview/gtksourceview.h>
 #include <gtksourceview/gtksourcelanguagemanager.h>
 #include <gtksourceview/gtksourcestyleschememanager.h>
 
@@ -143,7 +144,6 @@ static void cb_normal_apply_button_changed(GtkButton* w, LanguageTips* self) {
 	GtkBuilder* builder;
 	const Option* option;
 	GtkEntry* entry;
-	const gchar* text;
 
 	builder = (GtkBuilder*)g_object_get_data(G_OBJECT(w), BUILDER_KEY);
 
@@ -316,6 +316,7 @@ void ui_create(LanguageTips* self) {
 	gchar* filepath;
 	const gchar* plugins_path;
 	GtkBuilder* builder;
+	GtkContainer* container;
 	GError* err = 0;
 	gint i;
 
@@ -355,8 +356,11 @@ void ui_create(LanguageTips* self) {
 	self->preview_panel = GTK_WIDGET(gtk_builder_get_object(builder, "preview_panel"));
 	self->preview_filename_label = GTK_LABEL(gtk_builder_get_object(builder, "filename_label"));
 	self->preview_number_button = GTK_BUTTON(gtk_builder_get_object(builder, "number_button"));
-	self->preview_view = GTK_TEXT_VIEW(gtk_builder_get_object(builder, "preview_view"));
-	g_assert( self->preview_panel && self->preview_filename_label && self->preview_number_button && self->preview_view );
+	container = GTK_CONTAINER(gtk_builder_get_object(builder, "preview_container"));
+	self->preview_view = GTK_TEXT_VIEW(gtk_source_view_new());
+	g_assert( self->preview_panel && self->preview_filename_label && self->preview_number_button && container && self->preview_view );
+	g_object_set(self->preview_view, "editable", FALSE, "tab-width", 4, "show-line-numbers", TRUE, "highlight-current-line", TRUE, NULL);
+	gtk_container_add(container, GTK_WIDGET(self->preview_view));
 	set_cpp_lang_to_source_view(self->preview_view);
 	gtk_widget_show_all(self->preview_panel);
 	self->app->panel_append(self->preview_panel, gtk_label_new(_("Preview")), "dev_preview", PUSS_PANEL_POS_BOTTOM);
@@ -374,10 +378,13 @@ void ui_create(LanguageTips* self) {
 	gtk_widget_show_all(GTK_WIDGET(gtk_builder_get_object(builder, "list_panel")));
 
 	self->tips_decl_window = GTK_WIDGET(gtk_builder_get_object(builder, "decl_window"));
-	self->tips_decl_view = GTK_TEXT_VIEW(gtk_builder_get_object(builder, "decl_view"));
+	container = GTK_CONTAINER(gtk_builder_get_object(builder, "decl_scrolled_window"));
+	self->tips_decl_view =  GTK_TEXT_VIEW(gtk_source_view_new());
 	set_cpp_lang_to_source_view(self->tips_decl_view);
 	self->tips_decl_buffer = GTK_TEXT_BUFFER(gtk_text_view_get_buffer(self->tips_decl_view));
-	g_assert( self->tips_decl_window && self->tips_decl_view && self->tips_decl_buffer );
+	g_assert( self->tips_decl_window && self->tips_decl_view && container && self->tips_decl_buffer );
+	g_object_set(self->tips_decl_view, "editable", FALSE, "tab-width", 4, NULL);
+	gtk_container_add(container, GTK_WIDGET(self->tips_decl_view));
 	gtk_widget_show_all(GTK_WIDGET(gtk_builder_get_object(builder, "decl_panel")));
 
 	gtk_builder_connect_signals(builder, self);
