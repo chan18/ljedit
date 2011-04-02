@@ -1,73 +1,45 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <interface>
-<!-- interface-requires gtk+ 2.12 -->
-<!-- interface-naming-policy toplevel-contextual -->
-  <object class="GtkTreeStore" id="outline_store">
-    <columns>
-<!-- column-name gdkpixbuf -->
-      <column type="GdkPixbuf"/>
-<!-- column-name gchararray -->
-      <column type="gchararray"/>
-<!-- column-name gpointer -->
-      <column type="gpointer"/>
-    </columns>
-  </object>
-  <object class="GtkListStore" id="include_store">
-    <columns>
-<!-- column-name gchararray -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
-  <object class="GtkListStore" id="list_store">
-    <columns>
-<!-- column-name gdkpixbuf -->
-      <column type="GdkPixbuf"/>
-<!-- column-name gchararray -->
-      <column type="gchararray"/>
-<!-- column-name gpointer -->
-      <column type="gpointer"/>
-    </columns>
-  </object>
-  <object class="GtkScrolledWindow" id="outline_panel">
-    <property name="width_request">180</property>
+  <requires lib="gtk+" version="2.22"/>
+  <!-- interface-naming-policy toplevel-contextual -->
+  <object class="GtkWindow" id="decl_window">
+    <property name="height_request">150</property>
     <property name="can_focus">False</property>
-    <property name="hscrollbar_policy">automatic</property>
-    <property name="vscrollbar_policy">automatic</property>
-    <property name="shadow_type">in</property>
+    <property name="type">popup</property>
+    <property name="resizable">False</property>
+    <property name="accept_focus">False</property>
+    <property name="opacity">0.94999999999999996</property>
     <child>
-      <object class="GtkTreeView" id="outline_treeview">
-        <property name="model">outline_store</property>
-        <property name="headers_visible">False</property>
-        <property name="search_column">1</property>
-        <signal name="query_tooltip" handler="outline_cb_query_tooltip"/>
-        <signal name="row_activated" handler="outline_cb_row_activated"/>
+      <object class="GtkFrame" id="decl_panel">
+        <property name="can_focus">False</property>
+        <property name="label_xalign">0</property>
         <child>
-          <object class="GtkTreeViewColumn" id="elem_column">
-            <child>
-              <object class="GtkCellRendererPixbuf" id="icon_cell_renderer"/>
-              <attributes>
-                <attribute name="pixbuf">0</attribute>
-              </attributes>
-            </child>
-            <child>
-              <object class="GtkCellRendererText" id="decl_cell_renderer"/>
-              <attributes>
-                <attribute name="text">1</attribute>
-              </attributes>
-            </child>
+          <object class="GtkScrolledWindow" id="decl_scrolled_window">
+            <property name="can_focus">False</property>
+            <property name="border_width">2</property>
+            <property name="hscrollbar_policy">never</property>
+            <property name="vscrollbar_policy">automatic</property>
           </object>
         </child>
       </object>
     </child>
   </object>
+  <object class="GtkListStore" id="include_store">
+    <columns>
+      <!-- column-name gchararray -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkWindow" id="include_window">
     <property name="height_request">150</property>
+    <property name="can_focus">False</property>
     <property name="type">popup</property>
     <property name="resizable">False</property>
     <property name="accept_focus">False</property>
     <property name="opacity">0.94999999999999996</property>
     <child>
       <object class="GtkFrame" id="include_panel">
+        <property name="can_focus">False</property>
         <property name="label_xalign">0</property>
         <child>
           <object class="GtkScrolledWindow" id="include_scrolled_window">
@@ -77,6 +49,7 @@
             <property name="vscrollbar_policy">automatic</property>
             <child>
               <object class="GtkTreeView" id="include_view">
+                <property name="can_focus">False</property>
                 <property name="model">include_store</property>
                 <property name="headers_visible">False</property>
                 <child>
@@ -97,14 +70,26 @@
       </object>
     </child>
   </object>
+  <object class="GtkListStore" id="list_store">
+    <columns>
+      <!-- column-name gdkpixbuf -->
+      <column type="GdkPixbuf"/>
+      <!-- column-name gchararray -->
+      <column type="gchararray"/>
+      <!-- column-name gpointer -->
+      <column type="gpointer"/>
+    </columns>
+  </object>
   <object class="GtkWindow" id="list_window">
     <property name="height_request">150</property>
+    <property name="can_focus">False</property>
     <property name="type">popup</property>
     <property name="resizable">False</property>
     <property name="accept_focus">False</property>
     <property name="opacity">0.94999999999999996</property>
     <child>
       <object class="GtkFrame" id="list_panel">
+        <property name="can_focus">False</property>
         <property name="label_xalign">0</property>
         <child>
           <object class="GtkScrolledWindow" id="list_scrolled_window">
@@ -114,9 +99,12 @@
             <property name="vscrollbar_policy">automatic</property>
             <child>
               <object class="GtkTreeView" id="list_view">
+                <property name="can_focus">False</property>
                 <property name="model">list_store</property>
                 <property name="headers_visible">False</property>
-                <signal name="query_tooltip" handler="tips_list_cb_query_tooltip"/>
+                <property name="rules_hint">True</property>
+                <property name="tooltip_column">2</property>
+                <signal name="query-tooltip" handler="tips_list_cb_query_tooltip" swapped="no"/>
                 <child>
                   <object class="GtkTreeViewColumn" id="list_column">
                     <child>
@@ -140,45 +128,73 @@
       </object>
     </child>
   </object>
-  <object class="GtkWindow" id="decl_window">
-    <property name="height_request">150</property>
-    <property name="type">popup</property>
-    <property name="resizable">False</property>
-    <property name="accept_focus">False</property>
-    <property name="opacity">0.94999999999999996</property>
+  <object class="GtkScrolledWindow" id="outline_panel">
+    <property name="width_request">180</property>
+    <property name="can_focus">False</property>
+    <property name="hscrollbar_policy">automatic</property>
+    <property name="vscrollbar_policy">automatic</property>
+    <property name="shadow_type">in</property>
     <child>
-      <object class="GtkFrame" id="decl_panel">
-        <property name="label_xalign">0</property>
+      <object class="GtkTreeView" id="outline_treeview">
+        <property name="can_focus">False</property>
+        <property name="model">outline_store</property>
+        <property name="headers_visible">False</property>
+        <property name="search_column">1</property>
+        <property name="tooltip_column">2</property>
+        <signal name="query-tooltip" handler="outline_cb_query_tooltip" swapped="no"/>
+        <signal name="row-activated" handler="outline_cb_row_activated" swapped="no"/>
         <child>
-          <object class="GtkScrolledWindow" id="decl_scrolled_window">
-            <property name="can_focus">False</property>
-            <property name="border_width">2</property>
-            <property name="hscrollbar_policy">never</property>
-            <property name="vscrollbar_policy">automatic</property>
+          <object class="GtkTreeViewColumn" id="elem_column">
+            <child>
+              <object class="GtkCellRendererPixbuf" id="icon_cell_renderer"/>
+              <attributes>
+                <attribute name="pixbuf">0</attribute>
+              </attributes>
+            </child>
+            <child>
+              <object class="GtkCellRendererText" id="decl_cell_renderer"/>
+              <attributes>
+                <attribute name="text">1</attribute>
+              </attributes>
+            </child>
           </object>
         </child>
       </object>
     </child>
   </object>
+  <object class="GtkTreeStore" id="outline_store">
+    <columns>
+      <!-- column-name gdkpixbuf -->
+      <column type="GdkPixbuf"/>
+      <!-- column-name gchararray -->
+      <column type="gchararray"/>
+      <!-- column-name gpointer -->
+      <column type="gpointer"/>
+    </columns>
+  </object>
   <object class="GtkViewport" id="preview_panel">
     <property name="visible">True</property>
+    <property name="can_focus">False</property>
     <property name="resize_mode">queue</property>
     <child>
       <object class="GtkVBox" id="preview_panel_vbox">
         <property name="height_request">150</property>
-        <property name="orientation">vertical</property>
+        <property name="can_focus">False</property>
         <child>
           <object class="GtkHBox" id="hbox">
+            <property name="can_focus">False</property>
             <child>
               <object class="GtkButton" id="number_button">
                 <property name="label">0/0</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
                 <property name="relief">half</property>
-                <signal name="clicked" handler="preview_cb_number_button_clicked"/>
+                <signal name="clicked" handler="preview_cb_number_button_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
+                <property name="fill">True</property>
                 <property name="position">0</property>
               </packing>
             </child>
@@ -186,26 +202,33 @@
               <object class="GtkButton" id="filename_button">
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <signal name="clicked" handler="preview_cb_filename_button_clicked"/>
+                <property name="use_action_appearance">False</property>
+                <signal name="clicked" handler="preview_cb_filename_button_clicked" swapped="no"/>
                 <child>
                   <object class="GtkHBox" id="filename_hbox">
+                    <property name="can_focus">False</property>
                     <child>
                       <object class="GtkImage" id="filename_image">
+                        <property name="can_focus">False</property>
                         <property name="stock">gtk-find</property>
                         <property name="icon-size">1</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
+                        <property name="fill">True</property>
                         <property name="position">0</property>
                       </packing>
                     </child>
                     <child>
                       <object class="GtkLabel" id="filename_label">
+                        <property name="can_focus">False</property>
                         <property name="xalign">0</property>
                         <property name="xpad">8</property>
                         <property name="ellipsize">middle</property>
                       </object>
                       <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
                         <property name="position">1</property>
                       </packing>
                     </child>
@@ -213,6 +236,8 @@
                 </child>
               </object>
               <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
                 <property name="position">1</property>
               </packing>
             </child>
@@ -235,6 +260,8 @@
             </child>
           </object>
           <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
             <property name="position">1</property>
           </packing>
         </child>
