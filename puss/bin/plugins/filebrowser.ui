@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
 <interface>
   <requires lib="gtk+" version="2.16"/>
-<!-- interface-naming-policy project-wide -->
+  <!-- interface-naming-policy project-wide -->
   <object class="GtkTreeStore" id="file_tree_store">
     <columns>
-<!-- column-name icon -->
+      <!-- column-name icon -->
       <column type="GdkPixbuf"/>
-<!-- column-name name -->
+      <!-- column-name name -->
       <column type="gchararray"/>
-<!-- column-name file -->
+      <!-- column-name file -->
       <column type="GObject"/>
     </columns>
   </object>
@@ -19,11 +19,13 @@
     <child>
       <object class="GtkToolbar" id="toolbar1">
         <property name="visible">True</property>
-        <property name="toolbar_style">icons</property>
-        <property name="icon_size">1</property>
+        <property name="border_width">3</property>
+        <property name="toolbar_style">both-horiz</property>
+        <property name="icon_size">4</property>
         <child>
           <object class="GtkToolButton" id="refresh_btn">
             <property name="visible">True</property>
+            <property name="label" translatable="yes">refresh</property>
             <property name="use_underline">True</property>
             <property name="stock_id">gtk-refresh</property>
             <signal name="clicked" handler="filebrowser_cb_refresh_button_clicked"/>
@@ -36,7 +38,6 @@
       </object>
       <packing>
         <property name="expand">False</property>
-        <property name="padding">3</property>
         <property name="position">0</property>
       </packing>
     </child>

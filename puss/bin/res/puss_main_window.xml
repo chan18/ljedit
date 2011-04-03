@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <interface>
-<!-- interface-requires gtk+ 2.12 -->
-<!-- interface-naming-policy toplevel-contextual -->
+  <!-- interface-requires gtk+ 2.12 -->
+  <!-- interface-naming-policy toplevel-contextual -->
   <object class="GtkWindow" id="main_window">
     <property name="title" translatable="yes">Puss - source editor</property>
     <property name="default_width">1024</property>
@@ -12,9 +12,12 @@
         <property name="orientation">vertical</property>
         <child>
           <object class="GtkHPaned" id="hpaned1">
+            <property name="position">180</property>
+            <property name="position_set">True</property>
             <child>
               <object class="GtkNotebook" id="left_panel">
                 <property name="tab_pos">bottom</property>
+                <property name="scrollable">True</property>
                 <property name="group_id">1</property>
               </object>
               <packing>
@@ -25,10 +28,17 @@
             <child>
               <object class="GtkVPaned" id="vpaned1">
                 <property name="orientation">vertical</property>
+                <property name="position">530</property>
+                <property name="position_set">True</property>
                 <child>
                   <object class="GtkHPaned" id="hpaned2">
+                    <property name="height_request">24</property>
+                    <property name="position">640</property>
+                    <property name="position_set">True</property>
                     <child>
-                      <object class="GtkNotebook" id="doc_panel"/>
+                      <object class="GtkNotebook" id="doc_panel">
+                        <property name="scrollable">True</property>
+                      </object>
                       <packing>
                         <property name="resize">True</property>
                         <property name="shrink">True</property>
@@ -36,35 +46,39 @@
                     </child>
                     <child>
                       <object class="GtkNotebook" id="right_panel">
+                        <property name="width_request">5</property>
                         <property name="tab_pos">bottom</property>
                         <property name="group_id">1</property>
                       </object>
                       <packing>
                         <property name="resize">False</property>
-                        <property name="shrink">True</property>
+                        <property name="shrink">False</property>
                       </packing>
                     </child>
                   </object>
                   <packing>
                     <property name="resize">True</property>
-                    <property name="shrink">True</property>
+                    <property name="shrink">False</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkNotebook" id="bottom_panel">
+                    <property name="width_request">10</property>
+                    <property name="height_request">24</property>
                     <property name="can_focus">True</property>
                     <property name="tab_pos">bottom</property>
+                    <property name="scrollable">True</property>
                     <property name="group_id">1</property>
                   </object>
                   <packing>
                     <property name="resize">False</property>
-                    <property name="shrink">True</property>
+                    <property name="shrink">False</property>
                   </packing>
                 </child>
               </object>
               <packing>
-                <property name="resize">False</property>
-                <property name="shrink">False</property>
+                <property name="resize">True</property>
+                <property name="shrink">True</property>
               </packing>
             </child>
           </object>
