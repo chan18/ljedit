@@ -268,6 +268,7 @@ static void on_chdir_btn_click(GtkButton *button, PussVConsole* self) {
 }
 
 static gboolean on_active(GtkWidget* widget, GdkEventFocus* event, PussVConsole* self) {
+	gtk_window_set_focus(puss_get_main_window(self->app), self->view);
 	gtk_widget_grab_focus(self->view);
 	return TRUE;
 }
@@ -346,7 +347,7 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 		g_signal_connect(show_hide_btn, "clicked", (GCallback)on_show_hide_btn_click, self);
 		g_signal_connect(chdir_btn, "clicked", (GCallback)on_chdir_btn_click, self);
 
-		g_signal_connect(hbox, "focus-in-event",G_CALLBACK(&on_active), self);
+		g_signal_connect(panel, "focus-in-event",G_CALLBACK(&on_active), self);
 
 		gtk_box_pack_start(GTK_BOX(vbox), reset_btn, FALSE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(vbox), show_hide_btn, FALSE, FALSE, 0);
@@ -384,8 +385,6 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 PUSS_EXPORT void  puss_plugin_destroy(void* ext) {
 	PussVConsole* self = (PussVConsole*)ext;
 
-	self->app->panel_remove(self->panel);
-
 	if( self->api ) {
 		if( self->vcon ) {
 			self->vcon->on_quit = 0;
@@ -396,6 +395,8 @@ PUSS_EXPORT void  puss_plugin_destroy(void* ext) {
 
 	if( self->module )
 		g_module_close(self->module);
+
+	self->app->panel_remove(self->panel);
 
 	g_free(self);
 }
