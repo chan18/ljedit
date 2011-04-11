@@ -69,8 +69,6 @@ static void update_view(PussVConsole* self) {
 	self->adjust->page_increment = h;
 	self->adjust->value = range->Top;
 
-	gtk_adjustment_changed(self->adjust);
-
 	// screen buffer update
 	ps = vcon->screen_buffer;
 	for( i=0; i<h; ++i ) {
@@ -119,6 +117,8 @@ static void update_view(PussVConsole* self) {
 		gtk_text_buffer_place_cursor(txt_buf, &it);
 		gtk_text_view_set_cursor_visible(txt_view, TRUE);
 	}
+
+	gtk_adjustment_changed(self->adjust);
 }
 
 static void send_utf8_text(const gchar *text, PussVConsole* self) {
@@ -198,6 +198,7 @@ static void on_size_allocate(GtkWidget *widget, GtkAllocation *allocation, PussV
 	h += gtk_text_view_get_pixels_below_lines(view);
 	h += gtk_text_view_get_pixels_above_lines(view);
 
+	// g_print("size allocate : %d\n", (int)(allocation->height/h));
 	self->api->resize(self->vcon, 80, allocation->height/h);
 }
 
