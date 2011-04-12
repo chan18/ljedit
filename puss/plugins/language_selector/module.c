@@ -19,10 +19,15 @@ typedef struct {
 	GTypeModule*	type_module;
 
 	GtkActionGroup* action_group;
-	guint	merge_id;
+	guint			merge_id;
+
+	GList*			favory_language_list;
+	guint			favory_merge_id;
 } LanguageSelector;
 
 static LanguageSelector* g_self = 0;
+
+static void add_fill_favory_language(GtkSourceLanguage* lang);
 
 static void pls_lang_active(GtkAction* action, GtkSourceLanguage* lang) {
 	gint page_num;
@@ -37,9 +42,9 @@ static void pls_lang_active(GtkAction* action, GtkSourceLanguage* lang) {
 		return;
 
 	gtk_source_buffer_set_language(GTK_SOURCE_BUFFER(buf), lang);
-}
 
-static gint compare_data_func_wrapper(gpointer a, gpointer b, GCompareFunc cmp) { return (*cmp)(a, b); }
+	add_fill_favory_language(lang);
+}
 
 static void fill_languages(gchar* lang, GString* gstr) {
 	g_string_append_printf(gstr, "            <menuitem action='pls_lang_%s'/>\n", lang);
@@ -53,14 +58,88 @@ static gboolean fill_language_section(gchar* key, GList* value, GString* gstr) {
 	return FALSE;
 }
 
-static void destroy_language(gchar* lang, gpointer nouse) {
-	g_free(lang);
+static void fill_favory_language_menu() {
+	GError* err = 0;
+	GtkUIManager* ui_mgr;
+	gchar* ui_info;
+	GString* gstr;
+
+	if( !g_self->favory_language_list )
+		return;
+
+	ui_mgr = GTK_UI_MANAGER(gtk_builder_get_object(g_self->app->get_ui_builder(), "main_ui_manager"));
+
+	if( g_self->favory_merge_id ) {
+		gtk_ui_manager_remove_ui(ui_mgr, g_self->favory_merge_id);
+		gtk_ui_manager_ensure_update(ui_mgr);
+	}
+
+	// favory selector menu
+	// 
+	gstr = g_string_new(0);
+	g_list_foreach(g_self->favory_language_list, (GFunc)&fill_languages, gstr);
+
+	ui_info = g_strdup_printf(
+		"<ui>"
+		"  <menubar name='main_menubar'>"
+		"     <menu action='view_menu'>\n"
+		"      <placeholder name='view_menu_extend_place'>"
+		"        <menu action='language_selector_open'>"
+		"          <placeholder name='pls_favory_menu_place'>"
+		"            <separator/>"
+		"            %s"
+		"          </placeholder>"
+		"        </menu>"
+		"      </placeholder>"
+		"    </menu>"
+		"  </menubar>"
+		""
+		"  <toolbar name='main_toolbar'>"
+		"    <placeholder name='main_toolbar_view_place'>"
+		"      <toolitem action='language_selector_toolmenu_open'>"
+		"        <menu action='language_selector_toolmenu_open'>"
+		"          <separator/>"
+		"          <placeholder name='pls_favory_toolmenu_place'>"
+		"            <separator/>"
+		"            %s"
+		"          </placeholder>"
+		"        </menu>"
+		"      </toolitem>"
+		"    </placeholder>"
+        "  </toolbar>"
+		"</ui>"
+		, gstr->str
+		, gstr->str
+	);
+
+	g_self->favory_merge_id = gtk_ui_manager_add_ui_from_string(ui_mgr, ui_info, -1, &err);
+	if( err ) {
+		g_printerr("%s", err->message);
+		g_error_free(err);
+	}
+	g_free(ui_info);
+	g_string_free(gstr, TRUE);
+
+	gtk_ui_manager_ensure_update(ui_mgr);
 }
 
-static gboolean destroy_language_section(gchar* key, GList* value, gpointer nouse) {
-	g_list_foreach(value, (GFunc)&destroy_language, 0);
-	g_list_free(value);
-	return FALSE;
+static void add_fill_favory_language(GtkSourceLanguage* lang) {
+	GList* list;
+	const gchar* name = lang ? gtk_source_language_get_name(lang) : 0;
+	if( !name )
+		return;
+
+	list = g_list_remove_all(g_self->favory_language_list, name);
+	g_self->favory_language_list = g_list_prepend(list, (gchar*)name);
+
+	for(;;) {
+		list = g_list_nth(g_self->favory_language_list, 16);
+		if( !list )
+			break;
+		g_self->favory_language_list = g_list_delete_link(g_self->favory_language_list, list);
+	}
+
+	fill_favory_language_menu();
 }
 
 PUSS_EXPORT void* puss_plugin_create(Puss* app) {
@@ -93,7 +172,7 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	g_self->action_group = gtk_action_group_new("puss_language_selector_action_group");
 
 	// set select language menu
-	sections = g_tree_new((GCompareFunc)&g_ascii_strcasecmp);
+	sections = g_tree_new_full((GCompareDataFunc)&g_ascii_strcasecmp, 0, 0, (GDestroyNotify)g_list_free);
 	lm = gtk_source_language_manager_get_default();
 	ids = gtk_source_language_manager_get_language_ids(lm);
 	for( id=ids; *id; ++id ) {
@@ -103,19 +182,21 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 			action_name = g_strdup_printf("pls_lang_%s", name);
 			action = gtk_action_new(action_name, name, NULL, NULL);
 			g_signal_connect(action, "activate", G_CALLBACK(&pls_lang_active), lang);
-
-			g_free(action_name);
 			gtk_action_group_add_action(g_self->action_group, action);
 			g_object_unref(action);
+			g_free(action_name);
 
 			section = gtk_source_language_get_section(lang);
 
 			section_list = (GList*)g_tree_lookup(sections, section);
-			if( !section_list ) {
+			if( section_list ) {
+				g_tree_steal(sections, section);
+			} else {
 				action_name = g_strdup_printf("pls_sec_%s", section);
 				action = GTK_ACTION(gtk_action_new(action_name, section, NULL, NULL));
-				g_free(action_name);
 				gtk_action_group_add_action(g_self->action_group, action);
+				g_object_unref(action);
+				g_free(action_name);
 			}
 
 			section_list = g_list_insert_sorted(section_list, (gchar*)name, (GCompareFunc)&g_ascii_strcasecmp);
@@ -126,8 +207,12 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 
 	// insert language selector menu-tool-button
 	// 
+	action = gtk_action_new("language_selector_open", _("Language"), _("select high-light source language, default use c++"), GTK_STOCK_SELECT_COLOR);
+	gtk_action_group_add_action(g_self->action_group, action);
+	g_object_unref(action);
+
 	action = GTK_ACTION( g_object_new(tool_menu_interface->get_type ()
-			, "name", "language_selector_open"
+			, "name", "language_selector_toolmenu_open"
 			, "label", _("Language")
 			, "tooltip", _("select high-light source language, default use c++")
 			, "stock-id", GTK_STOCK_SELECT_COLOR
@@ -139,6 +224,7 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	ui_mgr = GTK_UI_MANAGER(gtk_builder_get_object(app->get_ui_builder(), "main_ui_manager"));
 	gtk_ui_manager_insert_action_group(ui_mgr, g_self->action_group, 0);
 
+	// main selector menu
 	gstr= g_string_new(NULL);
 	g_tree_foreach(sections, (GTraverseFunc)&fill_language_section, gstr);
 	g_tree_destroy(sections);
@@ -150,6 +236,8 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 		"      <placeholder name='view_menu_extend_place'>"
 		"        <menu action='language_selector_open'>"
 		"          %s"
+		"          <placeholder name='pls_favory_menu_place'>"
+		"          </placeholder>"
 		"        </menu>"
 		"      </placeholder>"
 		"    </menu>"
@@ -157,9 +245,11 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 		""
 		"  <toolbar name='main_toolbar'>"
 		"    <placeholder name='main_toolbar_view_place'>"
-		"      <toolitem action='language_selector_open'>"
-		"        <menu action='language_selector_open'>"
+		"      <toolitem action='language_selector_toolmenu_open'>"
+		"        <menu action='language_selector_toolmenu_open'>"
 		"          %s"
+		"          <placeholder name='pls_favory_toolmenu_place'>"
+		"          </placeholder>"
 		"        </menu>"
 		"      </toolitem>"
 		"    </placeholder>"
@@ -172,16 +262,17 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	//g_print(ui_info);
 	err = 0;
 	g_self->merge_id = gtk_ui_manager_add_ui_from_string(ui_mgr, ui_info, -1, &err);
-
 	if( err ) {
 		g_printerr("%s", err->message);
 		g_error_free(err);
 	}
-
 	g_free(ui_info);
 	g_string_free(gstr, TRUE);
 
 	gtk_ui_manager_ensure_update(ui_mgr);
+
+	fill_favory_language_menu();
+
 	return g_self;
 }
 
@@ -192,11 +283,13 @@ PUSS_EXPORT void  puss_plugin_destroy(void* self) {
 		return;
 
 	ui_mgr = GTK_UI_MANAGER(gtk_builder_get_object(g_self->app->get_ui_builder(), "main_ui_manager"));
+	gtk_ui_manager_remove_ui(ui_mgr, g_self->favory_merge_id);
 	gtk_ui_manager_remove_ui(ui_mgr, g_self->merge_id);
 	gtk_ui_manager_remove_action_group(ui_mgr, g_self->action_group);
 	gtk_ui_manager_ensure_update(ui_mgr);
 
 	g_object_unref(g_self->action_group);
+	g_list_free(g_self->favory_language_list);
 
 	g_free(g_self);
 	g_self = 0;
