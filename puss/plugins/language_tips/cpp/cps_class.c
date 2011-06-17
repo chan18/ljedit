@@ -95,7 +95,13 @@ gboolean cps_class(ParseEnv* env, Block* block) {
 				break;
 			}
 
+			if( ps->type==KW_VIRTUAL ) {
+				++ps;
+				err_goto_finish_if_not( ps < pe );
+			}
+
 			err_goto_finish_if( (ps = parse_id(ps, pe, &(inhers[inhers_count]), 0))==0 );
+
 			++inhers_count;
 		} while( (ps < pe) && ps->type==',' );
 
