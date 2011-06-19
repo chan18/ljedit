@@ -1057,13 +1057,13 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 				loop_insert_nskey(searcher, spath, pos, elem->v_using.nskey);
 			break;
 		}
+	}
 
-		if( next_sign ) {
-			if( pos->next ) {
-				if( elem->type==CPP_ET_CLASS && ((SKey*)(pos->data))->type=='L' && pos->next->next )
-					pos = pos->next;
-				searcher_do_walk(searcher, sub_node, spath, pos->next);
-			}
+	if( next_sign ) {
+		if( pos->next ) {
+			if( elem->type==CPP_ET_CLASS && ((SKey*)(pos->data))->type=='L' && pos->next->next )
+				pos = pos->next;
+			searcher_do_walk(searcher, sub_node, spath, pos->next);
 		}
 	}
 }
