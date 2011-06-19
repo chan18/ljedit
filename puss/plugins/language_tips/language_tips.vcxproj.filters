@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="cpp">
+      <UniqueIdentifier>{b431c69a-e0e4-4f83-bcc3-db05677aca55}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="cpp\cps.c">
+      <Filter>cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="cpp\cps_class.c">
+      <Filter>cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="cpp\cps_enum.c">
+      <Filter>cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="cpp\cps_fun.c">
+      <Filter>cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="cpp\cps_namespace.c">
+      <Filter>cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="cpp\cps_others.c">
+      <Filter>cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="cpp\cps_template.c">
+      <Filter>cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="cpp\cps_typedef.c">
+      <Filter>cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="cpp\cps_using.c">
+      <Filter>cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="cpp\cps_utils.c">
+      <Filter>cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="cpp\cps_var.c">
+      <Filter>cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="cpp\ds.c">
+      <Filter>cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="cpp\guide.c">
+      <Filter>cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="cpp\keywords.c">
+      <Filter>cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="cpp\lexer.c">
+      <Filter>cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="cpp\macro_lexer.c">
+      <Filter>cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="cpp\parser.c">
+      <Filter>cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="cpp\searcher.c">
+      <Filter>cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="Controls.c" />
+    <ClCompile Include="module.c" />
+    <ClCompile Include="OutlinePage.c" />
+    <ClCompile Include="ParseThread.c" />
+    <ClCompile Include="PreviewPage.c" />
+    <ClCompile Include="Tips.c" />
+    <ClCompile Include="UIBuilder.c" />
+    <ClCompile Include="Utils.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="cpp\cps.h">
+      <Filter>cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="cpp\cps_utils.h">
+      <Filter>cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="cpp\ds.h">
+      <Filter>cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="cpp\guide.h">
+      <Filter>cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="cpp\keywords.h">
+      <Filter>cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="cpp\lexer.h">
+      <Filter>cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="cpp\macro_lexer.h">
+      <Filter>cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="cpp\parser.h">
+      <Filter>cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="cpp\searcher.h">
+      <Filter>cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="cpp\token.h">
+      <Filter>cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="LanguageTips.h" />
+  </ItemGroup>
+</Project>
