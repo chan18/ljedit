@@ -4,5 +4,5 @@
 [plugin]
 name = language tips
 engine = so
-file = language_tips/language_tips
+file = language_tips
 description = select program source language
