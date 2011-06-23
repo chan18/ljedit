@@ -904,6 +904,7 @@ static void loop_insert_nskey(Searcher* searcher, GList* spath, GList* pos, Tiny
 
 static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GList* pos) {
 	CppElem* elem = 0;
+	gboolean next_sign = FALSE;
 	SKey* cur;
 	gchar cur_type;
 	TinyStr* cur_key;
@@ -914,7 +915,6 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 	TinyStr* key;
 	SNode* value;
 	SNode* sub_node;
-	gboolean next_sign;
 	gint i;
 	GTimeVal tm;
 
