@@ -177,22 +177,20 @@ gboolean cps_fun_or_var(ParseEnv* env, Block* block) {
 	return TRUE;
 }
 
-gboolean cps_class_or_var(ParseEnv* env, Block* block) {
+static gboolean cps_class_or_var(ParseEnv* env, Block* block) {
 	if( !cps_class(env, block) )
 		return cps_var(env, block);
 
 	return TRUE;
 }
 
-// break-out sign
-// 
-gboolean CPS_BREAK_OUT_BLOCK(ParseEnv* env, Block* block) { return TRUE; }
-
 TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 	MLToken* token;
 	TParseFn fn = 0;
 	gboolean use_template = FALSE;
 	gboolean stop_with_blance = FALSE;
+	gboolean already_end_sign = FALSE;
+	gboolean run_sign = TRUE;
 
 	switch( spliter->policy ) {
 	case SPLITER_POLICY_USE_LEXER:
@@ -208,7 +206,7 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 
 	spliter->pos = -1;
 
-	while( fn==0 ) {
+	while( run_sign && fn==0 ) {
 		if( (token = spliter_next_token(spliter, TRUE))==0 )
 			return 0;
 
@@ -217,13 +215,19 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 		case '=':	fn = cps_var;				break;
 		case '~':	fn = cps_destruct;			stop_with_blance = TRUE;	break;
 		case '{':	fn = cps_block;				stop_with_blance = TRUE;	break;
-		case '}':	fn = CPS_BREAK_OUT_BLOCK;	stop_with_blance = TRUE;	break;
+		case '}':
+			run_sign = FALSE;
+			stop_with_blance = TRUE;
+			already_end_sign = TRUE;
+			break;
 		case '(':	fn = use_template ? &cps_template : cps_fun_or_var;	stop_with_blance = TRUE;	break;
 		case ':':
-			if( spliter->pos==1 )
+			if( spliter->pos==1 ) {
 				fn = cps_label;
-			else
+				already_end_sign = TRUE;
+			} else {
 				fn = cps_var;
+			}
 			break;
 		case '<':
 			if( !spliter_skip_pair_angle_bracket(spliter) )
@@ -308,8 +312,14 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 	}
 
 	block->style = BLOCK_STYLE_LINE;
+	g_print("fn=%p\n", fn);
 
-	if( fn && (fn != cps_label) && (fn!=CPS_BREAK_OUT_BLOCK) ) {
+	// NOTICE : VS2010 merge functions as one function witch with same implements
+	// so every cps_function MUST have different implements!!!
+	// or not use function address compare!!!
+	// 
+	// if( (fn!=cps_label) && (fn!=CPS_BREAK_OUT_BLOCK) ) {
+	if( !already_end_sign ) {
 		gint layer = 0;
 		token = spliter->tokens + spliter->pos;
 		for(;;) {
@@ -364,16 +374,15 @@ MLToken* parse_scope(ParseEnv* env, MLToken* tokens, gsize count, CppElem* paren
 	spliter_init_with_tokens(&spliter, env, tokens, count);
 
 	while( (fn = spliter_next_block(&spliter, &block)) != 0 ) {
-		if( fn==CPS_BREAK_OUT_BLOCK ) {
-			if( use_block_end ) {
-				retval = block.tokens;
-				break;
-			} else {
-				continue;
-			}
+		if( fn ) {
+			(*fn)(env, &block);
+			continue;
 		}
 
-		(*fn)(env, &block);
+		if( use_block_end ) {
+			retval = block.tokens;
+			break;
+		}
 	}
 
 	spliter_final(&spliter);
