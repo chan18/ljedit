@@ -312,7 +312,7 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 	}
 
 	block->style = BLOCK_STYLE_LINE;
-	g_print("fn=%p\n", fn);
+	// g_print("fn=%p\n", fn);
 
 	// NOTICE : VS2010 merge functions as one function witch with same implements
 	// so every cps_function MUST have different implements!!!
@@ -361,10 +361,9 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 #include <assert.h>
 
 MLToken* parse_scope(ParseEnv* env, MLToken* tokens, gsize count, CppElem* parent, gboolean use_block_end) {
-	MLToken* retval = 0;
-	TParseFn fn;
 	BlockSpliter spliter;
 	Block block;
+	TParseFn fn;
 	
 	assert( cpp_elem_has_subscope(parent) );
 
@@ -374,18 +373,12 @@ MLToken* parse_scope(ParseEnv* env, MLToken* tokens, gsize count, CppElem* paren
 	spliter_init_with_tokens(&spliter, env, tokens, count);
 
 	while( (fn = spliter_next_block(&spliter, &block)) != 0 ) {
-		if( fn ) {
-			(*fn)(env, &block);
-			continue;
-		}
-
-		if( use_block_end ) {
-			retval = block.tokens;
-			break;
-		}
+		(*fn)(env, &block);
+		continue;
 	}
 
 	spliter_final(&spliter);
-	return retval;
+
+	return use_block_end ? block.tokens : 0;
 }
 

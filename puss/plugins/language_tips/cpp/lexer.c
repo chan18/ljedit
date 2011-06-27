@@ -84,6 +84,10 @@ void cpp_lexer_init(CppLexer* lexer, gchar* text, gsize len, gint start_line) {
 	lexer->stack[0].pe = text + len;
 	lexer->stack[0].is_new_line = TRUE;
 	lexer->stack[0].tag = 0;
+
+	// skip UTF-8 BOM
+	if( (len > 3) && memcmp(lexer->stack[0].ps, "\xEF\xBB\xBF", 3)==0 )
+		lexer->stack[0].ps += 3;
 }
 
 void cpp_lexer_final(CppLexer* lexer) {
