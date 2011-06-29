@@ -130,8 +130,8 @@ struct _CppElem {
 	guchar		type;
 	gchar		view;
 	TinyStr*	name;
-	gint		sline;
-	gint		eline;
+	guint		sline;
+	guint		eline;
 	TinyStr*	decl;
 
 	union {

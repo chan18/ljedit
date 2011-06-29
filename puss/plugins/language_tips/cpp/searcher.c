@@ -920,7 +920,7 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 	SKey* cur;
 	gchar cur_type;
 	TinyStr* cur_key;
-	gint cur_key_len;
+	guint cur_key_len;
 	GList* ps;
 	// GList* pe;
 	GHashTableIter it;
@@ -1093,7 +1093,7 @@ static void searcher_walk(Searcher* searcher, GList* spath) {
 	g_tree_destroy(searcher->worked_nodes);
 }
 
-static gboolean searcher_do_locate(Searcher* searcher, GList* scope, gint line, GList* spath, GList* pos, gboolean need_walk) {
+static gboolean searcher_do_locate(Searcher* searcher, GList* scope, guint line, GList* spath, GList* pos, gboolean need_walk) {
 	GList* p;
 	CppElem* elem;
 	SKey* cur;
@@ -1188,7 +1188,7 @@ static gboolean searcher_do_locate(Searcher* searcher, GList* scope, gint line, 
 	return need_walk;
 }
 
-static void searcher_locate(Searcher* searcher, CppFile* file, gint line, GList* spath) {
+static void searcher_locate(Searcher* searcher, CppFile* file, guint line, GList* spath) {
 	gboolean need_walk = TRUE;
 	if( file && line && spath && ((SKey*)(spath->data))->type!='R' ) {
 		searcher->worked_nodes = g_tree_new(g_direct_equal);
@@ -1200,7 +1200,7 @@ static void searcher_locate(Searcher* searcher, CppFile* file, gint line, GList*
 		searcher_add_spath(searcher, spath);
 }
 
-static void searcher_start(Searcher* searcher, GList* spath, CppFile* file, gint line) {
+static void searcher_start(Searcher* searcher, GList* spath, CppFile* file, guint line) {
 	GList* p;
 	GList* worked;
 

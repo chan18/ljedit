@@ -439,7 +439,7 @@ static void do_macro_replace(CppElem* macro, CppLexer* lexer, gint argc, MLArg a
 	gchar* pd = sbuf;
 	MLToken token;
 	CppLexer rlexer;
-	gint i;
+	guint i;
 	gint pos;
 
 	cpp_lexer_init(&rlexer, def->value->buf, tiny_str_len(def->value), 0);

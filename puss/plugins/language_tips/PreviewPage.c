@@ -110,7 +110,7 @@ static gboolean scroll_to_define_line(LanguageTips* self) {
 	if( elem ) {
 		buffer = gtk_text_view_get_buffer(self->preview_view);
 
-		if( elem->sline < gtk_text_buffer_get_line_count(buffer) ) {
+		if( elem->sline < (guint)gtk_text_buffer_get_line_count(buffer) ) {
 			GtkTextIter it;
 			gtk_text_buffer_get_iter_at_line(buffer, &it, elem->sline - 1);
 			if( !gtk_text_iter_is_end(&it) ) {
