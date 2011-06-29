@@ -3,6 +3,8 @@
 
 #include "parser.h"
 #include <sys/stat.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "keywords.h"
 #include "cps.h"
@@ -64,7 +66,7 @@
 	#define trace_files(self)
 #endif
 
-static void cpp_parser_on_remove_file(CppFile* file, CppParser* self) {
+static void cpp_parser_on_remove_file(const gchar* filename, CppFile* file, CppParser* self) {
 	if( self->cb_file_remove )
 		self->cb_file_remove(file, self->cb_tag);
 	cpp_file_unref(file);
@@ -275,7 +277,7 @@ static CppFile* cpp_parser_parse_use_menv(ParseEnv* env, const gchar* filekey, g
 		} else {
 			if( file ) {
 				g_hash_table_remove(env->parser->files, file->filename->buf);
-				cpp_parser_on_remove_file(file, env->parser);
+				cpp_parser_on_remove_file(file->filename->buf, file, env->parser);
 			}
 
 			file = g_slice_new0(CppFile);
