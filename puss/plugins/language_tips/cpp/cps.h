@@ -41,5 +41,28 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block);
 
 MLToken* parse_scope(ParseEnv* env, MLToken* tokens, gsize count, CppElem* parent, gboolean use_block_end);
 
+
+
+// cps functions, implements in all cps_xxx.c
+// 
+gboolean cps_var(ParseEnv* env, Block* block);
+gboolean cps_fun(ParseEnv* env, Block* block);
+gboolean cps_using(ParseEnv* env, Block* block);
+gboolean cps_namespace(ParseEnv* env, Block* block);
+gboolean cps_typedef(ParseEnv* env, Block* block);
+gboolean cps_template(ParseEnv* env, Block* block);
+gboolean cps_destruct(ParseEnv* env, Block* block);
+gboolean cps_operator(ParseEnv* env, Block* block);
+gboolean cps_extern_template(ParseEnv* env, Block* block);
+gboolean cps_extern_scope(ParseEnv* env, Block* block);
+gboolean cps_class(ParseEnv* env, Block* block);
+gboolean cps_enum(ParseEnv* env, Block* block);
+gboolean cps_block(ParseEnv* env, Block* block);
+gboolean cps_label(ParseEnv* env, Block* block);
+gboolean cps_fun_or_var(ParseEnv* env, Block* block);
+gboolean cps_breakout_block(ParseEnv* env, Block* block);
+gboolean cps_skip_block(ParseEnv* env, Block* block);
+
+
 #endif//PUSS_CPP_CPS_H
 

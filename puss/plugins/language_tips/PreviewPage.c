@@ -12,7 +12,7 @@ typedef struct {
 
 static PreviewSearchKey PREVIEW_SEARCH_THREAD_EXIT_SIGN = {0,0,0};
 
-static search_key_free(PreviewSearchKey* key) {
+static void search_key_free(PreviewSearchKey* key) {
 	if( key != &PREVIEW_SEARCH_THREAD_EXIT_SIGN ) {
 		cpp_spath_free(key->spath);
 		if( key->file )
@@ -66,7 +66,7 @@ static gpointer tips_preview_search_thread(LanguageTips* self) {
 			arg->self = self;
 			arg->key = key;
 			arg->seq = seq;
-			g_idle_add(preview_show, arg);
+			g_idle_add((GSourceFunc)preview_show, arg);
 		}
 	}
 
@@ -80,7 +80,7 @@ void preview_init(LanguageTips* self) {
 	self->preview_search_seq = 0;
 	self->preview_search_queue = g_async_queue_new_full(g_free);
 	g_async_queue_ref(self->preview_search_queue);
-	self->preview_search_thread = g_thread_create(tips_preview_search_thread, self, TRUE, 0);
+	self->preview_search_thread = g_thread_create((GThreadFunc)tips_preview_search_thread, self, TRUE, 0);
 }
 
 void preview_final(LanguageTips* self) {
@@ -168,7 +168,7 @@ static void preview_do_update(LanguageTips* self, gint index) {
 		gtk_text_buffer_set_text(buffer, text, len);
 		g_free(text);
 
-		g_idle_add(scroll_to_define_line, self);
+		g_idle_add((GSourceFunc)scroll_to_define_line, self);
 
 	} else {
 		scroll_to_define_line(self);

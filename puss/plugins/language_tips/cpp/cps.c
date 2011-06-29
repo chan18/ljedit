@@ -149,27 +149,6 @@ void spliter_final(BlockSpliter* spliter) {
 	}
 }
 
-// cps
-// 
-gboolean cps_var(ParseEnv* env, Block* block);
-gboolean cps_fun(ParseEnv* env, Block* block);
-gboolean cps_using(ParseEnv* env, Block* block);
-gboolean cps_namespace(ParseEnv* env, Block* block);
-gboolean cps_typedef(ParseEnv* env, Block* block);
-gboolean cps_template(ParseEnv* env, Block* block);
-gboolean cps_destruct(ParseEnv* env, Block* block);
-gboolean cps_operator(ParseEnv* env, Block* block);
-gboolean cps_extern_template(ParseEnv* env, Block* block);
-gboolean cps_extern_scope(ParseEnv* env, Block* block);
-gboolean cps_class(ParseEnv* env, Block* block);
-gboolean cps_enum(ParseEnv* env, Block* block);
-gboolean cps_block(ParseEnv* env, Block* block);
-gboolean cps_label(ParseEnv* env, Block* block);
-gboolean cps_fun_or_var(ParseEnv* env, Block* block);
-gboolean cps_breakout_block(ParseEnv* env, Block* block);
-gboolean cps_skip_block(ParseEnv* env, Block* block);
-gboolean cps_class_or_var(ParseEnv* env, Block* block);
-
 gboolean cps_fun_or_var(ParseEnv* env, Block* block) {
 	if( !cps_fun(env, block) )
 		return cps_var(env, block);

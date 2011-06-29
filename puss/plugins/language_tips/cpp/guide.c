@@ -29,7 +29,7 @@ static void guide_on_file_remove(CppFile* file, CppGuide* self) {
 
 CppGuide* cpp_guide_new( gboolean enable_macro_replace
 			, gboolean enable_search
-			, CppFileParsed* cb_file_parsed
+			, CppFileParsed cb_file_parsed
 			, gpointer cb_file_parsed_tag )
 {
 	CppGuide* guide;
@@ -277,7 +277,7 @@ static gboolean matched_into_sequence(CppElem* elem, SeqMatched* tag) {
 			return FALSE;
 
 	if( !tag->seq )
-		tag->seq = g_sequence_new(cpp_elem_unref);
+		tag->seq = g_sequence_new((GDestroyNotify)cpp_elem_unref);
 
 	if( !tag->seq )
 		return FALSE;
@@ -285,7 +285,7 @@ static gboolean matched_into_sequence(CppElem* elem, SeqMatched* tag) {
 	if( tag->flag & CPP_GUIDE_SEARCH_FLAG_USE_UNIQUE_ID )
 		use_unique_id = 1;
 
-	pe = g_sequence_search(tag->seq, elem, cpp_elem_cmp, use_unique_id);
+	pe = g_sequence_search(tag->seq, elem, (GCompareDataFunc)cpp_elem_cmp, GINT_TO_POINTER(use_unique_id));
 	if( !g_sequence_iter_is_begin(pe) ) {
 		ps = pe;
 		do {
@@ -303,7 +303,7 @@ static gboolean matched_into_sequence(CppElem* elem, SeqMatched* tag) {
 	}
 
 	cpp_elem_ref(elem);
-	g_sequence_insert_sorted(tag->seq, elem, cpp_elem_cmp, 0);
+	g_sequence_insert_sorted(tag->seq, elem, (GCompareDataFunc)cpp_elem_cmp, 0);
 	return TRUE;
 }
 
@@ -316,7 +316,7 @@ GSequence* cpp_guide_search( CppGuide* guide
 			, gint limit_time )
 {
 	SeqMatched tag = { flag, 0 };
-	cpp_guide_search_with_callback(guide, spath, matched_into_sequence, &tag, file, line, limit_num, limit_time);
+	cpp_guide_search_with_callback(guide, spath, (CppMatched)matched_into_sequence, &tag, file, line, limit_num, limit_time);
 	return tag.seq;
 }
 

@@ -7,39 +7,43 @@
 #include "keywords.h"
 #include "cps.h"
 
-static void __dump_block(Block* block) {
-	gchar ch;
-	gsize i;
-	MLToken* token;
-	for( i=0; i<block->count; ++i ) {
-		token = block->tokens + i;
+#ifdef __DEBUG_DUMP
+	static void __dump_block(Block* block) {
+		gchar ch;
+		gsize i;
+		MLToken* token;
+		for( i=0; i<block->count; ++i ) {
+			token = block->tokens + i;
 
-		switch( token->type ) {
-		case TK_LINE_COMMENT:
-		case TK_BLOCK_COMMENT:
-		case '{':
-		case '}':
-			//g_print("\n");
-			break;
+			switch( token->type ) {
+			case TK_LINE_COMMENT:
+			case TK_BLOCK_COMMENT:
+			case '{':
+			case '}':
+				//g_print("\n");
+				break;
+			}
+
+			ch = token->buf[token->len];
+			token->buf[token->len] = '\0';
+			g_print("%s ", token->buf);
+			token->buf[token->len] = ch;
+
+			switch( token->type ) {
+			case TK_LINE_COMMENT:
+			case TK_BLOCK_COMMENT:
+			case '{':
+			case '}':
+			case ';':
+				//g_print("\n");
+				break;
+			}
 		}
-
-		ch = token->buf[token->len];
-		token->buf[token->len] = '\0';
-		g_print("%s ", token->buf);
-		token->buf[token->len] = ch;
-
-		switch( token->type ) {
-		case TK_LINE_COMMENT:
-		case TK_BLOCK_COMMENT:
-		case '{':
-		case '}':
-		case ';':
-			//g_print("\n");
-			break;
-		}
+		g_print("\n--------------------------------------------------------\n");
 	}
-	g_print("\n--------------------------------------------------------\n");
-}
+#else
+	#define __dump_block(block)
+#endif
 
 #ifdef _DEBUG
 	static void trace_parser_status(const gchar* ms) {
@@ -52,7 +56,7 @@ static void __dump_block(Block* block) {
 
 	static void trace_files(CppParser* self) {
 		g_printerr("  DUMP START!\n");
-		g_hash_table_foreach(self->files, dump_file, self);
+		g_hash_table_foreach(self->files, (GHFunc)dump_file, self);
 		g_printerr("  DUMP FINISHED!\n");
 	}
 #else
@@ -60,7 +64,7 @@ static void __dump_block(Block* block) {
 	#define trace_files(self)
 #endif
 
-static void cpp_parser_on_remove_file(gchar* filekey, CppFile* file, CppParser* self) {
+static void cpp_parser_on_remove_file(CppFile* file, CppParser* self) {
 	if( self->cb_file_remove )
 		self->cb_file_remove(file, self->cb_tag);
 	cpp_file_unref(file);
@@ -79,7 +83,7 @@ void cpp_parser_init(CppParser* self, gboolean enable_macro_replace) {
 
 void cpp_parser_final(CppParser* self) {
 	//trace_parser_status("clean_start");
-	g_hash_table_foreach_remove(self->files, cpp_parser_on_remove_file, self);
+	g_hash_table_foreach_remove(self->files, (GHRFunc)cpp_parser_on_remove_file, self);
 	trace_parser_status("  clean_end");
 
 	g_hash_table_destroy(self->files);
@@ -94,7 +98,7 @@ void cpp_parser_final(CppParser* self) {
 void cpp_parser_predefineds_set(CppParser* self, GList* files) {
 	g_static_rw_lock_writer_lock( &(self->settings_lock) );
 	if( self->predefineds ) {
-		g_list_foreach(self->predefineds, g_free, 0);
+		g_list_foreach(self->predefineds, (GFunc)g_free, 0);
 		g_list_free(self->predefineds);
 	}
 	self->predefineds = files;
@@ -115,7 +119,7 @@ void cpp_parser_include_paths_set(CppParser* self, GList* paths) {
 	g_static_rw_lock_writer_unlock( &(self->settings_lock) );
 
 	if( old && g_atomic_int_dec_and_test(&(old->ref_count)) ) {
-		g_list_foreach(old->path_list, g_free, 0);
+		g_list_foreach(old->path_list, (GFunc)g_free, 0);
 		g_list_free(old->path_list);
 		g_free(old);
 	}
@@ -134,7 +138,7 @@ CppIncludePaths* cpp_parser_include_paths_ref(CppParser* self) {
 
 void cpp_parser_include_paths_unref(CppIncludePaths* paths) {
 	if( paths && g_atomic_int_dec_and_test(&(paths->ref_count)) ) {
-		g_list_foreach(paths->path_list, g_free, 0);
+		g_list_foreach(paths->path_list, (GFunc)g_free, 0);
 		g_list_free(paths->path_list);
 		g_free(paths);
 	}
@@ -148,7 +152,7 @@ CppFile* cpp_parser_find_parsed(CppParser* self, const gchar* filekey) {
 
 	g_static_rw_lock_reader_lock( &(self->files_lock) );
 
-	//trace_files(self);
+	trace_files(self);
 
 	file = (CppFile*)g_hash_table_lookup(self->files, filekey);
 	if( file && file->status==0 )
@@ -175,7 +179,7 @@ static void cpp_parser_do_parse(ParseEnv* env, gchar* buf, gsize len) {
 	spliter_init(&spliter, env);
 
 	while( (fn = spliter_next_block(&spliter, &block)) != 0 ) {
-		// __dump_block(&block);
+		__dump_block(&block);
 		fn(env, &block);
 	}
 
@@ -271,7 +275,7 @@ static CppFile* cpp_parser_parse_use_menv(ParseEnv* env, const gchar* filekey, g
 		} else {
 			if( file ) {
 				g_hash_table_remove(env->parser->files, file->filename->buf);
-				cpp_parser_on_remove_file(file->filename, file, env->parser);
+				cpp_parser_on_remove_file(file, env->parser);
 			}
 
 			file = g_slice_new0(CppFile);
@@ -328,7 +332,7 @@ static CppFile* cpp_parser_do_parse_in_include_path(ParseEnv* env, const gchar* 
 	GList* p;
 
 	for( p=env->include_paths->path_list; !file && p; p=p->next ) {
-		str = g_build_filename( (gchar*)(p->data), filename, 0 );
+		str = g_build_filename((gchar*)(p->data), filename, NULL);
 		if( str ) {
 			filekey = cpp_filename_to_filekey(str, -1);
 			if( filekey ) {
@@ -361,7 +365,7 @@ CppFile* parse_include_file(ParseEnv* env, MLStr* filename, gboolean is_system_h
 
 		} else {
 			path = g_path_get_dirname(env->file->filename->buf);
-			str = g_build_filename(path, filename->buf, 0);
+			str = g_build_filename(path, filename->buf, NULL);
 			filekey = cpp_filename_to_filekey(str, -1);
 			g_free(str);
 			g_free(path);
@@ -398,7 +402,7 @@ CppFile* cpp_parser_parse(CppParser* self, const gchar* filekey, gboolean force_
 	cpp_macro_lexer_init(&env);
 
 	g_static_rw_lock_reader_lock( &(self->settings_lock) );
-	g_list_foreach(self->predefineds, parse_predefines_file, &env);
+	g_list_foreach(self->predefineds, (GFunc)parse_predefines_file, &env);
 	g_static_rw_lock_reader_unlock( &(self->settings_lock) );
 
 	file = cpp_parser_parse_use_menv(&env, filekey, force_rebuild);

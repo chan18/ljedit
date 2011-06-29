@@ -84,23 +84,28 @@ struct _SNode {
 	GHashTable*	sub;
 };
 
-static void __cpp_elem_dump(CppElem* elem) {
-	g_print("elem : name=%s\n", elem->name->buf);
-}
-
-static void __snode_dump(SNode* snode) {
-	g_print("==snode : elems======================\n");
-	g_list_foreach(snode->elems, __cpp_elem_dump, 0);
-	g_print("--snode : subs-----------------------\n");
-	if( snode->sub ) {
-		GHashTableIter iter;
-		TinyStr* sub_key = 0;
-		SNode* sub_node = 0;
-		g_hash_table_iter_init(&iter, snode->sub);
-		while( g_hash_table_iter_next(&iter, &sub_key, &sub_node) )
-			g_print("subnode : name=%s\n", sub_key->buf);
+#ifdef __DEBUG_DUMP
+	static void __cpp_elem_dump(CppElem* elem) {
+		g_print("elem : name=%s\n", elem->name->buf);
 	}
-}
+
+	static void __snode_dump(SNode* snode) {
+		g_print("==snode : elems======================\n");
+		g_list_foreach(snode->elems, __cpp_elem_dump, 0);
+		g_print("--snode : subs-----------------------\n");
+		if( snode->sub ) {
+			GHashTableIter iter;
+			TinyStr* sub_key = 0;
+			SNode* sub_node = 0;
+			g_hash_table_iter_init(&iter, snode->sub);
+			while( g_hash_table_iter_next(&iter, &sub_key, &sub_node) )
+				g_print("subnode : name=%s\n", sub_key->buf);
+		}
+	}
+#else
+	#define __cpp_elem_dump(elem)
+	#define __snode_dump(snode)
+#endif
 
 static inline SNode* snode_new() {
 	return g_slice_new0(SNode);
@@ -124,8 +129,14 @@ static SNode* make_sub_node(SNode* parent, const TinyStr* key) {
 	TinyStr* skey = 0;
 	SNode* snode = 0;
 
+	if( key->buf[0]=='@' )
+		return 0;
+
 	if( !parent->sub )
-		parent->sub = g_hash_table_new_full(tiny_str_hash, tiny_str_equal, tiny_str_free, (GDestroyNotify)snode_free);
+		parent->sub = g_hash_table_new_full( (GHashFunc)tiny_str_hash
+							, (GEqualFunc)tiny_str_equal
+							, (GFreeFunc)tiny_str_free
+							, (GDestroyNotify)snode_free );
 
 	if( parent->sub ) {
 		snode = g_hash_table_lookup(parent->sub, key);
@@ -145,7 +156,7 @@ static SNode* make_sub_node(SNode* parent, const TinyStr* key) {
 	return snode;
 }
 
-static SNode* snode_locate(SNode* parent, TinyStr* nskey, gboolean make_if_not_exist) {
+static SNode* snode_locate(SNode* parent, const TinyStr* nskey, gboolean make_if_not_exist) {
 	SNode* snode;
 	gchar* ps;
 	gchar* pe;
@@ -156,7 +167,7 @@ static SNode* snode_locate(SNode* parent, TinyStr* nskey, gboolean make_if_not_e
 		return parent;
 
 	snode = parent;
-	ps = nskey->buf;
+	ps = (gchar*)(nskey->buf);
 
 	while( *ps && snode ) {
 		pe = ps + 1;
@@ -192,7 +203,8 @@ static SNode* snode_sub_insert(SNode* parent, const TinyStr* nskey, CppElem* ele
 	scope_snode = snode_locate(parent, nskey, TRUE);
 	if( scope_snode ) {
 		snode = make_sub_node(scope_snode, elem->name);
-		snode->elems = g_list_append(snode->elems, elem);
+		if( snode )
+			snode->elems = g_list_append(snode->elems, elem);
 	}
 	return snode;
 }
@@ -263,8 +275,8 @@ static void snode_insert(SNode* parent, CppElem* elem) {
 			SNode* snode = snode_sub_insert(parent, elem->v_class.nskey, elem);
 			if( snode )
 				snode_insert_list(snode, elem->v_ncscope.scope);
-			if( elem->v_class.class_type==CPP_CLASS_TYPE_UNION )
-				snode_insert_list(parent, elem->v_ncscope.scope);
+			else
+				snode_insert_list(parent, elem->v_ncscope.scope);	// anonymous union, struct
 		}
 		break;
 		
@@ -324,8 +336,8 @@ static void snode_remove(SNode* parent, CppElem* elem) {
 			SNode* snode = snode_sub_remove(parent, elem->v_class.nskey, elem);
 			if( snode )
 				snode_remove_list(snode, elem->v_ncscope.scope);
-			if( elem->v_class.class_type==CPP_CLASS_TYPE_UNION )
-				snode_remove_list(parent, elem->v_ncscope.scope);
+			else
+				snode_insert_list(parent, elem->v_ncscope.scope);	// anonymous union, struct
 		}
 		break;
 		
@@ -673,7 +685,7 @@ find_finish:
 typedef struct {
 	const gchar* start;
 	const gchar* end;
-	gchar* cur;
+	const gchar* cur;
 } ParseKeyIter;
 
 static gchar parse_key_do_prev(ParseKeyIter* pos) {
@@ -688,13 +700,13 @@ GList* spath_parse(const gchar* text, gboolean find_startswith) {
 	gint len = strlen(text);
 	ParseKeyIter ps = { text, text+len, text+len };
 	ParseKeyIter pe = { text, text+len, text+len };
-	SearchIterEnv env = { parse_key_do_prev, parse_key_do_next };
+	SearchIterEnv env = { (CppTextIter)parse_key_do_prev, (CppTextIter)parse_key_do_next };
 
 	return spath_find(&env, &ps, &pe, find_startswith);
 }
 
 void spath_free(GList* spath) {
-	g_list_foreach(spath, skey_free, 0);
+	g_list_foreach(spath, (GFunc)skey_free, 0);
 	g_list_free(spath);
 }
 
@@ -767,7 +779,7 @@ static void searcher_add_spath(Searcher* searcher, GList* spath) {
 
 static GList* do_parse_nskey_to_spath(const TinyStr* nskey, gchar mtype, gchar etype) {
 	GList* spath = 0;
-	gchar* ps = nskey->buf;
+	gchar* ps = (gchar*)(nskey->buf);
 	gchar* pe = 0;
 
 	if( *ps=='.' ) {
@@ -910,7 +922,7 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 	TinyStr* cur_key;
 	gint cur_key_len;
 	GList* ps;
-	GList* pe;
+	// GList* pe;
 	GHashTableIter it;
 	TinyStr* key;
 	SNode* value;
@@ -963,7 +975,7 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 			return;
 
 		g_hash_table_iter_init(&it, node->sub);
-		while( g_hash_table_iter_next(&it, &key, &value) ) {
+		while( g_hash_table_iter_next(&it, (gpointer*)&key, (gpointer*)&value) ) {
 			if( tiny_str_len(key) < cur_key_len )
 				continue;
 
@@ -978,14 +990,16 @@ static void searcher_do_walk(Searcher* searcher, SNode* node, GList* spath, GLis
 	sub_node = (node->sub) ? g_hash_table_lookup(node->sub, cur_key) : 0;
 	if( !sub_node ) {
 		// debug, dump snode
-		// __snode_dump(node);
+		__snode_dump(node);
 		return;
 	}
 
 	for( ps=sub_node->elems; searcher->run_sign && ps; ps=ps->next ) {
 		g_get_current_time(&tm);
 		if( searcher->limit_time > 0 ) {
-			if( searcher->limit_time < abs((tm.tv_sec - searcher->start_time.tv_sec)*1000 + (tm.tv_usec - searcher->start_time.tv_usec)/1000) ) {
+			gint used = (tm.tv_sec - searcher->start_time.tv_sec)*1000 + (tm.tv_usec - searcher->start_time.tv_usec)/1000;
+			if( used < 0 )	used = -used;
+			if( searcher->limit_time < used ) {
 				searcher->run_sign = FALSE;
 				break;
 			}
@@ -1086,7 +1100,6 @@ static gboolean searcher_do_locate(Searcher* searcher, GList* scope, gint line, 
 	GList* rep;
 	GList* new_spath;
 	GList* ps;
-	GList* pe;
 
 	if( !pos )
 		return need_walk;

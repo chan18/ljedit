@@ -3,6 +3,8 @@
 
 #include "keywords.h"
 
+#include <stdlib.h>
+#include <string.h>
 
 typedef struct {
 	gchar*	key;

@@ -127,7 +127,7 @@ typedef struct {
 
 struct _CppElem {
 	CppFile*	file;
-	gchar		type;
+	guchar		type;
 	gchar		view;
 	TinyStr*	name;
 	gint		sline;
@@ -186,7 +186,7 @@ gchar* cpp_filename_to_filekey(const gchar* filename, glong namelen);
 
 CppGuide* cpp_guide_new( gboolean enable_macro_replace
 			, gboolean enable_search
-			, CppFileParsed* cb_file_parsed
+			, CppFileParsed cb_file_parsed
 			, gpointer cb_file_parsed_tag );
 
 void cpp_guide_free(CppGuide* guide);

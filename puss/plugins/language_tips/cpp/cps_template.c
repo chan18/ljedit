@@ -32,7 +32,7 @@ MLToken* parse_template_arg_value(MLToken* ps, MLToken* pe) {
 #define TEMPLATE_ARGS_MAX 128
 
 gboolean cps_template(ParseEnv* env, Block* block) {
-	Template* tmpl;
+	// Template* tmpl;
 	gint i;
 	gint targc = -1;
 	TemplateArg targv[128];

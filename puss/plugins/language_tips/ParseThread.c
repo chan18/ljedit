@@ -6,7 +6,7 @@
 static gchar* PARSE_THREAD_EXIT_SIGN = "";
 
 static void push_implement_file_into_queue(LanguageTips* self, const gchar* filename, const gchar* suffix) {
-	gchar* filepath = g_strdup_printf("%c%s%s", ' ', filename, suffix, 0);
+	gchar* filepath = g_strdup_printf("%c%s%s", ' ', filename, suffix);
 	g_async_queue_push(self->parse_queue, filepath);
 }
 
@@ -131,13 +131,13 @@ static void insert_predefineds_files(LanguageTips* self) {
 }
 
 void parse_thread_init(LanguageTips* self) {
-	self->cpp_guide = cpp_guide_new(TRUE, TRUE, on_file_parsed, self);
+	self->cpp_guide = cpp_guide_new(TRUE, TRUE, (CppFileParsed)on_file_parsed, self);
 	insert_predefineds_files(self);
 
 	self->parse_queue = g_async_queue_new_full(g_free);
 	g_async_queue_ref(self->parse_queue);
 
-	self->parse_thread = g_thread_create(tips_parse_thread, self, TRUE, 0);
+	self->parse_thread = g_thread_create((GThreadFunc)tips_parse_thread, self, TRUE, 0);
 }
 
 void parse_thread_final(LanguageTips* self) {

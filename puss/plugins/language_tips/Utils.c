@@ -58,7 +58,7 @@ gboolean open_and_locate_elem(LanguageTips* self, CppElem* elem) {
 	if( !elem )
 		return FALSE;
 
-	if( !self->app->doc_open_locate(elem->file->filename->buf, search_elem_locate, elem, FALSE) )
+	if( !self->app->doc_open_locate(elem->file->filename->buf, (FindLocation)search_elem_locate, elem, FALSE) )
 		return FALSE;
 
 	return TRUE;
