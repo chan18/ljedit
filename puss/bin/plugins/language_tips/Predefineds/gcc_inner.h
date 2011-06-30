@@ -11,3 +11,6 @@
 #define _GLIBCXX_BEGIN_EXTERN_C extern "C" {
 #define _GLIBCXX_END_EXTERN_C }
 
+#define __declspec()
+#define __attribute__()
+
