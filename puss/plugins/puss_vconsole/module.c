@@ -37,6 +37,7 @@ typedef struct {
 	VConsoleAPI*		api;
 	VConsole*			vcon;
 
+	gint				line_height;
 } PussVConsole;
 
 static void update_view(PussVConsole* self) {
@@ -198,6 +199,15 @@ static void on_size_allocate(GtkWidget *widget, GtkAllocation *allocation, PussV
 	h += gtk_text_view_get_pixels_below_lines(view);
 	h += gtk_text_view_get_pixels_above_lines(view);
 
+	// Gtk+ need non-rich-text-editor
+	// fix BUG
+	// 
+	if( h > self->line_height ) {
+		self->line_height = h;
+	} else {
+		h = self->line_height;
+	}
+
 	// g_print("size allocate : %d\n", (int)(allocation->height/h));
 	self->api->resize(self->vcon, 80, allocation->height/h);
 }
@@ -308,6 +318,7 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 
 	self = g_new0(PussVConsole, 1);
 	self->app = app;
+	self->line_height = -1;
 
 #ifdef _DEBUG
 	vconsole_file = g_build_filename(app->get_plugins_path(), "vconsole_d.dll", NULL);

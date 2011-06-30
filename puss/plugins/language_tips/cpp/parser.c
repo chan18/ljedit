@@ -47,7 +47,7 @@
 	#define __dump_block(block)
 #endif
 
-#ifdef _DEBUG
+#ifdef __DEBUG_DUMP
 	static void trace_parser_status(const gchar* ms) {
 		g_printerr("DEBUG[csp_debug %s] : files:%d elems:%d str:%d\n", ms, cps_debug_file_count, cps_debug_elem_count, cps_debug_tinystr_count);
 	}
