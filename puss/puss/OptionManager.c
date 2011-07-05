@@ -8,10 +8,12 @@
 #include "Puss.h"
 #include "Utils.h"
 
-typedef struct _OptionNotifer OptionNotifer;
+typedef struct _OptionNotifer	OptionNotifer;
+typedef struct _OptionNode		OptionNode;
 
 struct _OptionNotifer {
 	OptionNotifer*	next;
+	OptionNode*		owner;
 	OptionChanged	fun;
 	gpointer		tag;
 	GFreeFunc		tag_free_fun;
@@ -196,6 +198,7 @@ gpointer puss_option_manager_monitor_reg(const Option* option, OptionChanged fun
 	if( fun ) {
 		notifer = g_new0(OptionNotifer, 1);
 		notifer->next = node->notifer_list;
+		notifer->owner = node;
 		notifer->fun = fun;
 		notifer->tag = tag;
 		notifer->tag_free_fun = tag_free_fun;
@@ -216,6 +219,17 @@ void puss_option_manager_monitor_unreg(gpointer handler) {
 			p->tag_free_fun( p->tag );
 			p->tag_free_fun = 0;
 		}
+
+		if( p->owner->notifer_list==p ) {
+			p->owner->notifer_list = p->next;
+		} else {
+			OptionNotifer* q;
+			for( q=p->owner->notifer_list; q && q->next!=p; q=q->next );
+			if( q )
+				q->next = p->next;
+		}
+
+		g_free(p);
 	}
 }
 

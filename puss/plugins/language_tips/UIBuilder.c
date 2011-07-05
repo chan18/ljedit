@@ -297,15 +297,9 @@ static void option_monitor_init(LanguageTips* self) {
 }
 
 static void option_monitor_final(LanguageTips* self) {
-	const Option* option;
-
-	option = self->app->option_find("puss", "editor.font");
-	if( option )
-		self->app->option_monitor_unreg(self->option_font_change_handler);
-
-	option = self->app->option_find("puss", "editor.style");
-	if( option )
-		self->app->option_monitor_unreg(self->option_style_change_handler);
+	self->app->option_monitor_unreg(self->option_font_change_handler);
+	self->app->option_monitor_unreg(self->option_style_change_handler);
+	self->app->option_monitor_unreg(self->option_path_change_handler);
 
 	self->app->option_setup_unreg("language_tips.path");
 	self->app->option_setup_unreg("language_tips._");
