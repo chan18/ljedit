@@ -120,6 +120,9 @@ gboolean puss_find_and_locate_text( GtkTextView* view
 	gchar* last_search_text = 0;
 
 	buf = gtk_text_view_get_buffer(view);
+	gtk_text_buffer_get_iter_at_mark(buf, &ps, gtk_text_buffer_get_insert(buf));
+	pe = ps;
+
 	mark_s = gtk_text_buffer_get_mark(buf, "puss:searched_mark_start");
 	mark_e = gtk_text_buffer_get_mark(buf, "puss:searched_mark_end");
 	last_search_text = g_object_get_data(G_OBJECT(buf), PUSS_LAST_SEARCH_TEXT);
