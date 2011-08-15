@@ -4,6 +4,7 @@
 #include "OptionManager.h"
 
 #include <string.h>
+#include <assert.h>
 
 #include "Puss.h"
 #include "Utils.h"
@@ -58,7 +59,7 @@ static OptionManager*	puss_option_manager;
 static gint compare_data_func_wrapper(gpointer a, gpointer b, GCompareFunc cmp) { return (*cmp)(a, b); }
 
 gboolean puss_option_manager_create() {
-	g_assert( !puss_option_manager );
+	assert( !puss_option_manager );
 
 	puss_option_manager = g_new0(OptionManager, 1);
 

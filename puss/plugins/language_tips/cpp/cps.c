@@ -3,6 +3,7 @@
 
 #include "cps.h"
 
+#include <assert.h>
 #include <string.h>
 #include "keywords.h"
 
@@ -17,7 +18,7 @@ static MLToken* spliter_next_token(BlockSpliter* spliter, gboolean skip_comment)
 	MLToken* token;
 	gsize count;
 
-	g_assert( spliter->pos < spliter->end );
+	assert( spliter->pos < spliter->end );
 
 	if( spliter->policy==SPLITER_POLICY_USE_LEXER ) {
 		while( (spliter->pos + 1)==spliter->end ) {
@@ -45,7 +46,7 @@ static MLToken* spliter_next_token(BlockSpliter* spliter, gboolean skip_comment)
 				break;
 			}
 #endif
-			g_assert( token->type != TK_MACRO );
+			assert( token->type != TK_MACRO );
 
 			if( token->type==TK_EOF )
 				return 0;
@@ -64,7 +65,7 @@ static MLToken* spliter_next_token(BlockSpliter* spliter, gboolean skip_comment)
 	}
 
 	++(spliter->pos);
-	g_assert( spliter->pos < spliter->end );
+	assert( spliter->pos < spliter->end );
 
 	return spliter->tokens + spliter->pos;
 }
@@ -178,7 +179,7 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 		break;
 
 	default:
-		g_assert( spliter->policy==SPLITER_POLICY_USE_TOKENS );
+		assert( spliter->policy==SPLITER_POLICY_USE_TOKENS );
 		spliter->tokens += spliter->pos;
 		spliter->end -= spliter->pos;
 	} 
@@ -285,7 +286,7 @@ TParseFn spliter_next_block(BlockSpliter* spliter, Block* block) {
 			fn = cps_skip_block;
 			break;
 		default:
-			g_assert( token->type != TK_MACRO );
+			assert( token->type != TK_MACRO );
 			break;
 		}
 	}

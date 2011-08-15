@@ -4,6 +4,7 @@
 #include "PosLocate.h"
 
 #include <stdlib.h>
+#include <assert.h>
 
 #include "Puss.h"
 #include "DocManager.h"
@@ -62,7 +63,7 @@ gboolean puss_pos_locate_create() {
 
 	puss_pos_list->free_list = &pool[0];
 
-	g_assert(__debug_pos_list_check());
+	assert(__debug_pos_list_check());
 
 	return TRUE;
 }
@@ -75,9 +76,9 @@ void puss_pos_locate_destroy() {
 void page_delete_notify(PosNode* node, GObject* where_the_object_was) {
 	PosList* list = puss_pos_list;
 
-	g_assert(node && G_OBJECT(node->page)==where_the_object_was);
+	assert(node && G_OBJECT(node->page)==where_the_object_was);
 
-	g_assert(__debug_pos_list_check_node(node));
+	assert(__debug_pos_list_check_node(node));
 
 	if( node->next )
 		node->next->prev = node->prev;
@@ -99,7 +100,7 @@ void page_delete_notify(PosNode* node, GObject* where_the_object_was) {
 	node->next = list->free_list;
 	list->free_list = node;
 
-	g_assert(__debug_pos_list_check());
+	assert(__debug_pos_list_check());
 }
 
 void puss_pos_locate_add(gint page_num, gint line, gint offset) {
@@ -122,7 +123,7 @@ void puss_pos_locate_add(gint page_num, gint line, gint offset) {
 		}
 
 		// remove all forward from current
-		g_assert( list->head && list->tail );
+		assert( list->head && list->tail );
 
 		for( node = list->current->next; node; node = node->next )
 			g_object_weak_unref(G_OBJECT(node->page), (GWeakNotify)&page_delete_notify, node);
@@ -138,7 +139,7 @@ void puss_pos_locate_add(gint page_num, gint line, gint offset) {
 		puss_pos_list->free_list = node->next;
 
 	} else {
-		g_assert( list->head && list->head->next );
+		assert( list->head && list->head->next );
 
 		node = list->head;
 		list->head = node->next;
@@ -169,7 +170,7 @@ void puss_pos_locate_add(gint page_num, gint line, gint offset) {
 
 	list->current = list->tail;
 
-	g_assert(__debug_pos_list_check());
+	assert(__debug_pos_list_check());
 }
 
 void puss_pos_locate_add_current_pos() {

@@ -3,6 +3,8 @@
 
 #include "LanguageTips.h"
 
+#include <assert.h>
+
 #include <gdk/gdkkeysyms.h>
 #include <gtksourceview/gtksourcebuffer.h>
 #include <gtksourceview/gtksourcelanguagemanager.h>
@@ -49,7 +51,7 @@ static void locate_line(LanguageTips* self, size_t line, GtkTreeIter* parent) {
 
 	do {
 		gtk_tree_model_get(GTK_TREE_MODEL(self->outline_store), &iter, 2, &elem, -1);
-		g_assert( elem );
+		assert( elem );
 
 		if( line < elem->sline )
 			break;

@@ -5,6 +5,7 @@
 
 #include <memory.h>
 #include <string.h>
+#include <assert.h>
 
 static inline void mlstr_cpy(MLStr* dst, MLStr* src) {
 	if( src->buf ) {
@@ -51,7 +52,7 @@ static void ml_str_join(MLStr* out, MLStr* array, gint count) {
 		p += array[i].len;
 	}
 
-	g_assert( p==(out->buf + out->len) );
+	assert( p==(out->buf + out->len) );
 	*p = '\0';
 }
 

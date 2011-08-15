@@ -3,6 +3,8 @@
 
 #include "LanguageTips.h"
 
+#include <assert.h>
+
 // TODO : use tooltip replace tips_decl_window
 //		since gtk-2.12, tooltip can use markup language
 // 
@@ -99,6 +101,7 @@ static void fill_list_store(LanguageTips* self, GSequence* seq) {
 
 	for( i=0; i<num; ++i ) {
 		elem = (CppElem*)g_sequence_get(seq_iter);
+		g_print("%p", elem);
 		seq_iter = g_sequence_iter_next(seq_iter);
 
 		gtk_list_store_append( GTK_LIST_STORE(self->tips_list_model), &iter );
@@ -292,7 +295,7 @@ gboolean tips_locate_sub(LanguageTips* self, gint x, gint y, const gchar* key) {
 
 	do {
 		gtk_tree_model_get(self->tips_list_model, &iter, 2, &elem, -1);
-		g_assert( elem );
+		assert( elem );
 
 		if( g_str_has_prefix(elem->name->buf, key) ) {
 			sel = gtk_tree_view_get_selection(self->tips_list_view);

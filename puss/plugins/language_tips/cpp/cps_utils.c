@@ -3,6 +3,8 @@
 
 #include "cps_utils.h"
 
+#include <assert.h>
+
 #define MAX_RESULT_LENGTH (16*1024)
 
 TinyStr* block_meger_tokens(MLToken* ps, MLToken* pe, TinyStr* init) {
@@ -339,7 +341,7 @@ MLToken* parse_id(MLToken* ps, MLToken* pe, TinyStr** ns, MLToken** name_token) 
 	ps = parse_ns(ps, pe, ns, name_token);
 	if( ps ) {
 		if( name_token )
-			g_assert( *name_token );
+			assert( *name_token );
 	} else {
 		err_trace("parse ns error when parse id!");
 	}

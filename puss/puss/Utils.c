@@ -7,6 +7,7 @@
 
 #include <string.h>
 #include <memory.h>
+#include <assert.h>
 
 
 typedef struct _Utils          Utils;
@@ -363,7 +364,7 @@ gchar* puss_format_filename(const gchar* filename) {
 	if( !res )
 		res = g_strdup(filename);
 
-	g_assert( res );
+	assert( res );
 
 #else
 	gboolean succeed = TRUE;

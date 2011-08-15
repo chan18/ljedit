@@ -2,6 +2,7 @@
 // 
 
 #include "ds.h"
+#include <assert.h>
 
 #ifdef _DEBUG
 	gint cps_debug_file_count = 0;
@@ -126,7 +127,7 @@ void cpp_elem_clear(CppElem* elem) {
 	case CPP_ET_NAMESPACE:	// CppNamespace
 		break;
 	default:
-		g_assert( FALSE && "bad elem type" );
+		assert( FALSE && "bad elem type" );
 	}
 
 	switch( elem->type ) {
@@ -167,13 +168,13 @@ void cpp_file_clear(CppFile* file) {
 }
 
 CppFile* cpp_file_ref(CppFile* file) {
-	g_assert( file );
+	assert( file );
 	g_atomic_int_inc(&(file->ref_count));
 	return file;
 }
 
 void cpp_file_unref(CppFile* file) {
-	g_assert( file );
+	assert( file );
 	if( g_atomic_int_dec_and_test(&(file->ref_count)) ) {
 		cpp_file_clear(file);
 		DEBUG_FILE_DEC();

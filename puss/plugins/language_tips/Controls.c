@@ -5,6 +5,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include <gdk/gdkkeysyms.h>
 #include <gtksourceview/gtksourcebuffer.h>
@@ -372,7 +373,7 @@ static GList* search_include_files(CppGuide* guide, gchar* startswith, GString* 
 	gchar* dirname;
 	GList* p;
 
-	g_assert( startswith );
+	assert( startswith );
 	len = (gint)strlen(startswith);
 	key = startswith;
 	path = 0;
@@ -484,7 +485,7 @@ static gboolean do_show_hint(LanguageTips* self, GtkTextView* view) {
 	GtkTextIter iter;
 	GtkTextIter end;
 
-	g_assert( view );
+	assert( view );
 
 	doc_panel = puss_get_doc_panel(self->app);
 	page_num = gtk_notebook_get_current_page(doc_panel);
@@ -516,7 +517,7 @@ static void do_hint_or_auto_complete(LanguageTips* self, GtkTextView* view) {
 	gint len;
 	gunichar ch;
 
-	g_assert( view );
+	assert( view );
 
 	doc_panel = puss_get_doc_panel(self->app);
 	page_num = gtk_notebook_get_current_page(doc_panel);

@@ -35,7 +35,7 @@ static void ml_str_merge(MLStr* out, MLStr* array, gint count) {
 		p += array[i].len;
 	}
 
-	g_assert( p==(out->buf + out->len) );
+	assert( p==(out->buf + out->len) );
 	*p = '\0';
 }
 
@@ -75,7 +75,7 @@ void cpp_lexer_frame_push(CppLexer* lexer, MLStr* str, gboolean need_copy_str, g
 }
 
 void cpp_lexer_init(CppLexer* lexer, gchar* text, gsize len, gint start_line) {
-	g_assert( lexer && text );
+	assert( lexer && text );
 
 	lexer->keeps = 0;
 	lexer->line = start_line;
@@ -120,7 +120,7 @@ static gint cpp_lexer_next_sign(CppLexer* lexer, CppFrame* frame);
 #define FRAME_GET_CH()		*(frame->ps)
 
 #define INC_LINE()	\
-	g_assert( frame==lexer->stack ); \
+	assert( frame==lexer->stack ); \
 	++lexer->line;
 
 static gint cpp_lexer_meger_lines_and_skip_ws(CppLexer* lexer) {
@@ -133,7 +133,7 @@ label_cpp_lexer_start:
 		return line;
 
 	frame = &(lexer->stack[lexer->top]);
-	g_assert( frame );
+	assert( frame );
 
 	// skip ws
 	while( FRAME_HAS_NEXT() ) {
@@ -207,7 +207,7 @@ label_cpp_lexer_start:
 
 				} else if( ch=='\r' || ch=='\n' ) {
 					if( (i > 0) || mline.buf ) {
-						g_assert( i < MULTILINES_COUNT );
+						assert( i < MULTILINES_COUNT );
 						lines[i].len = (gsize)(frame->ps - lines[i].buf);
 						++i;
 
@@ -332,7 +332,7 @@ void cpp_lexer_next(CppLexer* lexer, MLToken* token) {
 				}
 
 			} else {
-				goto label_cpp_lexer_sign;
+				goto label_cpp_lexer_finish;
 			}
 		}
 

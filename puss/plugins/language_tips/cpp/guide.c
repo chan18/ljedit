@@ -2,6 +2,8 @@
 // 
 #include "guide.h"
 
+#include <assert.h>
+
 #include "parser.h"
 #include "searcher.h"
 
@@ -383,7 +385,7 @@ gchar* cpp_filename_to_filekey(const gchar* filename, glong namelen) {
 	if( !res )
 		res = g_strdup(filename);
 
-	g_assert( res );
+	assert( res );
 
 #else
 	gboolean succeed = TRUE;

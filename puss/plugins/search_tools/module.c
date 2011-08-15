@@ -3,9 +3,9 @@
 
 #include "IPuss.h"
 
-#include <gdk/gdkkeysyms.h>
-
+#include <assert.h>
 #include <libintl.h>
+#include <gdk/gdkkeysyms.h>
 
 #define TEXT_DOMAIN "plugin_search_tools"
 
@@ -126,7 +126,7 @@ void search_in_file_content( const gchar* filename
 				fnode->owner_filename = g_strdup(filename);
 
 				if( self->result_list ) {
-					g_assert( self->result_list_last );
+					assert( self->result_list_last );
 					self->result_list_last->next = fnode;
 				} else {
 					self->result_list = fnode;
@@ -356,7 +356,7 @@ void create_ui(SearchTools* self) {
 	self->search_option_in_current_file = GTK_TOGGLE_BUTTON(gtk_builder_get_object(builder, "search_option_in_current_file"));
 	self->search_option_in_opened_files = GTK_TOGGLE_BUTTON(gtk_builder_get_object(builder, "search_option_in_opened_files"));
 	self->search_option_in_current_file_dir = GTK_TOGGLE_BUTTON(gtk_builder_get_object(builder, "search_option_in_current_file_dir"));
-	g_assert( self->panel
+	assert( self->panel
 		&& self->search_entry
 		&& self->result_store
 		&& self->result_view

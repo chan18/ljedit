@@ -5,6 +5,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 typedef struct {
 	gchar*	key;
@@ -132,9 +133,9 @@ void cpp_keywords_table_free(gpointer keywords_table) {
 void cpp_keywords_check(MLToken* token, gpointer keywords_table) {
 	gpointer value;
 
-	g_assert( token && token->type==TK_ID && keywords_table );
-	g_assert( ((Key*)token)->buf == token->buf );
-	g_assert( ((Key*)token)->len == token->len );
+	assert( token && token->type==TK_ID && keywords_table );
+	assert( ((Key*)token)->buf == token->buf );
+	assert( ((Key*)token)->len == token->len );
 
 	value = g_hash_table_lookup((GHashTable*)keywords_table, (Key*)token);
 	if( value )
