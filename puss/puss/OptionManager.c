@@ -20,12 +20,12 @@ struct _OptionNotifer {
 	GFreeFunc		tag_free_fun;
 };
 
-typedef struct _OptionNode {
+struct _OptionNode {
 	Option			option;
 	gchar*			value;
 	gchar*			default_value;
 	OptionNotifer*	notifer_list;
-} OptionNode;
+};
 
 static void option_node_free(OptionNode* node) {
 	OptionNotifer* p;

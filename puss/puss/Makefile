@@ -38,20 +38,21 @@ LIBS += `pkg-config --libs gtksourceview-2.0` \
 # project
 # 
 SRCS = $(wildcard *.c)
-
 OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)
+DEPS = $(SRCS:%.c=$(OBJPATH)/%.d)
+DIRS = $(sort $(foreach f,$(OBJS),$(dir $(f))))
 
 ifeq ($(OS), Windows_NT)
 	ifeq ($(BUILD), release)
 		CFLAGS += -mwindows
 	endif
-
-	OBJS += puss_res.o
 endif
+
+.PHONY : all debug release clean
 
 all : $(TARGET) $(TARGET_PATH)/include/IPuss.h
 
-$(TARGET) : $(OBJS)
+$(TARGET) : $(OBJS) puss_res.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 $(TARGET_PATH)/include/IPuss.h : IPuss.h
@@ -65,16 +66,17 @@ clean :
 	rm -f $(TARGET_PATH)/include/IPuss.h
 	rm -rf $(OBJPATH)
 
-$(OBJPATH)/%.o : %.c
-	@mkdir -p $(dir $@)
+$(DIRS): % :
+	@mkdir -p $@
+
+$(OBJS): $(OBJPATH)/%.o : %.c
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-$(OBJPATH)/%.d : %.c
+$(DEPS): $(OBJPATH)/%.d : %.c | $(DIRS)
 	@echo $(CC) -MM -o $@ -c $<
 	@rm -f $@
-	@mkdir -p $(dir $@)
 	@$(CC) $(CFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
 
 ifneq ($(NOT_USE_D_FILE), 1)
--include $(SRCS:%.c=$(OBJPATH)/%.d)
+-include $(DEPS)
 endif
