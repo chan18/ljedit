@@ -1,29 +1,33 @@
 # makefile puss
 # 
 # usage :
-#     build debug version   : make
-#     build release version : make BUILD=release
+#     build debug version   : make debug
+#     build release version : make
 # 
 # locale example :
 #	xgettext -k_ -o puss.po ./*.c
 #	msgfmt -o bin/locale/zh_CN/LC_MESSAGES/puss.mo poss.po
 # 
 
+CC = gcc
+
+TARGET_PATH = ../bin
+
 ifeq ($(OS), Windows_NT)
 	EXE_SUFFIX = .exe
 endif
 
-CC = gcc
-
-TARGET_PATH = ../bin
-ifeq ($(BUILD), release)
-	CFLAGS = -O3 -Wall
-	OBJPATH = release
-	TARGET = $(TARGET_PATH)/puss$(EXE_SUFFIX)
-else
+ifeq ($(MAKECMDGOALS), debug)
 	CFLAGS = -g -Wall -D_DEBUG
 	OBJPATH = debug
 	TARGET = $(TARGET_PATH)/puss_d$(EXE_SUFFIX)
+else
+	CFLAGS = -O3 -Wall
+	OBJPATH = release
+	TARGET = $(TARGET_PATH)/puss$(EXE_SUFFIX)
+	ifeq ($(OS), Windows_NT)
+		CFLAGS += -mwindows
+	endif
 endif
 
 # gtk & gtksourceview & gthread
@@ -37,20 +41,27 @@ LIBS += `pkg-config --libs gtksourceview-2.0` \
 
 # project
 # 
-SRCS = $(wildcard *.c)
+define walk
+	$(wildcard $(1)) $(foreach e, $(wildcard $(1)/*), $(call walk, $(e)))
+endef
+
+ALLFILES = $(call walk, .)
+
+SRCS = $(filter %.c, $(ALLFILES))
 OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)
 DEPS = $(SRCS:%.c=$(OBJPATH)/%.d)
 DIRS = $(sort $(foreach f,$(OBJS),$(dir $(f))))
 
-ifeq ($(OS), Windows_NT)
-	ifeq ($(BUILD), release)
-		CFLAGS += -mwindows
-	endif
-endif
+.PHONY : debug release clean
 
-.PHONY : all debug release clean
+release : $(TARGET) $(TARGET_PATH)/include/IPuss.h
 
-all : $(TARGET) $(TARGET_PATH)/include/IPuss.h
+debug : $(TARGET) $(TARGET_PATH)/include/IPuss.h
+
+clean :
+	rm -f $(TARGET)
+	rm -f $(TARGET_PATH)/include/IPuss.h
+	rm -rf $(OBJPATH)
 
 $(TARGET) : $(OBJS) puss_res.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
@@ -60,11 +71,6 @@ $(TARGET_PATH)/include/IPuss.h : IPuss.h
 
 puss_res.o : puss.rc puss.ico
 	windres -i puss.rc -J rc -o puss_res.o -O coff --include-dir=./
-
-clean :
-	rm -f $(TARGET)
-	rm -f $(TARGET_PATH)/include/IPuss.h
-	rm -rf $(OBJPATH)
 
 $(DIRS): % :
 	@mkdir -p $@
@@ -77,6 +83,6 @@ $(DEPS): $(OBJPATH)/%.d : %.c | $(DIRS)
 	@rm -f $@
 	@$(CC) $(CFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
 
-ifneq ($(NOT_USE_D_FILE), 1)
+ifneq ($(MAKECMDGOALS), clean)
 -include $(DEPS)
 endif
