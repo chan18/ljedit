@@ -266,7 +266,7 @@ static void on_chdir_btn_click(GtkButton *button, PussVConsole* self) {
 
 	dirname = g_path_get_dirname(url->str);
 	if( dirname ) {
-		cmd = g_strdup_printf("%c:\nCD %s\n", dirname[0], dirname);
+		cmd = g_strdup_printf("%c: && CD %s\n", dirname[0], dirname);
 		if( cmd ) {
 			send_utf8_text(cmd, self);
 			g_free(cmd);
