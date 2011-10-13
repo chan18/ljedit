@@ -38,7 +38,7 @@ LIBS += `pkg-config --libs gtksourceview-2.0` \
 # 
 CFLAGS += -I$(TARGET_PATH)/../include
 
-SRCS = $(wildcard *.c)
+SRCS += $(wildcard *.c)
 OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)
 DEPS = $(SRCS:%.c=$(OBJPATH)/%.d)
 DIRS = $(sort $(foreach f,$(OBJS),$(dir $(f)).))

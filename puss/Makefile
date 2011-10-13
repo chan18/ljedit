@@ -11,6 +11,10 @@ PROJECTS =	puss \
 
 PRJS = $(filter-out plugins/puss_plugin_makefile_c_template, $(PROJECTS))
 
+ifeq ($(OS), Windows_NT)
+	PRJS += plugins/puss_vconsole/vconsole
+endif
+
 release : $(PRJS:%=.project/%)
 
 debug : $(PRJS:%=.project/%)
