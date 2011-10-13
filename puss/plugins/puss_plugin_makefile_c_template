@@ -1,8 +1,8 @@
 # makefile
 # 
 # usage :
-#     build debug version   : make
-#     build release version : make BUILD=release
+#     build debug version   : make debug
+#     build release version : make
 # 
 
 ifeq ($(OS), Windows_NT)
@@ -16,14 +16,14 @@ CC = gcc
 
 TARGET_PATH = ../../bin/plugins
 
-ifeq ($(BUILD), release)
-	CFLAGS += -O3 -Wall
-	OBJPATH = release
-	TARGET = $(TARGET_PATH)/$(TARGET_NAME).so
-else
+ifeq ($(MAKECMDGOALS), debug)
 	CFLAGS += -g -Wall -D_DEBUG
 	OBJPATH = debug
 	TARGET = $(TARGET_PATH)/$(TARGET_NAME).so_d
+else
+	CFLAGS += -O3 -Wall
+	OBJPATH = release
+	TARGET = $(TARGET_PATH)/$(TARGET_NAME).so
 endif
 
 # gtk & gtksourceview & gthread
@@ -36,32 +36,41 @@ LIBS += `pkg-config --libs gtksourceview-2.0` \
 
 # project
 # 
-CFLAGS += -I../../bin/include
+CFLAGS += -I$(TARGET_PATH)/../include
 
-SRCS += $(wildcard *.c)
+SRCS = $(wildcard *.c)
+OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)
+DEPS = $(SRCS:%.c=$(OBJPATH)/%.d)
+DIRS = $(sort $(foreach f,$(OBJS),$(dir $(f)).))
 
-OBJS += $(SRCS:%.c=$(OBJPATH)/%.o)
+.PHONY : debug release clean
 
-target : $(TARGET)
+release : $(TARGET)
+
+debug : $(TARGET)
+
+clean :
+	rm -f $(TARGET_PATH)/$(TARGET_NAME).so_d
+	rm -f $(TARGET_PATH)/$(TARGET_NAME).so
+	rm -rf debug
+	rm -rf release
 
 $(TARGET) : $(OBJS)
 	$(CC) $(CFLAGS) -shared -o $@ $^ $(LIBS)
 
-clean :
-	rm -f $(TARGET)
-	rm -rf $(OBJPATH)
+$(DIRS): % :
+	@mkdir -p $@
 
-$(OBJPATH)/%.o : %.c
-	@mkdir -p $(dir $@)
+$(OBJS): $(OBJPATH)/%.o : %.c
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-$(OBJPATH)/%.d : %.c
+$(DEPS): $(OBJPATH)/%.d : %.c | $(DIRS)
 	@echo $(CC) -MM -o $@ -c $<
 	@rm -f $@
-	@mkdir -p $(dir $@)
 	@$(CC) $(CFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
 
-ifneq ($(NOT_USE_D_FILE), 1)
--include $(SRCS:%.c=$(OBJPATH)/%.d)
+ifneq ($(MAKECMDGOALS), clean)
+-include $(DEPS)
 endif
+
 

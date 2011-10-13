@@ -15,6 +15,7 @@ TARGET_PATH = ../bin
 
 ifeq ($(OS), Windows_NT)
 	EXE_SUFFIX = .exe
+	WIN_RES = puss_res.o
 endif
 
 ifeq ($(MAKECMDGOALS), debug)
@@ -42,7 +43,7 @@ LIBS += `pkg-config --libs gtksourceview-2.0` \
 # project
 # 
 define walk
-	$(wildcard $(1)) $(foreach e, $(wildcard $(1)/*), $(call walk, $(e)))
+	$(patsubst ./%, %, $(wildcard $(1)) $(foreach e, $(wildcard $(1)/*), $(call walk, $(e))))
 endef
 
 ALLFILES = $(call walk, .)
@@ -50,7 +51,7 @@ ALLFILES = $(call walk, .)
 SRCS = $(filter %.c, $(ALLFILES))
 OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)
 DEPS = $(SRCS:%.c=$(OBJPATH)/%.d)
-DIRS = $(sort $(foreach f,$(OBJS),$(dir $(f))))
+DIRS = $(sort $(foreach f,$(OBJS),$(dir $(f)).))	# why need release/. not release ??? in linux
 
 .PHONY : debug release clean
 
@@ -59,11 +60,13 @@ release : $(TARGET) $(TARGET_PATH)/include/IPuss.h
 debug : $(TARGET) $(TARGET_PATH)/include/IPuss.h
 
 clean :
-	rm -f $(TARGET)
+	rm -rf debug
+	rm -rf release
+	rm -f $(TARGET_PATH)/puss_d$(EXE_SUFFIX)
+	rm -f $(TARGET_PATH)/puss$(EXE_SUFFIX)
 	rm -f $(TARGET_PATH)/include/IPuss.h
-	rm -rf $(OBJPATH)
 
-$(TARGET) : $(OBJS) puss_res.o
+$(TARGET) : $(OBJS) $(WIN_RES)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 $(TARGET_PATH)/include/IPuss.h : IPuss.h
@@ -86,3 +89,4 @@ $(DEPS): $(OBJPATH)/%.d : %.c | $(DIRS)
 ifneq ($(MAKECMDGOALS), clean)
 -include $(DEPS)
 endif
+

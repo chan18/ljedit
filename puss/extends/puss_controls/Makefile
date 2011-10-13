@@ -1,8 +1,8 @@
 # makefile
 # 
 # usage :
-#     build debug version   : make
-#     build release version : make BUILD=release
+#     build debug version   : make debug
+#     build release version : make
 # 
 
 ifeq ($(OS), Windows_NT)
@@ -13,14 +13,14 @@ CC = gcc
 
 TARGET_PATH = ../../bin
 
-ifeq ($(BUILD), release)
-	CFLAGS = -O3 -Wall
-	OBJPATH = release
-	TARGET = $(TARGET_PATH)/extends/puss_controls.ext
-else
+ifeq ($(MAKECMDGOALS), debug)
 	CFLAGS = -g -Wall -D_DEBUG
 	OBJPATH = debug
 	TARGET = $(TARGET_PATH)/extends/puss_controls.ext_d
+else
+	CFLAGS = -O3 -Wall
+	OBJPATH = release
+	TARGET = $(TARGET_PATH)/extends/puss_controls.ext
 endif
 
 # gtk & gtksourceview
@@ -32,10 +32,24 @@ LIBS += `pkg-config --libs gtksourceview-2.0`
 # project
 # 
 CFLAGS += -I$(TARGET_PATH)/include
+
 SRCS = $(wildcard *.c)
 OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)
+DEPS = $(SRCS:%.c=$(OBJPATH)/%.d)
+DIRS = $(sort $(foreach f,$(OBJS),$(dir $(f)).))
 
-all : $(TARGET) $(TARGET_PATH)/include/IPussControls.h
+.PHONY : debug release clean
+
+release : $(TARGET) $(TARGET_PATH)/include/IPussControls.h
+
+debug : $(TARGET) $(TARGET_PATH)/include/IPussControls.h
+
+clean :
+	rm -f $(TARGET_PATH)/extends/puss_controls.ext_d
+	rm -f $(TARGET_PATH)/extends/puss_controls.ext
+	rm -f $(TARGET_PATH)/include/IPussControls.h
+	rm -rf debug
+	rm -rf release
 
 $(TARGET) : $(OBJS)
 	$(CC) $(CFLAGS) -shared -o $@ $^ $(LIBS)
@@ -43,23 +57,18 @@ $(TARGET) : $(OBJS)
 $(TARGET_PATH)/include/IPussControls.h : IPussControls.h
 	cp -f $< $@
 
-clean :
-	rm -f $(TARGET)
-	rm -f $(TARGET_PATH)/include/IPussControls.h
-	rm -rf $(OBJPATH)
+$(DIRS): % :
+	@mkdir -p $@
 
-$(OBJPATH)/%.o : %.c
-	@mkdir -p $(dir $@)
+$(OBJS): $(OBJPATH)/%.o : %.c
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-$(OBJPATH)/%.d : %.c
+$(DEPS): $(OBJPATH)/%.d : %.c | $(DIRS)
 	@echo $(CC) -MM -o $@ -c $<
 	@rm -f $@
-	@mkdir -p $(dir $@)
 	@$(CC) $(CFLAGS) -MM -MT '$@ $(basename $@).o' $< -o $@
 
-
-ifneq ($(NOT_USE_D_FILE), 1)
--include $(SRCS:%.c=$(OBJPATH)/%.d)
+ifneq ($(MAKECMDGOALS), clean)
+-include $(DEPS)
 endif
 
