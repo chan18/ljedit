@@ -242,9 +242,6 @@ static void snode_remove_list(SNode* parent, GList* elems) {
 }
 
 static void snode_insert(SNode* parent, CppElem* elem) {
-	if( elem->name && elem->name->buf ) {
-		assert( g_utf8_validate(elem->name->buf, -1, 0) ); 
-	}
 	switch( elem->type ) {
 	case CPP_ET_NCSCOPE:
 		snode_insert_list(parent, elem->v_ncscope.scope);
