@@ -16,7 +16,7 @@
 
 //-----------------------------------------------------------------
 
-#include "vconsole.h"
+#include "vconsole/vconsole.h"
 
 #define MAX_SCR_COL	256
 #define MAX_SCR_ROW	256

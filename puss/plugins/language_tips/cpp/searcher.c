@@ -2,7 +2,9 @@
 // 
 
 #include "searcher.h"
+
 #include <assert.h>
+#include <string.h>
 
 // c++ keywords & macro keywords
 // 

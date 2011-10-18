@@ -2,7 +2,7 @@
 
 TARGET_NAME = puss_vconsole
 
-ifneq ($(PLATFORM), win32)
+ifneq ($(OS), Windows_NT)
 	CFLAGS += `pkg-config --cflags vte`
 	LIBS += `pkg-config --libs vte`
 endif
