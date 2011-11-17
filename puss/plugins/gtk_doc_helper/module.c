@@ -345,7 +345,7 @@ static GtkWidget* create_setup_ui(GtkDocHelper* self) {
 		return 0;
 	gtk_builder_set_translation_domain(builder, TEXT_DOMAIN);
 
-	filename = g_build_filename(self->app->get_plugins_path(), "gtk_doc_helper_setup.ui", 0);
+	filename = g_build_filename(self->app->get_plugins_path(), "gtk_doc_helper_setup.ui", NULL);
 	gtk_builder_add_from_file(builder, filename, &err);
 	g_free(filename);
 
