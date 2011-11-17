@@ -511,7 +511,7 @@ static void do_hint_or_auto_complete(LanguageTips* self, GtkTextView* view) {
 	gint flag;
 	CppFile* file;
 	gint line;
-	gint offset;
+	// gint offset;
 	gpointer spath;
 	GSequence* seq;
 	gint len;
@@ -535,7 +535,7 @@ static void do_hint_or_auto_complete(LanguageTips* self, GtkTextView* view) {
 
 	// find keys
 	line = gtk_text_iter_get_line(&iter);
-	offset = gtk_text_iter_get_line_offset(&iter);
+	// offset = gtk_text_iter_get_line_offset(&iter);
 
 	file = cpp_guide_find_parsed(self->cpp_guide, url->str, url->len);
 	if( !file )

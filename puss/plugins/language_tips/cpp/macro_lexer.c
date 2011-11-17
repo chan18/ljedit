@@ -209,7 +209,7 @@ static void on_macro_include(ParseEnv* env, MLStr* filename, gboolean is_system_
 }
 
 static void cpp_parse_macro(ParseEnv* env, CppLexer* lexer) {
-	gint ch;
+	gint ch = 0;
 	CppFrame* frame;
 	MLToken token;
 	MLStr desc;

@@ -369,12 +369,10 @@ gchar* puss_format_filename(const gchar* filename) {
 #else
 	gboolean succeed = TRUE;
 	gchar** p;
-	gchar* path;
 	gchar* outs[256];
 	gchar** pt = outs;
 	gchar** paths = g_strsplit(filename, "/", 0);
 	for( p=paths; succeed && *p; ++p ) {
-		path = *p;
 		if( g_str_equal(*p, ".") ) {
 			// ignore ./
 

@@ -119,8 +119,8 @@ static void option_setup_fill_list(GtkTreeStore* store, const gchar* filter) {
 
 	keys = g_hash_table_get_keys(puss_setup_panels);
 	if( keys ) {
-		keys = g_list_sort(keys, g_strcmp0);
-		g_list_foreach(keys, fill_option_list, &tag);
+		keys = g_list_sort(keys, (GCompareFunc)g_strcmp0);
+		g_list_foreach(keys, (GFunc)fill_option_list, &tag);
 		g_list_free(keys);
 	}
 }

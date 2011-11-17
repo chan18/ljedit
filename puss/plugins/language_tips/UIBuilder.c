@@ -99,12 +99,12 @@ static void cb_add_button_changed(GtkButton* w, LanguageTips* self) {
 	GtkTextIter iter;
 	gchar* uri;
 	gchar* path;
-	const Option* option;
+	// const Option* option;
 	GtkTextView* view;
 	GtkFileChooserButton* btn;
 	GtkTextBuffer* buf;
 
-	option = (const Option*)g_object_get_data(G_OBJECT(w), TARGET_OPTION_KEY);
+	// option = (const Option*)g_object_get_data(G_OBJECT(w), TARGET_OPTION_KEY);
 	view = (GtkTextView*)g_object_get_data(G_OBJECT(w), TEXT_VIEW_KEY);
 	btn = (GtkFileChooserButton*)g_object_get_data(G_OBJECT(w), FILE_BUTTON_KEY);
 

@@ -83,15 +83,16 @@ static gboolean walk_one_plugin(const gchar* plugin_id, TPluginWalkerFn cb, gpoi
 	gchar* filepath;
 	gboolean res = FALSE;
 
-	filename = g_strconcat(plugin_id, PLUGIN_SUFFIX, 0);
+	filename = g_strconcat(plugin_id, PLUGIN_SUFFIX, NULL);
 	if( filename ) {
-		filepath = g_build_filename(puss_app->plugins_path, filename, 0);
-		if( filepath )
+		filepath = g_build_filename(puss_app->plugins_path, filename, NULL);
+		if( filepath ) {
 			res = walk_read_plugin(plugin_id, filepath, cb, tag);
+			g_free(filepath);
+		}
+		g_free(filename);
 	}
 
-	g_free(filename);
-	g_free(filepath);
 	return res;
 }
 
@@ -279,7 +280,6 @@ void puss_plugin_manager_show_config_dialog() {
 	gchar* filepath;
 	GtkBuilder* builder;
 	GtkListStore* store;
-	GtkTreeView* view;
 	GtkCellRendererToggle* toggle;
 	GError* err = 0;
 	GtkWidget* dlg = (GtkWidget*)g_plugin_manager_dlg;
@@ -310,7 +310,6 @@ void puss_plugin_manager_show_config_dialog() {
 
 		dlg = GTK_WIDGET(gtk_builder_get_object(builder, "puss_plugin_manager_dialog"));
 		store = GTK_LIST_STORE(gtk_builder_get_object(builder, "plugin_store"));
-		view = GTK_TREE_VIEW(gtk_builder_get_object(builder, "plugin_treeview"));
 		toggle = GTK_CELL_RENDERER_TOGGLE(gtk_builder_get_object(builder, "enabled_cell_renderer"));
 		g_signal_connect(toggle, "toggled", G_CALLBACK(plugin_ui_enabled_toggled), store);
 		gtk_tree_view_column_set_sort_column_id(GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "enabled_column")), 0);

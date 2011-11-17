@@ -25,20 +25,20 @@ gpointer dll_plugin_load(const gchar* plugin_id, GKeyFile* keyfile, Puss* app) {
 	if( filename ) {
 		gchar* s = filename;
 #ifdef _DEBUG
-		filename = g_strconcat(filename, ".so_d", 0);
+		filename = g_strconcat(filename, ".so_d", NULL);
 #else
-		filename = g_strconcat(filename, ".so", 0);
+		filename = g_strconcat(filename, ".so", NULL);
 #endif
 		g_free(s);
 	} else {
 #ifdef _DEBUG
-		filename = g_strconcat(plugin_id, ".so_d", 0);
+		filename = g_strconcat(plugin_id, ".so_d", NULL);
 #else
-		filename = g_strconcat(plugin_id, ".so", 0);
+		filename = g_strconcat(plugin_id, ".so", NULL);
 #endif
 	}
 
-	filepath = g_build_filename(app->get_plugins_path(), filename, 0);
+	filepath = g_build_filename(app->get_plugins_path(), filename, NULL);
 	dll_plugin->module = g_module_open(filepath, G_MODULE_BIND_LAZY);
 
 	if( !dll_plugin->module ) {

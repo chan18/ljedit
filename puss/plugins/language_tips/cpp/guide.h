@@ -153,7 +153,7 @@ struct _CppElem {
 
 struct _CppFile {
 	gint		ref_count;
-	gint		status;
+	gint64		status;
 	TinyStr*	filename;
 	time_t		datetime;
 	CppElem		root_scope;

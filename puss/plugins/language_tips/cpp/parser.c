@@ -264,7 +264,7 @@ static CppFile* cpp_parser_parse_use_menv(ParseEnv* env, const gchar* filekey, g
 
 	if( file && file->status!=0 ) {
 		// parsing
-		if( file->status==(gint)env )
+		if( file->status==(gint64)env )
 			file = 0;
 		else
 			cpp_file_ref(file);
@@ -283,7 +283,7 @@ static CppFile* cpp_parser_parse_use_menv(ParseEnv* env, const gchar* filekey, g
 			file = g_slice_new0(CppFile);
 			DEBUG_FILE_INC();
 			file->datetime = filestat.st_mtime;
-			file->status = (gint)env;
+			file->status = (gint64)env;
 			file->ref_count = 1;
 			file->filename = tiny_str_new(filekey, strlen(filekey));
 			file->root_scope.type = CPP_ET_NCSCOPE;
@@ -299,7 +299,7 @@ static CppFile* cpp_parser_parse_use_menv(ParseEnv* env, const gchar* filekey, g
 	if( !file )
 		return file;
 
-	if( file->status!=(gint)env ) {
+	if( file->status!=(gint64)env ) {
 		while( file->status!=0 )
 			g_usleep(500);
 

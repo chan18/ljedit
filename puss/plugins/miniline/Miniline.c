@@ -57,23 +57,6 @@ static void get_insert_pos(GtkTextBuffer* buf, gint* line, gint* offset) {
 	*offset = gtk_text_iter_get_line_offset(&iter);
 }
 
-static gboolean get_current_document_insert_pos(Miniline* miniline, gint* line, gint* offset) {
-	gint page_num = gtk_notebook_get_current_page(puss_get_doc_panel(miniline->app));
-	GtkTextBuffer* buf;
-	GtkTextView* view;
-
-	view = miniline->app->doc_get_view_from_page_num(page_num);
-	if( !view )
-		return FALSE;
-
-	buf = gtk_text_view_get_buffer(view);
-	if( !buf )
-		return FALSE;
-
-	get_insert_pos(buf, line, offset);
-	return TRUE;
-}
-
 static void find_and_locate_text(Miniline* miniline, GtkTextView* view, const gchar* text, gboolean is_forward, gboolean skip_current) {
 	if( g_self->app->find_and_locate_text(view, text, is_forward, skip_current, TRUE, TRUE, TRUE, SEARCH_FLAGS) )
 		gtk_widget_modify_base(GTK_WIDGET(miniline->entry), GTK_STATE_NORMAL, NULL);
@@ -456,11 +439,6 @@ static gboolean miniline_cb_key_press_event( GtkWidget* widget, GdkEventKey* eve
 	return FALSE;
 }
 
-static gboolean miniline_cb_button_press_event( GtkWidget* widget, GdkEventButton* event ) {
-	miniline_deactive();
-	return FALSE;
-}
-
 static void miniline_cb_active(GtkAction* action) {
 	gboolean res = FALSE;
 	gint page_num;
@@ -605,12 +583,12 @@ static void miniline_destroy() {
 	GtkBuilder* builder;
 	GtkUIManager* ui_mgr;
 	GtkActionGroup* group;
-	GtkBox* hbox;
+	// GtkBox* hbox;
 
 	builder = g_self->app->get_ui_builder();
 	group = GTK_ACTION_GROUP( gtk_builder_get_object(builder, "main_action_group") );
 	ui_mgr = GTK_UI_MANAGER( gtk_builder_get_object(builder, "main_ui_manager") );
-	hbox = GTK_BOX( gtk_builder_get_object(builder, "main_toolbar_hbox") );
+	// hbox = GTK_BOX( gtk_builder_get_object(builder, "main_toolbar_hbox") );
 
 	gtk_ui_manager_remove_ui(ui_mgr, g_self->ui_mgr_id);
 	gtk_action_group_remove_action(group, g_self->action);
