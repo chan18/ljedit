@@ -31,7 +31,7 @@ LIBS += `pkg-config --libs gtksourceview-2.0`
 
 # project
 # 
-CFLAGS += -I$(TARGET_PATH)/include
+CFLAGS += -I$(TARGET_PATH)/include -fPIC
 
 SRCS = $(wildcard *.c)
 OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)

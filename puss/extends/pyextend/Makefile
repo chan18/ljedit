@@ -45,7 +45,7 @@ endif
 
 # project
 # 
-CFLAGS += -I$(TARGET_PATH)/include
+CFLAGS += -I$(TARGET_PATH)/include -fPIC
 
 SRCS = $(wildcard *.c)
 OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)

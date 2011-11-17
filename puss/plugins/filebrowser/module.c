@@ -18,12 +18,6 @@
 
 #define _(str) dgettext(TEXT_DOMAIN, str)
 
-#ifdef G_OS_WIN32
-	// win32
-#else
-	// linux
-#endif
-
 typedef struct {
 	Puss*				app;
 
@@ -92,20 +86,21 @@ static void fill_subs(PussFileBrowser* self, GFile* dir, GtkTreeIter* parent_ite
 		info = icon ? gtk_icon_theme_lookup_by_gicon(theme, icon, self->icon_size, 0) : 0;
 		pbuf = info ? gtk_icon_info_load_icon(info, 0) : g_object_ref(self->folder_icon);
 		subfile = g_file_get_child(dir, name);
+		if( info )	gtk_icon_info_free(info);
+		if( icon )	g_object_unref(icon);
 		g_object_unref(fileinfo);
 
 		gtk_tree_store_append(self->store, &iter, parent_iter);
 		gtk_tree_store_set( self->store, &iter, 0, pbuf, 1, name, 2, subfile, -1 );
+
 		if( name )
 			self->string_pool = g_slist_prepend(self->string_pool, name);
-		if( info )
-			gtk_icon_info_free(info);
 		if( pbuf )
 			self->object_pool = g_slist_prepend(self->object_pool, pbuf);
 		if( subfile ) {
 			// append [loading] node
 			gtk_tree_store_append(self->store, &subiter, &iter);
-			gtk_tree_store_set( self->store, &subiter, 0, 0, 1, 0, 2, 0, -1 );
+			gtk_tree_store_set( self->store, &subiter, 1, NULL, 2, NULL, -1 );
 			self->object_pool = g_slist_prepend(self->object_pool, subfile);
 		}
 	}
@@ -116,14 +111,15 @@ static void fill_subs(PussFileBrowser* self, GFile* dir, GtkTreeIter* parent_ite
 		icon = g_file_info_get_icon(fileinfo);
 		info = icon ? gtk_icon_theme_lookup_by_gicon(theme, icon, self->icon_size, 0) : 0;
 		pbuf = info ? gtk_icon_info_load_icon(info, 0) : g_object_ref(self->file_icon);
+		if( icon )	g_object_unref(icon);
+		if( info )	gtk_icon_info_free(info);
 		g_object_unref(fileinfo);
 
 		gtk_tree_store_append(self->store, &iter, parent_iter);
-		gtk_tree_store_set( self->store, &iter, 0, pbuf, 1, name, 2, 0, -1 );
+		gtk_tree_store_set( self->store, &iter, 0, pbuf, 1, name, 2, NULL, -1 );
+
 		if( name )
 			self->string_pool = g_slist_prepend(self->string_pool, name);
-		if( info )
-			gtk_icon_info_free(info);
 		if( pbuf )
 			self->object_pool = g_slist_prepend(self->object_pool, pbuf);
 	}
@@ -155,6 +151,8 @@ static void fill_root(PussFileBrowser* self) {
 		pbuf = info ? gtk_icon_info_load_icon(info, 0) : 0;
 		name = g_mount_get_name(mnt);
 		file = g_mount_get_root(mnt);
+		if( info )	gtk_icon_info_free(info);
+		if( icon )	g_object_unref(icon);
 
 		gtk_tree_store_prepend(self->store, &iter, 0);
 		gtk_tree_store_set( self->store, &iter, 0, pbuf, 1, name, 2, file, -1 );
@@ -162,17 +160,13 @@ static void fill_root(PussFileBrowser* self) {
 		g_object_unref(mnt);
 		if( name )
 			self->string_pool = g_slist_prepend(self->string_pool, name);
-		if( icon )
-			g_object_unref(icon);
-		if( info )
-			gtk_icon_info_free(info);
 		if( pbuf )
 			self->object_pool = g_slist_prepend(self->object_pool, pbuf);
 
 		// append [loading] node
 		if( file ) {
 			gtk_tree_store_prepend(self->store, &subiter, &iter);
-			gtk_tree_store_set( self->store, &subiter, 0, 0, 1, 0, 2, 0, -1 );
+			gtk_tree_store_set( self->store, &subiter, 1, NULL, 2, NULL, -1 );
 			self->object_pool = g_slist_prepend(self->object_pool, file);
 		}
 	}
