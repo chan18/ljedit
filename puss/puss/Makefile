@@ -10,6 +10,7 @@
 # 
 
 CC = gcc
+WINDRES = windres
 
 TARGET_PATH = ../bin
 
@@ -73,7 +74,7 @@ $(TARGET_PATH)/include/IPuss.h : IPuss.h
 	cp -f $< $@
 
 puss_res.o : puss.rc puss.ico
-	windres -i puss.rc -J rc -o puss_res.o -O coff --include-dir=./
+	$(WINDRES) -i puss.rc -J rc -o puss_res.o -O coff --include-dir=./
 
 $(DIRS): % :
 	@mkdir -p $@

@@ -163,7 +163,7 @@ static GtkWidget* puss_text_view_new_with_buffer(GtkSourceBuffer* buf) {
 }
 
 #ifdef G_OS_WIN32
-
+/*
 	LRESULT CALLBACK __trackpoint_win32_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		GtkPussTextView* self = (GtkPussTextView*)GetWindowLong(hwnd, GWL_USERDATA);
 		if( msg==WM_MOUSEWHEEL ) {
@@ -185,6 +185,7 @@ static GtkWidget* puss_text_view_new_with_buffer(GtkSourceBuffer* buf) {
 
 		return CallWindowProc(self->old_proc, hwnd, msg, wparam, lparam);
 	}
+*/
 
 	static gboolean puss_text_view_cb_init(GtkWidget* widget, GdkEvent* event) {
 		// GtkPussTextView* self = PUSS_TEXT_VIEW(widget);
