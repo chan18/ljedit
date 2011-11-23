@@ -19,6 +19,6 @@ msgstr ""
 msgid "Language"
 msgstr "源码语言"
 
-msgid "select high-light source language, default use c++"
-msgstr "选择高亮源码语言，默认使用c++语言"
+msgid "select high-light source language, default use last"
+msgstr "选择高亮源码语言，默认使用上次选择的语言"
 
