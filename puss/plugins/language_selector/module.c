@@ -16,13 +16,14 @@
 typedef struct {
 	Puss* app;
 
-	GTypeModule*	type_module;
+	GTypeModule*		type_module;
 
-	GtkActionGroup* action_group;
-	guint			merge_id;
+	GtkActionGroup*		action_group;
+	guint				merge_id;
 
-	GList*			favory_language_list;
-	guint			favory_merge_id;
+	GList*				favory_language_list;
+	guint				favory_merge_id;
+	GtkSourceLanguage*	last_favory_lang;
 } LanguageSelector;
 
 static LanguageSelector* g_self = 0;
@@ -41,9 +42,13 @@ static void pls_lang_active(GtkAction* action, GtkSourceLanguage* lang) {
 	if( !buf || !GTK_IS_SOURCE_BUFFER(buf) )
 		return;
 
-	gtk_source_buffer_set_language(GTK_SOURCE_BUFFER(buf), lang);
+	if( lang ) {
+		gtk_source_buffer_set_language(GTK_SOURCE_BUFFER(buf), lang);
+		add_fill_favory_language(lang);
 
-	add_fill_favory_language(lang);
+	} else {
+		gtk_source_buffer_set_language(GTK_SOURCE_BUFFER(buf), g_self->last_favory_lang);
+	}
 }
 
 static void fill_languages(gchar* lang, GString* gstr) {
@@ -139,6 +144,8 @@ static void add_fill_favory_language(GtkSourceLanguage* lang) {
 		g_self->favory_language_list = g_list_delete_link(g_self->favory_language_list, list);
 	}
 
+	g_self->last_favory_lang = lang;
+
 	fill_favory_language_menu();
 }
 
@@ -175,6 +182,7 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 	sections = g_tree_new_full((GCompareDataFunc)&g_ascii_strcasecmp, 0, 0, (GDestroyNotify)g_list_free);
 	lm = gtk_source_language_manager_get_default();
 	ids = gtk_source_language_manager_get_language_ids(lm);
+	g_self->last_favory_lang = gtk_source_language_manager_get_language(lm, "cpp");
 	for( id=ids; *id; ++id ) {
 		lang = gtk_source_language_manager_get_language(lm, *id);
 		if( lang ) {
@@ -207,17 +215,17 @@ PUSS_EXPORT void* puss_plugin_create(Puss* app) {
 
 	// insert language selector menu-tool-button
 	// 
-	action = gtk_action_new("language_selector_open", _("Language"), _("select high-light source language, default use c++"), GTK_STOCK_SELECT_COLOR);
+	action = gtk_action_new("language_selector_open", _("Language"), _("select high-light source language, default use last"), GTK_STOCK_SELECT_COLOR);
 	gtk_action_group_add_action(g_self->action_group, action);
 	g_object_unref(action);
 
 	action = GTK_ACTION( g_object_new(tool_menu_interface->get_type ()
 			, "name", "language_selector_toolmenu_open"
 			, "label", _("Language")
-			, "tooltip", _("select high-light source language, default use c++")
+			, "tooltip", _("select high-light source language, default use last")
 			, "stock-id", GTK_STOCK_SELECT_COLOR
 			, NULL) );
-	g_signal_connect(action, "activate", G_CALLBACK(&pls_lang_active), gtk_source_language_manager_get_language(lm, "cpp"));
+	g_signal_connect(action, "activate", G_CALLBACK(&pls_lang_active), 0);
 	gtk_action_group_add_action(g_self->action_group, action);
 	g_object_unref(action);
 
