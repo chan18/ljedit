@@ -244,12 +244,12 @@ gboolean cps_fun(ParseEnv* env, Block* block) {
 			if( block->parent->type!=CPP_ET_CLASS && typekey && tiny_str_len(typekey)>0 ) {
 				TinyStr* str;
 				gsize typekey_len = tiny_str_len(typekey);
-				err_goto_finish_if_not( typekey_len > ps->len );
-				err_goto_finish_if_not( typekey->buf[typekey_len - (ps->len + 1)]=='.' );
-				str = tiny_str_new(typekey->buf, typekey_len - (ps->len + 1));
-				tiny_str_free(typekey);
-				typekey = str;
-				name = ps;
+				ps = fptrypos - 1;
+				if( ps > name ) {
+					while( ps>name && ps->type!=TK_ID )
+						--ps;
+					name = ps;
+				}
 				ps = fptrypos;
 
 			} else if( ps->type==TK_ID ) {
