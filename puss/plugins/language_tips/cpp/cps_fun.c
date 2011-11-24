@@ -250,6 +250,8 @@ gboolean cps_fun(ParseEnv* env, Block* block) {
 						--ps;
 					name = ps;
 				}
+				nskey = typekey;
+				typekey = 0;
 				ps = fptrypos;
 
 			} else if( ps->type==TK_ID ) {
