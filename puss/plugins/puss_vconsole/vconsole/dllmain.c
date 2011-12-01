@@ -3,7 +3,7 @@
 
 #include <Windows.h>
 
-extern	HMODULE	g_hModule = 0;
+HMODULE	g_hModule = 0;
 
 BOOL APIENTRY DllMain(HANDLE hModule, DWORD ul_reason_for_call, LPVOID lpReserved) {
 	g_hModule = hModule;

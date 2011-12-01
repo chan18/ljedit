@@ -65,7 +65,7 @@ static int vconsole_init(VCon* con);
 #define ENV_STR_BLOCK_SZ	(32 * 1024)
 
 static LPWCH create_env_strings() {
-	LPWCH sEnv, sp, dEnv, dp, tp;
+	LPWCH sEnv, sp, dEnv, dp;
 	DWORD sSize, dSize, nSize;
 	DWORD dwLimit = ENV_STR_BLOCK_SZ;
 
@@ -85,7 +85,7 @@ static LPWCH create_env_strings() {
 			dEnv = realloc(dEnv, dwLimit * sizeof(WCHAR) );
 			dp = dEnv + sSize;
 		}
-		tp = memcpy(dp, sp, sSize);
+		memcpy(dp, sp, sSize);
 		sp += sSize;
 		dp += sSize;
 		dSize += sSize;
@@ -102,7 +102,7 @@ static LPWCH create_env_strings() {
 			dEnv = realloc(dEnv, dwLimit * sizeof(WCHAR) );
 			dp = dEnv + sSize;
 		}
-		tp = memcpy(dp, sp, sSize);
+		memcpy(dp, sp, sSize);
 		sp += sSize;
 		dp += sSize;
 		dSize += sSize;
@@ -123,7 +123,7 @@ static VCon* vconsole_create() {
 		if( vconsole_init(con)==0 ) {
 			con->hEventStopMonitor = CreateEvent(NULL, FALSE, FALSE, NULL);
 			if( con->hEventStopMonitor ) {
-				con->hMonitorThread = CreateThread(NULL, 0, &MonitorService, con, 0, NULL);
+				con->hMonitorThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&MonitorService, con, 0, NULL);
 				if( con->hMonitorThread )
 					return con;
 			}
@@ -201,6 +201,7 @@ static int vconsole_init(VCon* con) {
 
 	LPVOID pRemoteAddr;
 	LPTHREAD_START_ROUTINE pfnThreadRoutine;
+	DWORD dwExitCode;
 	HMODULE	hRemoteDLL;
 	HANDLE hRemoteThread;
 	HANDLE hRemoteSharedMem = 0;
@@ -285,8 +286,9 @@ static int vconsole_init(VCon* con) {
 		if( WaitForSingleObject(hRemoteThread, 10000)==WAIT_TIMEOUT)
 			return 3006;
 
-		if( !GetExitCodeThread(hRemoteThread, &hRemoteDLL) )
+		if( !GetExitCodeThread(hRemoteThread, &dwExitCode) )
 			return 3007;
+		hRemoteDLL = (HMODULE)dwExitCode;
 
 		CloseHandle(hRemoteThread);
 		VirtualFreeEx(pi.hProcess, pRemoteAddr, dwHookLen*sizeof(WCHAR), MEM_RELEASE);
@@ -306,7 +308,7 @@ static int vconsole_init(VCon* con) {
 			return 4000;
 		}
 
-		pfnThreadRoutine = (LPTHREAD_START_ROUTINE)((DWORD)hRemoteDLL + (DWORD)HookService - (DWORD)g_hModule);
+		pfnThreadRoutine = (LPTHREAD_START_ROUTINE)((char*)hRemoteDLL + ((char*)HookService - (char*)g_hModule));
 
 		// start the remote thread
 		hRemoteThread = CreateRemoteThread(pi.hProcess, NULL, 0, pfnThreadRoutine, hRemoteSharedMem, 0, NULL);
@@ -366,13 +368,13 @@ static void vconsole_send_input(VCon* con, WCHAR* text) {
 	SetEvent(con->hToHook_SendInput);
 }
 
-VConsoleAPI g_api =	{
-	  vconsole_create
-	, vconsole_destroy
-	, vconsole_scroll
-	, vconsole_resize
-	, vconsole_send_input
-};
+static VConsoleAPI g_api =
+	{ (void*)vconsole_create
+	, (void*)vconsole_destroy
+	, (void*)vconsole_scroll
+	, (void*)vconsole_resize
+	, (void*)vconsole_send_input
+	};
 
 __declspec(dllexport) VConsoleAPI* get_vconsole_api() { return &g_api; }
 

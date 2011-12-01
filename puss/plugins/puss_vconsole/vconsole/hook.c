@@ -195,6 +195,11 @@ static BOOL console_on_send_input(ShareMemory* shared) {
 	INPUT_RECORD* pd;
 	INPUT_RECORD records[SEND_INPUT_CHARS_MAX+1];
 
+	// CreateFile or WriteConsoleInput BUG on Mingw64
+	// 
+	if( sizeof(void*)==8 )
+		return TRUE;
+
 	hStdIn = CreateFile( L"CONIN$"
 		, GENERIC_WRITE | GENERIC_READ
 		, FILE_SHARE_READ | FILE_SHARE_WRITE

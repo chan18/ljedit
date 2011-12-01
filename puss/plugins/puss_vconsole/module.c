@@ -125,7 +125,8 @@ static void update_view(PussVConsole* self) {
 static void send_utf8_text(const gchar *text, PussVConsole* self) {
 	gunichar2* utf16_text = g_utf8_to_utf16(text, -1, 0, 0, 0);
 	if( utf16_text ) {
-		self->api->send_input(self->vcon, utf16_text);
+		// self->api->send_input(self->vcon, utf16_text);
+		PostMessage(self->vcon->hwnd, WM_IME_CHAR, event->hardware_keycode, 0x001C0001);
 		g_free(utf16_text);
 	}
 }
@@ -139,11 +140,7 @@ static gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, PussVConsole
 }
 
 static void on_im_commit(GtkIMContext *imcontext, gchar *text, PussVConsole* self) {
-	gunichar2* utf16_text = g_utf8_to_utf16(text, -1, 0, 0, 0);
-	if( utf16_text ) {
-		self->api->send_input(self->vcon, utf16_text);
-		g_free(utf16_text);
-	}
+	send_utf8_text(text, self);
 }
 
 static gboolean on_scroll_event(GtkWidget *widget, GdkEventScroll *event, PussVConsole* self) {
