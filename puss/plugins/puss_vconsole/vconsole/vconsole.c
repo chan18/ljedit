@@ -1,5 +1,7 @@
 // vconsole.c
 // 
+#define _CRT_SECURE_NO_WARNINGS
+
 #include "vconsole.h"
 
 #include "share.h"
