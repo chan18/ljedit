@@ -17,6 +17,14 @@
 	#define GDK_KEY_Up			GDK_Up
 	#define GDK_KEY_Down		GDK_Down
 	#define GDK_KEY_Escape		GDK_Escape
+	#define GDK_KEY_F12			GDK_F12
+	#define GDK_KEY_Alt_L		GDK_Alt_L
+	#define GDK_KEY_Alt_R		GDK_Alt_R
+	#define GDK_KEY_Delete		GDK_Delete
+	#define GDK_KEY_Left		GDK_Left
+	#define GDK_KEY_Right		GDK_Right
+	#define GDK_KEY_BackSpace	GDK_BackSpace
+	#define GDK_KEY_KP_Enter	GDK_KP_Enter
 #endif
 
 struct _ControlsPriv {
@@ -816,7 +824,7 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
         //tips_hide_all(self);	// when use Xming, it will hide autocomplete-tip window
 
 		switch( event->keyval ) {
-		case GDK_Right:
+		case GDK_KEY_Right:
 			do_hint_or_auto_complete(self, view);
 			break;
 		}
@@ -825,27 +833,27 @@ static gboolean view_on_key_release(GtkTextView* view, GdkEventKey* event, Langu
     }
 
     switch( event->keyval ) {
-	case GDK_F12:
+	case GDK_KEY_F12:
 		if( event->state & (GDK_CONTROL_MASK|GDK_MOD1_MASK) )
 			jump_to_current(self, view);
 		else
 			show_current_in_preview(self, view);
 		return FALSE;
 
-	case GDK_Alt_L:
-	case GDK_Alt_R:
+	case GDK_KEY_Alt_L:
+	case GDK_KEY_Alt_R:
 		show_current_in_preview(self, view);
         return FALSE;
     }
 
 	if( tips_list_is_visible(self) || tips_include_is_visible(self) ) {
 		switch( event->keyval ) {
-		case GDK_Delete:
-		case GDK_Left:
-		case GDK_Right:
-		case GDK_BackSpace:
-		case GDK_Return:
-		case GDK_KP_Enter:
+		case GDK_KEY_Delete:
+		case GDK_KEY_Left:
+		case GDK_KEY_Right:
+		case GDK_KEY_BackSpace:
+		case GDK_KEY_Return:
+		case GDK_KEY_KP_Enter:
 			{
 				GtkTextBuffer* buf;
 				GtkTextIter iter;
