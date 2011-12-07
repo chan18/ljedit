@@ -16,10 +16,10 @@ static void drag_data_received( GtkWidget* widget
 	gchar** uris;
 	gchar* filepath;
 
-	if( !data || data->format!=8 )
+	if( !data || gtk_selection_data_get_format(data)!=8 )
 		return;
 
-	uris = g_uri_list_extract_uris((const gchar*)(data->data));
+	uris = g_uri_list_extract_uris((const gchar*)(gtk_selection_data_get_data(data)));
 	if( !uris )
 		return;
 

@@ -1,9 +1,6 @@
 // DocManager.c
 // 
 
-// TODO : use gio!!!!
-// 
-
 #include "DocManager.h"
 
 #ifdef G_OS_WIN32
@@ -13,9 +10,7 @@
 
 #include <gdk/gdkkeysyms.h>
 #include <gtksourceview/gtksourceview.h>
-#include <gtksourceview/gtksourceiter.h>
 #include <gtksourceview/gtksourcestyleschememanager.h>
-
 #include <gio/gio.h>
 
 #include <string.h>
@@ -26,6 +21,10 @@
 #include "GlobMatch.h"
 #include "PosLocate.h"
 #include "OptionManager.h"
+
+#if GTK_MAJOR_VERSION==2
+	#define GDK_KEY_F	GDK_F
+#endif
 
 #define PUSS_TYPE_TEXT_VIEW             (puss_text_view_get_type ())
 #define PUSS_TEXT_VIEW(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), PUSS_TYPE_TEXT_VIEW, GtkPussTextView))
@@ -52,7 +51,11 @@ struct _GtkPussTextViewClass {
 	void (*search)(GtkPussTextView *view);
 };
 
-G_DEFINE_TYPE(GtkPussTextView, puss_text_view, GTK_TYPE_SOURCE_VIEW)
+#if GTK_MAJOR_VERSION==2
+	G_DEFINE_TYPE(GtkPussTextView, puss_text_view, GTK_TYPE_SOURCE_VIEW)
+#else
+	G_DEFINE_TYPE(GtkPussTextView, puss_text_view, GTK_SOURCE_TYPE_VIEW)
+#endif
 
 /* Signals */
 enum {
@@ -98,11 +101,11 @@ static void puss_text_view_class_init(GtkPussTextViewClass* klass) {
 		, G_STRUCT_OFFSET(GtkPussTextViewClass, search)
 		, NULL
 		, NULL
-		, gtk_marshal_VOID__VOID
+		, g_cclosure_marshal_VOID__VOID
 		, G_TYPE_NONE
 		, 0 );
 
-	gtk_binding_entry_add_signal(binding_set, GDK_F, GDK_CONTROL_MASK, "puss_search", 0);
+	gtk_binding_entry_add_signal(binding_set, GDK_KEY_F, GDK_CONTROL_MASK, "puss_search", 0);
 }
 
 static void doc_cb_move_focus(GtkWidget* widget, GtkDirectionType dir) {
@@ -276,6 +279,7 @@ static void puss_text_view_move_cursor(GtkTextView *view, GtkMovementStep step, 
 }
 
 static gint puss_text_view_button_press_event(GtkWidget *widget, GdkEventButton *event) {
+#if GTK_MAJOR_VERSION==2
 	GtkTextView* text_view = GTK_TEXT_VIEW(widget);
 	gint res;
 	if( text_view->need_im_reset ) {
@@ -285,7 +289,9 @@ static gint puss_text_view_button_press_event(GtkWidget *widget, GdkEventButton 
 	} else {
 		res = (*parent_press_event_fn)(widget, event);
 	}
-
+#else
+	gint res = (*parent_press_event_fn)(widget, event);
+#endif
 
 	if( event->button==1 && event->type == GDK_2BUTTON_PRESS ) {
 		// Double-Click word can select word(include "_" )

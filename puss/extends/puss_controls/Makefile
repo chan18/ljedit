@@ -3,6 +3,7 @@
 # usage :
 #     build debug version   : make debug
 #     build release version : make
+#     build gtk3 version    : make GTK_VERSION=3
 # 
 
 ifeq ($(OS), Windows_NT)
@@ -25,9 +26,13 @@ endif
 
 # gtk & gtksourceview
 # 
-CFLAGS += `pkg-config --cflags gtksourceview-2.0`
-
-LIBS += `pkg-config --libs gtksourceview-2.0`
+ifeq ($(GTK_VERSION),3)
+	CFLAGS += `pkg-config --cflags gtksourceview-3.0`
+	LIBS += `pkg-config --libs gtksourceview-3.0`
+else
+	CFLAGS += `pkg-config --cflags gtksourceview-2.0`
+	LIBS += `pkg-config --libs gtksourceview-2.0`
+endif
 
 # project
 # 

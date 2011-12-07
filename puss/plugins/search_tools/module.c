@@ -7,6 +7,11 @@
 #include <libintl.h>
 #include <gdk/gdkkeysyms.h>
 
+#if GTK_MAJOR_VERSION==2
+	#define GDK_KEY_Return		GDK_Return
+	#define GDK_KEY_KP_Enter	GDK_KP_Enter
+#endif
+
 #define TEXT_DOMAIN "plugin_search_tools"
 
 #define _(str) dgettext(TEXT_DOMAIN, str)
@@ -262,7 +267,7 @@ void search_in_current_file_dir(const gchar* search_text, SearchTools* self) {
 }
 
 SIGNAL_CALLBACK gboolean search_tools_search(GtkEntry* entry, GdkEventKey* event, SearchTools* self) {
-	if( event->keyval==GDK_Return || event->keyval==GDK_KP_Enter ) {
+	if( event->keyval==GDK_KEY_Return || event->keyval==GDK_KEY_KP_Enter ) {
 		const gchar* text = gtk_entry_get_text(entry);
 
 		gtk_tree_view_set_model(self->result_view, 0);

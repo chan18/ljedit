@@ -90,11 +90,19 @@ void puss_reg_global_options() {
 	append_global_paths();
 }
 
-static void cb_combo_box_option_changed(GtkComboBox* w, const Option* option) {
-	gchar* text = gtk_combo_box_get_active_text(w);
-	puss_option_manager_option_set(option, text);
-	g_free(text);
-}
+#if GTK_MAJOR_VERSION==2
+	static void cb_combo_box_option_changed(GtkComboBox* w, const Option* option) {
+		gchar* text = gtk_combo_box_get_active_text(w);
+		puss_option_manager_option_set(option, text);
+		g_free(text);
+	}
+#else
+	static void cb_combo_box_option_changed(GtkComboBoxText* w, const Option* option) {
+		gchar* text = gtk_combo_box_text_get_active_text(w);
+		puss_option_manager_option_set(option, text);
+		g_free(text);
+	}
+#endif
 
 static void cb_font_button_changed(GtkFontButton* w, const Option* option) {
 	const gchar* text = gtk_font_button_get_font_name(w);
@@ -120,8 +128,12 @@ GtkWidget* puss_create_global_options_setup_widget(gpointer tag) {
 	if( !builder )
 		return 0;
 	gtk_builder_set_translation_domain(builder, TEXT_DOMAIN);
-
+	
+#if GTK_MAJOR_VERSION==2
 	filepath = g_build_filename(puss_app->module_path, "res", "puss_setup_widget.xml", NULL);
+#else
+	filepath = g_build_filename(puss_app->module_path, "res", "puss_setup_widget_gtk3.xml", NULL);
+#endif
 	if( !filepath ) {
 		g_printerr("ERROR(puss) : build setup dialog filepath failed!\n");
 		g_object_unref(G_OBJECT(builder));
@@ -163,8 +175,11 @@ GtkWidget* puss_create_global_options_setup_widget(gpointer tag) {
 
 				rcfile = g_build_filename(path, fname, "gtk-2.0", "gtkrc", NULL);
 				if( g_file_test(rcfile, G_FILE_TEST_EXISTS) ) {
+#if GTK_MAJOR_VERSION==2
 					gtk_combo_box_append_text(GTK_COMBO_BOX(w), fname);
-
+#else
+					gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(w), fname);
+#endif
 					if( index < 0 && option->value ) {
 						if( g_str_equal(fname, option->value) )
 							index = i;
@@ -200,7 +215,11 @@ GtkWidget* puss_create_global_options_setup_widget(gpointer tag) {
 			ids = gtk_source_style_scheme_manager_get_scheme_ids(ssm);
 			i = 0;
 			for( p=ids; *p; ++p ) {
+#if GTK_MAJOR_VERSION==2
 				gtk_combo_box_append_text(GTK_COMBO_BOX(w), *p);
+#else
+				gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(w), *p);
+#endif
 
 				if( index < 0 && option->value ) {
 					if( g_str_equal(*p, option->value) )

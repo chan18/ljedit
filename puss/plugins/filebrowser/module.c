@@ -443,6 +443,7 @@ SIGNAL_CALLBACK void filebrowser_cb_row_expanded(GtkTreeView* tree_view, GtkTree
 SIGNAL_CALLBACK gboolean filebrowser_view_cb_keypress(GtkWidget* w, GdkEventKey* event, gpointer user_data) {
 	PussFileBrowser* self = (PussFileBrowser*)user_data;
 
+#if GTK_MAJOR_VERSION==2
 	switch( event->keyval ) {
 	case GDK_Left: {
 			GtkTreePath* path;
@@ -465,11 +466,34 @@ SIGNAL_CALLBACK gboolean filebrowser_view_cb_keypress(GtkWidget* w, GdkEventKey*
 	default:
 		break;
 	}
-
+#else
+	switch( event->keyval ) {
+	case GDK_KEY_Left: {
+			GtkTreePath* path;
+			gtk_tree_view_get_cursor(self->view, &path, 0);
+			if( path && gtk_tree_view_row_expanded(self->view, path) ) {
+				gtk_bindings_activate((GObject*)w, GDK_KEY_Return, 0);
+			} else {
+				gtk_bindings_activate((GObject*)w, GDK_KEY_BackSpace, 0);
+			}
+			g_signal_stop_emission_by_name(w, "key-press-event");
+			return TRUE;
+		}
+		break;
+	case GDK_KEY_Right: {
+			gtk_bindings_activate((GObject*)w, GDK_KEY_Return, 0);
+			g_signal_stop_emission_by_name(w, "key-press-event");
+			return TRUE;
+		}
+		break;
+	default:
+		break;
+	}
+#endif
 	return FALSE;
 }
 
-static void on_switch_page(GtkNotebook* nb, GtkNotebookPage* page, guint page_num, gpointer user_data) {
+static void on_switch_page(GtkNotebook* nb, GtkWidget* page, guint page_num, gpointer user_data) {
 	PussFileBrowser* self = (PussFileBrowser*)user_data;
 	GtkTextBuffer* buf = self->app->doc_get_buffer_from_page_num(page_num);
 	GString* filepath;

@@ -120,8 +120,6 @@ static gboolean puss_main_ui_create() {
 }
 
 static void puss_locale_init() {
-	gtk_set_locale();
-
 	bindtextdomain(TEXT_DOMAIN, puss_app->locale_path);
 	bind_textdomain_codeset(TEXT_DOMAIN, "UTF-8");
 }

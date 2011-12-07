@@ -11,6 +11,14 @@
 #include <gtksourceview/gtksourcebuffer.h>
 #include <gtksourceview/gtksourcelanguagemanager.h>
 
+#if GTK_MAJOR_VERSION==2
+	#define GDK_KEY_Tab			GDK_Tab
+	#define GDK_KEY_Return		GDK_Return
+	#define GDK_KEY_Up			GDK_Up
+	#define GDK_KEY_Down		GDK_Down
+	#define GDK_KEY_Escape		GDK_Escape
+#endif
+
 struct _ControlsPriv {
 	// ui
 	guint		merge_id;
@@ -759,14 +767,14 @@ static gboolean view_on_key_press(GtkTextView* view, GdkEventKey* event, Languag
     }
 
 	switch( event->keyval ) {
-	case GDK_Tab:
+	case GDK_KEY_Tab:
 		if( tips_list_is_visible(self) || tips_include_is_visible(self) ) {
 			auto_complete(self, view);
 			return TRUE;
 		}
 		break;
 
-	case GDK_Return:
+	case GDK_KEY_Return:
 		if( tips_list_is_visible(self) || tips_include_is_visible(self) ) {
 			tips_hide_all(self);
 			auto_complete(self, view);
@@ -774,7 +782,7 @@ static gboolean view_on_key_press(GtkTextView* view, GdkEventKey* event, Languag
 		}
 		break;
 
-	case GDK_Up:
+	case GDK_KEY_Up:
 		if( tips_list_is_visible(self) || tips_include_is_visible(self) ) {
 			tips_select_prev(self);
 			return TRUE;
@@ -784,7 +792,7 @@ static gboolean view_on_key_press(GtkTextView* view, GdkEventKey* event, Languag
 			tips_decl_tip_hide(self);
 		break;
 
-	case GDK_Down:
+	case GDK_KEY_Down:
 		if( tips_list_is_visible(self) || tips_include_is_visible(self) ) {
 			tips_select_next(self);
 			return TRUE;
@@ -794,7 +802,7 @@ static gboolean view_on_key_press(GtkTextView* view, GdkEventKey* event, Languag
 			tips_decl_tip_hide(self);
 		break;
 
-	case GDK_Escape:
+	case GDK_KEY_Escape:
 		tips_hide_all(self);
 		return TRUE;
 		break;
@@ -1047,8 +1055,9 @@ static void doc_signals_connect(LanguageTips* self, GtkTextView* view, GtkTextBu
 		g_signal_connect(view, "key-press-event", G_CALLBACK(view_on_key_press), self);
 		g_signal_connect(view, "key-release-event", G_CALLBACK(view_on_key_release), self);
 
+#if GTK_MAJOR_VERSION==2
 		g_signal_connect(view->im_context, "commit", G_CALLBACK(view_on_im_commit), self);
-
+#endif
 		g_signal_connect(view, "button-release-event", G_CALLBACK(view_on_button_release), self);
 		g_signal_connect(view, "focus-out-event", G_CALLBACK(view_on_focus_out), self);
 		g_signal_connect(view, "scroll-event", G_CALLBACK(view_on_scroll), self);
@@ -1064,9 +1073,11 @@ static void doc_signals_connect(LanguageTips* self, GtkTextView* view, GtkTextBu
 }
 
 static void doc_signals_disconnect(LanguageTips* self, GtkTextView* view, GtkTextBuffer* buf) {
-    g_signal_handlers_disconnect_matched( view->im_context, (GSignalMatchType)(G_SIGNAL_MATCH_DATA), 0, 0, NULL, NULL, self );
-    g_signal_handlers_disconnect_matched( view, (GSignalMatchType)(G_SIGNAL_MATCH_DATA), 0, 0, NULL, NULL, self );
-    g_signal_handlers_disconnect_matched( buf, (GSignalMatchType)(G_SIGNAL_MATCH_DATA), 0, 0, NULL, NULL, self );
+#if GTK_MAJOR_VERSION==2
+	g_signal_handlers_disconnect_matched( view->im_context, (GSignalMatchType)(G_SIGNAL_MATCH_DATA), 0, 0, NULL, NULL, self );
+#endif
+	g_signal_handlers_disconnect_matched( view, (GSignalMatchType)(G_SIGNAL_MATCH_DATA), 0, 0, NULL, NULL, self );
+	g_signal_handlers_disconnect_matched( buf, (GSignalMatchType)(G_SIGNAL_MATCH_DATA), 0, 0, NULL, NULL, self );
 }
 
 #define __LANGUAGE_TIPS_KEY__	"__language_tips__"

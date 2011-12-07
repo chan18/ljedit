@@ -37,8 +37,11 @@ void puss_show_about_dialog() {
 
 	const gchar* authors[] = { "Louis LJ", NULL };
 
+#if GTK_MAJOR_VERSION==2
 	gtk_about_dialog_set_email_hook(&cb_about_activate_email, 0, 0);
 	gtk_about_dialog_set_url_hook(&cb_about_activate_url, 0, 0);
+#endif
+
 	gtk_show_about_dialog( puss_app->main_window
 		, "name",      "puss"
 		, "version",   "0.1"

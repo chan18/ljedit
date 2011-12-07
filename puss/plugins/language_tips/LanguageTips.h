@@ -113,9 +113,15 @@ void preview_update(LanguageTips* self);
 void tips_init(LanguageTips* self);
 void tips_final(LanguageTips* self);
 
-#define tips_include_is_visible(self)	GTK_WIDGET_VISIBLE(self->tips_include_window)
-#define tips_list_is_visible(self)		GTK_WIDGET_VISIBLE(self->tips_list_window)
-#define tips_decl_is_visible(self)		GTK_WIDGET_VISIBLE(self->tips_decl_window)
+#if GTK_MAJOR_VERSION==2
+	#define tips_include_is_visible(self)	GTK_WIDGET_VISIBLE(self->tips_include_window)
+	#define tips_list_is_visible(self)		GTK_WIDGET_VISIBLE(self->tips_list_window)
+	#define tips_decl_is_visible(self)		GTK_WIDGET_VISIBLE(self->tips_decl_window)
+#else
+	#define tips_include_is_visible(self)	gtk_widget_get_visible(self->tips_include_window)
+	#define tips_list_is_visible(self)		gtk_widget_get_visible(self->tips_list_window)
+	#define tips_decl_is_visible(self)		gtk_widget_get_visible(self->tips_decl_window)
+#endif
 #define tips_is_visible(self) (tips_include_is_visible(self) || tips_list_is_visible(self) || tips_decl_is_visible(self))
 
 #define tips_include_tip_hide(self)		gtk_widget_hide(self->tips_include_window)

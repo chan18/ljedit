@@ -8,10 +8,20 @@
 #include <string.h>
 
 #include <gdk/gdkkeysyms.h>
-#include <gtksourceview/gtksourceiter.h>
 #include <gtksourceview/gtksourcebuffer.h>
 
 #include "DocManager.h"
+
+#if GTK_MAJOR_VERSION==2
+	#include <gtksourceview/gtksourceiter.h>
+	#define gtk_text_iter_forward_search		gtk_source_iter_forward_search
+	#define gtk_text_iter_backward_search		gtk_source_iter_backward_search
+	#define GTK_TEXT_SEARCH_CASE_INSENSITIVE	GTK_SOURCE_SEARCH_CASE_INSENSITIVE
+	#define GDK_KEY_Return		GDK_Return
+	#define GDK_KEY_KP_Enter	GDK_KP_Enter
+	#define GDK_KEY_Down		GDK_Down
+	#define GDK_KEY_Up			GDK_Up
+#endif
 
 typedef struct {
 	GtkDialog*	dlg;
@@ -23,7 +33,7 @@ static const gchar* PUSS_LAST_SEARCH_TEXT = "puss:last_search_text";
 
 static FindDialog g_self;
 
-static gboolean find_next_text(GtkTextView* view, const gchar* text, GtkTextIter* ps, GtkTextIter* pe, gboolean skip_current, GtkSourceSearchFlags flags) {
+static gboolean find_next_text(GtkTextView* view, const gchar* text, GtkTextIter* ps, GtkTextIter* pe, gboolean skip_current, GtkTextSearchFlags flags) {
 	GtkTextIter iter, end;
 	GtkTextBuffer* buf = gtk_text_view_get_buffer(view);
 	if( !buf )
@@ -34,17 +44,17 @@ static gboolean find_next_text(GtkTextView* view, const gchar* text, GtkTextIter
 		gtk_text_iter_forward_char(&iter);
 	gtk_text_buffer_get_end_iter(buf, &end);
 
-	if( !gtk_source_iter_forward_search(&iter, text, flags, ps, pe, &end) ) {
+	if( !gtk_text_iter_forward_search(&iter, text, flags, ps, pe, &end) ) {
 		gtk_text_buffer_get_start_iter(buf, &iter);
 
-		if( !gtk_source_iter_forward_search(&iter, text, flags, ps, pe, &end) )
+		if( !gtk_text_iter_forward_search(&iter, text, flags, ps, pe, &end) )
 			return FALSE;
 	}
 
 	return TRUE;
 }
 
-static gboolean find_prev_text(GtkTextView* view, const gchar* text, GtkTextIter* ps, GtkTextIter* pe, gboolean skip_current, GtkSourceSearchFlags flags) {
+static gboolean find_prev_text(GtkTextView* view, const gchar* text, GtkTextIter* ps, GtkTextIter* pe, gboolean skip_current, GtkTextSearchFlags flags) {
 	GtkTextIter iter, end;
 	GtkTextBuffer* buf = gtk_text_view_get_buffer(view);
 	if( !buf )
@@ -53,10 +63,10 @@ static gboolean find_prev_text(GtkTextView* view, const gchar* text, GtkTextIter
 	gtk_text_buffer_get_iter_at_mark(buf, &iter, gtk_text_buffer_get_mark(buf, "puss:searched_mark_start"));
 	gtk_text_buffer_get_start_iter(buf, &end);
 
-	if( !gtk_source_iter_backward_search(&iter, text, flags, ps, pe, &end) ) {
+	if( !gtk_text_iter_backward_search(&iter, text, flags, ps, pe, &end) ) {
 		gtk_text_buffer_get_end_iter(buf, &iter);
 
-		if( !gtk_source_iter_backward_search(&iter, text, flags, ps, pe, &end) )
+		if( !gtk_text_iter_backward_search(&iter, text, flags, ps, pe, &end) )
 			return FALSE;
 	}
 
@@ -70,7 +80,7 @@ static void unmark_all_search_text_matched(GtkTextBuffer* buf, int search_flags)
 		gtk_text_buffer_get_start_iter(buf, &ps);
 		gtk_text_buffer_get_end_iter(buf, &end);
 
-		while( gtk_source_iter_forward_search(&ps, last_search_text, search_flags, &ps, &pe, &end) ) {
+		while( gtk_text_iter_forward_search(&ps, last_search_text, search_flags, &ps, &pe, &end) ) {
 			gtk_text_buffer_remove_tag_by_name(buf, "puss:searched", &ps, &pe);
 			ps = pe;
 		}
@@ -94,7 +104,7 @@ static void mark_all_search_text_matched(GtkTextBuffer* buf, const gchar* text, 
 			gtk_text_buffer_get_start_iter(buf, &ps);
 			gtk_text_buffer_get_end_iter(buf, &end);
 
-			while( gtk_source_iter_forward_search(&ps, last_search_text, search_flags, &ps, &pe, &end) ) {
+			while( gtk_text_iter_forward_search(&ps, last_search_text, search_flags, &ps, &pe, &end) ) {
 				gtk_text_buffer_apply_tag_by_name(buf, "puss:searched", &ps, &pe);
 				ps = pe;
 			}
@@ -203,7 +213,7 @@ void puss_find_dialog_show(const gchar* text) {
 	page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
 	view = puss_doc_get_view_from_page_num(page_num);
 
-	puss_find_and_locate_text(view, text, TRUE, FALSE, TRUE, TRUE, FALSE, (GTK_SOURCE_SEARCH_TEXT_ONLY | GTK_SOURCE_SEARCH_CASE_INSENSITIVE));
+	puss_find_and_locate_text(view, text, TRUE, FALSE, TRUE, TRUE, FALSE, (GTK_TEXT_SEARCH_TEXT_ONLY | GTK_TEXT_SEARCH_CASE_INSENSITIVE));
 }
 
 SIGNAL_CALLBACK gboolean puss_search_dialog_cb_find_entry_key_press( GtkWidget* widget, GdkEventKey* event ) {
@@ -218,14 +228,14 @@ SIGNAL_CALLBACK gboolean puss_search_dialog_cb_find_entry_key_press( GtkWidget* 
 		return FALSE;
 
 	switch( event->keyval ) {
-	case GDK_Return:
-	case GDK_KP_Enter:
-	case GDK_Down:
-		puss_find_and_locate_text(view, text, TRUE, TRUE, TRUE, TRUE, TRUE, (GTK_SOURCE_SEARCH_TEXT_ONLY | GTK_SOURCE_SEARCH_CASE_INSENSITIVE));
+	case GDK_KEY_Return:
+	case GDK_KEY_KP_Enter:
+	case GDK_KEY_Down:
+		puss_find_and_locate_text(view, text, TRUE, TRUE, TRUE, TRUE, TRUE, (GTK_TEXT_SEARCH_TEXT_ONLY | GTK_TEXT_SEARCH_CASE_INSENSITIVE));
 		return TRUE;
 
-	case GDK_Up:
-		puss_find_and_locate_text(view, text, FALSE, TRUE, TRUE, TRUE, TRUE, (GTK_SOURCE_SEARCH_TEXT_ONLY | GTK_SOURCE_SEARCH_CASE_INSENSITIVE));
+	case GDK_KEY_Up:
+		puss_find_and_locate_text(view, text, FALSE, TRUE, TRUE, TRUE, TRUE, (GTK_TEXT_SEARCH_TEXT_ONLY | GTK_TEXT_SEARCH_CASE_INSENSITIVE));
 		return TRUE;
 	}
 
@@ -243,7 +253,7 @@ SIGNAL_CALLBACK void puss_search_dialog_cb_find(GtkButton* button) {
 	if( !view )
 		return;
 
-	puss_find_and_locate_text(view, text, TRUE, TRUE, TRUE, TRUE, TRUE, (GTK_SOURCE_SEARCH_TEXT_ONLY | GTK_SOURCE_SEARCH_CASE_INSENSITIVE));
+	puss_find_and_locate_text(view, text, TRUE, TRUE, TRUE, TRUE, TRUE, (GTK_TEXT_SEARCH_TEXT_ONLY | GTK_TEXT_SEARCH_CASE_INSENSITIVE));
 }
 
 SIGNAL_CALLBACK void puss_search_dialog_cb_replace(GtkButton* button) {
@@ -253,7 +263,7 @@ SIGNAL_CALLBACK void puss_search_dialog_cb_replace(GtkButton* button) {
 	GtkTextIter ps, pe;
 	gchar* last_search_text = 0;
 	const gchar* find_text;
-	const gint flags = (GTK_SOURCE_SEARCH_TEXT_ONLY | GTK_SOURCE_SEARCH_CASE_INSENSITIVE);
+	const gint flags = (GTK_TEXT_SEARCH_TEXT_ONLY | GTK_TEXT_SEARCH_CASE_INSENSITIVE);
 
 	page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
 	view = puss_doc_get_view_from_page_num(page_num);
@@ -292,7 +302,7 @@ SIGNAL_CALLBACK void puss_search_dialog_cb_replace_all(GtkButton* button) {
 	const gchar* find_text;
 	const gchar* replace_text;
 	gint replace_text_len;
-	const gint flags = (GTK_SOURCE_SEARCH_TEXT_ONLY | GTK_SOURCE_SEARCH_CASE_INSENSITIVE);
+	const gint flags = (GTK_TEXT_SEARCH_TEXT_ONLY | GTK_TEXT_SEARCH_CASE_INSENSITIVE);
 
 	page_num = gtk_notebook_get_current_page(puss_app->doc_panel);
 	view = puss_doc_get_view_from_page_num(page_num);
@@ -308,7 +318,7 @@ SIGNAL_CALLBACK void puss_search_dialog_cb_replace_all(GtkButton* button) {
 	gtk_text_buffer_begin_user_action(buf);
 	{
 		replace_text_len = (gint)strlen(replace_text);
-		while( gtk_source_iter_forward_search(&iter
+		while( gtk_text_iter_forward_search(&iter
 				, find_text
 				, flags
 				, &ps
