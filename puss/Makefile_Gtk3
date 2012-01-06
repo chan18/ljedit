@@ -1,0 +1,38 @@
+# makefile puss
+# 
+# usage :
+#     build debug version   : make debug
+#     build release version : make
+# 
+
+PROJECTS =	puss \
+			$(wildcard extends/*) \
+			$(wildcard plugins/*)
+
+PRJS = $(filter-out plugins/puss_plugin_makefile_c_template, $(PROJECTS))
+
+ifeq ($(OS), Windows_NT)
+	PRJS += plugins/puss_vconsole/vconsole
+endif
+
+release : $(PRJS:%=.project/%)
+
+debug : $(PRJS:%=.project/%)
+
+clean: $(PRJS:%=.project/%)
+
+.project/% : %
+	-make $(MAKECMDGOALS) GTK_VERSION=3 -C$<
+
+strip:
+	@for ext in $(wildcard bin/extends/*.ext); do strip $$ext; done
+	@for plg in $(wildcard bin/plugins/*.so); do strip $$plg; done
+	@for dll in $(wildcard bin/plugins/*.dll); do strip $$dll; done
+	@-strip bin/*.so
+	@-strip bin/puss
+	@-strip bin/*.dll
+	@-strip bin/*.exe
+
+deb :
+	@./make_deb
+
