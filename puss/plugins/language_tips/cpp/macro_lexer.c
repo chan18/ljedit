@@ -442,6 +442,7 @@ static void do_macro_replace(CppElem* macro, CppLexer* lexer, gint argc, MLArg a
 	CppLexer rlexer;
 	guint i;
 	gint pos;
+	gint need_space_size;
 
 	cpp_lexer_init(&rlexer, def->value->buf, tiny_str_len(def->value), 0);
 	rlexer.stack[0].is_new_line = FALSE;
@@ -450,49 +451,42 @@ static void do_macro_replace(CppElem* macro, CppLexer* lexer, gint argc, MLArg a
 		CPP_LEXER_NEXT_NOCOMMENT(&rlexer, &token);
 		if( token.type=='#' ) {
 			CPP_LEXER_NEXT_NOCOMMENT(&rlexer, &token);
-			if( (pos = get_macro_arg_pos(macro, &token)) >= 0 ) {
-				if( (pos < argc) && argv[pos].str.len > 0 ) {
-					if( pd + (1 + argv[pos].str.len + 1) < sbuf + MACRO_REPLACE_BUFFER_MAX ) {
-						*pd++ = '"';
-						for( i=0; i<tiny_str_len(def->argv[pos]); ++i )
-							*pd++ = def->argv[pos]->buf[i];
-						*pd++ = '"';
-						continue;
-					}
-				}
+			pos = get_macro_arg_pos(macro, &token);
+
+			if( (pos >= 0) && (pos < argc)
+				&& (argv[pos].str.len > 0)
+				&& (pd + (1 + argv[pos].str.len + 1) < sbuf + MACRO_REPLACE_BUFFER_MAX) )
+			{
+				*pd++ = '"';
+				for( i=0; i<tiny_str_len(def->argv[pos]); ++i )
+					*pd++ = def->argv[pos]->buf[i];
+				*pd++ = '"';
+				continue;
 			}
 			break;
+		}
 
-		} else if( token.type==SG_DBL_SHARP ) {
+		if( token.type==SG_DBL_SHARP ) {
 			CPP_LEXER_NEXT_NOCOMMENT(&rlexer, &token);
-			if( (pos = get_macro_arg_pos(macro, &token)) >= 0 ) {
-				if( (pos < argc) && argv[pos].str.len > 0 ) {
-					if( (pd + argv[pos].str.len) < sbuf + MACRO_REPLACE_BUFFER_MAX ) {
-						for( i=0; i<argv[pos].str.len; ++i )
-							*pd++ = argv[pos].str.buf[i];
-						continue;
-					}
-				}
-			}
-			break;
-
+			need_space_size = 0;
+		} else {
+			need_space_size = 1;
 		}
 
 		pos = get_macro_arg_pos(macro, &token);
-		if( pos >= 0 ) {
-			if( (pos < argc) && argv[pos].str.len > 0 ) {
-				if( pd + (1 + argv[pos].str.len) < sbuf + MACRO_REPLACE_BUFFER_MAX ) {
-					*pd++ = ' ';
-					for( i=0; i<argv[pos].str.len; ++i )
-						*pd++ = argv[pos].str.buf[i];
-					continue;
-				}
+		if( (pos >= 0) && (pos < argc) ) {
+			if( (argv[pos].str.len > 0) && (pd + (need_space_size + argv[pos].str.len) < sbuf + MACRO_REPLACE_BUFFER_MAX) ) {
+				*pd++ = ' ';
+				for( i=0; i<argv[pos].str.len; ++i )
+					*pd++ = argv[pos].str.buf[i];
+				continue;
 			}
 			break;
 
-		} else if( (pos < argc) && token.len > 0 ) {
-			if( pd + (1 + token.len) < sbuf + MACRO_REPLACE_BUFFER_MAX ) {
-				*pd++ = ' ';
+		} else if( token.len > 0 ) {
+			if( pd + (need_space_size + token.len) < sbuf + MACRO_REPLACE_BUFFER_MAX ) {
+				for( i=0; i<need_space_size; ++i )
+					*pd++ = ' ';
 				for( i=0; i<(gint)token.len; ++i )
 					*pd++ = token.buf[i];
 				continue;
