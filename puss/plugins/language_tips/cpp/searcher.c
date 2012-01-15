@@ -132,9 +132,6 @@ static SNode* make_sub_node(SNode* parent, const TinyStr* key) {
 	TinyStr* skey = 0;
 	SNode* snode = 0;
 
-	if( key->buf[0]=='@' )
-		return 0;
-
 	if( !parent->sub )
 		parent->sub = g_hash_table_new_full( (GHashFunc)tiny_str_hash
 							, (GEqualFunc)tiny_str_equal
@@ -297,8 +294,7 @@ static void snode_insert(SNode* parent, CppElem* elem) {
 			SNode* snode = snode_sub_insert(parent, 0, elem);
 			if( snode )
 				snode_insert_list(snode, elem->v_ncscope.scope);
-			if( elem->name->buf[0]!='@' )
-				snode_insert_list(parent, elem->v_ncscope.scope);
+			snode_insert_list(parent, elem->v_ncscope.scope);
 		}
 		break;
 	}
@@ -358,8 +354,7 @@ static void snode_remove(SNode* parent, CppElem* elem) {
 			SNode* snode = snode_sub_remove(parent, 0, elem);
 			if( snode )
 				snode_remove_list(snode, elem->v_ncscope.scope);
-			if( elem->name->buf[0]!='@' )
-				snode_remove_list(parent, elem->v_ncscope.scope);
+			snode_remove_list(parent, elem->v_ncscope.scope);
 		}
 		break;
 	}
