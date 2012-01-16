@@ -22,7 +22,7 @@ debug : $(PRJS:%=.project/%)
 clean: $(PRJS:%=.project/%)
 
 .project/% : %
-	-make $(MAKECMDGOALS) -C$<
+	-make $(MAKECMDGOALS) -C$< -j4
 
 strip:
 	@for ext in $(wildcard bin/extends/*.ext); do strip $$ext; done

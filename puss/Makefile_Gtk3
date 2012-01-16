@@ -22,7 +22,7 @@ debug : $(PRJS:%=.project/%)
 clean: $(PRJS:%=.project/%)
 
 .project/% : %
-	-make $(MAKECMDGOALS) GTK_VERSION=3 -C$<
+	-make $(MAKECMDGOALS) GTK_VERSION=3 -C$< -j4
 
 strip:
 	@for ext in $(wildcard bin/extends/*.ext); do strip $$ext; done
