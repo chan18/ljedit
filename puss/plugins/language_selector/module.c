@@ -39,8 +39,14 @@ static void pls_lang_active(GtkAction* action, GtkSourceLanguage* lang) {
 		return;
 
 	buf = g_self->app->doc_get_buffer_from_page_num(page_num);
+
+#if GTK_MAJOR_VERSION==2
 	if( !buf || !GTK_IS_SOURCE_BUFFER(buf) )
 		return;
+#else
+	if( !buf || !GTK_SOURCE_IS_BUFFER(buf) )
+		return;
+#endif
 
 	if( lang ) {
 		gtk_source_buffer_set_language(GTK_SOURCE_BUFFER(buf), lang);
