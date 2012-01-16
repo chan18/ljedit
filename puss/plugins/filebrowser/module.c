@@ -274,7 +274,7 @@ locate_loop:
 	return FALSE;
 }
 
-typedef struct {
+typedef struct _ScrollTag {
 	PussFileBrowser*	self;
 	GtkTreePath*		path;
 } ScrollTag;
@@ -284,6 +284,7 @@ static gboolean scroll_to_path(gpointer data) {
 	GtkTreeSelection* selection = gtk_tree_view_get_selection(tag->self->view);
 	gtk_tree_selection_select_path(selection, tag->path);
 	gtk_tree_view_scroll_to_cell(tag->self->view, tag->path, 0, FALSE, 0.5f, 0.0f);
+	gtk_tree_path_free(tag->path);
 	g_slice_free(ScrollTag, tag);
 	return FALSE;
 }
@@ -454,6 +455,7 @@ SIGNAL_CALLBACK gboolean filebrowser_view_cb_keypress(GtkWidget* w, GdkEventKey*
 				gtk_bindings_activate((GtkObject*)w, GDK_BackSpace, 0);
 			}
 			g_signal_stop_emission_by_name(w, "key-press-event");
+			gtk_tree_path_free(path);
 			return TRUE;
 		}
 		break;
@@ -477,6 +479,7 @@ SIGNAL_CALLBACK gboolean filebrowser_view_cb_keypress(GtkWidget* w, GdkEventKey*
 				gtk_bindings_activate((GObject*)w, GDK_KEY_BackSpace, 0);
 			}
 			g_signal_stop_emission_by_name(w, "key-press-event");
+			gtk_tree_path_free(path);
 			return TRUE;
 		}
 		break;
