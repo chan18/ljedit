@@ -268,7 +268,7 @@ gboolean cps_fun(ParseEnv* env, Block* block) {
 		// ignore defined like XXX_EXPORT
 		//		XXX_EXPORT void foo();
 		// 
-		if( (ps+1) && (ps+1)->type==TK_ID ) {
+		if( ps && ps->type==TK_ID ) {
 			if( typekey ) {
 				tiny_str_free(typekey);
 				typekey = 0;
