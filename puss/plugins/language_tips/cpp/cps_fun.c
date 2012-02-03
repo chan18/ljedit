@@ -190,6 +190,7 @@ __cps_finish__:
 }
 
 gboolean cps_fun(ParseEnv* env, Block* block) {
+	gboolean try_parse_exports = FALSE;
 	MLToken* ps = block->tokens;
 	MLToken* pe = ps + block->count;
 	TinyStr* typekey = 0;
@@ -242,7 +243,6 @@ gboolean cps_fun(ParseEnv* env, Block* block) {
 		} else {
 			// no return type function
 			if( block->parent->type!=CPP_ET_CLASS && typekey && tiny_str_len(typekey)>0 ) {
-				TinyStr* str;
 				gsize typekey_len = tiny_str_len(typekey);
 				ps = fptrypos - 1;
 				if( ps > name ) {
@@ -265,26 +265,12 @@ gboolean cps_fun(ParseEnv* env, Block* block) {
 		}
 
 	} else if( ps && ps->type==TK_ID ) {
-
-		// ignore defined like XXX_EXPORT
-		//		XXX_EXPORT void foo();
-		// 
-		if( (ps+1) && (ps+1)->type!='(' ) {
-			if( typekey ) {
-				tiny_str_free(typekey);
-				typekey = 0;
-			}
-			dt = KD_UNK;
-
-			err_goto_finish_if( (ps = parse_datatype(ps, pe, &typekey, &dt))==0 );
-			prdt = dt;
-			err_goto_finish_if( (ps = parse_ptr_ref(ps, pe, &prdt))==0 );
-			err_goto_finish_if_not( ps < pe );
-			err_goto_finish_if_not( ps->type==TK_ID );
-		}
+		try_parse_exports = TRUE;
 
 		// normal function
 		err_goto_finish_if( (ps = parse_id(ps, pe, &nskey, &name))==0 );
+		err_goto_finish_if_not( ps < pe );
+		err_goto_finish_if_not( ps->type=='(' );
 	}
 
 	return parse_function_common(env, block, ps, typekey, nskey, name);
@@ -292,6 +278,26 @@ gboolean cps_fun(ParseEnv* env, Block* block) {
 __cps_finish__:
 	tiny_str_free(typekey);
 	tiny_str_free(nskey);
+
+	if( try_parse_exports ) {
+		try_parse_exports = FALSE;
+		typekey = 0;
+		nskey = 0;
+		dt = KD_UNK;
+
+		err_goto_finish_if( (ps = parse_datatype(ps, pe, &typekey, &dt))==0 );
+		prdt = dt;
+		err_goto_finish_if( (ps = parse_ptr_ref(ps, pe, &prdt))==0 );
+		err_goto_finish_if_not( ps < pe );
+		err_goto_finish_if_not( ps->type==TK_ID );
+	
+		err_goto_finish_if( (ps = parse_id(ps, pe, &nskey, &name))==0 );
+		err_goto_finish_if_not( ps < pe );
+		err_goto_finish_if_not( ps->type=='(' );
+
+		return parse_function_common(env, block, ps, typekey, nskey, name);
+	}
+
 	return FALSE;
 }
 
