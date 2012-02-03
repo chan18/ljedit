@@ -264,11 +264,12 @@ gboolean cps_fun(ParseEnv* env, Block* block) {
 			}
 		}
 
-	} else {
+	} else if( ps && ps->type==TK_ID ) {
+
 		// ignore defined like XXX_EXPORT
 		//		XXX_EXPORT void foo();
 		// 
-		if( ps && ps->type==TK_ID ) {
+		if( (ps+1) && (ps+1)->type!='(' ) {
 			if( typekey ) {
 				tiny_str_free(typekey);
 				typekey = 0;
@@ -279,6 +280,7 @@ gboolean cps_fun(ParseEnv* env, Block* block) {
 			prdt = dt;
 			err_goto_finish_if( (ps = parse_ptr_ref(ps, pe, &prdt))==0 );
 			err_goto_finish_if_not( ps < pe );
+			err_goto_finish_if_not( ps->type==TK_ID );
 		}
 
 		// normal function
