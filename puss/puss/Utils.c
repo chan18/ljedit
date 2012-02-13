@@ -249,6 +249,28 @@ finished:
 	return succeed;
 }
 
+// fix replace \r\n => \n
+// 
+static gsize fix_load_CRLF(gchar* text, gsize len) {
+	gchar* ps = text;
+	gchar* pe = text + len;
+	gchar* next;
+
+	for( ; ps<pe; ++ps) {
+		if( *ps!='\r' )
+			continue;
+
+		next = ps+1;
+		if( next < pe ) {
+			if( *next=='\n' ) {
+				g_memmove(ps, next, (pe-next));
+				--pe;
+			}
+		}
+	}
+	return (pe - text);
+}
+
 gboolean puss_load_file(const gchar* filename, gchar** text, gsize* len, G_CONST_RETURN gchar** charset, gboolean* use_BOM) {
 	gboolean BOM = FALSE;
 	const gchar* cs = 0;
@@ -303,8 +325,11 @@ load_succeed:
 		*use_BOM = BOM;
 	if( charset )
 		*charset = cs;
+
 	*text = sbuf;
-	*len = slen;
+	*len = fix_load_CRLF(sbuf, slen);
+
+	// TODO: find cr_lf, use it when save
 	return TRUE;
 }
 
