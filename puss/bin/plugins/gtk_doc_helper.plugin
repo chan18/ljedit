@@ -1,7 +1,0 @@
-# puss plugin
-# 
-
-[plugin]
-name = gtk document help
-engine = so
-description = whow gtk-doc in browser

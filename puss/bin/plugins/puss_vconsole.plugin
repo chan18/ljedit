@@ -1,7 +1,0 @@
-# puss plugin
-# 
-
-[plugin]
-name = puss virtual console
-engine = so
-description = puss virtual console

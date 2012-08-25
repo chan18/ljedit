@@ -1,8 +1,0 @@
-# puss plugin
-# 
-
-[plugin]
-name = language tips
-engine = so
-file = language_tips
-description = select program source language
