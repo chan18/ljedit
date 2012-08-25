@@ -1,0 +1,7 @@
+# puss plugin
+# 
+
+[plugin]
+name = mini command line
+engine = so
+description = mini command line

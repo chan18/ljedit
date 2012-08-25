@@ -1,0 +1,182 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# LJ <louisliangjun@gmail.com>, 2008.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2008-04-09 20:32+0800\n"
+"PO-Revision-Date: 2008-04-09 20:32+0800\n"
+"Last-Translator: LJ <louisliangjun@gmail.com>\n"
+"Language-Team: Chinese <louisliangjun@gmail.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/DocManager.cpp:106 src/DocManager.cpp:351 src/DocManager.cpp:610
+msgid "Untitled"
+msgstr "无标题"
+
+#: src/DocManager.cpp:255
+#, c-format
+msgid "Error loading file : %s"
+msgstr "错误 - 加载文件 : %s"
+
+#: src/DocManager.cpp:257
+msgid "please select charset and retry!"
+msgstr "请选择字符集并重试!"
+
+#: src/DocManager.cpp:390
+msgid "file modified, save it?"
+msgstr "文件已修改，是否保存?"
+
+#: src/DocManager.cpp:613
+msgid "yes to all"
+msgstr "保存全部"
+
+#: src/DocManager.cpp:614
+msgid "no to all"
+msgstr "放弃全部"
+
+#: src/ExtendEngine.cpp:48
+#, c-format
+msgid "ERROR  : load extend(%s) failed!\n"
+msgstr "错误 : 加载扩展(%s)失败!\n"
+
+#: src/ExtendEngine.cpp:49
+#, c-format
+msgid "REASON : %s\n"
+msgstr "原因 : %s\n"
+
+#: src/ExtendEngine.cpp:58
+#, c-format
+msgid "ERROR  : not find puss_extend_create() in extend(%s)!\n"
+msgstr "错误  : 在扩展模块(%s)中没有找到puss_extend_create()函数!\n"
+
+#: src/main.cpp:29
+msgid "ERROR : can not find puss in $PATH\n"
+msgstr "错误 : 在系统$PATH路径中找不到puss\n"
+
+#: src/main.cpp:48
+msgid "ERROR : can not find puss directory!\n"
+msgstr "错误 : 找不到puss目录!\n"
+
+#: src/main.cpp:49
+msgid "        can not use indirect search path in $PATH!\n"
+msgstr "        不能在$PATH中使用puss的相对路径!\n"
+
+#: src/MiniLineModules.cpp:163
+msgid "goto : "
+msgstr "跳至 : "
+
+#: src/MiniLineModules.cpp:253
+msgid "find : "
+msgstr "查找 : "
+
+#: src/MiniLineModules.cpp:365
+msgid "replace : "
+msgstr "替换 : "
+
+#: src/OptionManager.cpp:327
+msgid "font selecting..."
+msgstr "字体选择"
+
+#: src/OptionManager.cpp:362
+msgid "option setting..."
+msgstr "属性设置"
+
+### res/puss_ui_manager.xml
+###
+
+msgid "_File"
+msgstr "文件(_F)"
+
+msgid "_Edit"
+msgstr "编辑(_E)"
+
+msgid "_View"
+msgstr "视图(_V)"
+
+msgid "_Tools"
+msgstr "工具(_T)"
+
+msgid "_Help"
+msgstr "帮忙(_H)"
+
+msgid "Save All"
+msgstr "保存全部"
+
+msgid "Close All"
+msgstr "关闭全部"
+
+msgid "LeftPanel"
+msgstr "左边面板"
+
+msgid "RightPanel"
+msgstr "右边面板"
+
+msgid "BottomPanel"
+msgstr "底部面板"
+
+msgid "BottomPages"
+msgstr "底部页面"
+
+msgid "Bottom Page 1"
+msgstr "页面 1"
+
+msgid "Bottom Page 2"
+msgstr "页面 2"
+
+msgid "Bottom Page 3"
+msgstr "页面 3"
+
+msgid "Bottom Page 4"
+msgstr "页面 4"
+
+msgid "Bottom Page 5"
+msgstr "页面 5"
+
+msgid "Bottom Page 6"
+msgstr "页面 6"
+
+msgid "Bottom Page 7"
+msgstr "页面 7"
+
+msgid "Bottom Page 8"
+msgstr "页面 8"
+
+msgid "Bottom Page 9"
+msgstr "页面 9"
+
+### res/puss_main_window.xml
+###
+
+msgid "Puss - source editor"
+msgstr "Puss - 源代码编辑器"
+
+msgid "key"
+msgstr "选项"
+
+msgid "value"
+msgstr "值"
+
+msgid "close"
+msgstr "关闭"
+
+msgid "Plugins Setup"
+msgstr "插件管理"
+
+msgid "enabled"
+msgstr "启用"
+
+msgid "name"
+msgstr "名称"
+
+msgid "engine"
+msgstr "插件引擎"
+
+msgid "description"
+msgstr "描述"

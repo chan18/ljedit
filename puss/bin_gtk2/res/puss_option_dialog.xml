@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<interface>
+<!-- interface-requires gtk+ 2.12 -->
+<!-- interface-naming-policy toplevel-contextual -->
+  <object class="GtkTreeStore" id="option_store">
+    <columns>
+<!-- column-name gchararray -->
+      <column type="gchararray"/>
+<!-- column-name gpointer -->
+      <column type="gpointer"/>
+    </columns>
+  </object>
+  <object class="GtkDialog" id="puss_option_dialog">
+    <property name="default_width">680</property>
+    <property name="default_height">400</property>
+    <property name="type_hint">normal</property>
+    <child internal-child="vbox">
+      <object class="GtkVBox" id="vbox">
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkHBox" id="option_panel">
+            <child>
+              <object class="GtkScrolledWindow" id="option_list_scrollwindow">
+                <property name="width_request">180</property>
+                <property name="can_focus">False</property>
+                <property name="border_width">3</property>
+                <property name="hscrollbar_policy">automatic</property>
+                <property name="vscrollbar_policy">never</property>
+                <property name="shadow_type">in</property>
+                <child>
+                  <object class="GtkTreeView" id="option_treeview">
+                    <property name="model">option_store</property>
+                    <property name="headers_visible">False</property>
+                    <property name="enable_tree_lines">True</property>
+                    <signal name="cursor_changed" handler="cb_option_setup_changed"/>
+                    <child>
+                      <object class="GtkTreeViewColumn" id="name_column">
+                        <property name="title">name</property>
+                        <child>
+                          <object class="GtkCellRendererText" id="name_cell_renderer"/>
+                          <attributes>
+                            <attribute name="text">0</attribute>
+                          </attributes>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkFrame" id="option_setup_panel">
+                <property name="border_width">3</property>
+                <property name="label_xalign">0</property>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="padding">5</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="hbuttonbox">
+            <child>
+              <object class="GtkButton" id="close_button">
+                <property name="label" translatable="yes">_close</property>
+                <property name="can_focus">False</property>
+                <property name="receives_default">False</property>
+                <property name="use_underline">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="padding">3</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+    <action-widgets>
+      <action-widget response="0">close_button</action-widget>
+    </action-widgets>
+  </object>
+</interface>

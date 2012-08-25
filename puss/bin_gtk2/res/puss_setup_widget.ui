@@ -1,0 +1,157 @@
+<?xml version="1.0"?>
+<interface>
+<!-- interface-requires gtk+ 2.12 -->
+<!-- interface-naming-policy toplevel-contextual -->
+  <object class="GtkListStore" id="theme_store">
+    <columns>
+<!-- column-name gchararray -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkListStore" id="style_store">
+    <columns>
+<!-- column-name gchararray -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkHBox" id="main_panel">
+    <property name="visible">True</property>
+    <child>
+      <object class="GtkTable" id="main_table">
+        <property name="border_width">8</property>
+        <property name="n_rows">4</property>
+        <property name="n_columns">2</property>
+        <property name="column_spacing">12</property>
+        <property name="row_spacing">10</property>
+        <child>
+          <object class="GtkHBox" id="charset_hbox">
+            <child>
+              <object class="GtkEntry" id="charset_entry">
+                <property name="can_focus">True</property>
+                <property name="invisible_char">&#x25CF;</property>
+              </object>
+              <packing>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="charset_apply_button">
+                <property name="label" translatable="yes">apply</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="right_attach">2</property>
+            <property name="top_attach">2</property>
+            <property name="bottom_attach">3</property>
+            <property name="y_options">GTK_FILL</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkFontButton" id="font_button">
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="title" translatable="yes"></property>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="right_attach">2</property>
+            <property name="top_attach">3</property>
+            <property name="bottom_attach">4</property>
+            <property name="y_options">GTK_FILL</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="font_label">
+            <property name="xalign">1</property>
+            <property name="label" translatable="yes">editor font</property>
+          </object>
+          <packing>
+            <property name="top_attach">3</property>
+            <property name="bottom_attach">4</property>
+            <property name="x_options">GTK_FILL</property>
+            <property name="y_options">GTK_FILL</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="charset_label">
+            <property name="xalign">1</property>
+            <property name="label" translatable="yes">charset</property>
+          </object>
+          <packing>
+            <property name="top_attach">2</property>
+            <property name="bottom_attach">3</property>
+            <property name="x_options">GTK_FILL</property>
+            <property name="y_options">GTK_FILL</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkComboBox" id="style_combo">
+            <property name="model">style_store</property>
+            <child>
+              <object class="GtkCellRendererText" id="style_name_cell_renderer"/>
+              <attributes>
+                <attribute name="text">0</attribute>
+              </attributes>
+            </child>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="right_attach">2</property>
+            <property name="top_attach">1</property>
+            <property name="bottom_attach">2</property>
+            <property name="y_options">GTK_FILL</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="style_label">
+            <property name="xalign">1</property>
+            <property name="label" translatable="yes">editor style</property>
+          </object>
+          <packing>
+            <property name="top_attach">1</property>
+            <property name="bottom_attach">2</property>
+            <property name="x_options">GTK_FILL</property>
+            <property name="y_options">GTK_FILL</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkComboBox" id="theme_combo">
+            <property name="model">theme_store</property>
+            <child>
+              <object class="GtkCellRendererText" id="theme_name_cell_renderer"/>
+              <attributes>
+                <attribute name="text">0</attribute>
+              </attributes>
+            </child>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="right_attach">2</property>
+            <property name="y_options">GTK_FILL</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="theme_label">
+            <property name="xalign">1</property>
+            <property name="label" translatable="yes">gtk theme</property>
+          </object>
+          <packing>
+            <property name="x_options">GTK_FILL</property>
+            <property name="y_options">GTK_FILL</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="position">0</property>
+      </packing>
+    </child>
+  </object>
+</interface>

@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<interface>
+  <requires lib="gtk+" version="2.16"/>
+  <!-- interface-naming-policy project-wide -->
+  <object class="GtkTreeStore" id="file_tree_store">
+    <columns>
+      <!-- column-name icon -->
+      <column type="GdkPixbuf"/>
+      <!-- column-name name -->
+      <column type="gchararray"/>
+      <!-- column-name file -->
+      <column type="GObject"/>
+    </columns>
+  </object>
+  <object class="GtkVBox" id="main_vbox">
+    <property name="width_request">180</property>
+    <property name="visible">True</property>
+    <property name="orientation">vertical</property>
+    <child>
+      <object class="GtkToolbar" id="toolbar1">
+        <property name="visible">True</property>
+        <property name="border_width">3</property>
+        <property name="toolbar_style">both-horiz</property>
+        <property name="icon_size">4</property>
+        <child>
+          <object class="GtkToolButton" id="refresh_btn">
+            <property name="visible">True</property>
+            <property name="label" translatable="yes">refresh</property>
+            <property name="use_underline">True</property>
+            <property name="stock_id">gtk-refresh</property>
+            <signal name="clicked" handler="filebrowser_cb_refresh_button_clicked"/>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="homogeneous">True</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="position">0</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkScrolledWindow" id="scrolledwindow1">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="border_width">3</property>
+        <property name="hscrollbar_policy">automatic</property>
+        <property name="vscrollbar_policy">automatic</property>
+        <property name="shadow_type">etched-in</property>
+        <child>
+          <object class="GtkTreeView" id="file_treeview">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="model">file_tree_store</property>
+            <property name="headers_visible">False</property>
+            <property name="search_column">1</property>
+            <property name="enable_tree_lines">True</property>
+            <signal name="row_expanded" handler="filebrowser_cb_row_expanded"/>
+            <signal name="key_press_event" handler="filebrowser_view_cb_keypress"/>
+            <signal name="row_activated" handler="filebrowser_cb_row_activated"/>
+            <signal name="row_collapsed" handler="filebrowser_cb_row_collapsed"/>
+            <child>
+              <object class="GtkTreeViewColumn" id="col">
+                <property name="title">file tree</property>
+                <child>
+                  <object class="GtkCellRendererPixbuf" id="cellrendererpixbuf1"/>
+                  <attributes>
+                    <attribute name="pixbuf">0</attribute>
+                  </attributes>
+                </child>
+                <child>
+                  <object class="GtkCellRendererText" id="cellrenderertext1"/>
+                  <attributes>
+                    <attribute name="text">1</attribute>
+                  </attributes>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+      <packing>
+        <property name="padding">2</property>
+        <property name="position">1</property>
+      </packing>
+    </child>
+  </object>
+</interface>
