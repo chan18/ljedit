@@ -1,0 +1,7 @@
+# puss plugin
+# 
+
+[plugin]
+name = search tooles
+engine = so
+description = search tooles

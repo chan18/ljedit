@@ -128,12 +128,8 @@ GtkWidget* puss_create_global_options_setup_widget(gpointer tag) {
 	if( !builder )
 		return 0;
 	gtk_builder_set_translation_domain(builder, TEXT_DOMAIN);
-	
-#if GTK_MAJOR_VERSION==2
-	filepath = g_build_filename(puss_app->module_path, "res", "puss_setup_widget.xml", NULL);
-#else
-	filepath = g_build_filename(puss_app->module_path, "res", "puss_setup_widget_gtk3.xml", NULL);
-#endif
+
+	filepath = g_build_filename(puss_app->module_path, "res", "puss_setup_widget.ui", NULL);
 	if( !filepath ) {
 		g_printerr("ERROR(puss) : build setup dialog filepath failed!\n");
 		g_object_unref(G_OBJECT(builder));

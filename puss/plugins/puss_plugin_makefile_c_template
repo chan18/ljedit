@@ -10,20 +10,24 @@ ifeq ($(OS), Windows_NT)
 	PLATFORM = win32
 endif
 
+ifeq ($(GTK_VERSION),3)
+	OUTPUT_SUFFIX = _gtk3
+endif
+
 CC = gcc
 
 ##### 
 ##### TARGET_NAME = ?????
 
-TARGET_PATH = ../../bin/plugins
+TARGET_PATH = ../../bin$(OUTPUT_SUFFIX)/plugins
 
 ifeq ($(MAKECMDGOALS), debug)
 	CFLAGS += -g -Wall -D_DEBUG
-	OBJPATH = debug
+	OBJPATH = ../../debug$(OUTPUT_SUFFIX)/$(TARGET_NAME)
 	TARGET = $(TARGET_PATH)/$(TARGET_NAME).so_d
 else
 	CFLAGS += -O3 -Wall
-	OBJPATH = release
+	OBJPATH = ../../release$(OUTPUT_SUFFIX)/$(TARGET_NAME)
 	TARGET = $(TARGET_PATH)/$(TARGET_NAME).so
 endif
 

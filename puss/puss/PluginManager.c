@@ -291,7 +291,7 @@ void puss_plugin_manager_show_config_dialog() {
 			return;
 		gtk_builder_set_translation_domain(builder, TEXT_DOMAIN);
 
-		filepath = g_build_filename(puss_app->module_path, "res", "puss_plugin_manager_dialog.xml", NULL);
+		filepath = g_build_filename(puss_app->module_path, "res", "puss_plugin_manager_dialog.ui", NULL);
 		if( !filepath ) {
 			g_printerr("ERROR(puss) : build plugin manager ui filepath failed!\n");
 			g_object_unref(G_OBJECT(builder));
@@ -312,9 +312,13 @@ void puss_plugin_manager_show_config_dialog() {
 		store = GTK_LIST_STORE(gtk_builder_get_object(builder, "plugin_store"));
 		toggle = GTK_CELL_RENDERER_TOGGLE(gtk_builder_get_object(builder, "enabled_cell_renderer"));
 		g_signal_connect(toggle, "toggled", G_CALLBACK(plugin_ui_enabled_toggled), store);
+
+#if GTK_MAJOR_VERSION==2
 		gtk_tree_view_column_set_sort_column_id(GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "enabled_column")), 0);
 		gtk_tree_view_column_set_sort_column_id(GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "name_column")), 1);
 		gtk_tree_view_column_set_sort_column_id(GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "engine_column")), 2);
+#endif
+
 		gtk_builder_connect_signals(builder, GTK_WINDOW(dlg));
 		g_object_unref(G_OBJECT(builder));
 

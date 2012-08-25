@@ -170,7 +170,7 @@ void puss_option_setup_show_dialog(const gchar* filter) {
 		return;
 	gtk_builder_set_translation_domain(builder, TEXT_DOMAIN);
 
-	filepath = g_build_filename(puss_app->module_path, "res", "puss_option_dialog.xml", NULL);
+	filepath = g_build_filename(puss_app->module_path, "res", "puss_option_dialog.ui", NULL);
 	if( !filepath ) {
 		g_printerr("ERROR(puss) : build option setup ui filepath failed!\n");
 		g_object_unref(G_OBJECT(builder));

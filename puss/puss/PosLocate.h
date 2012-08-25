@@ -4,7 +4,7 @@
 #ifndef PUSS_INC_POSLOCATE_H
 #define PUSS_INC_POSLOCATE_H
 
-#include <glib/gtypes.h>
+#include <glib.h>
 
 gboolean	puss_pos_locate_create();
 void		puss_pos_locate_destroy();

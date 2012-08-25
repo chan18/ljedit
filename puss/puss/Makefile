@@ -13,7 +13,11 @@
 CC = gcc
 WINDRES = windres
 
-TARGET_PATH = ../bin
+ifeq ($(GTK_VERSION),3)
+	OUTPUT_SUFFIX = _gtk3
+endif
+
+TARGET_PATH = ../bin$(OUTPUT_SUFFIX)
 
 ifeq ($(OS), Windows_NT)
 	EXE_SUFFIX = .exe
@@ -22,11 +26,11 @@ endif
 
 ifeq ($(MAKECMDGOALS), debug)
 	CFLAGS = -g -Wall -D_DEBUG
-	OBJPATH = debug
+	OBJPATH = ../debug$(OUTPUT_SUFFIX)/puss
 	TARGET = $(TARGET_PATH)/puss_d$(EXE_SUFFIX)
 else
 	CFLAGS = -O3 -Wall
-	OBJPATH = release
+	OBJPATH = ../release$(OUTPUT_SUFFIX)/puss
 	TARGET = $(TARGET_PATH)/puss$(EXE_SUFFIX)
 	ifeq ($(OS), Windows_NT)
 		CFLAGS += -mwindows

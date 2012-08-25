@@ -10,17 +10,21 @@ ifeq ($(OS), Windows_NT)
 	PLATFORM = win32
 endif
 
+ifeq ($(GTK_VERSION),3)
+	OUTPUT_SUFFIX = _gtk3
+endif
+
 CC = gcc
 
-TARGET_PATH = ../../bin
+TARGET_PATH = ../../bin$(OUTPUT_SUFFIX)
 
 ifeq ($(MAKECMDGOALS), debug)
 	CFLAGS = -g -Wall -D_DEBUG
-	OBJPATH = debug
+	OBJPATH = ../../debug$(OUTPUT_SUFFIX)/puss_controls_ext
 	TARGET = $(TARGET_PATH)/extends/puss_controls.ext_d
 else
 	CFLAGS = -O3 -Wall
-	OBJPATH = release
+	OBJPATH = ../../release$(OUTPUT_SUFFIX)/puss_controls_ext
 	TARGET = $(TARGET_PATH)/extends/puss_controls.ext
 endif
 
