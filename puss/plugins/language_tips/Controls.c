@@ -8,6 +8,7 @@
 #include <assert.h>
 
 #include <gdk/gdkkeysyms.h>
+#include <gtksourceview/gtksourceview.h>
 #include <gtksourceview/gtksourcebuffer.h>
 #include <gtksourceview/gtksourcelanguagemanager.h>
 
@@ -1324,6 +1325,14 @@ void controls_init(LanguageTips* self) {
 	page_count = gtk_notebook_get_n_pages(doc_panel);
 	for( i=0; i<page_count; ++i )
 		signals_connect( self, self->app->doc_get_view_from_page_num(i) );
+
+#if GTK_MAJOR_VERSION!=2
+	{
+		GtkBindingSet* binding_set = gtk_binding_set_by_class(g_type_class_peek(GTK_SOURCE_TYPE_VIEW));
+		gtk_binding_entry_remove(binding_set, GDK_KEY_Left, GDK_MOD1_MASK);
+		gtk_binding_entry_remove(binding_set, GDK_KEY_Right, GDK_MOD1_MASK);
+	}
+#endif
 
 	self->update_timer = g_timeout_add(500, (GSourceFunc)on_update_timeout, self);
 }
