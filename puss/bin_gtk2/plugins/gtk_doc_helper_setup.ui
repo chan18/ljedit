@@ -22,8 +22,8 @@
           </packing>
         </child>
         <child>
-          <object class="GtkFileChooserButton" id="gtk_doc_path_button">
-            <property name="action">select-folder</property>
+          <object class="GtkEntry" id="web_browser_entry">
+            <property name="visible">True</property>
           </object>
           <packing>
             <property name="left_attach">1</property>
@@ -68,7 +68,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkFileChooserButton" id="web_browser_file_button">
+          <object class="GtkEntry" id="gtk_doc_path_entry">
             <property name="visible">True</property>
           </object>
           <packing>
@@ -79,7 +79,7 @@
         </child>
       </object>
       <packing>
-        <property name="expand">False</property>
+        <property name="expand">True</property>
         <property name="position">0</property>
       </packing>
     </child>

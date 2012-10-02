@@ -6,12 +6,10 @@
 #     build gtk3 version    : make GTK_VERSION=3
 # 
 
-ifeq ($(OS), Windows_NT)
-	PLATFORM = win32
-endif
-
 ifeq ($(GTK_VERSION),3)
 	OUTPUT_SUFFIX = _gtk3
+else
+	OUTPUT_SUFFIX = _gtk2
 endif
 
 CC = gcc
@@ -31,6 +29,10 @@ else
 	TARGET = $(TARGET_PATH)/$(TARGET_NAME).so
 endif
 
+ifneq ($(OS), Windows_NT)
+	CFLAGS += -fPIC
+endif
+
 # gtk & gtksourceview & gthread
 # 
 ifeq ($(GTK_VERSION),3)
@@ -47,7 +49,7 @@ LIBS += `pkg-config --libs gmodule-2.0` \
 
 # project
 # 
-CFLAGS += -I$(TARGET_PATH)/../include -fPIC
+CFLAGS += -I$(TARGET_PATH)/../include
 
 SRCS += $(wildcard *.c)
 OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)

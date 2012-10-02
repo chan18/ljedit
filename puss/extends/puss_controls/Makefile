@@ -6,12 +6,10 @@
 #     build gtk3 version    : make GTK_VERSION=3
 # 
 
-ifeq ($(OS), Windows_NT)
-	PLATFORM = win32
-endif
-
 ifeq ($(GTK_VERSION),3)
 	OUTPUT_SUFFIX = _gtk3
+else
+	OUTPUT_SUFFIX = _gtk2
 endif
 
 CC = gcc
@@ -28,6 +26,10 @@ else
 	TARGET = $(TARGET_PATH)/extends/puss_controls.ext
 endif
 
+ifneq ($(OS), Windows_NT)
+	CFLAGS += -fPIC
+endif
+
 # gtk & gtksourceview
 # 
 ifeq ($(GTK_VERSION),3)
@@ -40,7 +42,7 @@ endif
 
 # project
 # 
-CFLAGS += -I$(TARGET_PATH)/include -fPIC
+CFLAGS += -I$(TARGET_PATH)/include
 
 SRCS = $(wildcard *.c)
 OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)

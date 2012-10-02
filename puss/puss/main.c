@@ -77,16 +77,10 @@ static void open_arg1_file(const char* argv1) {
 }
 
 #ifdef G_OS_WIN32
-	#ifndef _DEBUG
-		#define USE_WINMAIN
-	#endif
+	SIGNAL_CALLBACK int main(int argc, char* argv[]);
 #endif
 
-#ifndef USE_WINMAIN
-	#define puss_main main
-#endif
-
-int puss_main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
 	gchar* filepath;
 	gboolean res;
 
@@ -120,28 +114,4 @@ int puss_main(int argc, char* argv[]) {
 
 	return 0;
 }
-
-#ifdef USE_WINMAIN
-	int CALLBACK WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,int nCmdShow) {
-		int res = 0;
-		if( nCmdShow != SW_HIDE ) {
-			char szApp[4096];
-			STARTUPINFOA si;
-			PROCESS_INFORMATION pi;
-			GetModuleFileNameA(NULL, szApp, sizeof(szApp));
-			ZeroMemory(&si, sizeof(STARTUPINFO));
-			si.cb			= sizeof(STARTUPINFO);
-			si.dwFlags		= STARTF_USESHOWWINDOW;
-			si.wShowWindow	= SW_HIDE;
-			CreateProcessA(szApp, lpCmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
-			return res;
-		}
-
-		AllocConsole();
-		res = puss_main(__argc, __argv);
-		FreeConsole();
-
-		return res;
-	}
-#endif
 

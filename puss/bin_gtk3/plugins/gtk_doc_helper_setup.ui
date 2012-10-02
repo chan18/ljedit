@@ -1,11 +1,12 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <interface>
-<!-- interface-requires gtk+ 2.12 -->
-<!-- interface-naming-policy toplevel-contextual -->
+  <!-- interface-requires gtk+ 3.0 -->
   <object class="GtkHBox" id="main_panel">
     <property name="visible">True</property>
+    <property name="can_focus">False</property>
     <child>
       <object class="GtkTable" id="main_table">
+        <property name="can_focus">False</property>
         <property name="border_width">8</property>
         <property name="n_rows">3</property>
         <property name="n_columns">2</property>
@@ -13,6 +14,7 @@
         <property name="row_spacing">10</property>
         <child>
           <object class="GtkLabel" id="web_browser_label">
+            <property name="can_focus">False</property>
             <property name="xalign">1</property>
             <property name="label" translatable="yes">web browser</property>
           </object>
@@ -22,19 +24,8 @@
           </packing>
         </child>
         <child>
-          <object class="GtkFileChooserButton" id="gtk_doc_path_button">
-            <property name="action">select-folder</property>
-          </object>
-          <packing>
-            <property name="left_attach">1</property>
-            <property name="right_attach">2</property>
-            <property name="top_attach">1</property>
-            <property name="bottom_attach">2</property>
-            <property name="y_options">GTK_FILL</property>
-          </packing>
-        </child>
-        <child>
           <object class="GtkLabel" id="gtk_doc_path_label">
+            <property name="can_focus">False</property>
             <property name="label" translatable="yes">gtk-doc path</property>
           </object>
           <packing>
@@ -46,6 +37,7 @@
         </child>
         <child>
           <object class="GtkLabel" id="gtk_doc_path_label_tip">
+            <property name="can_focus">False</property>
             <property name="label" translatable="yes">e.g. (/usr/share/gtk-doc/html)</property>
           </object>
           <packing>
@@ -58,6 +50,7 @@
         </child>
         <child>
           <object class="GtkLabel" id="gtk_doc_path_label1">
+            <property name="can_focus">False</property>
             <property name="xalign">1</property>
           </object>
           <packing>
@@ -68,8 +61,10 @@
           </packing>
         </child>
         <child>
-          <object class="GtkFileChooserButton" id="web_browser_file_button">
+          <object class="GtkEntry" id="web_browser_entry">
             <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="invisible_char">●</property>
           </object>
           <packing>
             <property name="left_attach">1</property>
@@ -77,9 +72,24 @@
             <property name="y_options">GTK_FILL</property>
           </packing>
         </child>
+        <child>
+          <object class="GtkEntry" id="gtk_doc_path_entry">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="invisible_char">●</property>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="right_attach">2</property>
+            <property name="top_attach">1</property>
+            <property name="bottom_attach">2</property>
+            <property name="y_options">GTK_FILL</property>
+          </packing>
+        </child>
       </object>
       <packing>
         <property name="expand">False</property>
+        <property name="fill">True</property>
         <property name="position">0</property>
       </packing>
     </child>

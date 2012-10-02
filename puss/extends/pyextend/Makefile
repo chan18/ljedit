@@ -5,12 +5,10 @@
 #     build release version : make
 # 
 
-ifeq ($(OS), Windows_NT)
-	PLATFORM = win32
-endif
-
 ifeq ($(GTK_VERSION),3)
 	OUTPUT_SUFFIX = _gtk3
+else
+	OUTPUT_SUFFIX = _gtk2
 endif
 
 CC = gcc
@@ -27,6 +25,10 @@ else
 	TARGET = $(TARGET_PATH)/extends/pyextend.ext
 endif
 
+ifneq ($(OS), Windows_NT)
+	CFLAGS += -fPIC
+endif
+
 # gtk & gtksourceview & gthread & python & pygtk
 # 
 CFLAGS += `pkg-config --cflags gtksourceview-2.0`
@@ -35,7 +37,7 @@ LIBS += `pkg-config --libs gtksourceview-2.0` \
 		`pkg-config --libs gmodule-2.0` \
 		`pkg-config --libs gthread-2.0` \
 
-ifeq ($(PLATFORM), win32)
+ifeq ($(OS), Windows_NT)
 	CFLAGS += -IC:/Python27/include \
 			-IC:/Python27/include/pygtk-2.0
 	LIBS += -LC:/Python27/libs -lPython27
@@ -49,7 +51,7 @@ endif
 
 # project
 # 
-CFLAGS += -I$(TARGET_PATH)/include -fPIC
+CFLAGS += -I$(TARGET_PATH)/include
 
 SRCS = $(wildcard *.c)
 OBJS = $(SRCS:%.c=$(OBJPATH)/%.o)

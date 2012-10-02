@@ -322,13 +322,14 @@ static void destroy_ui(GtkDocHelper* self) {
 
 static const gchar* TARGET_OPTION_KEY = "target_option";
 
-static void cb_file_set(GtkFileChooserButton *widget, GtkDocHelper* self) {
-	const Option* option = g_object_get_data(G_OBJECT(widget), TARGET_OPTION_KEY);
-	gchar* uri = gtk_file_chooser_get_uri(GTK_FILE_CHOOSER(widget));
-	gchar* filename = g_filename_from_uri(uri, NULL, NULL);
-	self->app->option_set(option, filename);
-	g_free(filename);
-	g_free(uri);
+static void cb_web_browser_entry_changed(GtkEntry* entry, GtkDocHelper* self) {
+	const Option* option = self->app->option_find("gtk_doc_helper", "web_browser");
+	self->app->option_set(option, gtk_entry_get_text(entry));
+}
+
+static void cb_gtk_doc_path_entry_changed(GtkEntry* entry, GtkDocHelper* self) {
+	const Option* option = self->app->option_find("gtk_doc_helper", "gtk_doc_path");
+	self->app->option_set(option, gtk_entry_get_text(entry));
 }
 
 static GtkWidget* create_setup_ui(GtkDocHelper* self) {
@@ -360,22 +361,16 @@ static GtkWidget* create_setup_ui(GtkDocHelper* self) {
 
 	{
 		option = self->app->option_find("gtk_doc_helper", "web_browser");
-		w = GTK_WIDGET(gtk_builder_get_object(builder, "web_browser_file_button"));
-
-		gtk_file_chooser_set_uri(GTK_FILE_CHOOSER(w), option->value);
-
-		g_object_set_data(G_OBJECT(w), TARGET_OPTION_KEY, (gpointer)option);
-		g_signal_connect(w, "file-set", G_CALLBACK(cb_file_set), self);
+		w = GTK_WIDGET(gtk_builder_get_object(builder, "web_browser_entry"));
+		gtk_entry_set_text(GTK_ENTRY(w), option->value);
+		g_signal_connect(w, "changed", G_CALLBACK(cb_web_browser_entry_changed), self);
 	}
 
 	{
 		option = self->app->option_find("gtk_doc_helper", "gtk_doc_path");
-		w = GTK_WIDGET(gtk_builder_get_object(builder, "gtk_doc_path_button"));
-
-		gtk_file_chooser_set_uri(GTK_FILE_CHOOSER(w), option->value);
-
-		g_object_set_data(G_OBJECT(w), TARGET_OPTION_KEY, (gpointer)option);
-		g_signal_connect(w, "file-set", G_CALLBACK(cb_file_set), self);
+		w = GTK_WIDGET(gtk_builder_get_object(builder, "gtk_doc_path_entry"));
+		gtk_entry_set_text(GTK_ENTRY(w), option->value);
+		g_signal_connect(w, "changed", G_CALLBACK(cb_gtk_doc_path_entry_changed), self);
 	}
 
 	g_object_unref(G_OBJECT(builder));
