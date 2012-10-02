@@ -59,8 +59,8 @@ clean :
 	rm -f $(TARGET_PATH)/extends/puss_controls.ext_d
 	rm -f $(TARGET_PATH)/extends/puss_controls.ext
 	rm -f $(TARGET_PATH)/include/IPussControls.h
-	rm -rf debug
-	rm -rf release
+	rm -rf ../../debug$(OUTPUT_SUFFIX)/puss_controls_ext
+	rm -rf ../../release$(OUTPUT_SUFFIX)/puss_controls_ext
 
 $(TARGET) : $(OBJS)
 	$(CC) $(CFLAGS) -shared -o $@ $^ $(LIBS)

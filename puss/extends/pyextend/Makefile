@@ -67,8 +67,8 @@ debug : $(TARGET)
 clean :
 	rm -f $(TARGET_PATH)/extends/pyextend.ext_d
 	rm -f $(TARGET_PATH)/extends/pyextend.ext
-	rm -rf debug
-	rm -rf release
+	rm -rf ../../debug$(OUTPUT_SUFFIX)/python_ext
+	rm -rf ../../release$(OUTPUT_SUFFIX)/python_ext
 
 $(TARGET) : $(OBJS)
 	$(CC) $(CFLAGS) -shared -o $@ $^ $(LIBS)
