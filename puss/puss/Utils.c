@@ -342,48 +342,50 @@ gchar* puss_format_filename(const gchar* filename) {
 	gchar* res = 0;
 
 #ifdef G_OS_WIN32
-	WIN32_FIND_DATAW wfdd;
-	HANDLE hfd;
-	wchar_t wbuf[32768];
-	gchar**  paths;
-	wchar_t* wfname;
-	gsize len;
-	gsize i;
-	gsize j;
+	if( filename[0]!='\\' ) {
+		WIN32_FIND_DATAW wfdd;
+		HANDLE hfd;
+		wchar_t wbuf[32768];
+		gchar**  paths;
+		wchar_t* wfname;
+		gsize len;
+		gsize i;
+		gsize j;
 	
-	wfname = (wchar_t*)g_utf8_to_utf16(filename, -1, 0, 0, 0);
-	if( wfname ) {
-		len = GetFullPathNameW(wfname, 32768, wbuf, 0);
-		len = GetLongPathNameW(wbuf, wbuf, 32768);
-		g_free(wfname);
+		wfname = (wchar_t*)g_utf8_to_utf16(filename, -1, 0, 0, 0);
+		if( wfname ) {
+			len = GetFullPathNameW(wfname, 32768, wbuf, 0);
+			len = GetLongPathNameW(wbuf, wbuf, 32768);
+			g_free(wfname);
 
-		paths = g_new(gchar*, 256);
-		paths[0] = g_strdup("_:");
-		paths[0][0] = toupper(filename[0]);
-		j = 1;
+			paths = g_new(gchar*, 256);
+			paths[0] = g_strdup("_:");
+			paths[0][0] = toupper(filename[0]);
+			j = 1;
 
-		for( i=3; i<len; ++i ) {
-			if( wbuf[i]=='\\' ) {
-				wbuf[i] = '\0';
+			for( i=3; i<len; ++i ) {
+				if( wbuf[i]=='\\' ) {
+					wbuf[i] = '\0';
 
-				hfd = FindFirstFileW(wbuf, &wfdd);
-				if( hfd != INVALID_HANDLE_VALUE ) {
-					paths[j++] = g_utf16_to_utf8((gunichar2*)wfdd.cFileName, -1, 0, 0, 0);
-					FindClose(hfd);
+					hfd = FindFirstFileW(wbuf, &wfdd);
+					if( hfd != INVALID_HANDLE_VALUE ) {
+						paths[j++] = g_utf16_to_utf8((gunichar2*)wfdd.cFileName, -1, 0, 0, 0);
+						FindClose(hfd);
+					}
+					wbuf[i] = '\\';
 				}
-				wbuf[i] = '\\';
 			}
-		}
 
-		hfd = FindFirstFileW(wbuf, &wfdd);
-		if( hfd != INVALID_HANDLE_VALUE ) {
-			paths[j++] = g_utf16_to_utf8((gunichar2*)wfdd.cFileName, -1, 0, 0, 0);
-			FindClose(hfd);
-		}
-		paths[j] = 0;
+			hfd = FindFirstFileW(wbuf, &wfdd);
+			if( hfd != INVALID_HANDLE_VALUE ) {
+				paths[j++] = g_utf16_to_utf8((gunichar2*)wfdd.cFileName, -1, 0, 0, 0);
+				FindClose(hfd);
+			}
+			paths[j] = 0;
 
-		res = g_build_filenamev(paths);
-		g_strfreev(paths);
+			res = g_build_filenamev(paths);
+			g_strfreev(paths);
+		}
 	}
 
 	if( !res )

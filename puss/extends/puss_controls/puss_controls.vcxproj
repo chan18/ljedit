@@ -28,11 +28,11 @@
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\bin\include\puss_extend_enviro.props" />
+    <Import Project="..\..\bin_gtk2\include\puss_extend_env.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\bin\include\puss_extend_enviro.props" />
+    <Import Project="..\..\bin_gtk2\include\puss_extend_env.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
@@ -48,7 +48,8 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
-      <Command>copy IPussControls.h $(ProjectDir)..\..\bin\include</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -70,12 +71,13 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(ProjectDir)IPussControls.h $(SolutionDir)bin\include\</Command>
+      <Command>copy $(ProjectDir)IPussControls.h $(SolutionDir)bin_gtk2\include\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <PreBuildEvent>
-      <Command>copy IPussControls.h $(ProjectDir)..\..\bin\include</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <ClCompile>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PLUGIN_ENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -96,7 +98,7 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(ProjectDir)IPussControls.h $(SolutionDir)bin\include\</Command>
+      <Command>copy $(ProjectDir)IPussControls.h $(SolutionDir)bin_gtk2\include\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

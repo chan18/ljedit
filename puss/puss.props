@@ -1,14 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="UserMacros">
-    <GtkBase>d:\gtk_2.22\</GtkBase>
+    <GtkBase>d:\gtk_2.16\</GtkBase>
     <PussConfigSuffix>$(Configuration.Replace(`Release`, ``).Replace(`Debug`, `_d`))</PussConfigSuffix>
   </PropertyGroup>
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
     <_PropertySheetDisplayName>puss environment</_PropertySheetDisplayName>
-    <TargetExt>$(PussConfigSuffix).exe</TargetExt>
-    <OutDir>$(ProjectDir)..\bin\</OutDir>
+    <OutDir>$(ProjectDir)..\bin_gtk2\extends\</OutDir>
+    <TargetName>$(ProjectName)$(PussConfigSuffix)</TargetName>
   </PropertyGroup>
   <ItemGroup>
     <BuildMacro Include="GtkBase">

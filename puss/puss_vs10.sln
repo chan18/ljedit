@@ -23,6 +23,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "puss", "puss\puss.vcxproj",
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "filebrowser", "plugins\filebrowser\filebrowser.vcxproj", "{43F803E1-2E28-34F4-1FAB-3DC8FE8B7AE4}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gdbmi", "plugins\gdbmi\gdbmi.vcxproj", "{44F813EE-EEA8-4F44-807A-3ECB5CB9FEF4}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "puss_win32", "puss\puss_win32.vcxproj", "{69646FCD-CCD2-4FC2-A92A-EAA02F9A671E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -73,6 +77,14 @@ Global
 		{43F803E1-2E28-34F4-1FAB-3DC8FE8B7AE4}.Debug|Win32.Build.0 = Debug|Win32
 		{43F803E1-2E28-34F4-1FAB-3DC8FE8B7AE4}.Release|Win32.ActiveCfg = Release|Win32
 		{43F803E1-2E28-34F4-1FAB-3DC8FE8B7AE4}.Release|Win32.Build.0 = Release|Win32
+		{44F813EE-EEA8-4F44-807A-3ECB5CB9FEF4}.Debug|Win32.ActiveCfg = Debug|Win32
+		{44F813EE-EEA8-4F44-807A-3ECB5CB9FEF4}.Debug|Win32.Build.0 = Debug|Win32
+		{44F813EE-EEA8-4F44-807A-3ECB5CB9FEF4}.Release|Win32.ActiveCfg = Release|Win32
+		{44F813EE-EEA8-4F44-807A-3ECB5CB9FEF4}.Release|Win32.Build.0 = Release|Win32
+		{69646FCD-CCD2-4FC2-A92A-EAA02F9A671E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{69646FCD-CCD2-4FC2-A92A-EAA02F9A671E}.Debug|Win32.Build.0 = Debug|Win32
+		{69646FCD-CCD2-4FC2-A92A-EAA02F9A671E}.Release|Win32.ActiveCfg = Release|Win32
+		{69646FCD-CCD2-4FC2-A92A-EAA02F9A671E}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

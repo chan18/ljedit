@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="UserMacros">
-    <GtkBase>d:\gtk_2.22\</GtkBase>
+    <GtkBase>d:\gtk_2.16\</GtkBase>
     <PussIncludePath>$(MSBuildThisFileDirectory)</PussIncludePath>
     <PussConfigSuffix>$(Configuration.Replace(`Release`, ``).Replace(`Debug`, `_d`))</PussConfigSuffix>
   </PropertyGroup>
@@ -9,7 +9,7 @@
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
     <_PropertySheetDisplayName>puss extends base environment</_PropertySheetDisplayName>
     <TargetExt>.ext$(PussConfigSuffix)</TargetExt>
-    <OutDir>$(SolutionDir)bin\extends\</OutDir>
+    <OutDir>$(SolutionDir)bin_gtk2\extends\</OutDir>
   </PropertyGroup>
   <ItemGroup>
     <BuildMacro Include="GtkBase">
