@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="UserMacros">
-    <GtkBase>d:\gtk_2.16\</GtkBase>
+    <GtkBase>d:\gtk_2.24\</GtkBase>
     <PussIncludePath>$(MSBuildThisFileDirectory)</PussIncludePath>
     <PussConfigSuffix>$(Configuration.Replace(`Release`, ``).Replace(`Debug`, `_d`))</PussConfigSuffix>
   </PropertyGroup>
