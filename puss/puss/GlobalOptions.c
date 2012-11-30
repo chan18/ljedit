@@ -11,13 +11,15 @@
 #include "Utils.h"
 
 static void parse_puss_theme_option(const Option* option, const gchar* old, gpointer tag) {
+#ifdef G_OS_WIN32
 	gchar* str;
-	if( !option->value || option->value[0]=='\0' )
+	if( option->value && option->value[0]!='\0' )
 		return;
 
 	str = g_strdup_printf("gtk-theme-name = \"%s\"", option->value);
 	gtk_rc_parse_string(str);
 	g_free(str);
+#endif
 }
 
 static void parse_puss_editor_style_option(const Option* option, const gchar* old, gpointer tag) {
@@ -148,7 +150,7 @@ GtkWidget* puss_create_global_options_setup_widget(gpointer tag) {
 
 	panel = GTK_WIDGET(g_object_ref(gtk_builder_get_object(builder, "main_panel")));
 
-
+#ifdef G_OS_WIN32
 	{
 		gchar* path;
 		GDir*  dir;
@@ -193,6 +195,7 @@ GtkWidget* puss_create_global_options_setup_widget(gpointer tag) {
 
 		g_signal_connect(w, "changed", G_CALLBACK(cb_combo_box_option_changed), (gpointer)option);
 	}
+#endif
 
 	{
 		const gchar* const * ids;

@@ -32,7 +32,8 @@ static void guide_on_file_remove(CppFile* file, CppGuide* self) {
 CppGuide* cpp_guide_new( gboolean enable_macro_replace
 			, gboolean enable_search
 			, CppFileParsed cb_file_parsed
-			, gpointer cb_file_parsed_tag )
+			, gpointer cb_file_parsed_tag
+			, FileLoadCallback cb_file_load )
 {
 	CppGuide* guide;
 	
@@ -40,7 +41,7 @@ CppGuide* cpp_guide_new( gboolean enable_macro_replace
 	guide->cb_file_parsed = cb_file_parsed;
 	guide->cb_file_parsed_tag = cb_file_parsed_tag;
 	guide->enable_search = enable_search;
-
+	guide->parser.cb_file_load = cb_file_load;
 	if( guide->enable_search ) {
 		guide->parser.cb_tag = guide;
 		guide->parser.cb_file_insert = (FileInsertCallback)guide_on_file_insert;

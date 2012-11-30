@@ -130,8 +130,15 @@ static void insert_predefineds_files(LanguageTips* self) {
 	g_string_free(files, TRUE);
 }
 
+static LanguageTips* self_ = 0;
+
+static gboolean puss_load_file(const gchar* filename, gchar** text, gsize* len) {
+	return self_ ? self_->app->load_file(filename, text, len, 0, 0) : FALSE;
+}
+
 void parse_thread_init(LanguageTips* self) {
-	self->cpp_guide = cpp_guide_new(TRUE, TRUE, (CppFileParsed)on_file_parsed, self);
+	self_ = self;
+	self->cpp_guide = cpp_guide_new(TRUE, TRUE, (CppFileParsed)on_file_parsed, self, puss_load_file);
 	insert_predefineds_files(self);
 
 	self->parse_queue = g_async_queue_new_full(g_free);
@@ -141,6 +148,8 @@ void parse_thread_init(LanguageTips* self) {
 }
 
 void parse_thread_final(LanguageTips* self) {
+	self_ = 0;
+
 	if( self->parse_queue ) {
 		g_async_queue_push(self->parse_queue, PARSE_THREAD_EXIT_SIGN);
 		g_async_queue_unref(self->parse_queue);

@@ -131,7 +131,6 @@
                 <property name="spacing">5</property>
                 <child>
                   <object class="GtkEntry" id="search_dialog_find_entry">
-                    <property name="can_focus">False</property>
                     <signal name="key-press-event" handler="puss_search_dialog_cb_find_entry_key_press" swapped="no"/>
                   </object>
                   <packing>
@@ -142,7 +141,6 @@
                 </child>
                 <child>
                   <object class="GtkEntry" id="search_dialog_replace_entry">
-                    <property name="can_focus">False</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>

@@ -180,6 +180,7 @@ typedef struct {
 
 typedef struct _CppGuide CppGuide;
 
+typedef gboolean (*FileLoadCallback)(const gchar* filename, gchar** text, gsize* len);
 typedef void (*CppFileParsed)(CppFile* file, gpointer tag);
 
 gchar* cpp_filename_to_filekey(const gchar* filename, glong namelen);
@@ -187,7 +188,8 @@ gchar* cpp_filename_to_filekey(const gchar* filename, glong namelen);
 CppGuide* cpp_guide_new( gboolean enable_macro_replace
 			, gboolean enable_search
 			, CppFileParsed cb_file_parsed
-			, gpointer cb_file_parsed_tag );
+			, gpointer cb_file_parsed_tag
+			, FileLoadCallback cb_file_load );
 
 void cpp_guide_free(CppGuide* guide);
 

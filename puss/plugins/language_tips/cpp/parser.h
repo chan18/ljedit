@@ -19,6 +19,7 @@ typedef struct {
 	GStaticRWLock		files_lock;
 	GHashTable*			files;
 
+	FileLoadCallback	cb_file_load;
 	FileInsertCallback	cb_file_insert;
 	FileRemoveCallback	cb_file_remove;
 	gpointer			cb_tag;

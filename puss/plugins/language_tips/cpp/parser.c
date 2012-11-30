@@ -72,31 +72,6 @@ static void cpp_parser_on_remove_file(const gchar* filename, CppFile* file, CppP
 	cpp_file_unref(file);
 }
 
-void cpp_parser_init(CppParser* self, gboolean enable_macro_replace) {
-	self->keywords_table = cpp_keywords_table_new();
-	self->enable_macro_replace = enable_macro_replace;
-	self->files  = g_hash_table_new(g_str_hash, g_str_equal);
-
-	g_static_rw_lock_init( &(self->settings_lock) );
-	g_static_rw_lock_init( &(self->files_lock) );
-
-	//trace_parser_status("init");
-}
-
-void cpp_parser_final(CppParser* self) {
-	//trace_parser_status("clean_start");
-	g_hash_table_foreach_remove(self->files, (GHRFunc)cpp_parser_on_remove_file, self);
-	trace_parser_status("  clean_end");
-
-	g_hash_table_destroy(self->files);
-	cpp_keywords_table_free(self->keywords_table);
-
-	cpp_parser_include_paths_unref(self->include_paths);
-
-	g_static_rw_lock_free( &(self->files_lock) );
-	g_static_rw_lock_free( &(self->settings_lock) );
-}
-
 void cpp_parser_predefineds_set(CppParser* self, GList* files) {
 	g_static_rw_lock_writer_lock( &(self->settings_lock) );
 	if( self->predefineds ) {
@@ -206,7 +181,7 @@ static gboolean load_convert_text(gchar** text, gsize* len, const gchar* charset
 	return FALSE;
 }
 
-gboolean cpp_parser_load_file(const gchar* filename, gchar** text, gsize* len) {
+static gboolean cpp_parser_load_file(const gchar* filename, gchar** text, gsize* len) {
 	const gchar* locale = 0;
 	gchar* sbuf = 0;
 	gsize  slen = 0;
@@ -304,7 +279,7 @@ static CppFile* cpp_parser_parse_use_menv(ParseEnv* env, const gchar* filekey, g
 			g_usleep(500);
 
 	} else {
-		if( cpp_parser_load_file(filekey, &buf, &len) ) {
+		if( (*(env->parser->cb_file_load))(filekey, &buf, &len) ) {
 			last_file = env->file;
 			last_lexer = env->lexer;
 
@@ -412,5 +387,32 @@ CppFile* cpp_parser_parse(CppParser* self, const gchar* filekey, gboolean force_
 	cpp_macro_lexer_final(&env);
 
 	return file;
+}
+
+void cpp_parser_init(CppParser* self, gboolean enable_macro_replace) {
+	self->keywords_table = cpp_keywords_table_new();
+	self->enable_macro_replace = enable_macro_replace;
+	self->files  = g_hash_table_new(g_str_hash, g_str_equal);
+
+	g_static_rw_lock_init( &(self->settings_lock) );
+	g_static_rw_lock_init( &(self->files_lock) );
+
+	if( self->cb_file_load==0 )
+		self->cb_file_load = cpp_parser_load_file;
+	//trace_parser_status("init");
+}
+
+void cpp_parser_final(CppParser* self) {
+	//trace_parser_status("clean_start");
+	g_hash_table_foreach_remove(self->files, (GHRFunc)cpp_parser_on_remove_file, self);
+	trace_parser_status("  clean_end");
+
+	g_hash_table_destroy(self->files);
+	cpp_keywords_table_free(self->keywords_table);
+
+	cpp_parser_include_paths_unref(self->include_paths);
+
+	g_static_rw_lock_free( &(self->files_lock) );
+	g_static_rw_lock_free( &(self->settings_lock) );
 }
 
