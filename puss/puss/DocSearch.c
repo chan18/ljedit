@@ -74,19 +74,10 @@ static gboolean find_prev_text(GtkTextView* view, const gchar* text, GtkTextIter
 }
 
 static void unmark_all_search_text_matched(GtkTextBuffer* buf, int search_flags) {
-	GtkTextIter ps, pe, end;
-	gchar* last_search_text = g_object_steal_data(G_OBJECT(buf), PUSS_LAST_SEARCH_TEXT);
-	if( last_search_text ) {
-		gtk_text_buffer_get_start_iter(buf, &ps);
-		gtk_text_buffer_get_end_iter(buf, &end);
-
-		while( gtk_text_iter_forward_search(&ps, last_search_text, search_flags, &ps, &pe, &end) ) {
-			gtk_text_buffer_remove_tag_by_name(buf, "puss:searched", &ps, &pe);
-			ps = pe;
-		}
-
-		g_free(last_search_text);
-	}
+	GtkTextIter ps, pe;
+	gtk_text_buffer_get_start_iter(buf, &ps);
+	gtk_text_buffer_get_end_iter(buf, &pe);
+	gtk_text_buffer_remove_tag_by_name(buf, "puss:searched", &ps, &pe);
 }
 
 static void mark_all_search_text_matched(GtkTextBuffer* buf, const gchar* text, int search_flags) {
